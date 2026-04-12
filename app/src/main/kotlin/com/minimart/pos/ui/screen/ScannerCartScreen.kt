@@ -30,8 +30,7 @@ import com.minimart.pos.ui.theme.ErrorRed
 import com.minimart.pos.ui.theme.SuccessGreen
 import com.minimart.pos.ui.viewmodel.CartViewModel
 
-@OptIn(ExperimentalPermissionsApi::class)
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ScannerCartScreen(
     onNavigateToCheckout: () -> Unit,
