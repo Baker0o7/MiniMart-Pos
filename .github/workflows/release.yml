@@ -10,9 +10,9 @@ on:
 
 env:
   JAVA_VERSION: '17'
+  GRADLE_VERSION: '8.7'
 
 jobs:
-  # ── Build debug APK on every PR ──────────────────────────────────────────────
   build-debug:
     name: Build Debug APK
     runs-on: ubuntu-latest
@@ -27,11 +27,16 @@ jobs:
           distribution: temurin
           cache: gradle
 
-      - name: Grant execute permission for gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Make gradlew executable
         run: chmod +x gradlew
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+        run: gradle assembleDebug --no-daemon
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -40,7 +45,6 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 7
 
-  # ── Signed release on version tags ───────────────────────────────────────────
   release:
     name: Release Signed APK + AAB
     runs-on: ubuntu-latest
@@ -55,55 +59,45 @@ jobs:
           distribution: temurin
           cache: gradle
 
-      - name: Grant execute permission for gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Make gradlew executable
         run: chmod +x gradlew
 
-      # Decode keystore from base64 secret
       - name: Decode keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/minimart-release.jks
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/minimart-release.jks
 
-      # Build signed release APK
       - name: Build signed release APK
-        run: ./gradlew assembleRelease --no-daemon
+        run: gradle assembleRelease --no-daemon
         env:
           SIGNING_KEY_ALIAS:      ${{ secrets.KEY_ALIAS }}
           SIGNING_KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
 
-      # Build signed release AAB (for Play Store)
       - name: Build signed release AAB
-        run: ./gradlew bundleRelease --no-daemon
+        run: gradle bundleRelease --no-daemon
         env:
           SIGNING_KEY_ALIAS:      ${{ secrets.KEY_ALIAS }}
           SIGNING_KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
 
-      # Extract version name from tag
       - name: Get version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      # Create GitHub Release and attach both artifacts
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.VERSION }}
-          name:     "MiniMart POS ${{ steps.version.outputs.VERSION }}"
+          name: "MiniMart POS ${{ steps.version.outputs.VERSION }}"
           body: |
             ## MiniMart POS ${{ steps.version.outputs.VERSION }}
-            
-            ### What's included
-            - `minimart-pos-${{ steps.version.outputs.VERSION }}.apk` — direct install APK
-            - `minimart-pos-${{ steps.version.outputs.VERSION }}.aab` — Google Play Bundle
-            
-            ### Install (direct APK)
-            1. Enable "Install from unknown sources" on the device
-            2. Transfer and open the `.apk` file
-            
-            ### Default credentials
-            - Username: `admin`
-            - PIN: `1234` ← **change immediately after first login**
+            - `*.apk` — direct sideload install
+            - `*.aab` — Google Play Bundle
+            Default login → username: `admin` | PIN: `1234`
           files: |
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
@@ -112,7 +106,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Clean up keystore
       - name: Clean up keystore
         if: always()
         run: rm -f app/minimart-release.jks
