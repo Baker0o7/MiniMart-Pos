@@ -10,6 +10,15 @@ android {
     namespace = "com.minimart.pos"
     compileSdk = 35
 
+    signingConfigs {
+        create("release") {
+            storeFile     = file("minimart-release.jks")
+            storePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: ""
+            keyAlias      = System.getenv("SIGNING_KEY_ALIAS")      ?: ""
+            keyPassword   = System.getenv("SIGNING_KEY_PASSWORD")   ?: ""
+        }
+    }
+
     defaultConfig {
         applicationId = "com.minimart.pos"
         minSdk = 26
@@ -23,6 +32,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
