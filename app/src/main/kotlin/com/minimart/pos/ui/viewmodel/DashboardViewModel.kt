@@ -45,25 +45,17 @@ class DashboardViewModel @Inject constructor(
         settingsRepo.currency,
         saleRepo.getTotalRevenueToday(todayStart),
         saleRepo.getSaleCountToday(todayStart),
-        productRepo.getLowStockProducts(),
-        saleRepo.getTopSellers(todayStart),
-        settingsRepo.loggedInUserId
-    ) { values ->
-        @Suppress("UNCHECKED_CAST")
-        val storeName = values[0] as String
-        val currency = values[1] as String
-        val revenue = (values[2] as? Double) ?: 0.0
-        val count = values[3] as Int
-        val lowStock = values[4] as List<Product>
-        val topSellers = values[5] as List<TopSellerResult>
+        productRepo.getLowStockProducts()
+    ) { storeName, currency, revenue, count, lowStock ->
         DashboardUiState(
             storeName = storeName,
             currency = currency,
-            todayRevenue = revenue,
+            todayRevenue = revenue ?: 0.0,
             todaySaleCount = count,
-            lowStockProducts = lowStock,
-            topSellers = topSellers
+            lowStockProducts = lowStock
         )
+    }.combine(saleRepo.getTopSellers(todayStart)) { state, topSellers ->
+        state.copy(topSellers = topSellers)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState())
 }
 
