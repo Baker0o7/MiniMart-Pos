@@ -9,6 +9,7 @@ import com.minimart.pos.data.dao.ProductDao
 import com.minimart.pos.data.dao.SaleDao
 import com.minimart.pos.data.dao.UserDao
 import com.minimart.pos.data.entity.*
+import javax.inject.Inject
 
 @Database(
     entities = [Product::class, Sale::class, SaleItem::class, User::class],
