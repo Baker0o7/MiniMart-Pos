@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Backup the Room database and DataStore prefs -->
+    <include domain="database" path="minimart_pos.db" />
+    <include domain="sharedpref" path="minimart_settings.preferences_pb" />
+    <!-- Exclude large caches -->
+    <exclude domain="cache" path="." />
+</full-backup-content>

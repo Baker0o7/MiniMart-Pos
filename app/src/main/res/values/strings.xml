@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MiniMart POS</string>
+    <string name="scan_hint">Point camera at barcode</string>
+    <string name="no_products">No products found</string>
+    <string name="cart_empty">Cart is empty</string>
+    <string name="sale_complete">Sale Complete!</string>
+</resources>
