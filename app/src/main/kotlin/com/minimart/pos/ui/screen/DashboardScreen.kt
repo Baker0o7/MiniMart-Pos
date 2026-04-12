@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import com.minimart.pos.ui.theme.ErrorRed
 import com.minimart.pos.ui.theme.SuccessGreen
 import com.minimart.pos.ui.viewmodel.DashboardViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     onNavigateToScanner: () -> Unit,
@@ -112,7 +114,7 @@ fun DashboardScreen(
                             Spacer(Modifier.height(8.dp))
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 items(state.lowStockProducts.take(5)) { product ->
-                                    Chip(
+                                    SuggestionChip(
                                         onClick = onNavigateToProducts,
                                         label = { Text("${product.name} (${product.stock})", style = MaterialTheme.typography.labelSmall) }
                                     )

@@ -74,10 +74,8 @@ fun MiniMartTheme(
     MaterialTheme(colorScheme = colorScheme, typography = AppTypography, content = content)
 }
 
-val AppTypography = Typography(
-    headlineLarge  = MaterialTheme.typography.headlineLarge.let { androidx.compose.ui.text.TextStyle() },
-    // Let Material 3 defaults handle the rest — they're great for POS displays
-)
+val AppTypography = Typography()
+    // Material 3 defaults are great for POS displays — override per-screen as needed
 
 // ─── Convenience extensions ───────────────────────────────────────────────────
 @Composable fun successColor() = SuccessGreen

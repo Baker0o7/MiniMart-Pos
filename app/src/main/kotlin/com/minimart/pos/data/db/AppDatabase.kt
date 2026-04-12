@@ -13,7 +13,7 @@ import com.minimart.pos.data.entity.*
 @Database(
     entities = [Product::class, Sale::class, SaleItem::class, User::class],
     version = 1,
-    exportSchema = true
+    exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
