@@ -38,7 +38,7 @@ class AppTypeConverters {
 }
 
 /** Called once when the DB is first created — seeds a default admin user. */
-class DatabaseCallback : RoomDatabase.Callback() {
+class DatabaseCallback @Inject constructor() : RoomDatabase.Callback() {
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
         // Insert default owner account (PIN: 1234 → SHA-256 hash)

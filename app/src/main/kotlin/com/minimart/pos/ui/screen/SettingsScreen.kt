@@ -8,6 +8,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -63,7 +67,7 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Settings", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, null) } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Brand500, titleContentColor = Color.White, navigationIconContentColor = Color.White)
             )
         }
@@ -160,7 +164,7 @@ fun SettingsScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, ErrorRed),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Icon(Icons.Default.Logout, null, tint = ErrorRed)
+                    Icon(Icons.AutoMirrored.Filled.Logout, null, tint = ErrorRed)
                     Spacer(Modifier.width(8.dp))
                     Text("Logout", color = ErrorRed)
                 }
@@ -213,7 +217,7 @@ private fun SettingsSection(title: String, content: @Composable ColumnScope.() -
     Card(shape = RoundedCornerShape(16.dp)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(title, fontWeight = FontWeight.SemiBold, color = Brand500)
-            Divider()
+            HorizontalDivider()
             content()
         }
     }

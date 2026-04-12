@@ -7,6 +7,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,7 +59,7 @@ fun ScannerCartScreen(
         topBar = {
             TopAppBar(
                 title = { Text("New Sale", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, null) } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Brand500, titleContentColor = Color.White, navigationIconContentColor = Color.White),
                 actions = {
                     if (state.items.isNotEmpty()) {
@@ -126,7 +130,7 @@ fun ScannerCartScreen(
                                     IconButton(onClick = {
                                         vm.processBarcode(manualBarcode)
                                         manualBarcode = ""
-                                    }) { Icon(Icons.Default.Send, null) }
+                                    }) { Icon(Icons.AutoMirrored.Filled.Send, null) }
                                 }
                             }
                         )

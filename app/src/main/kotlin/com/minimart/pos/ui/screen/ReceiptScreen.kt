@@ -68,7 +68,7 @@ fun ReceiptScreen(
             Text("Payment Received!", fontWeight = FontWeight.Bold, fontSize = 24.sp)
             Text("Sale #$saleId completed", color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-            Divider(modifier = Modifier.padding(horizontal = 24.dp))
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp))
 
             // ── Print button ──
             printStatus?.let {

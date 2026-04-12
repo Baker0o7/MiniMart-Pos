@@ -9,6 +9,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,7 +62,7 @@ fun CheckoutScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Checkout", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, null) } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Brand500, titleContentColor = Color.White, navigationIconContentColor = Color.White)
             )
         }
@@ -71,14 +75,14 @@ fun CheckoutScreen(
             Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Order Summary", fontWeight = FontWeight.SemiBold)
-                    Divider()
+                    HorizontalDivider()
                     state.items.forEach { item ->
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Text("${item.product.name} ×${item.quantity}", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                             Text("$currency ${String.format("%.2f", item.lineTotal)}", fontWeight = FontWeight.Medium)
                         }
                     }
-                    Divider()
+                    HorizontalDivider()
                     // Global discount
                     OutlinedTextField(
                         value = globalDiscount,
