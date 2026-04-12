@@ -70,7 +70,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Decode keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/minimart-release.jks
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n ' | base64 --decode > app/minimart-release.jks
 
       - name: Build signed release APK
         run: gradle assembleRelease --no-daemon
