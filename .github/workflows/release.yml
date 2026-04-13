@@ -70,7 +70,22 @@ jobs:
         run: chmod +x gradlew
 
       - name: Decode keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n ' | base64 --decode > app/minimart-release.jks
+        run: |
+          python3 - <<PYEOF
+          import base64, os, sys
+          raw = """${{ secrets.KEYSTORE_BASE64 }}"""
+          cleaned = "".join(raw.split())   # strip ALL whitespace
+          data = base64.b64decode(cleaned)
+          with open("app/minimart-release.jks", "wb") as f:
+              f.write(data)
+          print(f"Keystore written: {len(data)} bytes")
+          # Validate JKS magic bytes
+          magic = data[:4].hex()
+          print(f"Magic bytes: {magic} (expect feedfeed for JKS or cececece for PKCS12)")
+          if magic not in ("feedfeed", "cececece"):
+              print("ERROR: Not a valid keystore file!", file=sys.stderr)
+              sys.exit(1)
+          PYEOF
 
       - name: Build signed release APK
         run: gradle assembleRelease --no-daemon
