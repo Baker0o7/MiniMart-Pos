@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @Database(
     entities = [Product::class, Sale::class, SaleItem::class, User::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -51,13 +51,13 @@ class DatabaseCallback @Inject constructor() : RoomDatabase.Callback() {
         // Seed sample categories/products for demo
         val now = System.currentTimeMillis()
         db.execSQL("""
-            INSERT INTO products (barcode, name, price, costPrice, stock, lowStockThreshold, category, unit, taxRate, isActive, createdAt, updatedAt)
+            INSERT INTO products (barcode, name, description, price, costPrice, stock, lowStockThreshold, category, unit, taxRate, isActive, createdAt, updatedAt)
             VALUES 
-            ('6001007519173', 'Coca-Cola 500ml', 50.0, 35.0, 48, 10, 'Drinks', 'pcs', 0.16, 1, $now, $now),
-            ('6009705182370', 'Lays Chips 50g', 30.0, 20.0, 60, 10, 'Snacks', 'pcs', 0.16, 1, $now, $now),
-            ('6001255035069', 'Mentos Roll', 15.0, 9.0, 100, 20, 'Snacks', 'pcs', 0.0, 1, $now, $now),
-            ('6003132024014', 'Vaseline 250ml', 120.0, 80.0, 25, 5, 'Personal Care', 'pcs', 0.16, 1, $now, $now),
-            ('5000159484695', 'Marlboro Red 20s', 350.0, 280.0, 40, 5, 'Cigarettes', 'pcs', 0.0, 1, $now, $now)
+            ('6001007519173', 'Coca-Cola 500ml', '', 50.0, 35.0, 48, 10, 'Drinks', 'pcs', 0.16, 1, $now, $now),
+            ('6009705182370', 'Lays Chips 50g', '', 30.0, 20.0, 60, 10, 'Snacks', 'pcs', 0.16, 1, $now, $now),
+            ('6001255035069', 'Mentos Roll', '', 15.0, 9.0, 100, 20, 'Snacks', 'pcs', 0.0, 1, $now, $now),
+            ('6003132024014', 'Vaseline 250ml', '', 120.0, 80.0, 25, 5, 'Personal Care', 'pcs', 0.16, 1, $now, $now),
+            ('5000159484695', 'Marlboro Red 20s', '', 350.0, 280.0, 40, 5, 'Cigarettes', 'pcs', 0.0, 1, $now, $now)
         """)
     }
 }
