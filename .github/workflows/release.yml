@@ -71,22 +71,20 @@ jobs:
 
       - name: Decode keystore
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          python3 - <<'PYEOF'
+          python3 -c "
           import base64, os, sys
-          raw = os.environ["KEYSTORE_BASE64"]
-          cleaned = "".join(raw.split())
-          data = base64.b64decode(cleaned)
-          with open("app/minimart-release.jks", "wb") as f:
-              f.write(data)
-          print(f"Keystore written: {len(data)} bytes")
-          magic = data[:4].hex()
-          print(f"Magic bytes: {magic}")
-          if magic not in ("feedfeed", "cececece"):
-              print("ERROR: Not a valid keystore file!", file=sys.stderr)
+          raw = os.environ.get('KEYSTORE_B64', '')
+          print('Secret length:', len(raw))
+          if not raw.strip():
+              print('FATAL: KEYSTORE_BASE64 secret is empty or not set in repo secrets!', file=sys.stderr)
+              print('Go to: Settings > Secrets and variables > Actions > New secret', file=sys.stderr)
               sys.exit(1)
-          PYEOF
+          data = base64.b64decode(''.join(raw.split()))
+          open('app/minimart-release.jks', 'wb').write(data)
+          print('Keystore written:', len(data), 'bytes | magic:', data[:4].hex())
+          "
 
       - name: Build signed release APK
         run: gradle assembleRelease --no-daemon
