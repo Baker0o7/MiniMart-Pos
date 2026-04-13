@@ -33,15 +33,21 @@ fun MiniMartNavGraph(
     val authVm: AuthViewModel = hiltViewModel()
     val authState by authVm.uiState.collectAsState()
 
-    val storeName by settingsRepo.storeName.collectAsState("")
-    val currency by settingsRepo.currency.collectAsState("KES")
-    val receiptFooter by settingsRepo.receiptFooter.collectAsState("")
+    val storeName by settingsRepo.storeName.collectAsState("My MiniMart")
+    val currency   by settingsRepo.currency.collectAsState("KES")
+    val footer     by settingsRepo.receiptFooter.collectAsState("Thank you!")
 
-    val startDest = if (authState.isLoggedIn) Routes.DASHBOARD else Routes.LOGIN
-
-    NavHost(navController = navController, startDestination = startDest) {
+    NavHost(navController = navController, startDestination = Routes.LOGIN) {
 
         composable(Routes.LOGIN) {
+            // If already logged in, skip login screen
+            LaunchedEffect(authState.isLoggedIn) {
+                if (authState.isLoggedIn) {
+                    navController.navigate(Routes.DASHBOARD) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                }
+            }
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate(Routes.DASHBOARD) {
@@ -84,22 +90,14 @@ fun MiniMartNavGraph(
         ) { backStack ->
             val saleId = backStack.arguments?.getLong("saleId") ?: 0L
             ReceiptScreen(
-                saleId = saleId,
-                onNewSale = {
-                    navController.navigate(Routes.SCANNER) {
-                        popUpTo(Routes.DASHBOARD)
-                    }
-                },
-                onDashboard = {
-                    navController.navigate(Routes.DASHBOARD) {
-                        popUpTo(Routes.DASHBOARD) { inclusive = true }
-                    }
-                },
-                printer = printer,
-                storeName = storeName,
-                currency = currency,
-                footerMessage = receiptFooter,
-                cashierName = authState.currentUser?.displayName ?: "Cashier"
+                saleId        = saleId,
+                onNewSale     = { navController.navigate(Routes.SCANNER) { popUpTo(Routes.DASHBOARD) } },
+                onDashboard   = { navController.navigate(Routes.DASHBOARD) { popUpTo(Routes.DASHBOARD) { inclusive = true } } },
+                printer       = printer,
+                storeName     = storeName,
+                currency      = currency,
+                footerMessage = footer,
+                cashierName   = authState.currentUser?.displayName ?: "Cashier"
             )
         }
 
@@ -113,15 +111,15 @@ fun MiniMartNavGraph(
 
         composable(Routes.SETTINGS) {
             SettingsScreen(
-                onBack = { navController.popBackStack() },
-                onLogout = {
+                onBack    = { navController.popBackStack() },
+                onLogout  = {
                     authVm.logout()
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
                 settingsRepo = settingsRepo,
-                printer = printer
+                printer      = printer
             )
         }
     }
