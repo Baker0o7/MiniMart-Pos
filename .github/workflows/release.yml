@@ -34,21 +34,20 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Decode keystore
+      - name: Generate keystore
         env:
-          KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
-          echo "Secret length: ${#KEYSTORE_B64}"
-          printf '%s' "${KEYSTORE_B64}" > /tmp/keystore.b64
-          wc -c /tmp/keystore.b64
-          base64 --decode /tmp/keystore.b64 > app/minimart-release.jks
+          keytool -genkey -v \
+            -keystore app/minimart-release.jks \
+            -alias "${KEY_ALIAS}" \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "${STORE_PASSWORD}" \
+            -keypass "${KEY_PASSWORD}" \
+            -dname "CN=MiniMart POS,OU=Mobile,O=MiniMart,L=Mombasa,ST=Coast,C=KE"
           ls -lh app/minimart-release.jks
-          rm /tmp/keystore.b64
-
-      - name: Verify keystore
-        run: |
-          ls -lh app/minimart-release.jks
-          keytool -list -keystore app/minimart-release.jks -storepass MiniMart2025! -noprompt
 
       - name: Build signed release APK
         env:
