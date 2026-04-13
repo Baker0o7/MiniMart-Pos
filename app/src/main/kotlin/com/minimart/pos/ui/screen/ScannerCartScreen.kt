@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -33,10 +35,6 @@ import com.minimart.pos.ui.theme.Brand500
 import com.minimart.pos.ui.theme.ErrorRed
 import com.minimart.pos.ui.theme.SuccessGreen
 import com.minimart.pos.ui.viewmodel.CartViewModel
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.minimart.pos.data.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -116,9 +114,7 @@ fun ScannerCartScreen(
         bottomBar = {
             if (state.items.isNotEmpty()) {
                 Surface(shadowElevation = 8.dp) {
-                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // Items summary
-                        HorizontalDivider()
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         state.items.forEach { item ->
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 Text("${item.product.name} ×${item.quantity}",
@@ -151,7 +147,7 @@ fun ScannerCartScreen(
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
 
-            // ── Scanner ──────────────────────────────────────────────────────
+            // ── Scanner / Search ─────────────────────────────────────────────
             AnimatedContent(targetState = showScanner, label = "scanner") { scanning ->
                 if (scanning && cameraPermission.status.isGranted) {
                     Box(modifier = Modifier.fillMaxWidth().height(220.dp)) {
@@ -202,7 +198,7 @@ fun ScannerCartScreen(
                 }
             }
 
-            // ── Search suggestions ───────────────────────────────────────────
+            // ── Search suggestions dropdown ──────────────────────────────────
             if (searchResults.isNotEmpty() && searchText.isNotBlank()) {
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
@@ -219,8 +215,7 @@ fun ScannerCartScreen(
                                     modifier = Modifier.size(36.dp),
                                     colors = IconButtonDefaults.filledIconButtonColors(containerColor = Brand500)
                                 ) { Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.size(18.dp)) }
-                            },
-                            modifier = Modifier.fillMaxWidth()
+                            }
                         )
                         HorizontalDivider()
                     }
@@ -248,7 +243,7 @@ fun ScannerCartScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Default.ShoppingCart, null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                         Text("Cart is empty", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
-                        Text("Scan a barcode or search by name", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6f))
+                        Text("Scan a barcode or search by name above", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6f))
                     }
                 }
             } else {
