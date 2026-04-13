@@ -9,17 +9,17 @@ import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.printer.ThermalPrinter
 import com.minimart.pos.ui.screen.*
 import com.minimart.pos.ui.viewmodel.AuthViewModel
+import com.minimart.pos.ui.viewmodel.CartViewModel
 
 object Routes {
-    const val LOGIN      = "login"
-    const val DASHBOARD  = "dashboard"
-    const val SCANNER    = "scanner"
-    const val CHECKOUT   = "checkout"
-    const val RECEIPT    = "receipt/{saleId}"
-    const val PRODUCTS   = "products"
-    const val REPORTS    = "reports"
-    const val SETTINGS   = "settings"
-
+    const val LOGIN     = "login"
+    const val DASHBOARD = "dashboard"
+    const val SCANNER   = "scanner"
+    const val CHECKOUT  = "checkout"
+    const val RECEIPT   = "receipt/{saleId}"
+    const val PRODUCTS  = "products"
+    const val REPORTS   = "reports"
+    const val SETTINGS  = "settings"
     fun receipt(saleId: Long) = "receipt/$saleId"
 }
 
@@ -33,6 +33,10 @@ fun MiniMartNavGraph(
     val authVm: AuthViewModel = hiltViewModel()
     val authState by authVm.uiState.collectAsState()
 
+    // ── Shared CartViewModel scoped to the NavGraph ───────────────────────────
+    // Must be created here so Scanner and Checkout share the SAME instance
+    val cartVm: CartViewModel = hiltViewModel()
+
     val storeName by settingsRepo.storeName.collectAsState("My MiniMart")
     val currency   by settingsRepo.currency.collectAsState("KES")
     val footer     by settingsRepo.receiptFooter.collectAsState("Thank you!")
@@ -40,36 +44,32 @@ fun MiniMartNavGraph(
     NavHost(navController = navController, startDestination = Routes.LOGIN) {
 
         composable(Routes.LOGIN) {
-            // If already logged in, skip login screen
             LaunchedEffect(authState.isLoggedIn) {
-                if (authState.isLoggedIn) {
-                    navController.navigate(Routes.DASHBOARD) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
+                if (authState.isLoggedIn) navController.navigate(Routes.DASHBOARD) {
+                    popUpTo(Routes.LOGIN) { inclusive = true }
                 }
             }
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Routes.DASHBOARD) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
+            LoginScreen(onLoginSuccess = {
+                navController.navigate(Routes.DASHBOARD) {
+                    popUpTo(Routes.LOGIN) { inclusive = true }
                 }
-            )
+            })
         }
 
         composable(Routes.DASHBOARD) {
             DashboardScreen(
-                onNavigateToScanner   = { navController.navigate(Routes.SCANNER) },
-                onNavigateToProducts  = { navController.navigate(Routes.PRODUCTS) },
-                onNavigateToReports   = { navController.navigate(Routes.REPORTS) },
-                onNavigateToSettings  = { navController.navigate(Routes.SETTINGS) }
+                onNavigateToScanner  = { navController.navigate(Routes.SCANNER) },
+                onNavigateToProducts = { navController.navigate(Routes.PRODUCTS) },
+                onNavigateToReports  = { navController.navigate(Routes.REPORTS) },
+                onNavigateToSettings = { navController.navigate(Routes.SETTINGS) }
             )
         }
 
         composable(Routes.SCANNER) {
             ScannerCartScreen(
                 onNavigateToCheckout = { navController.navigate(Routes.CHECKOUT) },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                vm = cartVm   // shared instance
             )
         }
 
@@ -80,7 +80,8 @@ fun MiniMartNavGraph(
                         popUpTo(Routes.SCANNER) { inclusive = true }
                     }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                vm = cartVm   // same shared instance — cart data intact
             )
         }
 
@@ -91,8 +92,8 @@ fun MiniMartNavGraph(
             val saleId = backStack.arguments?.getLong("saleId") ?: 0L
             ReceiptScreen(
                 saleId        = saleId,
-                onNewSale     = { navController.navigate(Routes.SCANNER) { popUpTo(Routes.DASHBOARD) } },
-                onDashboard   = { navController.navigate(Routes.DASHBOARD) { popUpTo(Routes.DASHBOARD) { inclusive = true } } },
+                onNewSale     = { cartVm.clearCart(); navController.navigate(Routes.SCANNER) { popUpTo(Routes.DASHBOARD) } },
+                onDashboard   = { cartVm.clearCart(); navController.navigate(Routes.DASHBOARD) { popUpTo(Routes.DASHBOARD) { inclusive = true } } },
                 printer       = printer,
                 storeName     = storeName,
                 currency      = currency,
@@ -111,12 +112,10 @@ fun MiniMartNavGraph(
 
         composable(Routes.SETTINGS) {
             SettingsScreen(
-                onBack    = { navController.popBackStack() },
-                onLogout  = {
+                onBack   = { navController.popBackStack() },
+                onLogout = {
                     authVm.logout()
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    navController.navigate(Routes.LOGIN) { popUpTo(0) { inclusive = true } }
                 },
                 settingsRepo = settingsRepo,
                 printer      = printer

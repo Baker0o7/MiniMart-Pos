@@ -163,24 +163,25 @@ fun ScannerCartScreen(
                     }
                 } else {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OutlinedTextField(
                             value = searchText,
                             onValueChange = { searchText = it; searchVm.setQuery(it) },
-                            label = { Text("Barcode or product name") },
-                            leadingIcon = { Icon(Icons.Default.Search, null) },
-                            modifier = Modifier.weight(1f),
+                            placeholder = { Text("Barcode or product name", maxLines = 1) },
+                            leadingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.size(20.dp)) },
+                            modifier = Modifier.weight(1f).height(56.dp),
                             singleLine = true,
+                            shape = RoundedCornerShape(28.dp),
                             trailingIcon = {
                                 if (searchText.isNotEmpty()) {
                                     IconButton(onClick = {
                                         vm.processBarcode(searchText)
                                         searchText = ""
                                         searchVm.clear()
-                                    }) { Icon(Icons.AutoMirrored.Filled.Send, null) }
+                                    }) { Icon(Icons.AutoMirrored.Filled.Send, null, modifier = Modifier.size(20.dp)) }
                                 }
                             }
                         )
@@ -190,9 +191,10 @@ fun ScannerCartScreen(
                                 else showScanner = true
                             },
                             modifier = Modifier.size(56.dp),
-                            colors = IconButtonDefaults.filledIconButtonColors(containerColor = Brand500)
+                            colors = IconButtonDefaults.filledIconButtonColors(containerColor = Brand500),
+                            shape = RoundedCornerShape(16.dp)
                         ) {
-                            Icon(Icons.Default.QrCodeScanner, null, tint = Color.White, modifier = Modifier.size(28.dp))
+                            Icon(Icons.Default.QrCodeScanner, null, tint = Color.White, modifier = Modifier.size(26.dp))
                         }
                     }
                 }
