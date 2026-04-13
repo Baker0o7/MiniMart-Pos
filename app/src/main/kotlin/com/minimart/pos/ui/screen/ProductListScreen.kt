@@ -22,7 +22,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.minimart.pos.data.entity.Product
+import com.minimart.pos.scanner.BarcodeScannerView
+import com.minimart.pos.scanner.ScannerOverlay
 import com.minimart.pos.ui.theme.Brand500
 import com.minimart.pos.ui.theme.ErrorRed
 import com.minimart.pos.ui.theme.SuccessGreen
@@ -151,6 +156,7 @@ private fun ProductRow(product: Product, onEdit: (Product) -> Unit, onDelete: ()
 
 // ─── Add/Edit Dialog ──────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Product) -> Unit) {
     var barcode by remember { mutableStateOf(product?.barcode ?: "") }
@@ -160,20 +166,61 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
     var stock by remember { mutableStateOf(product?.stock?.toString() ?: "") }
     var category by remember { mutableStateOf(product?.category ?: "") }
     var unit by remember { mutableStateOf(product?.unit ?: "pcs") }
+    var showBarcodeScanner by remember { mutableStateOf(false) }
+    val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (product == null) "Add Product" else "Edit Product", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(barcode, { barcode = it }, label = { Text("Barcode *") }, singleLine = true, modifier = Modifier.fillMaxWidth(), leadingIcon = { Icon(Icons.Default.QrCode, null) })
+                // Barcode field with scan button
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = barcode,
+                        onValueChange = { barcode = it },
+                        label = { Text("Barcode *") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        leadingIcon = { Icon(Icons.Default.QrCode, null) }
+                    )
+                    FilledIconButton(
+                        onClick = {
+                            if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
+                            else showBarcodeScanner = true
+                        },
+                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = Brand500)
+                    ) { Icon(Icons.Default.QrCodeScanner, null, tint = Color.White) }
+                }
+                // Inline barcode scanner
+                if (showBarcodeScanner && cameraPermission.status.isGranted) {
+                    Box(modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(8.dp))) {
+                        BarcodeScannerView(
+                            modifier = Modifier.fillMaxSize(),
+                            onBarcodeDetected = { scanned ->
+                                barcode = scanned
+                                showBarcodeScanner = false
+                            }
+                        )
+                        ScannerOverlay(modifier = Modifier.fillMaxSize())
+                        IconButton(onClick = { showBarcodeScanner = false }, modifier = Modifier.align(Alignment.TopEnd)) {
+                            Icon(Icons.Default.Close, null, tint = Color.White)
+                        }
+                    }
+                }
                 OutlinedTextField(name, { name = it }, label = { Text("Product Name *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(price, { price = it }, label = { Text("Price (KES)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, modifier = Modifier.weight(1f))
-                    OutlinedTextField(costPrice, { costPrice = it }, label = { Text("Cost Price") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, modifier = Modifier.weight(1f))
+                    OutlinedTextField(price, { price = it }, label = { Text("Price (KES)") },
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal),
+                        singleLine = true, modifier = Modifier.weight(1f))
+                    OutlinedTextField(costPrice, { costPrice = it }, label = { Text("Cost Price") },
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal),
+                        singleLine = true, modifier = Modifier.weight(1f))
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(stock, { stock = it }, label = { Text("Stock") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), singleLine = true, modifier = Modifier.weight(1f))
+                    OutlinedTextField(stock, { stock = it }, label = { Text("Stock") },
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                        singleLine = true, modifier = Modifier.weight(1f))
                     OutlinedTextField(unit, { unit = it }, label = { Text("Unit") }, singleLine = true, modifier = Modifier.weight(1f))
                 }
                 OutlinedTextField(category, { category = it }, label = { Text("Category") }, singleLine = true, modifier = Modifier.fillMaxWidth())
