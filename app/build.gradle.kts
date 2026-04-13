@@ -13,9 +13,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile     = file("minimart-release.jks")
-            storePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: ""
-            keyAlias      = System.getenv("SIGNING_KEY_ALIAS")      ?: ""
-            keyPassword   = System.getenv("SIGNING_KEY_PASSWORD")   ?: ""
+            storePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: "android"
+            keyAlias      = System.getenv("SIGNING_KEY_ALIAS")      ?: "minimart"
+            keyPassword   = System.getenv("SIGNING_KEY_PASSWORD")   ?: "android"
         }
     }
 

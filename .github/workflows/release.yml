@@ -35,32 +35,28 @@ jobs:
         run: chmod +x gradlew
 
       - name: Generate keystore
-        env:
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           keytool -genkey -v \
             -keystore app/minimart-release.jks \
-            -alias "${KEY_ALIAS}" \
+            -alias minimart \
             -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass "${STORE_PASSWORD}" \
-            -keypass "${KEY_PASSWORD}" \
+            -storepass android \
+            -keypass android \
             -dname "CN=MiniMart POS,OU=Mobile,O=MiniMart,L=Mombasa,ST=Coast,C=KE"
           ls -lh app/minimart-release.jks
 
       - name: Build signed release APK
         env:
-          SIGNING_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: minimart
+          SIGNING_KEY_PASSWORD: android
+          SIGNING_STORE_PASSWORD: android
         run: gradle assembleRelease --no-daemon
 
       - name: Build signed release AAB
         env:
-          SIGNING_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: minimart
+          SIGNING_KEY_PASSWORD: android
+          SIGNING_STORE_PASSWORD: android
         run: gradle bundleRelease --no-daemon
 
       - name: Get version
