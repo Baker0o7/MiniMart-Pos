@@ -4,11 +4,6 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Version tag (e.g. v1.0.0)'
-        required: true
-        default: 'v1.0.0'
 
 env:
   JAVA_VERSION: '17'
@@ -42,42 +37,30 @@ jobs:
       - name: Decode keystore
         env:
           KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: echo "${KEYSTORE_B64}" | tr -d '[:space:]' | base64 -d > app/minimart-release.jks
+
+      - name: Verify keystore
         run: |
-          cat > /tmp/decode_ks.py << 'PYEOF'
-import base64, os, sys
-raw = os.environ.get("KEYSTORE_B64", "")
-print(f"Secret length: {len(raw)}")
-if not raw.strip():
-    print("FATAL: KEYSTORE_BASE64 secret is empty!", file=sys.stderr)
-    sys.exit(1)
-data = base64.b64decode("".join(raw.split()))
-open("app/minimart-release.jks", "wb").write(data)
-print(f"Keystore written: {len(data)} bytes | magic: {data[:4].hex()}")
-PYEOF
-          python3 /tmp/decode_ks.py
+          ls -lh app/minimart-release.jks
+          keytool -list -keystore app/minimart-release.jks -storepass MiniMart2025! -noprompt
 
       - name: Build signed release APK
         env:
-          SIGNING_KEY_ALIAS:      ${{ secrets.KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: gradle assembleRelease --no-daemon
 
       - name: Build signed release AAB
         env:
-          SIGNING_KEY_ALIAS:      ${{ secrets.KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           SIGNING_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
         run: gradle bundleRelease --no-daemon
 
       - name: Get version
         id: version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "VERSION=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
-          else
-            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          fi
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -86,17 +69,15 @@ PYEOF
           name: "MiniMart POS ${{ steps.version.outputs.VERSION }}"
           body: |
             ## MiniMart POS ${{ steps.version.outputs.VERSION }}
-            - `*-arm64-v8a-release.apk` — direct sideload (arm64 devices)
-            - `*.aab` — Google Play Bundle
-            Default login → username: `admin` | PIN: `1234`
+            - arm64-v8a signed APK (direct sideload)
+            - AAB for Google Play
+            Default login: username `admin` | PIN `1234`
           files: |
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
-          draft: false
-          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Clean up keystore
         if: always()
-        run: rm -f app/minimart-release.jks app/minimart-release.jks.bak /tmp/decode_ks.py
+        run: rm -f app/minimart-release.jks
