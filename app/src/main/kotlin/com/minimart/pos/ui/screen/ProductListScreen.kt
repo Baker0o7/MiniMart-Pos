@@ -169,6 +169,8 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
     var unit by remember { mutableStateOf(product?.unit ?: "pcs") }
     var showBarcodeScanner by remember { mutableStateOf(false) }
     val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
+    // Use Activity lifecycle owner — Dialogs have their own context that breaks CameraX
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -198,6 +200,7 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                     Box(modifier = Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(8.dp))) {
                         BarcodeScannerView(
                             modifier = Modifier.fillMaxSize(),
+                            lifecycleOwner = lifecycleOwner,
                             onBarcodeDetected = { scanned ->
                                 barcode = scanned
                                 showBarcodeScanner = false

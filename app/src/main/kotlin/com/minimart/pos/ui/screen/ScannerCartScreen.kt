@@ -114,7 +114,12 @@ fun ScannerCartScreen(
         bottomBar = {
             if (state.items.isNotEmpty()) {
                 Surface(shadowElevation = 8.dp) {
-                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .navigationBarsPadding()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         state.items.forEach { item ->
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 Text("${item.product.name} ×${item.quantity}",

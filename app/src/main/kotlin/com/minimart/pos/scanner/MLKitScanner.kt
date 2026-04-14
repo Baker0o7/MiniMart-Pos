@@ -5,18 +5,20 @@ import android.util.Log
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -24,16 +26,16 @@ import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.Executors
 
 /**
- * Full-screen camera composable that uses CameraX + ML Kit for real-time barcode scanning.
- * Fires [onBarcodeDetected] once per unique barcode, debounced to avoid duplicates.
+ * Full-screen camera composable using CameraX + ML Kit barcode scanning.
+ * Accepts an explicit [lifecycleOwner] so it works correctly inside Dialogs.
  */
 @Composable
 fun BarcodeScannerView(
     modifier: Modifier = Modifier,
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     onBarcodeDetected: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     var lastScanned by remember { mutableStateOf("") }
     var lastScannedTime by remember { mutableLongStateOf(0L) }
 
@@ -41,9 +43,8 @@ fun BarcodeScannerView(
         modifier = modifier,
         factory = { ctx ->
             val previewView = PreviewView(ctx)
-            setupCamera(ctx, previewView) { barcode ->
+            setupCamera(ctx, previewView, lifecycleOwner) { barcode ->
                 val now = System.currentTimeMillis()
-                // Debounce: ignore same barcode within 2 seconds
                 if (barcode != lastScanned || now - lastScannedTime > 2000L) {
                     lastScanned = barcode
                     lastScannedTime = now
@@ -58,6 +59,7 @@ fun BarcodeScannerView(
 private fun setupCamera(
     context: Context,
     previewView: PreviewView,
+    lifecycleOwner: LifecycleOwner,
     onBarcodeDetected: (String) -> Unit
 ) {
     val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
@@ -70,12 +72,9 @@ private fun setupCamera(
 
         val options = BarcodeScannerOptions.Builder()
             .setBarcodeFormats(
-                Barcode.FORMAT_EAN_13,
-                Barcode.FORMAT_EAN_8,
-                Barcode.FORMAT_UPC_A,
-                Barcode.FORMAT_UPC_E,
-                Barcode.FORMAT_CODE_128,
-                Barcode.FORMAT_CODE_39,
+                Barcode.FORMAT_EAN_13, Barcode.FORMAT_EAN_8,
+                Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E,
+                Barcode.FORMAT_CODE_128, Barcode.FORMAT_CODE_39,
                 Barcode.FORMAT_QR_CODE
             ).build()
 
@@ -94,7 +93,7 @@ private fun setupCamera(
         try {
             cameraProvider.unbindAll()
             cameraProvider.bindToLifecycle(
-                previewView.context as androidx.lifecycle.LifecycleOwner,
+                lifecycleOwner,   // use passed-in owner, not view context cast
                 CameraSelector.DEFAULT_BACK_CAMERA,
                 preview,
                 imageAnalysis
@@ -120,72 +119,21 @@ private fun processImageProxy(
         .addOnCompleteListener { imageProxy.close() }
 }
 
-// ─── Viewfinder overlay UI ────────────────────────────────────────────────────
+// ─── Viewfinder overlay ───────────────────────────────────────────────────────
 
 @Composable
 fun ScannerOverlay(modifier: Modifier = Modifier) {
     Box(modifier = modifier) {
-        // Dimmed corners
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-        )
-        // Scan window
-        Box(
-            modifier = Modifier
-                .size(260.dp, 160.dp)
-                .align(Alignment.Center)
-        ) {
-            // Corner brackets
-            CornerBracket(Alignment.TopStart)
-            CornerBracket(Alignment.TopEnd)
-            CornerBracket(Alignment.BottomStart)
-            CornerBracket(Alignment.BottomEnd)
-        }
-        // Label
-        Text(
-            text = "Point at barcode",
-            style = MaterialTheme.typography.labelLarge,
-            color = Color.White,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(top = 200.dp)
-        )
-    }
-}
-
-@Composable
-private fun BoxScope.CornerBracket(alignment: Alignment) {
-    Surface(
-        modifier = Modifier
-            .size(32.dp)
-            .align(alignment),
-        color = Color.Transparent,
-        shape = RoundedCornerShape(4.dp)
-    ) {
-        // White L-shaped bracket via Canvas
-        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-            val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx())
-            val color = Color.White
+        Canvas(modifier = Modifier.size(260.dp, 160.dp).align(Alignment.Center)) {
+            val stroke = Stroke(width = 4.dp.toPx())
             val len = 32.dp.toPx()
-            when (alignment) {
-                Alignment.TopStart -> {
-                    drawLine(color, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(len, 0f), strokeWidth = 4.dp.toPx())
-                    drawLine(color, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(0f, len), strokeWidth = 4.dp.toPx())
-                }
-                Alignment.TopEnd -> {
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width, 0f), androidx.compose.ui.geometry.Offset(size.width - len, 0f), strokeWidth = 4.dp.toPx())
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width, 0f), androidx.compose.ui.geometry.Offset(size.width, len), strokeWidth = 4.dp.toPx())
-                }
-                Alignment.BottomStart -> {
-                    drawLine(color, androidx.compose.ui.geometry.Offset(0f, size.height), androidx.compose.ui.geometry.Offset(len, size.height), strokeWidth = 4.dp.toPx())
-                    drawLine(color, androidx.compose.ui.geometry.Offset(0f, size.height), androidx.compose.ui.geometry.Offset(0f, size.height - len), strokeWidth = 4.dp.toPx())
-                }
-                else -> {
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width, size.height), androidx.compose.ui.geometry.Offset(size.width - len, size.height), strokeWidth = 4.dp.toPx())
-                    drawLine(color, androidx.compose.ui.geometry.Offset(size.width, size.height), androidx.compose.ui.geometry.Offset(size.width, size.height - len), strokeWidth = 4.dp.toPx())
-                }
-            }
+            val w = size.width; val h = size.height
+            listOf(
+                Offset(0f, 0f) to Offset(len, 0f), Offset(0f, 0f) to Offset(0f, len),
+                Offset(w, 0f) to Offset(w - len, 0f), Offset(w, 0f) to Offset(w, len),
+                Offset(0f, h) to Offset(len, h), Offset(0f, h) to Offset(0f, h - len),
+                Offset(w, h) to Offset(w - len, h), Offset(w, h) to Offset(w, h - len)
+            ).forEach { (start, end) -> drawLine(Color.White, start, end, strokeWidth = 4.dp.toPx()) }
         }
     }
 }
