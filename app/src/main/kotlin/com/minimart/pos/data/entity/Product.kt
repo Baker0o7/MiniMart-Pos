@@ -6,11 +6,12 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "products",
-    indices = [Index(value = ["barcode"], unique = true), Index(value = ["category"])]
+    indices = [Index(value = ["barcode"], unique = true), Index(value = ["category"]), Index(value = ["sku"])]
 )
 data class Product(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val barcode: String,
+    val sku: String = "",                // Stock Keeping Unit (internal code)
     val name: String,
     val description: String = "",
     val price: Double,

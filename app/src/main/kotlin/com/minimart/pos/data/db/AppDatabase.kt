@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.minimart.pos.data.dao.ExpenseDao
 import com.minimart.pos.data.dao.ProductDao
 import com.minimart.pos.data.dao.SaleDao
 import com.minimart.pos.data.dao.UserDao
@@ -12,8 +13,8 @@ import com.minimart.pos.data.entity.*
 import javax.inject.Inject
 
 @Database(
-    entities = [Product::class, Sale::class, SaleItem::class, User::class],
-    version = 2,
+    entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class],
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -21,6 +22,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
     abstract fun saleDao(): SaleDao
     abstract fun userDao(): UserDao
+    abstract fun expenseDao(): ExpenseDao
 
     companion object {
         const val DATABASE_NAME = "minimart_pos.db"
@@ -28,36 +30,31 @@ abstract class AppDatabase : RoomDatabase() {
 }
 
 class AppTypeConverters {
-    @TypeConverter fun fromPaymentMethod(value: PaymentMethod): String = value.name
-    @TypeConverter fun toPaymentMethod(value: String): PaymentMethod = PaymentMethod.valueOf(value)
-
-    @TypeConverter fun fromSaleStatus(value: SaleStatus): String = value.name
-    @TypeConverter fun toSaleStatus(value: String): SaleStatus = SaleStatus.valueOf(value)
-
-    @TypeConverter fun fromUserRole(value: UserRole): String = value.name
-    @TypeConverter fun toUserRole(value: String): UserRole = UserRole.valueOf(value)
+    @TypeConverter fun fromPaymentMethod(v: PaymentMethod): String = v.name
+    @TypeConverter fun toPaymentMethod(v: String): PaymentMethod = PaymentMethod.valueOf(v)
+    @TypeConverter fun fromSaleStatus(v: SaleStatus): String = v.name
+    @TypeConverter fun toSaleStatus(v: String): SaleStatus = SaleStatus.valueOf(v)
+    @TypeConverter fun fromUserRole(v: UserRole): String = v.name
+    @TypeConverter fun toUserRole(v: String): UserRole = UserRole.valueOf(v)
+    @TypeConverter fun fromExpenseCategory(v: ExpenseCategory): String = v.name
+    @TypeConverter fun toExpenseCategory(v: String): ExpenseCategory = ExpenseCategory.valueOf(v)
 }
 
-/** Called once when the DB is first created — seeds a default admin user. */
 class DatabaseCallback @Inject constructor() : RoomDatabase.Callback() {
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
-        // Insert default owner account (PIN: 1234 → SHA-256 hash)
         val pinHash = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
-        db.execSQL(
-            """INSERT INTO users (username, pinHash, displayName, role, isActive, createdAt)
-               VALUES ('admin', '$pinHash', 'Owner', 'OWNER', 1, ${System.currentTimeMillis()})"""
-        )
-        // Seed sample categories/products for demo
+        db.execSQL("""INSERT INTO users (username, pinHash, displayName, role, isActive, createdAt)
+               VALUES ('admin', '$pinHash', 'Owner', 'OWNER', 1, ${System.currentTimeMillis()})""")
         val now = System.currentTimeMillis()
         db.execSQL("""
-            INSERT INTO products (barcode, name, description, price, costPrice, stock, lowStockThreshold, category, unit, taxRate, isActive, createdAt, updatedAt)
-            VALUES 
-            ('6001007519173', 'Coca-Cola 500ml', '', 50.0, 35.0, 48, 10, 'Drinks', 'pcs', 0.16, 1, $now, $now),
-            ('6009705182370', 'Lays Chips 50g', '', 30.0, 20.0, 60, 10, 'Snacks', 'pcs', 0.16, 1, $now, $now),
-            ('6001255035069', 'Mentos Roll', '', 15.0, 9.0, 100, 20, 'Snacks', 'pcs', 0.0, 1, $now, $now),
-            ('6003132024014', 'Vaseline 250ml', '', 120.0, 80.0, 25, 5, 'Personal Care', 'pcs', 0.16, 1, $now, $now),
-            ('5000159484695', 'Marlboro Red 20s', '', 350.0, 280.0, 40, 5, 'Cigarettes', 'pcs', 0.0, 1, $now, $now)
+            INSERT INTO products (barcode, sku, name, description, price, costPrice, stock, lowStockThreshold, category, unit, taxRate, isActive, createdAt, updatedAt)
+            VALUES
+            ('6001007519173','DRK001','Coca-Cola 500ml','',50.0,35.0,48,10,'Drinks','pcs',0.16,1,$now,$now),
+            ('6009705182370','SNK001','Lays Chips 50g','',30.0,20.0,60,10,'Snacks','pcs',0.16,1,$now,$now),
+            ('6001255035069','SNK002','Mentos Roll','',15.0,9.0,100,20,'Snacks','pcs',0.0,1,$now,$now),
+            ('6003132024014','PCA001','Vaseline 250ml','',120.0,80.0,25,5,'Personal Care','pcs',0.16,1,$now,$now),
+            ('5000159484695','CIG001','Marlboro Red 20s','',350.0,280.0,40,5,'Cigarettes','pcs',0.0,1,$now,$now)
         """)
     }
 }

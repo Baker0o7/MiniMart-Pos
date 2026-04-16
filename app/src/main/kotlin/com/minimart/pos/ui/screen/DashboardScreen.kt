@@ -36,7 +36,9 @@ import com.minimart.pos.ui.viewmodel.DashboardViewModel
 fun DashboardScreen(
     onNavigateToScanner: () -> Unit,
     onNavigateToProducts: () -> Unit,
+    onNavigateToInventory: () -> Unit,
     onNavigateToReports: () -> Unit,
+    onNavigateToExpenses: () -> Unit,
     onNavigateToSettings: () -> Unit,
     vm: DashboardViewModel = hiltViewModel()
 ) {
@@ -138,9 +140,10 @@ fun DashboardScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    QuickActionCard(Modifier.weight(1f), "New Sale", Icons.Default.QrCodeScanner, Brand500, onNavigateToScanner)
-                    QuickActionCard(Modifier.weight(1f), "Products", Icons.Default.Inventory2, Accent, onNavigateToProducts)
-                    QuickActionCard(Modifier.weight(1f), "Reports", Icons.Default.BarChart, Color(0xFF7B1FA2), onNavigateToReports)
+                    QuickActionCard(Modifier.weight(1f), "New Sale",  Icons.Default.QrCodeScanner, Brand500,                 onNavigateToScanner)
+                    QuickActionCard(Modifier.weight(1f), "Inventory", Icons.Default.Inventory2,    Accent,                  onNavigateToInventory)
+                    QuickActionCard(Modifier.weight(1f), "Expenses",  Icons.Default.ReceiptLong,   Color(0xFF7B1FA2),       onNavigateToExpenses)
+                    QuickActionCard(Modifier.weight(1f), "Reports",   Icons.Default.BarChart,      Color(0xFF0288D1),       onNavigateToReports)
                 }
             }
 

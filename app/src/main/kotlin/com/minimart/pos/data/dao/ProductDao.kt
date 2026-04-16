@@ -26,7 +26,8 @@ interface ProductDao {
         WHERE isActive = 1 AND (
             name LIKE '%' || :query || '%' OR 
             barcode LIKE '%' || :query || '%' OR
-            category LIKE '%' || :query || '%'
+            category LIKE '%' || :query || '%' OR
+            sku LIKE '%' || :query || '%'
         ) ORDER BY name ASC
     """)
     fun searchProducts(query: String): Flow<List<Product>>

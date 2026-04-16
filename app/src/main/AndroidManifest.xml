@@ -4,6 +4,8 @@
 
     <!-- Camera for ML Kit barcode scanning -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Push notifications (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Bluetooth for thermal printer -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
