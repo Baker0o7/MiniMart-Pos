@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onShifts: () -> Unit,
     onLogout: () -> Unit,
     settingsRepo: SettingsRepository,
     printer: ThermalPrinter
@@ -157,6 +158,15 @@ fun SettingsScreen(
 
             // ── Account ──
             SettingsSection("Account") {
+                OutlinedButton(
+                    onClick = onShifts,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.AccessTime, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Shift Management")
+                }
                 OutlinedButton(
                     onClick = onLogout,
                     modifier = Modifier.fillMaxWidth(),

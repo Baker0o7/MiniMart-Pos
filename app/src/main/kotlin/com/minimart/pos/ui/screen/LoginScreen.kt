@@ -54,15 +54,26 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Logo
+                // Store photo as login icon
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(Brand500),
+                        .size(90.dp)
+                        .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.StoreMallDirectory, null, tint = androidx.compose.ui.graphics.Color.White, modifier = Modifier.size(44.dp))
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = android.R.drawable.sym_def_app_icon),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                    // Use mipmap launcher icon (the store photo we set)
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.minimart.pos.R.mipmap.ic_launcher),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
                 }
 
                 Text("MiniMart POS", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)

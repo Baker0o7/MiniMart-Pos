@@ -111,6 +111,25 @@ fun ScannerCartScreen(
                 }
             )
         },
+        floatingActionButton = {
+            // Camera scan FAB at bottom right
+            FloatingActionButton(
+                onClick = {
+                    if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
+                    else showScanner = !showScanner
+                },
+                containerColor = Brand500,
+                contentColor = Color.White,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.navigationBarsPadding()
+            ) {
+                Icon(
+                    if (showScanner) Icons.Default.Close else Icons.Default.QrCodeScanner,
+                    null,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
         bottomBar = {
             if (state.items.isNotEmpty()) {
                 Surface(shadowElevation = 8.dp) {
@@ -160,48 +179,33 @@ fun ScannerCartScreen(
                             vm.processBarcode(it)
                             searchVm.clear()
                             searchText = ""
+                            showScanner = false
                         })
                         ScannerOverlay(modifier = Modifier.fillMaxSize())
-                        IconButton(onClick = { showScanner = false }, modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)) {
-                            Icon(Icons.Default.Close, null, tint = Color.White)
-                        }
                     }
                 } else {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = searchText,
-                            onValueChange = { searchText = it; searchVm.setQuery(it) },
-                            placeholder = { Text("Barcode or product name", maxLines = 1) },
-                            leadingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.size(20.dp)) },
-                            modifier = Modifier.weight(1f).height(56.dp),
-                            singleLine = true,
-                            shape = RoundedCornerShape(28.dp),
-                            trailingIcon = {
-                                if (searchText.isNotEmpty()) {
-                                    IconButton(onClick = {
-                                        vm.processBarcode(searchText)
-                                        searchText = ""
-                                        searchVm.clear()
-                                    }) { Icon(Icons.AutoMirrored.Filled.Send, null, modifier = Modifier.size(20.dp)) }
-                                }
+                    // Search bar only — scan button is the FAB
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it; searchVm.setQuery(it) },
+                        placeholder = { Text("Barcode or product name", maxLines = 1) },
+                        leadingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.size(20.dp)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .height(56.dp),
+                        singleLine = true,
+                        shape = RoundedCornerShape(28.dp),
+                        trailingIcon = {
+                            if (searchText.isNotEmpty()) {
+                                IconButton(onClick = {
+                                    vm.processBarcode(searchText)
+                                    searchText = ""
+                                    searchVm.clear()
+                                }) { Icon(Icons.AutoMirrored.Filled.Send, null, modifier = Modifier.size(20.dp)) }
                             }
-                        )
-                        FilledIconButton(
-                            onClick = {
-                                if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
-                                else showScanner = true
-                            },
-                            modifier = Modifier.size(56.dp),
-                            colors = IconButtonDefaults.filledIconButtonColors(containerColor = Brand500),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Icon(Icons.Default.QrCodeScanner, null, tint = Color.White, modifier = Modifier.size(26.dp))
                         }
-                    }
+                    )
                 }
             }
 

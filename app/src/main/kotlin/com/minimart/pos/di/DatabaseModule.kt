@@ -2,10 +2,7 @@ package com.minimart.pos.di
 
 import android.content.Context
 import androidx.room.Room
-import com.minimart.pos.data.dao.ExpenseDao
-import com.minimart.pos.data.dao.ProductDao
-import com.minimart.pos.data.dao.SaleDao
-import com.minimart.pos.data.dao.UserDao
+import com.minimart.pos.data.dao.*
 import com.minimart.pos.data.db.AppDatabase
 import com.minimart.pos.data.db.DatabaseCallback
 import dagger.Module
@@ -18,19 +15,14 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
-    @Provides
-    @Singleton
-    fun provideDatabase(
-        @ApplicationContext context: Context,
-        callback: DatabaseCallback
-    ): AppDatabase = Room.databaseBuilder(context, AppDatabase::class.java, AppDatabase.DATABASE_NAME)
-        .fallbackToDestructiveMigration()
-        .addCallback(callback)
-        .build()
+    @Provides @Singleton
+    fun provideDatabase(@ApplicationContext context: Context, callback: DatabaseCallback): AppDatabase =
+        Room.databaseBuilder(context, AppDatabase::class.java, AppDatabase.DATABASE_NAME)
+            .fallbackToDestructiveMigration().addCallback(callback).build()
 
     @Provides fun provideProductDao(db: AppDatabase): ProductDao = db.productDao()
     @Provides fun provideSaleDao(db: AppDatabase): SaleDao = db.saleDao()
     @Provides fun provideUserDao(db: AppDatabase): UserDao = db.userDao()
     @Provides fun provideExpenseDao(db: AppDatabase): ExpenseDao = db.expenseDao()
+    @Provides fun provideShiftDao(db: AppDatabase): ShiftDao = db.shiftDao()
 }
