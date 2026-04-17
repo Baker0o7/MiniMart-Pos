@@ -60,7 +60,7 @@ fun DashboardScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(DarkBg)) {
         LazyColumn(
-            contentPadding = PaddingValues(bottom = 100.dp),
+            contentPadding = PaddingValues(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             // ── Top bar ───────────────────────────────────────────────────────
@@ -196,19 +196,6 @@ fun DashboardScreen(
                     }
                 }
             }
-        }
-
-        // ── FAB ────────────────────────────────────────────────────────────────
-        ExtendedFloatingActionButton(
-            onClick = onNavigateToScanner,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp).navigationBarsPadding(),
-            containerColor = TealGlow,
-            contentColor = Color.White,
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Icon(Icons.Default.QrCodeScanner, null)
-            Spacer(Modifier.width(8.dp))
-            Text("New Sale", fontWeight = FontWeight.Bold)
         }
     }
 }
