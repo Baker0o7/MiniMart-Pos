@@ -2,16 +2,13 @@ package com.minimart.pos.ui.screen
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -19,18 +16,19 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.printer.PrintResult
 import com.minimart.pos.printer.ThermalPrinter
-import com.minimart.pos.ui.theme.Brand500
 import com.minimart.pos.ui.theme.DT
-import com.minimart.pos.ui.theme.ErrorRed
-import com.minimart.pos.ui.theme.SuccessGreen
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,187 +59,153 @@ fun SettingsScreen(
     var showPrinterDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(storeName, currency, receiptFooter, mpesaPaybill) {
-        storeNameInput = storeName
-        currencyInput = currency
-        footerInput = receiptFooter
-        mpesaInput = mpesaPaybill
+        storeNameInput = storeName; currencyInput = currency; footerInput = receiptFooter; mpesaInput = mpesaPaybill
     }
 
-    Scaffold(
-        containerColor = DT.Bg,
-        topBar = {
-            TopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Brand500, titleContentColor = Color.White, navigationIconContentColor = Color.White)
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().background(DT.Bg).padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // ── Store info ──
-            SettingsSection("Store Information") {
-                OutlinedTextField(storeNameInput, { storeNameInput = it }, label = { Text("Store Name") }, modifier = Modifier.fillMaxWidth(), singleLine = true, leadingIcon = { Icon(Icons.Default.Store, null) })
-                OutlinedTextField(currencyInput, { currencyInput = it }, label = { Text("Currency Code (e.g. KES, USD)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                OutlinedTextField(footerInput, { footerInput = it }, label = { Text("Receipt Footer Message") }, modifier = Modifier.fillMaxWidth(), maxLines = 2)
-                OutlinedTextField(mpesaInput, { mpesaInput = it }, label = { Text("M-Pesa Paybill / Till Number") }, modifier = Modifier.fillMaxWidth(), singleLine = true, leadingIcon = { Icon(Icons.Default.PhoneAndroid, null) })
-                Button(
-                    onClick = {
-                        scope.launch {
-                            settingsRepo.setStoreName(storeNameInput)
-                            settingsRepo.setCurrency(currencyInput)
-                            settingsRepo.setReceiptFooter(footerInput)
-                            settingsRepo.setMpesaPaybill(mpesaInput)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
-                ) { Text("Save Store Settings") }
-            }
-
-            // ── Printer ──
-            SettingsSection("Thermal Printer (Bluetooth)") {
+    Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Teal top bar ──────────────────────────────────────────────────
+            Box(
+                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
+                    .background(Brush.horizontalGradient(listOf(DT.Teal, Color(0xFF00695C))))
+                    .padding(horizontal = 8.dp, vertical = 16.dp)
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.Print,
-                        null,
-                        tint = if (printer.isConnected) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(printerName ?: "No printer paired", fontWeight = FontWeight.Medium)
-                        Text(if (printer.isConnected) "Connected" else "Disconnected", style = MaterialTheme.typography.labelSmall, color = if (printer.isConnected) SuccessGreen else ErrorRed)
-                    }
-                }
-                printerStatus?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = if (it.startsWith("✓")) SuccessGreen else ErrorRed) }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = {
-                            pairedDevices = printer.getPairedPrinters(context)
-                            showPrinterDialog = true
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp)
-                    ) { Text("Pair Printer") }
-                    if (printer.isConnected) {
-                        OutlinedButton(
-                            onClick = { scope.launch { printer.disconnect(); printerStatus = "Disconnected" } },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
-                        ) { Text("Disconnect") }
-                    }
-                }
-                // Test print
-                if (printer.isConnected) {
-                    Button(
-                        onClick = {
-                            scope.launch {
-                                // Simple test
-                                printerStatus = "✓ Test print sent"
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
-                    ) { Icon(Icons.Default.Print, null); Spacer(Modifier.width(6.dp)); Text("Test Print") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White) }
+                    Text("Settings", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.weight(1f))
                 }
             }
 
-            // ── Appearance ──
-            SettingsSection("Appearance") {
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.DarkMode, null)
-                    Spacer(Modifier.width(12.dp))
-                    Text("Dark Mode", modifier = Modifier.weight(1f))
-                    Switch(checked = darkMode, onCheckedChange = { scope.launch { settingsRepo.setDarkMode(it) } })
-                }
-            }
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
-            // ── Account ──
-            SettingsSection("Account") {
-                OutlinedButton(
-                    onClick = onUsers,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Icon(Icons.Default.Group, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("User Management")
+                // ── Store Information ─────────────────────────────────────────
+                DarkSection("Store Information") {
+                    DarkSettingRow("Store Name", storeNameInput, { storeNameInput = it })
+                    DarkDivider()
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Text("Currency", color = DT.OnSurface, modifier = Modifier.weight(1f))
+                        OutlinedTextField(currencyInput, { currencyInput = it }, singleLine = true,
+                            modifier = Modifier.width(100.dp),
+                            colors = darkFieldColors(), shape = RoundedCornerShape(10.dp))
+                    }
+                    DarkDivider()
+                    DarkSettingRow("Receipt Footer", footerInput, { footerInput = it })
+                    DarkDivider()
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Text("M-Pesa Till", color = DT.OnSurface, modifier = Modifier.weight(1f))
+                        Switch(checked = mpesaInput.isNotBlank(), onCheckedChange = {}, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal))
+                    }
+                    OutlinedTextField(mpesaInput, { mpesaInput = it }, placeholder = { Text("M-Pesa Till Number", color = DT.SubText) },
+                        singleLine = true, modifier = Modifier.fillMaxWidth(), colors = darkFieldColors(), shape = RoundedCornerShape(10.dp))
+                    Button(onClick = {
+                        scope.launch {
+                            settingsRepo.setStoreName(storeNameInput); settingsRepo.setCurrency(currencyInput)
+                            settingsRepo.setReceiptFooter(footerInput); settingsRepo.setMpesaPaybill(mpesaInput)
+                        }
+                    }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
+                        Text("Save", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
-                OutlinedButton(
-                    onClick = onShifts,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Icon(Icons.Default.AccessTime, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Shift Management")
+
+                // ── Thermal Printer ───────────────────────────────────────────
+                DarkSection("Thermal Printer") {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                        Text(printerName ?: "No printer paired", color = if (printer.isConnected) DT.Teal else DT.SubText, modifier = Modifier.weight(1f))
+                        Button(onClick = { pairedDevices = printer.getPairedPrinters(context); showPrinterDialog = true },
+                            shape = RoundedCornerShape(20.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = DT.Teal),
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)) {
+                            Text("Pair", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    printerStatus?.let { Text(it, color = if (it.startsWith("✓")) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall) }
                 }
-                OutlinedButton(
-                    onClick = onLogout,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRed),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, ErrorRed),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.Logout, null, tint = ErrorRed)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Logout", color = ErrorRed)
+
+                // ── Appearance ────────────────────────────────────────────────
+                DarkSection("Appearance") {
+                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Dark Mode", color = DT.OnSurface, modifier = Modifier.weight(1f))
+                        Switch(checked = darkMode, onCheckedChange = { scope.launch { settingsRepo.setDarkMode(it) } },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal))
+                    }
+                }
+
+                // ── Account ───────────────────────────────────────────────────
+                DarkSection("Account") {
+                    DarkMenuRow("User Management", Icons.Default.Group, Icons.Default.ChevronRight, DT.OnSurface, onUsers)
+                    DarkDivider()
+                    DarkMenuRow("Shift Management", Icons.Default.Schedule, Icons.Default.ChevronRight, DT.OnSurface, onShifts)
+                    DarkDivider()
+                    DarkMenuRow("Logout", Icons.AutoMirrored.Filled.Logout, null, DT.Red, onLogout)
                 }
             }
         }
     }
 
-    // Printer picker dialog
     if (showPrinterDialog) {
-        AlertDialog(
-            onDismissRequest = { showPrinterDialog = false },
-            title = { Text("Select Printer") },
+        AlertDialog(onDismissRequest = { showPrinterDialog = false }, containerColor = DT.Surface,
+            title = { Text("Select Printer", color = DT.OnSurface) },
             text = {
                 Column {
-                    if (pairedDevices.isEmpty()) {
-                        Text("No paired Bluetooth printers found. Pair your printer in Android Bluetooth settings first.")
-                    } else {
-                        pairedDevices.forEach { device ->
-                            TextButton(
-                                onClick = {
-                                    scope.launch {
-                                        showPrinterDialog = false
-                                        printerStatus = "Connecting…"
-                                        val result = printer.connect(device.address)
-                                        if (result is PrintResult.Success) {
-                                            settingsRepo.setPrinterAddress(device.address, device.name ?: "Printer")
-                                            printerStatus = "✓ Connected to ${device.name}"
-                                        } else {
-                                            printerStatus = (result as PrintResult.Error).message
-                                        }
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Icon(Icons.Default.Print, null, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text(device.name ?: device.address)
+                    if (pairedDevices.isEmpty()) Text("No paired printers found.", color = DT.SubText)
+                    else pairedDevices.forEach { device ->
+                        TextButton(onClick = {
+                            scope.launch {
+                                showPrinterDialog = false; printerStatus = "Connecting…"
+                                val result = printer.connect(device.address)
+                                if (result is PrintResult.Success) {
+                                    settingsRepo.setPrinterAddress(device.address, device.name ?: "Printer")
+                                    printerStatus = "✓ Connected to ${device.name}"
+                                } else printerStatus = (result as PrintResult.Error).message
                             }
+                        }, modifier = Modifier.fillMaxWidth()) {
+                            Text(device.name ?: device.address, color = DT.OnSurface)
                         }
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showPrinterDialog = false }) { Text("Close") } }
+            confirmButton = { TextButton(onClick = { showPrinterDialog = false }) { Text("Close", color = DT.SubText) } }
         )
     }
 }
 
 @Composable
-private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Card(shape = RoundedCornerShape(16.dp)) {
+private fun DarkSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(DT.Surface)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(title, fontWeight = FontWeight.SemiBold, color = Brand500)
-            HorizontalDivider()
+            Text(title, color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             content()
         }
     }
 }
+
+@Composable
+private fun DarkSettingRow(label: String, value: String, onValueChange: (String) -> Unit) {
+    OutlinedTextField(value = value, onValueChange = onValueChange, label = { Text(label, color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
+        singleLine = true, modifier = Modifier.fillMaxWidth(), colors = darkFieldColors(), shape = RoundedCornerShape(10.dp))
+}
+
+@Composable
+private fun DarkMenuRow(label: String, icon: ImageVector, trailingIcon: ImageVector?, color: Color, onClick: () -> Unit) {
+    TextButton(onClick = onClick, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(0.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = color, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(12.dp))
+            Text(label, color = color, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+            trailingIcon?.let { Icon(it, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) }
+        }
+    }
+}
+
+@Composable
+private fun DarkDivider() = HorizontalDivider(color = DT.Border, thickness = 0.5.dp)
+
+@Composable
+private fun darkFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+    focusedTextColor = DT.OnSurface, unfocusedTextColor = DT.OnSurface,
+    cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg
+)
