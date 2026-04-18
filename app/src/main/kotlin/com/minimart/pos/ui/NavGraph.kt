@@ -40,6 +40,7 @@ object Routes {
     const val INVENTORY = "inventory"
     const val REPORTS   = "reports"
     const val EXPENSES  = "expenses"
+    const val USERS     = "users"
     const val SHIFTS    = "shifts"
     const val SETTINGS  = "settings"
     fun receipt(saleId: Long) = "receipt/$saleId"
@@ -150,12 +151,14 @@ fun MiniMartNavGraph(
                 composable(Routes.INVENTORY) { InventoryScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.REPORTS)   { ReportsScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.EXPENSES)  { ExpenseScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.USERS)     { UserManagementScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.SHIFTS)    { ShiftScreen(onBack = { navController.popBackStack() }) }
 
                 composable(Routes.SETTINGS) {
                     SettingsScreen(
                         onBack   = { navController.popBackStack() },
                         onShifts = { navController.navigate(Routes.SHIFTS) },
+                        onUsers  = { navController.navigate(Routes.USERS) },
                         onLogout = {
                             authVm.logout()
                             navController.navigate(Routes.LOGIN) { popUpTo(0) { inclusive = true } }

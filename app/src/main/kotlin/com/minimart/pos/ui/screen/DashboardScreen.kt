@@ -151,8 +151,8 @@ fun DashboardScreen(
             item {
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        BigActionCard(Modifier.weight(1f), "New Sale",     Icons.Default.QrCode, TealCard,   TealGlow,   onNavigateToScanner)
-                        BigActionCard(Modifier.weight(1f), "My Products",  Icons.Default.ShoppingCart, Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory)
+                        BigActionCard(Modifier.weight(1f), "Products",   Icons.Default.QrCode,         TealCard,   TealGlow,   onNavigateToScanner)
+                        BigActionCard(Modifier.weight(1f), "Inventory",  Icons.Default.ShoppingCart,   Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                         BigActionCard(Modifier.weight(1f), "Daily Report", Icons.Default.BarChart,       PurpleCard, Color(0xFFCE93D8), onNavigateToReports)

@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     onBack: () -> Unit,
     onShifts: () -> Unit,
+    onUsers: () -> Unit,
     onLogout: () -> Unit,
     settingsRepo: SettingsRepository,
     printer: ThermalPrinter
@@ -161,6 +162,15 @@ fun SettingsScreen(
 
             // ── Account ──
             SettingsSection("Account") {
+                OutlinedButton(
+                    onClick = onUsers,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.Group, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("User Management")
+                }
                 OutlinedButton(
                     onClick = onShifts,
                     modifier = Modifier.fillMaxWidth(),
