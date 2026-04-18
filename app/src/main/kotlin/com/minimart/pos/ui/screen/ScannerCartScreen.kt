@@ -129,7 +129,7 @@ fun ScannerCartScreen(
                     modifier = Modifier.size(28.dp)
                 )
             }
-        }
+        },
         bottomBar = {
             if (state.items.isNotEmpty()) {
                 Surface(shadowElevation = 8.dp) {
