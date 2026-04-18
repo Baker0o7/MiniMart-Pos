@@ -204,7 +204,7 @@ private fun InventoryProductRow(
                 }
                 if (product.sku.isNotBlank()) {
                     AssistChip(onClick = {}, label = { Text("SKU: ${product.sku}", style = MaterialTheme.typography.labelSmall) },
-                        leadingIcon = { Icon(Icons.Default.Tag, null, modifier = Modifier.size(14.dp)) })
+                        leadingIcon = { Icon(Icons.Default.Label, null, modifier = Modifier.size(14.dp)) })
                 }
             }
 
@@ -216,7 +216,7 @@ private fun InventoryProductRow(
                     shape = RoundedCornerShape(8.dp),
                     contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    Icon(Icons.Default.Tune, null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Settings, null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
                     Text("Stock", style = MaterialTheme.typography.labelSmall)
                 }

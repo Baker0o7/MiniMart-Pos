@@ -132,7 +132,7 @@ fun DashboardScreen(
                             .background(Brush.linearGradient(listOf(Color(0xFF1E2A28), TealCard.copy(alpha = 0.6f))))
                     ) {
                         Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Diamond, null, tint = TealGlow.copy(0.7f), modifier = Modifier.size(22.dp))
+                            Icon(Icons.Default.Star, null, tint = TealGlow.copy(0.7f), modifier = Modifier.size(22.dp))
                             Spacer(Modifier.height(8.dp))
                             Text(state.todaySaleCount.toString(), color = OnDark, fontWeight = FontWeight.ExtraBold, fontSize = 36.sp)
                             Spacer(Modifier.height(4.dp))
@@ -151,12 +151,12 @@ fun DashboardScreen(
             item {
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        BigActionCard(Modifier.weight(1f), "New Sale",     Icons.Default.QrCodeScanner, TealCard,   TealGlow,   onNavigateToScanner)
-                        BigActionCard(Modifier.weight(1f), "My Products",  Icons.Default.ShoppingBasket, Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory)
+                        BigActionCard(Modifier.weight(1f), "New Sale",     Icons.Default.QrCode, TealCard,   TealGlow,   onNavigateToScanner)
+                        BigActionCard(Modifier.weight(1f), "My Products",  Icons.Default.ShoppingCart, Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                         BigActionCard(Modifier.weight(1f), "Daily Report", Icons.Default.BarChart,       PurpleCard, Color(0xFFCE93D8), onNavigateToReports)
-                        BigActionCard(Modifier.weight(1f), "Add Expense",  Icons.Default.ReceiptLong,    RoseCard.copy(alpha = 0.4f), Color(0xFFEF9A9A),  onNavigateToExpenses)
+                        BigActionCard(Modifier.weight(1f), "Add Expense",  Icons.Default.Receipt,    RoseCard.copy(alpha = 0.4f), Color(0xFFEF9A9A),  onNavigateToExpenses)
                     }
                 }
             }

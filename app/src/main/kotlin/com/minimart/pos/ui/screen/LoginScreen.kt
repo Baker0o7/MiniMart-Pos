@@ -54,7 +54,7 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Store photo as login icon
+                // Logo
                 Box(
                     modifier = Modifier
                         .size(90.dp)
@@ -62,11 +62,11 @@ fun LoginScreen(
                         .background(Brand500),
                     contentAlignment = Alignment.Center
                 ) {
-                    androidx.compose.foundation.Image(
-                        painter = androidx.compose.ui.res.painterResource(id = com.minimart.pos.R.mipmap.ic_launcher),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize().clip(CircleShape),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    Icon(
+                        Icons.Default.StoreMallDirectory,
+                        null,
+                        tint = androidx.compose.ui.graphics.Color.White,
+                        modifier = Modifier.size(50.dp)
                     )
                 }
 

@@ -105,7 +105,7 @@ fun ScannerCartScreen(
                 actions = {
                     if (state.items.isNotEmpty()) {
                         IconButton(onClick = { vm.clearCart() }) {
-                            Icon(Icons.Default.DeleteSweep, "Clear cart", tint = Color.White)
+                            Icon(Icons.Default.Delete, "Clear cart", tint = Color.White)
                         }
                     }
                 }
@@ -124,7 +124,7 @@ fun ScannerCartScreen(
                 modifier = Modifier.navigationBarsPadding()
             ) {
                 Icon(
-                    if (showScanner) Icons.Default.Close else Icons.Default.QrCodeScanner,
+                    if (showScanner) Icons.Default.Close else Icons.Default.QrCode,
                     null,
                     modifier = Modifier.size(28.dp)
                 )
@@ -160,7 +160,7 @@ fun ScannerCartScreen(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Brand500)
                         ) {
-                            Icon(Icons.Default.ShoppingCartCheckout, null)
+                            Icon(Icons.Default.ShoppingCart, null)
                             Spacer(Modifier.width(8.dp))
                             Text("Checkout  •  $currency ${String.format("%.2f", state.total)}", fontWeight = FontWeight.SemiBold)
                         }

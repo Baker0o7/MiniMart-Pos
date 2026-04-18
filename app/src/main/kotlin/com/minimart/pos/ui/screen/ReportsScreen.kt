@@ -75,7 +75,7 @@ fun ReportsScreen(
             }
             item {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    KpiCard(Modifier.weight(1f), "Avg Basket", "${state.currency} ${String.format("%,.2f", state.averageBasket)}", Accent, Icons.Default.ShoppingBasket)
+                    KpiCard(Modifier.weight(1f), "Avg Basket", "${state.currency} ${String.format("%,.2f", state.averageBasket)}", Accent, Icons.Default.ShoppingCart)
                     Spacer(Modifier.weight(1f))
                 }
             }

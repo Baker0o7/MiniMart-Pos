@@ -102,7 +102,7 @@ fun ReceiptScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Brand500)
             ) {
-                Icon(Icons.Default.QrCodeScanner, null, tint = Color.White)
+                Icon(Icons.Default.QrCode, null, tint = Color.White)
                 Spacer(Modifier.width(8.dp))
                 Text("New Sale", fontWeight = FontWeight.SemiBold, color = Color.White, fontSize = 16.sp)
             }

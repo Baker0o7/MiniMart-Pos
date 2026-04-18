@@ -193,7 +193,7 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                             else showBarcodeScanner = true
                         },
                         colors = IconButtonDefaults.filledIconButtonColors(containerColor = Brand500)
-                    ) { Icon(Icons.Default.QrCodeScanner, null, tint = Color.White) }
+                    ) { Icon(Icons.Default.QrCode, null, tint = Color.White) }
                 }
                 // Inline barcode scanner
                 if (showBarcodeScanner && cameraPermission.status.isGranted) {

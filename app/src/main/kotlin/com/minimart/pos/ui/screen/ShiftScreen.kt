@@ -308,7 +308,7 @@ private fun ShiftSummaryDialog(shift: Shift, onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Assessment, null, tint = Brand500, modifier = Modifier.size(22.dp))
+                Icon(Icons.Default.BarChart, null, tint = Brand500, modifier = Modifier.size(22.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Shift Summary", fontWeight = FontWeight.Bold)
             }

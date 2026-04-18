@@ -200,8 +200,8 @@ private fun BottomNavBar(
                 NavItem(Icons.Default.Home,          "Home",      currentRoute == Routes.DASHBOARD, onHome)
                 NavItem(Icons.Default.Inventory2,    "Products",  currentRoute == Routes.PRODUCTS,  onProducts)
                 Spacer(Modifier.width(64.dp)) // space for center button
-                NavItem(Icons.Default.ReceiptLong,   "Expenses",  currentRoute == Routes.EXPENSES,  onExpenses)
-                NavItem(Icons.Default.Warehouse,     "Inventory", currentRoute == Routes.INVENTORY, onInventory)
+                NavItem(Icons.Default.Receipt,   "Expenses",  currentRoute == Routes.EXPENSES,  onExpenses)
+                NavItem(Icons.Default.Store,         "Inventory", currentRoute == Routes.INVENTORY, onInventory)
             }
         }
 
@@ -217,7 +217,7 @@ private fun BottomNavBar(
                 .clickable(onClick = onScan),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.QrCodeScanner, null, tint = Color.White, modifier = Modifier.size(28.dp))
+            Icon(Icons.Default.QrCode, null, tint = Color.White, modifier = Modifier.size(28.dp))
         }
     }
 }

@@ -195,7 +195,7 @@ private fun ExpenseListTab(expenses: List<Expense>, currency: String, onDelete: 
     if (expenses.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Default.ReceiptLong, null, modifier = Modifier.size(56.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f))
+                Icon(Icons.Default.Receipt, null, modifier = Modifier.size(56.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f))
                 Spacer(Modifier.height(8.dp))
                 Text("No expenses recorded", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("Tap + to add an expense", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6f))
