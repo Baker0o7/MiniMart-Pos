@@ -179,9 +179,9 @@ private fun CategoryChip(label: String, selected: Boolean, onClick: () -> Unit) 
 private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
     this.clickable(
         indication = null,
-        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+        interactionSource = androidx.compose.foundation.interaction.MutableInteractionSource(),
         onClick = onClick
-    ))
+    )
 
 @Composable
 private fun DarkInventoryRow(
@@ -268,9 +268,9 @@ private fun ActionBtn(label: String, bg: Color, textColor: Color, onClick: () ->
             .border(1.dp, textColor.copy(0.3f), RoundedCornerShape(20.dp))
             .clickable(
                 indication = null,
-                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                interactionSource = androidx.compose.foundation.interaction.MutableInteractionSource(),
                 onClick = onClick
-            ))
+            )
             .padding(horizontal = 16.dp, vertical = 7.dp)
     ) {
         Text(label, color = textColor, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
