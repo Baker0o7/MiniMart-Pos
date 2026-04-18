@@ -25,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.minimart.pos.data.entity.Expense
 import com.minimart.pos.data.entity.ExpenseCategory
 import com.minimart.pos.ui.theme.Brand500
+import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.theme.ErrorRed
 import com.minimart.pos.ui.theme.SuccessGreen
 import com.minimart.pos.ui.viewmodel.ExpenseViewModel
@@ -51,6 +52,7 @@ fun ExpenseScreen(
     }
 
     Scaffold(
+        containerColor = DT.Bg,
         topBar = {
             TopAppBar(
                 title = { Text("Expenses & P&L", fontWeight = FontWeight.Bold) },

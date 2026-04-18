@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.minimart.pos.data.entity.PaymentMethod
 import com.minimart.pos.ui.theme.Accent
 import com.minimart.pos.ui.theme.Brand500
+import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.theme.SuccessGreen
 import com.minimart.pos.ui.viewmodel.CartViewModel
 import com.minimart.pos.ui.viewmodel.CheckoutResult
@@ -55,6 +56,7 @@ fun CheckoutScreen(
     }
 
     Scaffold(
+        containerColor = DT.Bg,
         topBar = {
             TopAppBar(
                 title = {

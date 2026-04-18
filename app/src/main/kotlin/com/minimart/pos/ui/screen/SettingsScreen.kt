@@ -27,6 +27,7 @@ import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.printer.PrintResult
 import com.minimart.pos.printer.ThermalPrinter
 import com.minimart.pos.ui.theme.Brand500
+import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.theme.ErrorRed
 import com.minimart.pos.ui.theme.SuccessGreen
 import kotlinx.coroutines.launch
@@ -65,6 +66,7 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        containerColor = DT.Bg,
         topBar = {
             TopAppBar(
                 title = { Text("Settings", fontWeight = FontWeight.Bold) },
@@ -74,7 +76,7 @@ fun SettingsScreen(
         }
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
+            modifier = Modifier.fillMaxSize().background(DT.Bg).padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // ── Store info ──

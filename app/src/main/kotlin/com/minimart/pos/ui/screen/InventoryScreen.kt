@@ -1,8 +1,12 @@
 package com.minimart.pos.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,9 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.minimart.pos.data.entity.Product
-import com.minimart.pos.ui.theme.Brand500
-import com.minimart.pos.ui.theme.ErrorRed
-import com.minimart.pos.ui.theme.SuccessGreen
+import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,78 +49,83 @@ fun InventoryScreen(
         if (uiState.successMessage != null) { kotlinx.coroutines.delay(2000); vm.clearMessages() }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Inventory", fontWeight = FontWeight.Bold)
-                        Text("${products.size} products • ${lowStock.size} low stock",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(0.8f))
-                    }
-                },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Brand500, titleContentColor = Color.White, navigationIconContentColor = Color.White),
-                actions = {
+    Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Top bar ──────────────────────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = DT.OnSurface)
+                }
+                Spacer(Modifier.width(4.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Inventory", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                    Text("${products.size} products • ${lowStock.size} low stock",
+                        color = DT.SubText, style = MaterialTheme.typography.labelMedium)
+                }
+                // Settings icon
+                Box(
+                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(DT.Surface2),
+                    contentAlignment = Alignment.Center
+                ) {
                     IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, "Add product", tint = Color.White)
+                        Icon(Icons.Default.Add, null, tint = DT.Teal, modifier = Modifier.size(22.dp))
                     }
                 }
-            )
-        }
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            }
 
             // ── Search bar ────────────────────────────────────────────────────
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = vm::setSearchQuery,
-                placeholder = { Text("Search name, barcode or SKU…", maxLines = 1) },
-                leadingIcon = { Icon(Icons.Default.Search, null, modifier = Modifier.size(20.dp)) },
+                placeholder = { Text("Search", color = DT.SubText) },
+                leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) IconButton(onClick = { vm.setSearchQuery("") }) {
-                        Icon(Icons.Default.Clear, null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Close, null, tint = DT.SubText, modifier = Modifier.size(18.dp))
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp).height(54.dp)
+                shape = RoundedCornerShape(28.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = DT.Teal,
+                    unfocusedBorderColor = DT.Border,
+                    focusedTextColor = DT.OnSurface,
+                    unfocusedTextColor = DT.OnSurface,
+                    cursorColor = DT.Teal,
+                    focusedContainerColor = DT.Surface,
+                    unfocusedContainerColor = DT.Surface
+                ),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(52.dp)
             )
 
+            Spacer(Modifier.height(12.dp))
+
             // ── Category chips ────────────────────────────────────────────────
-            androidx.compose.foundation.lazy.LazyRow(
-                contentPadding = PaddingValues(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
-                    FilterChip(selected = selectedCat == null, onClick = { vm.setCategory(null) }, label = { Text("All") })
+                    CategoryChip("All", selectedCat == null) { vm.setCategory(null) }
                 }
                 items(categories) { cat ->
-                    FilterChip(selected = selectedCat == cat, onClick = { vm.setCategory(cat) }, label = { Text(cat) })
+                    CategoryChip(cat, selectedCat == cat) { vm.setCategory(cat) }
                 }
             }
 
-            // ── Low stock banner ──────────────────────────────────────────────
-            if (lowStock.isNotEmpty() && searchQuery.isBlank()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().background(ErrorRed.copy(alpha = 0.12f)).padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Warning, null, tint = ErrorRed, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("${lowStock.size} items low on stock", color = ErrorRed, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
-                }
-            }
+            Spacer(Modifier.height(12.dp))
 
             uiState.successMessage?.let {
-                Text(it, color = SuccessGreen, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.labelMedium)
+                Text(it, color = DT.Green, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp), style = MaterialTheme.typography.labelMedium)
             }
 
             // ── Product list ──────────────────────────────────────────────────
-            LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyColumn(
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 items(products, key = { it.id }) { product ->
-                    InventoryProductRow(
+                    DarkInventoryRow(
                         product = product,
                         onEdit = { editProduct = it; showAddDialog = true },
                         onAdjustStock = { showStockDialog = it },
@@ -127,12 +134,11 @@ fun InventoryScreen(
                 }
                 if (products.isEmpty()) {
                     item {
-                        Box(modifier = Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.fillMaxWidth().padding(top = 60.dp), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Default.Inventory2, null, modifier = Modifier.size(56.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.4f))
+                                Icon(Icons.Default.Inventory2, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.4f))
                                 Spacer(Modifier.height(8.dp))
-                                Text(if (searchQuery.isNotBlank()) "No results for \"$searchQuery\"" else "No products yet",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(if (searchQuery.isNotBlank()) "No results for \"$searchQuery\"" else "No products yet", color = DT.SubText)
                             }
                         }
                     }
@@ -148,18 +154,37 @@ fun InventoryScreen(
             onSave = { vm.saveProduct(it); showAddDialog = false; editProduct = null }
         )
     }
-
     showStockDialog?.let { product ->
-        StockAdjustDialog(
-            product = product,
-            onDismiss = { showStockDialog = null },
-            onAdjust = { delta -> vm.adjustStock(product.id, delta); showStockDialog = null }
-        )
+        StockAdjustDialog(product = product, onDismiss = { showStockDialog = null },
+            onAdjust = { delta -> vm.adjustStock(product.id, delta); showStockDialog = null })
     }
 }
 
 @Composable
-private fun InventoryProductRow(
+private fun CategoryChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (selected) DT.Teal else DT.Surface2)
+            .border(1.dp, if (selected) DT.Teal else DT.Border, RoundedCornerShape(20.dp))
+            .then(Modifier.clickableNoRipple(onClick))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(label, color = if (selected) Color.White else DT.SubText,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            style = MaterialTheme.typography.labelMedium)
+    }
+}
+
+private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
+    this.clickable(
+        indication = null,
+        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+        onClick = onClick
+    ))
+
+@Composable
+private fun DarkInventoryRow(
     product: Product,
     onEdit: (Product) -> Unit,
     onAdjustStock: (Product) -> Unit,
@@ -167,72 +192,57 @@ private fun InventoryProductRow(
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
     val stockColor = when {
-        product.stock == 0 -> ErrorRed
-        product.stock <= product.lowStockThreshold -> MaterialTheme.colorScheme.tertiary
-        else -> SuccessGreen
-    }
-    val stockBg = when {
-        product.stock == 0 -> ErrorRed.copy(alpha = 0.12f)
-        product.stock <= product.lowStockThreshold -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f)
-        else -> SuccessGreen.copy(alpha = 0.1f)
+        product.stock == 0 -> DT.Red
+        product.stock <= product.lowStockThreshold -> DT.Amber
+        else -> DT.Green
     }
 
-    Card(shape = RoundedCornerShape(12.dp)) {
-        Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+    Box(
+        modifier = Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(DT.Surface)
+            .border(1.dp, DT.Border, RoundedCornerShape(16.dp))
+            .padding(14.dp)
+    ) {
+        Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Stock badge
+                // Product icon placeholder
                 Box(
-                    modifier = Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(stockBg),
+                    modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)).background(DT.TealDim),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(product.stock.toString(), fontWeight = FontWeight.Bold, color = stockColor, fontSize = 16.sp)
+                    Icon(Icons.Default.Inventory2, null, tint = DT.Teal, modifier = Modifier.size(26.dp))
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(product.name, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
-                    Text(product.category, style = MaterialTheme.typography.labelSmall, color = Brand500)
+                    Text(product.name, color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1)
+                    // Barcode row
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.QrCode, null, tint = DT.SubText, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(product.barcode, color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                    }
+                    if (product.sku.isNotBlank()) {
+                        Text("SKU ${product.sku}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                    }
                 }
-                Text("KES ${String.format("%.2f", product.price)}", fontWeight = FontWeight.Bold, color = Brand500)
+                // Stock badge
+                Box(
+                    modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(DT.TealDim).padding(horizontal = 12.dp, vertical = 5.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(product.stock.toString(), color = stockColor, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        Text("  KES${String.format("%.0f", product.price)}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
             }
-
-            // Meta row — barcode, SKU
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (product.barcode.isNotBlank()) {
-                    AssistChip(onClick = {}, label = { Text(product.barcode, style = MaterialTheme.typography.labelSmall) },
-                        leadingIcon = { Icon(Icons.Default.QrCode, null, modifier = Modifier.size(14.dp)) })
-                }
-                if (product.sku.isNotBlank()) {
-                    AssistChip(onClick = {}, label = { Text("SKU: ${product.sku}", style = MaterialTheme.typography.labelSmall) },
-                        leadingIcon = { Icon(Icons.Default.Label, null, modifier = Modifier.size(14.dp)) })
-                }
-            }
-
+            Spacer(Modifier.height(10.dp))
             // Action buttons
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                OutlinedButton(
-                    onClick = { onAdjustStock(product) },
-                    modifier = Modifier.weight(1f).height(36.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp)
-                ) {
-                    Icon(Icons.Default.Settings, null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Stock", style = MaterialTheme.typography.labelSmall)
-                }
-                OutlinedButton(
-                    onClick = { onEdit(product) },
-                    modifier = Modifier.weight(1f).height(36.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp)
-                ) {
-                    Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp), tint = Brand500)
-                    Spacer(Modifier.width(4.dp))
-                    Text("Edit", style = MaterialTheme.typography.labelSmall, color = Brand500)
-                }
-                IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Delete, null, tint = ErrorRed, modifier = Modifier.size(18.dp))
-                }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ActionBtn("Stock", DT.Surface2, DT.TealLight) { onAdjustStock(product) }
+                ActionBtn("Edit",  DT.Surface2, DT.Teal)      { onEdit(product) }
+                Spacer(Modifier.weight(1f))
+                ActionBtn("Delete", DT.Surface2, DT.Red)       { showDeleteConfirm = true }
             }
         }
     }
@@ -240,57 +250,66 @@ private fun InventoryProductRow(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Product?") },
-            text = { Text("Remove '${product.name}' from inventory?") },
-            confirmButton = { TextButton(onClick = { onDelete(); showDeleteConfirm = false }) { Text("Delete", color = ErrorRed) } },
-            dismissButton = { TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") } }
+            containerColor = DT.Surface,
+            title = { Text("Delete Product?", color = DT.OnSurface) },
+            text = { Text("Remove '${product.name}'?", color = DT.SubText) },
+            confirmButton = { TextButton(onClick = { onDelete(); showDeleteConfirm = false }) { Text("Delete", color = DT.Red) } },
+            dismissButton = { TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel", color = DT.SubText) } }
         )
     }
 }
 
 @Composable
+private fun ActionBtn(label: String, bg: Color, textColor: Color, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(bg)
+            .border(1.dp, textColor.copy(0.3f), RoundedCornerShape(20.dp))
+            .clickable(
+                indication = null,
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                onClick = onClick
+            ))
+            .padding(horizontal = 16.dp, vertical = 7.dp)
+    ) {
+        Text(label, color = textColor, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 private fun StockAdjustDialog(product: Product, onDismiss: () -> Unit, onAdjust: (Int) -> Unit) {
     var delta by remember { mutableStateOf("") }
     var isAddition by remember { mutableStateOf(true) }
-
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Adjust Stock — ${product.name}") },
+        containerColor = DT.Surface,
+        title = { Text("Adjust Stock", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Current stock: ${product.stock} ${product.unit}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${product.name} — Current: ${product.stock}", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = isAddition, onClick = { isAddition = true }, label = { Text("Add stock") },
-                        leadingIcon = { Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp)) })
-                    FilterChip(selected = !isAddition, onClick = { isAddition = false }, label = { Text("Remove stock") },
-                        leadingIcon = { Icon(Icons.Default.Remove, null, modifier = Modifier.size(16.dp)) })
+                    FilterChip(selected = isAddition, onClick = { isAddition = true }, label = { Text("Add") })
+                    FilterChip(selected = !isAddition, onClick = { isAddition = false }, label = { Text("Remove") })
                 }
-                OutlinedTextField(
-                    value = delta,
-                    onValueChange = { delta = it },
-                    label = { Text("Quantity") },
+                OutlinedTextField(delta, { delta = it }, label = { Text("Quantity", color = DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border, focusedTextColor = DT.OnSurface, unfocusedTextColor = DT.OnSurface))
                 val qty = delta.toIntOrNull() ?: 0
                 if (qty > 0) {
                     val newStock = if (isAddition) product.stock + qty else product.stock - qty
-                    Text("New stock will be: $newStock ${product.unit}",
-                        color = if (newStock < 0) ErrorRed else SuccessGreen,
-                        style = MaterialTheme.typography.bodySmall)
+                    Text("New stock: $newStock", color = if (newStock < 0) DT.Red else DT.Green, style = MaterialTheme.typography.bodySmall)
                 }
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    val qty = delta.toIntOrNull() ?: 0
-                    onAdjust(if (isAddition) qty else -qty)
-                },
-                enabled = (delta.toIntOrNull() ?: 0) > 0
+            Button(onClick = { onAdjust(if (isAddition) (delta.toIntOrNull() ?: 0) else -(delta.toIntOrNull() ?: 0)) },
+                enabled = (delta.toIntOrNull() ?: 0) > 0,
+                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
             ) { Text("Confirm") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
     )
 }
