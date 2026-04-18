@@ -58,16 +58,10 @@ fun LoginScreen(
                 Box(
                     modifier = Modifier
                         .size(90.dp)
-                        .clip(CircleShape),
+                        .clip(CircleShape)
+                        .background(Brand500),
                     contentAlignment = Alignment.Center
                 ) {
-                    androidx.compose.foundation.Image(
-                        painter = androidx.compose.ui.res.painterResource(id = android.R.drawable.sym_def_app_icon),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize().clip(CircleShape),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                    )
-                    // Use mipmap launcher icon (the store photo we set)
                     androidx.compose.foundation.Image(
                         painter = androidx.compose.ui.res.painterResource(id = com.minimart.pos.R.mipmap.ic_launcher),
                         contentDescription = null,

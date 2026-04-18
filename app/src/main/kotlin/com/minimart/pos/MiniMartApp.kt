@@ -12,14 +12,17 @@ class MiniMartApp : Application(), Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
-    override fun onCreate() {
-        super.onCreate()
-        // Schedule low-stock check every 4 hours
-        com.minimart.pos.worker.LowStockWorker.schedule(this)
-    }
-
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
+
+    override fun onCreate() {
+        super.onCreate()
+        // Schedule low-stock check — wrapped in try/catch so a WorkManager
+        // issue never prevents the app from starting
+        try {
+            com.minimart.pos.worker.LowStockWorker.schedule(this)
+        } catch (_: Exception) {}
+    }
 }
