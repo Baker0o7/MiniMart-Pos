@@ -3,6 +3,8 @@ package com.minimart.pos.ui.screen
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -136,7 +138,7 @@ fun ScannerCartScreen(
                     .clip(RoundedCornerShape(12.dp)).background(DT.Surface2).border(1.dp, DT.Border, RoundedCornerShape(12.dp))
                 ) {
                     Column {
-                        searchResults.take(5).forEach { product ->
+                        searchResults.take(5).forEach { product: com.minimart.pos.data.entity.Product ->
                             Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(product.name, color = DT.OnSurface, fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyMedium)

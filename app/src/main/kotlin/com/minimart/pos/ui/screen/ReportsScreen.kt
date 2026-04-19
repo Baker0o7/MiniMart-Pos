@@ -2,6 +2,8 @@ package com.minimart.pos.ui.screen
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -56,7 +58,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             modifier = Modifier.clip(RoundedCornerShape(20.dp))
                                 .background(if (sel) DT.Teal else DT.Surface)
                                 .border(1.dp, if (sel) DT.Teal else DT.Border, RoundedCornerShape(20.dp))
-                                .then(Modifier.androidx.compose.foundation.clickable(
+                                .clickable(
                                     indication = null,
                                     interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
                                 ) { vm.setPeriod(p) })
