@@ -61,7 +61,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                                 .clickable(
                                     indication = null,
                                     interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-                                ) { vm.setPeriod(p) })
+                                ) { vm.setPeriod(p) }
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             Text(p.name.lowercase().replaceFirstChar { it.uppercase() },

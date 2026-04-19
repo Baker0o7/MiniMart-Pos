@@ -79,7 +79,7 @@ fun ExpenseScreen(onBack: () -> Unit, vm: ExpenseViewModel = hiltViewModel()) {
                             .clickable(
                                 indication = null,
                                 interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-                            ) { vm.setPeriod(p) })
+                            ) { vm.setPeriod(p) }
                             .padding(horizontal = 14.dp, vertical = 8.dp)
                     ) {
                         Text(p.name.lowercase().replaceFirstChar { it.uppercase() },
