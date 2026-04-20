@@ -1,6 +1,6 @@
 package com.minimart.pos.ui.screen
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,7 +20,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -32,19 +31,11 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.minimart.pos.data.entity.CartItem
 import com.minimart.pos.data.entity.Product
-import com.minimart.pos.data.repository.ProductRepository
 import com.minimart.pos.scanner.BarcodeScannerView
 import com.minimart.pos.scanner.ScannerOverlay
 import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.CartViewModel
 import com.minimart.pos.ui.viewmodel.ProductSearchViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.*
-import javax.inject.Inject
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -59,7 +50,7 @@ fun ScannerCartScreen(
     val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
     var showScanner by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
-    val searchResults by searchVm.results.collectAsState()
+    val searchResults: List<Product> by searchVm.results.collectAsState()
 
     LaunchedEffect(state.lastScannedProduct) {
         if (state.lastScannedProduct != null) { kotlinx.coroutines.delay(1500); vm.clearError() }
@@ -92,9 +83,12 @@ fun ScannerCartScreen(
                         }
                     }
                     if (state.itemCount > 0) {
-                        Text("${state.itemCount} items • $currency ${String.format("%.2f", state.total)}",
-                            color = Color.White.copy(0.85f), style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.align(Alignment.CenterHorizontally))
+                        Text(
+                            "${state.itemCount} items • $currency ${String.format("%.2f", state.total)}",
+                            color = Color.White.copy(0.85f),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
                     }
                 }
             }
@@ -117,7 +111,9 @@ fun ScannerCartScreen(
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (searchText.isNotEmpty()) {
-                        IconButton(onClick = { vm.processBarcode(searchText); searchText = ""; searchVm.clear() }) {
+                        IconButton(onClick = {
+                            vm.processBarcode(searchText); searchText = ""; searchVm.clear()
+                        }) {
                             Icon(Icons.AutoMirrored.Filled.Send, null, tint = DT.Teal, modifier = Modifier.size(20.dp))
                         }
                     }
@@ -134,20 +130,29 @@ fun ScannerCartScreen(
 
             // ── Search suggestions ────────────────────────────────────────────
             if (searchResults.isNotEmpty() && searchText.isNotBlank()) {
-                Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(12.dp)).background(DT.Surface2).border(1.dp, DT.Border, RoundedCornerShape(12.dp))
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(DT.Surface2)
+                        .border(1.dp, DT.Border, RoundedCornerShape(12.dp))
                 ) {
                     Column {
-                        searchResults.take(5).forEach { product: com.minimart.pos.data.entity.Product ->
-                            Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        searchResults.take(5).forEach { product: Product ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(product.name, color = DT.OnSurface, fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodyMedium)
+                                    Text(product.name, color = DT.OnSurface, fontWeight = FontWeight.Medium,
+                                        style = MaterialTheme.typography.bodyMedium)
                                     Text("$currency ${String.format("%.2f", product.price)} • Stock: ${product.stock}",
                                         color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                                 }
-                                FilledIconButton(onClick = { vm.addToCart(product); searchText = ""; searchVm.clear() },
+                                FilledIconButton(
+                                    onClick = { vm.addToCart(product); searchText = ""; searchVm.clear() },
                                     modifier = Modifier.size(32.dp),
-                                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = DT.Teal)) {
+                                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = DT.Teal)
+                                ) {
                                     Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.size(16.dp))
                                 }
                             }
@@ -157,10 +162,12 @@ fun ScannerCartScreen(
                 }
             }
 
-            // ── Error/success banner ──────────────────────────────────────────
+            // ── Error banner ──────────────────────────────────────────────────
             AnimatedVisibility(visible = state.error != null) {
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clip(RoundedCornerShape(10.dp)).background(DT.Red.copy(0.15f)).padding(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(10.dp)).background(DT.Red.copy(0.15f)).padding(10.dp)
+                ) {
                     Icon(Icons.Default.Error, null, tint = DT.Red, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(state.error ?: "", color = DT.Red, style = MaterialTheme.typography.bodySmall)
@@ -184,9 +191,11 @@ fun ScannerCartScreen(
                     }
                 }
             } else {
-                LazyColumn(modifier = Modifier.weight(1f),
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     items(state.items, key = { it.product.id }) { item ->
                         DarkCartRow(item, currency,
                             onQtyChange = { vm.updateQuantity(item.product.id, it) },
@@ -197,9 +206,10 @@ fun ScannerCartScreen(
 
             // ── Bottom total + checkout ───────────────────────────────────────
             if (state.items.isNotEmpty()) {
-                Box(modifier = Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                    .background(DT.Surface2).padding(20.dp)
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                        .background(DT.Surface2).padding(20.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -228,47 +238,68 @@ fun ScannerCartScreen(
                 if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
                 else showScanner = !showScanner
             },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = if (state.items.isNotEmpty()) 140.dp else 20.dp).navigationBarsPadding(),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 20.dp, bottom = if (state.items.isNotEmpty()) 140.dp else 20.dp)
+                .navigationBarsPadding(),
             containerColor = if (showScanner) DT.Surface2 else DT.Teal,
-            shape = CircleShape,
-            elevation = FloatingActionButtonDefaults.elevation(8.dp)
+            shape = CircleShape
         ) {
-            Icon(if (showScanner) Icons.Default.Close else Icons.Default.QrCode, null,
-                tint = Color.White, modifier = Modifier.size(26.dp))
+            Icon(
+                if (showScanner) Icons.Default.Close else Icons.Default.QrCode,
+                null, tint = Color.White, modifier = Modifier.size(26.dp)
+            )
         }
     }
 }
 
 @Composable
-private fun DarkCartRow(item: CartItem, currency: String, onQtyChange: (Int) -> Unit, onRemove: () -> Unit) {
-    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-        .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(14.dp)).padding(14.dp)) {
+private fun DarkCartRow(
+    item: CartItem,
+    currency: String,
+    onQtyChange: (Int) -> Unit,
+    onRemove: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(DT.Surface)
+            .border(1.dp, DT.Border, RoundedCornerShape(14.dp))
+            .padding(14.dp)
+    ) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text("${item.product.name} x${item.quantity}", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
-                    Text("$currency ${String.format("%.2f", item.lineTotal)}", color = DT.TealLight, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text("$currency ${String.format("%.2f", item.lineTotal)}", color = DT.TealLight,
+                        fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
-                // Remove X button
-                Box(modifier = Modifier.size(32.dp).clip(CircleShape).background(DT.Surface2),
-                    contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.size(32.dp).clip(CircleShape).background(DT.Surface2),
+                    contentAlignment = Alignment.Center
+                ) {
                     IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
                         Icon(Icons.Default.Close, null, tint = DT.SubText, modifier = Modifier.size(16.dp))
                     }
                 }
             }
             Spacer(Modifier.height(10.dp))
-            // Quantity stepper
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(DT.Surface2).border(1.dp, DT.Border, CircleShape),
-                    contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.size(36.dp).clip(CircleShape)
+                        .background(DT.Surface2).border(1.dp, DT.Border, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
                     IconButton(onClick = { onQtyChange(item.quantity - 1) }, modifier = Modifier.size(36.dp)) {
                         Icon(Icons.Default.Remove, null, tint = DT.OnSurface, modifier = Modifier.size(18.dp))
                     }
                 }
                 Text(item.quantity.toString(), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Box(modifier = Modifier.size(36.dp).clip(CircleShape).background(DT.Surface2).border(1.dp, DT.Border, CircleShape),
-                    contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.size(36.dp).clip(CircleShape)
+                        .background(DT.Surface2).border(1.dp, DT.Border, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
                     IconButton(onClick = { onQtyChange(item.quantity + 1) }, modifier = Modifier.size(36.dp)) {
                         Icon(Icons.Default.Add, null, tint = DT.OnSurface, modifier = Modifier.size(18.dp))
                     }

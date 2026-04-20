@@ -92,7 +92,7 @@ fun ExpenseScreen(onBack: () -> Unit, vm: ExpenseViewModel = hiltViewModel()) {
 
             // ── Screen tabs ───────────────────────────────────────────────────
             TabRow(selectedTabIndex = selectedTab, containerColor = Color.Transparent,
-                contentColor = DT.Teal, dividerColor = DT.Border) {
+                contentColor = DT.Teal) {
                 Tab(selected = selectedTab == 0, onClick = { selectedTab = 0 }) {
                     Text("P&L Report", color = if (selectedTab == 0) DT.Teal else DT.SubText,
                         fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
