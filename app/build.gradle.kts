@@ -80,7 +80,6 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     // Room
-    implementation(libs.appcompat)
     implementation(libs.biometric)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)

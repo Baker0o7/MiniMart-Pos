@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.MiniMartPOS" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowSplashScreenBackground">#00897B</item>
         <item name="android:statusBarColor">#00897B</item>
-        <item name="android:navigationBarColor">@android:color/white</item>
+        <item name="android:navigationBarColor">#000000</item>
     </style>
 
-    <!-- Splash screen theme -->
     <style name="Theme.MiniMartPOS.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#00897B</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
