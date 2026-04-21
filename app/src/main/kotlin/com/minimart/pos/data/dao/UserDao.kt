@@ -18,6 +18,9 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE username = :username AND pinHash = :pinHash AND isActive = 1 LIMIT 1")
     suspend fun login(username: String, pinHash: String): User?
 
+    @Query("SELECT COUNT(*) FROM users WHERE isActive = 1")
+    suspend fun getUserCount(): Int
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertUser(user: User): Long
 

@@ -2,10 +2,8 @@ package com.minimart.pos.data.repository
 
 import com.minimart.pos.data.dao.SaleDao
 import com.minimart.pos.data.dao.TopSellerResult
-import com.minimart.pos.data.dao.UserDao
 import com.minimart.pos.data.entity.*
 import kotlinx.coroutines.flow.Flow
-import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,27 +30,5 @@ class SaleRepository @Inject constructor(
             productRepository.decrementStock(item.productId, item.quantity)
         }
         return saleId
-    }
-}
-
-@Singleton
-class UserRepository @Inject constructor(private val userDao: UserDao) {
-
-    fun getAllUsers(): Flow<List<User>> = userDao.getAllUsers()
-    suspend fun getUserById(id: Long): User? = userDao.getUserById(id)
-    suspend fun getUserCount(): Int = userDao.getUserCount()
-    suspend fun insertUser(user: User): Long = userDao.insertUser(user)
-    suspend fun updateUser(user: User) = userDao.updateUser(user)
-
-    /** Verify PIN login. Returns the User or null if credentials invalid. */
-    suspend fun login(username: String, pin: String): User? {
-        val user = userDao.getUserByUsername(username) ?: return null
-        val hash = sha256(pin)
-        return if (hash == user.pinHash) user else null
-    }
-
-    fun sha256(input: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(input.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) }
     }
 }
