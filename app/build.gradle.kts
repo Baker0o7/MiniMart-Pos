@@ -80,6 +80,9 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     // Room
+    implementation(libs.biometric)
+    implementation(libs.sqlcipher)
+    implementation(libs.sqlite.ktx)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
@@ -92,9 +95,6 @@ dependencies {
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
     // Retrofit
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.gson)
-    implementation(libs.okhttp.logging)
     // Coroutines
     implementation(libs.coroutines.android)
     // WorkManager

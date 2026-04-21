@@ -146,4 +146,22 @@ class AuthViewModel @Inject constructor(
             _uiState.update { AuthUiState() }
         }
     }
+
+    /** Called after biometric success — looks up the user by username only (no PIN check needed). */
+    fun loginWithBiometric(username: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val user = userRepo.getUserByUsername(username.trim())
+                if (user != null && user.isActive) {
+                    settingsRepo.setLoggedInUser(user.id)
+                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user) }
+                } else {
+                    _uiState.update { it.copy(isLoading = false, error = "User not found") }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = "Biometric login failed") }
+            }
+        }
+    }
 }

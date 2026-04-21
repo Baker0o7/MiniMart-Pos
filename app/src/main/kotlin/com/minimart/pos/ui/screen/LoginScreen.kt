@@ -1,5 +1,12 @@
 package com.minimart.pos.ui.screen
 
+import android.content.Context
+import android.os.Build
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricManager.Authenticators.*
+import androidx.biometric.BiometricPrompt
+import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -7,38 +14,76 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.AuthViewModel
+import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class)
+private const val MAX_ATTEMPTS = 3
+private const val LOCKOUT_SECONDS = 30
+
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     vm: AuthViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
+    val context = LocalContext.current
+
     var username by remember { mutableStateOf("admin") }
     var pin by remember { mutableStateOf("") }
-    var showPin by remember { mutableStateOf(false) }
+    var attempts by remember { mutableIntStateOf(0) }
+    var lockedOut by remember { mutableStateOf(false) }
+    var lockoutSeconds by remember { mutableIntStateOf(LOCKOUT_SECONDS) }
+    var biometricError by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(state.isLoggedIn) { if (state.isLoggedIn) onLoginSuccess() }
+    // Track failed attempts via state.error changes
+    LaunchedEffect(state.error) {
+        if (state.error != null && !state.isLoggedIn && !lockedOut) {
+            attempts++
+            if (attempts >= MAX_ATTEMPTS) lockedOut = true
+        }
+    }
+    LaunchedEffect(lockedOut) {
+        if (lockedOut) {
+            lockoutSeconds = LOCKOUT_SECONDS
+            while (lockoutSeconds > 0) {
+                delay(1000)
+                lockoutSeconds--
+            }
+            lockedOut = false
+            attempts = 0
+            pin = ""
+        }
+    }
+
+    LaunchedEffect(state.isLoggedIn) {
+        if (state.isLoggedIn) onLoginSuccess()
+    }
+
+    // Auto-show biometric on load if available
+    LaunchedEffect(Unit) {
+        delay(300)
+        if (isBiometricAvailable(context)) {
+            triggerBiometric(context, username, vm, onError = { biometricError = it })
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -46,7 +91,7 @@ fun LoginScreen(
         contentAlignment = Alignment.TopCenter
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp).padding(top = 60.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp).padding(top = 56.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // ── Logo ──────────────────────────────────────────────────────────
@@ -57,93 +102,168 @@ fun LoginScreen(
             ) {
                 Icon(Icons.Default.StoreMallDirectory, null, tint = Color.White, modifier = Modifier.size(48.dp))
             }
-            Spacer(Modifier.height(20.dp))
-            Text("MiniMart POS", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
+            Spacer(Modifier.height(16.dp))
+            Text("MiniMart POS", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
             Text("Sign in to continue", color = DT.SubText, style = MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(28.dp))
 
-            // ── Username ──────────────────────────────────────────────────────
-            OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Username", color = DT.SubText) },
-                leadingIcon = { Icon(Icons.Default.Person, null, tint = DT.Teal, modifier = Modifier.size(20.dp)) },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                    focusedTextColor = DT.OnSurface, unfocusedTextColor = DT.OnSurface,
-                    cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(12.dp))
-
-            // ── PIN field ─────────────────────────────────────────────────────
-            OutlinedTextField(
-                value = pin,
-                onValueChange = { if (it.length <= 6 && it.all(Char::isDigit)) pin = it },
-                label = { Text("PIN", color = DT.SubText) },
-                leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.Teal, modifier = Modifier.size(20.dp)) },
-                trailingIcon = {
-                    IconButton(onClick = { showPin = !showPin }) {
-                        Icon(if (showPin) Icons.Default.VisibilityOff else Icons.Default.Visibility, null, tint = DT.SubText)
+            // ── Lockout banner ────────────────────────────────────────────────
+            AnimatedVisibility(visible = lockedOut) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                            .background(DT.Red.copy(0.15f)).border(1.dp, DT.Red.copy(0.4f), RoundedCornerShape(14.dp))
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.Lock, null, tint = DT.Red, modifier = Modifier.size(32.dp))
+                            Spacer(Modifier.height(8.dp))
+                            Text("Account Locked", color = DT.Red, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text("Too many failed attempts", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                            Spacer(Modifier.height(8.dp))
+                            Text("Try again in ${lockoutSeconds}s", color = DT.Amber, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        }
                     }
-                },
-                visualTransformation = if (showPin) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                    focusedTextColor = DT.OnSurface, unfocusedTextColor = DT.OnSurface,
-                    cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(20.dp))
-
-            // ── PIN pad ───────────────────────────────────────────────────────
-            DarkPinPad(
-                onDigit = { d -> if (pin.length < 6) pin += d },
-                onDelete = { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
-            )
-
-            Spacer(Modifier.height(20.dp))
-
-            state.error?.let {
-                Text(it, color = DT.Red, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(8.dp))
-            }
-
-            // ── Login button ──────────────────────────────────────────────────
-            Button(
-                onClick = { vm.login(username, pin) },
-                modifier = Modifier.fillMaxWidth().height(54.dp),
-                enabled = username.isNotBlank() && pin.length >= 4 && !state.isLoading,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.TealDim)
-            ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
-                } else {
-                    Text("Login", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
+                    Spacer(Modifier.height(16.dp))
                 }
             }
-            Spacer(Modifier.height(32.dp))
+
+            if (!lockedOut) {
+                // ── Username field ────────────────────────────────────────────
+                OutlinedTextField(
+                    value = username, onValueChange = { username = it },
+                    label = { Text("Username", color = DT.SubText) },
+                    leadingIcon = { Icon(Icons.Default.Person, null, tint = DT.Teal, modifier = Modifier.size(20.dp)) },
+                    singleLine = true, shape = RoundedCornerShape(14.dp),
+                    colors = outlinedColors(), modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
+
+                // ── PIN dots display ──────────────────────────────────────────
+                Row(
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                        .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(14.dp))
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Lock, null, tint = DT.Teal, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(4.dp))
+                    // 6 PIN dots
+                    repeat(6) { i ->
+                        val filled = i < pin.length
+                        Box(
+                            modifier = Modifier.size(14.dp).clip(CircleShape)
+                                .background(if (filled) DT.Teal else DT.Border)
+                        )
+                    }
+                    Spacer(Modifier.weight(1f))
+                    // Biometric button
+                    if (isBiometricAvailable(context)) {
+                        IconButton(onClick = {
+                            triggerBiometric(context, username, vm, onError = { biometricError = it })
+                        }, modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Fingerprint, null, tint = DT.Teal, modifier = Modifier.size(26.dp))
+                        }
+                    }
+                }
+
+                // Attempt counter
+                if (attempts > 0) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "${MAX_ATTEMPTS - attempts} attempt${if (MAX_ATTEMPTS - attempts == 1) "" else "s"} remaining",
+                        color = DT.Amber, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                // Error message
+                (state.error ?: biometricError)?.let { err ->
+                    Spacer(Modifier.height(6.dp))
+                    Text(err, color = DT.Red, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // ── PIN pad ───────────────────────────────────────────────────
+                DarkPinPad(
+                    onDigit = { d ->
+                        if (pin.length < 6) {
+                            pin += d
+                            if (pin.length == 6) {
+                                vm.login(username, pin)
+                                pin = ""
+                            }
+                        }
+                    },
+                    onDelete = { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                // ── Login button (manual submit) ──────────────────────────────
+                Button(
+                    onClick = { vm.login(username, pin); pin = "" },
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    enabled = username.isNotBlank() && pin.length >= 4 && !state.isLoading,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.TealDim)
+                ) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
+                    } else {
+                        Text("Login", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
+                    }
+                }
+            }
         }
     }
 }
+
+// ─── Biometric helpers ────────────────────────────────────────────────────────
+
+private fun isBiometricAvailable(context: Context): Boolean {
+    val bm = BiometricManager.from(context)
+    return bm.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
+}
+
+private fun triggerBiometric(context: Context, username: String, vm: AuthViewModel, onError: (String) -> Unit) {
+    val executor = ContextCompat.getMainExecutor(context)
+    val activity = context as? FragmentActivity ?: return
+
+    val callback = object : BiometricPrompt.AuthenticationCallback() {
+        override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+            vm.loginWithBiometric(username)
+        }
+        override fun onAuthenticationError(code: Int, msg: CharSequence) {
+            if (code != BiometricPrompt.ERROR_USER_CANCELED && code != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                onError("Biometric error: $msg")
+            }
+        }
+        override fun onAuthenticationFailed() {
+            onError("Biometric not recognized")
+        }
+    }
+
+    val prompt = BiometricPrompt(activity, executor, callback)
+    val info = BiometricPrompt.PromptInfo.Builder()
+        .setTitle("MiniMart POS")
+        .setSubtitle("Verify your identity")
+        .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
+        .build()
+
+    prompt.authenticate(info)
+}
+
+// ─── PIN Pad ──────────────────────────────────────────────────────────────────
 
 @Composable
 private fun DarkPinPad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
     val digits = listOf("1","2","3","4","5","6","7","8","9","","0","⌫")
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         digits.chunked(3).forEach { row ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 row.forEach { d ->
                     if (d.isEmpty()) {
                         Spacer(Modifier.weight(1f))
@@ -166,3 +286,10 @@ private fun DarkPinPad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
         }
     }
 }
+
+@Composable
+private fun outlinedColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+    focusedTextColor = DT.OnSurface, unfocusedTextColor = DT.OnSurface,
+    cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface
+)

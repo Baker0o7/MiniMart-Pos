@@ -242,11 +242,12 @@ fun ScannerCartScreen(
 
             // ── Cart items ────────────────────────────────────────────────────
             if (state.isEmpty) {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.ShoppingCart, null, modifier = Modifier.size(64.dp), tint = DT.SubText.copy(0.3f))
-                        Spacer(Modifier.height(8.dp))
-                        Text("Cart is empty", color = DT.SubText)
+                        Icon(Icons.Default.ShoppingCart, null, modifier = Modifier.size(72.dp), tint = DT.SubText.copy(0.3f))
+                        Spacer(Modifier.height(12.dp))
+                        Text("Cart is empty", color = DT.SubText, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+                        Spacer(Modifier.height(4.dp))
                         Text("Scan or search a product", color = DT.SubText.copy(0.6f), style = MaterialTheme.typography.bodySmall)
                     }
                 }
