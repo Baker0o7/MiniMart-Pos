@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,10 +48,20 @@ fun ScannerCartScreen(
 ) {
     val state by vm.uiState.collectAsState()
     val currency by vm.currency.collectAsState()
+    val context = LocalContext.current
     val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
     var showScanner by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
     val searchResults: List<Product> by searchVm.results.collectAsState()
+
+    fun vibrate() {
+        val vib = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as android.os.Vibrator
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            vib.vibrate(android.os.VibrationEffect.createOneShot(60, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION") vib.vibrate(60)
+        }
+    }
 
     LaunchedEffect(state.lastScannedProduct) {
         if (state.lastScannedProduct != null) { kotlinx.coroutines.delay(1500); vm.clearError() }
@@ -93,40 +104,89 @@ fun ScannerCartScreen(
                 }
             }
 
-            // ── Camera preview ────────────────────────────────────────────────
-            AnimatedVisibility(visible = showScanner && cameraPermission.status.isGranted) {
-                Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
-                    BarcodeScannerView(modifier = Modifier.fillMaxSize(), onBarcodeDetected = {
-                        vm.processBarcode(it); searchText = ""; searchVm.clear(); showScanner = false
-                    })
-                    ScannerOverlay(modifier = Modifier.fillMaxSize())
+            // ── Search bar ────────────────────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = searchText,
+                    onValueChange = { searchText = it; searchVm.setQuery(it) },
+                    placeholder = { Text("Barcode or product name", color = DT.SubText, maxLines = 1) },
+                    leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
+                    trailingIcon = {
+                        if (searchText.isNotEmpty()) {
+                            IconButton(onClick = {
+                                vm.processBarcode(searchText); searchText = ""; searchVm.clear()
+                            }) {
+                                Icon(Icons.AutoMirrored.Filled.Send, null, tint = DT.Teal, modifier = Modifier.size(20.dp))
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                        focusedTextColor = DT.OnSurface, unfocusedTextColor = DT.OnSurface,
+                        cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface
+                    ),
+                    modifier = Modifier.weight(1f)
+                )
+                // Scan toggle button
+                FilledIconButton(
+                    onClick = {
+                        if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
+                        else showScanner = !showScanner
+                    },
+                    modifier = Modifier.size(52.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = if (showScanner) DT.Surface2 else DT.Teal
+                    ),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Icon(
+                        if (showScanner) Icons.Default.Close else Icons.Default.QrCode,
+                        null, tint = Color.White, modifier = Modifier.size(24.dp)
+                    )
                 }
             }
 
-            // ── Search bar ────────────────────────────────────────────────────
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it; searchVm.setQuery(it) },
-                placeholder = { Text("Barcode or product name", color = DT.SubText, maxLines = 1) },
-                leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
-                trailingIcon = {
-                    if (searchText.isNotEmpty()) {
-                        IconButton(onClick = {
-                            vm.processBarcode(searchText); searchText = ""; searchVm.clear()
-                        }) {
-                            Icon(Icons.AutoMirrored.Filled.Send, null, tint = DT.Teal, modifier = Modifier.size(20.dp))
+            // ── Compact inline scanner (like Add Product dialog) ──────────────
+            AnimatedVisibility(visible = showScanner && cameraPermission.status.isGranted) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                ) {
+                    BarcodeScannerView(
+                        modifier = Modifier.fillMaxSize(),
+                        onBarcodeDetected = {
+                            vibrate()
+                            vm.processBarcode(it)
+                            searchText = ""
+                            searchVm.clear()
+                            showScanner = false
+                        }
+                    )
+                    // Corner bracket overlay
+                    ScannerOverlay(modifier = Modifier.fillMaxSize())
+                    // Close X button top-right
+                    IconButton(
+                        onClick = { showScanner = false },
+                        modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.size(28.dp).clip(CircleShape).background(Color.Black.copy(0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(16.dp))
                         }
                     }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                    focusedTextColor = DT.OnSurface, unfocusedTextColor = DT.OnSurface,
-                    cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface
-                ),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)
-            )
+                }
+            }
 
             // ── Search suggestions ────────────────────────────────────────────
             if (searchResults.isNotEmpty() && searchText.isNotBlank()) {
@@ -232,24 +292,6 @@ fun ScannerCartScreen(
             }
         }
 
-        // ── Scan FAB ──────────────────────────────────────────────────────────
-        FloatingActionButton(
-            onClick = {
-                if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
-                else showScanner = !showScanner
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = if (state.items.isNotEmpty()) 140.dp else 20.dp)
-                .navigationBarsPadding(),
-            containerColor = if (showScanner) DT.Surface2 else DT.Teal,
-            shape = CircleShape
-        ) {
-            Icon(
-                if (showScanner) Icons.Default.Close else Icons.Default.QrCode,
-                null, tint = Color.White, modifier = Modifier.size(26.dp)
-            )
-        }
     }
 }
 
