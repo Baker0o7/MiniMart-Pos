@@ -1,5 +1,7 @@
 package com.minimart.pos.ui
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -91,7 +93,14 @@ fun MiniMartNavGraph(
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            NavHost(navController = navController, startDestination = Routes.LOGIN) {
+            NavHost(
+        navController = navController,
+        startDestination = Routes.LOGIN,
+        enterTransition = { slideInHorizontally(tween(280)) { it / 3 } + fadeIn(tween(280)) },
+        exitTransition = { slideOutHorizontally(tween(280)) { -it / 3 } + fadeOut(tween(280)) },
+        popEnterTransition = { slideInHorizontally(tween(280)) { -it / 3 } + fadeIn(tween(280)) },
+        popExitTransition = { slideOutHorizontally(tween(280)) { it / 3 } + fadeOut(tween(280)) }
+    ) {
 
                 composable(Routes.LOGIN) {
                     LaunchedEffect(authState.isLoggedIn) {

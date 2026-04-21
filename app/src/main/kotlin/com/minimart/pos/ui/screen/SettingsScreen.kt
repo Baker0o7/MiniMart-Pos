@@ -133,6 +133,106 @@ fun SettingsScreen(
                     }
                 }
 
+                // ── Data & Backup ──────────────────────────────────────────────
+                DarkSection("Data & Backup") {
+                    var backupStatus by remember { mutableStateOf<String?>(null) }
+                    var isBackingUp by remember { mutableStateOf(false) }
+                    var isRestoring by remember { mutableStateOf(false) }
+                    var backupFiles by remember { mutableStateOf<List<java.io.File>>(emptyList()) }
+                    var showRestoreDialog by remember { mutableStateOf(false) }
+
+                    LaunchedEffect(Unit) { backupFiles = com.minimart.pos.util.BackupManager.listBackups() }
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        // Backup now
+                        Button(
+                            onClick = {
+                                isBackingUp = true
+                                scope.launch {
+                                    val result = com.minimart.pos.util.BackupManager.backup(context)
+                                    backupStatus = when (result) {
+                                        is com.minimart.pos.util.BackupResult.Success -> { backupFiles = com.minimart.pos.util.BackupManager.listBackups(); result.message }
+                                        is com.minimart.pos.util.BackupResult.Error -> result.message
+                                    }
+                                    isBackingUp = false
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isBackingUp,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
+                        ) {
+                            if (isBackingUp) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                            else Icon(Icons.Default.Backup, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Backup Now", style = MaterialTheme.typography.labelMedium, color = Color.White)
+                        }
+                        // Restore
+                        OutlinedButton(
+                            onClick = { backupFiles = com.minimart.pos.util.BackupManager.listBackups(); showRestoreDialog = true },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)
+                        ) {
+                            Icon(Icons.Default.Restore, null, tint = DT.OnSurface, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Restore", style = MaterialTheme.typography.labelMedium, color = DT.OnSurface)
+                        }
+                    }
+
+                    backupStatus?.let { msg ->
+                        Text(msg, color = if (msg.startsWith("Backup saved")) DT.Green else DT.Red,
+                            style = MaterialTheme.typography.labelSmall)
+                    }
+
+                    if (backupFiles.isNotEmpty()) {
+                        Text("${backupFiles.size} backup${if (backupFiles.size == 1) "" else "s"} in Downloads/MiniMartPOS/backups",
+                            color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                        // Share latest backup
+                        TextButton(onClick = { com.minimart.pos.util.BackupManager.shareBackup(context, backupFiles.first()) },
+                            contentPadding = PaddingValues(0.dp)) {
+                            Icon(Icons.Default.Share, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Share Latest Backup (USB/OTG/Cloud)", color = DT.Teal, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+
+                    if (showRestoreDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showRestoreDialog = false },
+                            containerColor = DT.Surface,
+                            title = { Text("Restore Database", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+                            text = {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text("Choose a backup to restore. The app will need to restart after restore.",
+                                        color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                                    if (backupFiles.isEmpty()) {
+                                        Text("No backups found in Downloads/MiniMartPOS/backups", color = DT.Red, style = MaterialTheme.typography.labelSmall)
+                                    } else {
+                                        backupFiles.take(5).forEach { file ->
+                                            TextButton(onClick = {
+                                                showRestoreDialog = false
+                                                isRestoring = true
+                                                scope.launch {
+                                                    val result = com.minimart.pos.util.BackupManager.restore(context, file)
+                                                    backupStatus = when (result) {
+                                                        is com.minimart.pos.util.BackupResult.Success -> result.message
+                                                        is com.minimart.pos.util.BackupResult.Error -> result.message
+                                                    }
+                                                    isRestoring = false
+                                                }
+                                            }, modifier = Modifier.fillMaxWidth()) {
+                                                Text(file.name, color = DT.TealLight, style = MaterialTheme.typography.bodySmall)
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            confirmButton = { TextButton(onClick = { showRestoreDialog = false }) { Text("Cancel", color = DT.SubText) } }
+                        )
+                    }
+                }
+
                 // ── Account ───────────────────────────────────────────────────
                 DarkSection("Account") {
                     DarkMenuRow("User Management", Icons.Default.Group, Icons.Default.ChevronRight, DT.OnSurface, onUsers)
