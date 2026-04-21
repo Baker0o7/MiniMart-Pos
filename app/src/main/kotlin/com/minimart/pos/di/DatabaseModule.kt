@@ -25,10 +25,7 @@ object DatabaseModule {
         @ApplicationContext context: Context,
         callback: DatabaseCallback
     ): AppDatabase {
-        // Load SQLCipher native libs
-        SQLiteDatabase.loadLibs(context)
-
-        // Derive encryption passphrase from app package + device Android ID
+        // SQLCipher libs already loaded in MainActivity.onCreate()
         val androidId = android.provider.Settings.Secure.getString(
             context.contentResolver, android.provider.Settings.Secure.ANDROID_ID
         ) ?: "minimart_fallback"

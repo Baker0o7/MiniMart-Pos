@@ -1,4 +1,5 @@
 [versions]
+appcompat = "1.7.0"
 biometric = "1.2.0-alpha05"
 sqlcipher = "4.5.4"
 agp = "8.6.1"
@@ -66,6 +67,7 @@ accompanist-permissions = { group = "com.google.accompanist", name = "accompanis
 # Chart
 mpandroidchart = { group = "com.github.PhilJay", name = "MPAndroidChart", version.ref = "mpandroidchart" }
 
+appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 sqlcipher = { group = "net.zetetic", name = "android-database-sqlcipher", version.ref = "sqlcipher" }
 sqlite-ktx = { group = "androidx.sqlite", name = "sqlite-ktx", version = "2.4.0" }
