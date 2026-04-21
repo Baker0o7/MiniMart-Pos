@@ -14,11 +14,10 @@ import com.minimart.pos.scanner.KeyboardScanner
 import com.minimart.pos.ui.MiniMartNavGraph
 import com.minimart.pos.ui.theme.MiniMartTheme
 import dagger.hilt.android.AndroidEntryPoint
-import net.sqlcipher.database.SQLiteDatabase
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {   // AppCompatActivity extends FragmentActivity → biometric works
+class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var keyboardScanner: KeyboardScanner
     @Inject lateinit var printer: ThermalPrinter
@@ -28,9 +27,6 @@ class MainActivity : AppCompatActivity() {   // AppCompatActivity extends Fragme
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        // SQLCipher native libs must be loaded on the main thread before Room opens the DB
-        SQLiteDatabase.loadLibs(this)
 
         setContent {
             val darkMode by settingsRepo.darkMode.collectAsState(false)

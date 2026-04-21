@@ -82,8 +82,6 @@ dependencies {
     // Room
     implementation(libs.appcompat)
     implementation(libs.biometric)
-    implementation(libs.sqlcipher)
-    implementation(libs.sqlite.ktx)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
