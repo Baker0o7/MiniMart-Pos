@@ -82,6 +82,23 @@ class DashboardViewModel @Inject constructor(
                 }
         }
     }
+
+    /** Pull-to-refresh: re-trigger a fresh load of today's stats */
+    fun refresh() {
+        viewModelScope.launch {
+            val todayStart = java.util.Calendar.getInstance().apply {
+                set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            try {
+                val revenue = saleRepo.getTotalRevenueToday(todayStart).first() ?: 0.0
+                val count = saleRepo.getSaleCountToday(todayStart).first()
+                val low = productRepo.getLowStockProducts().first()
+                val top = saleRepo.getTopSellers(todayStart).first()
+                _uiState.update { it.copy(todayRevenue = revenue, todaySaleCount = count, lowStockProducts = low, topSellers = top) }
+            } catch (_: Exception) {}
+        }
+    }
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────

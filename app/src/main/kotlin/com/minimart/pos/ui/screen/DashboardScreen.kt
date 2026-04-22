@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,8 +58,19 @@ fun DashboardScreen(
     vm: DashboardViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
+    val role   = state.currentUser?.role
+    val rm     = com.minimart.pos.util.RoleManager
+    var isRefreshing by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize().background(DarkBg)) {
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) { kotlinx.coroutines.delay(1000); vm.refresh(); isRefreshing = false }
+    }
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = { isRefreshing = true },
+        modifier = Modifier.fillMaxSize().background(DarkBg)
+    ) {
         LazyColumn(
             contentPadding = PaddingValues(bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp)
@@ -145,18 +157,48 @@ fun DashboardScreen(
             // ── Quick Actions ─────────────────────────────────────────────────
             item { Spacer(Modifier.height(20.dp)) }
             item {
-                Text("Quick Actions", color = OnDark, fontWeight = FontWeight.Bold, fontSize = 18.sp,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
+                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text("Quick Actions", color = OnDark, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.weight(1f))
+                    // Role badge
+                    if (state.currentUser != null) {
+                        val roleColor = Color(com.minimart.pos.util.RoleManager.roleBadgeColor(role).toLong() or 0xFF000000L)
+                        Box(modifier = Modifier.clip(RoundedCornerShape(20.dp))
+                            .background(roleColor.copy(0.15f))
+                            .border(1.dp, roleColor.copy(0.4f), RoundedCornerShape(20.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)) {
+                            Text(com.minimart.pos.util.RoleManager.roleLabel(role),
+                                color = roleColor, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
             item {
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        BigActionCard(Modifier.weight(1f), "Products",   Icons.Default.QrCode,         TealCard,   TealGlow,   onNavigateToProducts)
-                        BigActionCard(Modifier.weight(1f), "Inventory",  Icons.Default.ShoppingCart,   Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory)
+                        BigActionCard(Modifier.weight(1f), "New Sale", Icons.Default.QrCode, TealCard, TealGlow, onNavigateToScanner)
+                        BigActionCard(Modifier.weight(1f), "Products", Icons.Default.Inventory2, Color(0xFF1A3530), DT.TealLight, onNavigateToProducts)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        BigActionCard(Modifier.weight(1f), "Daily Report", Icons.Default.BarChart,       PurpleCard, Color(0xFFCE93D8), onNavigateToReports)
-                        BigActionCard(Modifier.weight(1f), "Add Expense",  Icons.Default.Receipt,    RoseCard.copy(alpha = 0.4f), Color(0xFFEF9A9A),  onNavigateToExpenses)
+                        if (rm.canViewReports(role)) {
+                            BigActionCard(Modifier.weight(1f), "Reports", Icons.Default.BarChart, PurpleCard, Color(0xFFCE93D8), onNavigateToReports)
+                        } else {
+                            BigActionCard(Modifier.weight(1f), "Inventory", Icons.Default.Store, Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory)
+                        }
+                        if (rm.canViewExpenses(role)) {
+                            BigActionCard(Modifier.weight(1f), "Expenses", Icons.Default.Receipt, RoseCard.copy(alpha = 0.4f), Color(0xFFEF9A9A), onNavigateToExpenses)
+                        } else {
+                            Box(modifier = Modifier.weight(1f).height(130.dp).clip(RoundedCornerShape(20.dp))
+                                .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(20.dp)),
+                                contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Default.Lock, null, tint = DT.SubText.copy(0.4f), modifier = Modifier.size(22.dp))
+                                    Spacer(Modifier.height(4.dp))
+                                    Text("Manager Only", color = DT.SubText.copy(0.4f), style = MaterialTheme.typography.labelSmall,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -197,7 +239,8 @@ fun DashboardScreen(
                 }
             }
         }
-    }
+    }  // end LazyColumn
+    }  // end PullToRefreshBox
 }
 
 // ─── Big action card ──────────────────────────────────────────────────────────
