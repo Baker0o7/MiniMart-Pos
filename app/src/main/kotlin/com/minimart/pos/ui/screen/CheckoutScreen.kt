@@ -150,6 +150,23 @@ fun CheckoutScreen(
                         }
                     }
 
+                    // Change row — shows inside summary as soon as cash >= total
+                    if (selectedMethod == PaymentMethod.CASH && cashAmount >= state.total && state.total > 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                .background(DT.Green.copy(0.12f)).padding(horizontal = 12.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Money, null, tint = DT.Green, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Change", color = DT.Green, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            }
+                            Text("$currency ${String.format("%.2f", change)}", color = DT.Green, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                        }
+                    }
+
                     // Total
                     HorizontalDivider(color = DT.Border)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
@@ -213,20 +230,7 @@ fun CheckoutScreen(
                                 }
                             }
                         }
-                        // Change display
-                        if (cashAmount >= state.total && state.total > 0) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(DT.TealDim)
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("Change", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Text("$currency ${String.format("%.2f", change)}", color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
-                            }
-                        }
+                        // (Change is shown in Order Summary above)
                     }
                     PaymentMethod.MPESA -> {
                         OutlinedTextField(
