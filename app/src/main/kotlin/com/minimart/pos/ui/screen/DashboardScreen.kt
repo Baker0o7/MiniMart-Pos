@@ -2,6 +2,7 @@ package com.minimart.pos.ui.screen
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.minimart.pos.data.dao.TopSellerResult
+import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.DashboardViewModel
 import kotlin.math.max
 
@@ -58,7 +60,7 @@ fun DashboardScreen(
     vm: DashboardViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
-    val role   = state.currentUser?.role
+    val role   = null  // role-based UI gating uses null = show all
     val rm     = com.minimart.pos.util.RoleManager
     var isRefreshing by remember { mutableStateOf(false) }
 
@@ -157,21 +159,8 @@ fun DashboardScreen(
             // ── Quick Actions ─────────────────────────────────────────────────
             item { Spacer(Modifier.height(20.dp)) }
             item {
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text("Quick Actions", color = OnDark, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.weight(1f))
-                    // Role badge
-                    if (state.currentUser != null) {
-                        val roleColor = Color(com.minimart.pos.util.RoleManager.roleBadgeColor(role).toLong() or 0xFF000000L)
-                        Box(modifier = Modifier.clip(RoundedCornerShape(20.dp))
-                            .background(roleColor.copy(0.15f))
-                            .border(1.dp, roleColor.copy(0.4f), RoundedCornerShape(20.dp))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)) {
-                            Text(com.minimart.pos.util.RoleManager.roleLabel(role),
-                                color = roleColor, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
+                Text("Quick Actions", color = OnDark, fontWeight = FontWeight.Bold, fontSize = 18.sp,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
             }
             item {
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
