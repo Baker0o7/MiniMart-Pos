@@ -239,7 +239,6 @@ fun DashboardScreen(
                 }
             }
         }
-    }  // end LazyColumn
     }  // end PullToRefreshBox
 }
 
