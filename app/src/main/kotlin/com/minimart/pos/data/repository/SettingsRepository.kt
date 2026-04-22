@@ -27,6 +27,9 @@ class SettingsRepository @Inject constructor(
         val KEY_LOGGED_IN_USER   = longPreferencesKey("logged_in_user_id")
         val KEY_REQUIRE_PIN      = booleanPreferencesKey("require_pin_on_open")
         val KEY_MPESA_PAYBILL    = stringPreferencesKey("mpesa_paybill")
+        val KEY_MPESA_TILL       = stringPreferencesKey("mpesa_till")
+        val KEY_MPESA_WITHDRAW   = stringPreferencesKey("mpesa_withdraw_number")
+        val KEY_MPESA_NAME       = stringPreferencesKey("mpesa_account_name")
         val KEY_RECEIPT_COUNTER  = intPreferencesKey("receipt_counter")
     }
 
@@ -40,6 +43,9 @@ class SettingsRepository @Inject constructor(
     val loggedInUserId: Flow<Long?>     = context.dataStore.data.map { it[KEY_LOGGED_IN_USER] }
     val requirePin: Flow<Boolean>       = context.dataStore.data.map { it[KEY_REQUIRE_PIN] ?: true }
     val mpesaPaybill: Flow<String>      = context.dataStore.data.map { it[KEY_MPESA_PAYBILL] ?: "" }
+    val mpesaTill: Flow<String>         = context.dataStore.data.map { it[KEY_MPESA_TILL] ?: "" }
+    val mpesaWithdraw: Flow<String>     = context.dataStore.data.map { it[KEY_MPESA_WITHDRAW] ?: "" }
+    val mpesaAccountName: Flow<String>  = context.dataStore.data.map { it[KEY_MPESA_NAME] ?: "" }
     val receiptCounter: Flow<Int>       = context.dataStore.data.map { it[KEY_RECEIPT_COUNTER] ?: 0 }
 
     suspend fun setStoreName(name: String) = context.dataStore.edit { it[KEY_STORE_NAME] = name }
@@ -53,7 +59,10 @@ class SettingsRepository @Inject constructor(
     suspend fun setLoggedInUser(userId: Long?) = context.dataStore.edit {
         if (userId == null) it.remove(KEY_LOGGED_IN_USER) else it[KEY_LOGGED_IN_USER] = userId
     }
-    suspend fun setMpesaPaybill(pb: String) = context.dataStore.edit { it[KEY_MPESA_PAYBILL] = pb }
+    suspend fun setMpesaPaybill(pb: String)    = context.dataStore.edit { it[KEY_MPESA_PAYBILL] = pb }
+    suspend fun setMpesaTill(t: String)        = context.dataStore.edit { it[KEY_MPESA_TILL] = t }
+    suspend fun setMpesaWithdraw(n: String)    = context.dataStore.edit { it[KEY_MPESA_WITHDRAW] = n }
+    suspend fun setMpesaAccountName(n: String) = context.dataStore.edit { it[KEY_MPESA_NAME] = n }
     suspend fun incrementReceiptCounter(): Int {
         var newVal = 0
         context.dataStore.edit { prefs ->

@@ -38,6 +38,7 @@ import com.minimart.pos.ui.viewmodel.ProductViewModel
 @Composable
 fun ProductListScreen(
     onBack: () -> Unit,
+    canEditPrices: Boolean = true,
     vm: ProductViewModel = hiltViewModel()
 ) {
     val products by vm.products.collectAsState()
@@ -60,12 +61,14 @@ fun ProductListScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = DT.Teal)
                 }
                 Text("Products", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 22.sp, modifier = Modifier.weight(1f))
-                Box(
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(DT.TealDim),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, null, tint = DT.Teal, modifier = Modifier.size(22.dp))
+                if (canEditPrices) {
+                    Box(
+                        modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(DT.TealDim),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        IconButton(onClick = { showAddDialog = true }) {
+                            Icon(Icons.Default.Add, null, tint = DT.Teal, modifier = Modifier.size(22.dp))
+                        }
                     }
                 }
             }

@@ -31,6 +31,7 @@ import com.minimart.pos.printer.ThermalPrinter
 import com.minimart.pos.ui.screen.*
 import com.minimart.pos.ui.viewmodel.AuthViewModel
 import com.minimart.pos.ui.viewmodel.CartViewModel
+import com.minimart.pos.util.RoleManager
 
 object Routes {
     const val LOGIN     = "login"
@@ -156,8 +157,8 @@ fun MiniMartNavGraph(
                     )
                 }
 
-                composable(Routes.PRODUCTS)  { ProductListScreen(onBack = { navController.popBackStack() }) }
-                composable(Routes.INVENTORY) { InventoryScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.PRODUCTS)  { ProductListScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role)) }
+                composable(Routes.INVENTORY) { InventoryScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role)) }
                 composable(Routes.REPORTS)   { ReportsScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.EXPENSES)  { ExpenseScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.USERS)     { UserManagementScreen(onBack = { navController.popBackStack() }) }
@@ -165,15 +166,16 @@ fun MiniMartNavGraph(
 
                 composable(Routes.SETTINGS) {
                     SettingsScreen(
-                        onBack   = { navController.popBackStack() },
-                        onShifts = { navController.navigate(Routes.SHIFTS) },
-                        onUsers  = { navController.navigate(Routes.USERS) },
-                        onLogout = {
+                        onBack       = { navController.popBackStack() },
+                        onShifts     = { navController.navigate(Routes.SHIFTS) },
+                        onUsers      = { navController.navigate(Routes.USERS) },
+                        onLogout     = {
                             authVm.logout()
                             navController.navigate(Routes.LOGIN) { popUpTo(0) { inclusive = true } }
                         },
-                        settingsRepo = settingsRepo,
-                        printer      = printer
+                        settingsRepo  = settingsRepo,
+                        printer       = printer,
+                        currentRole   = authState.currentUser?.role
                     )
                 }
             }
