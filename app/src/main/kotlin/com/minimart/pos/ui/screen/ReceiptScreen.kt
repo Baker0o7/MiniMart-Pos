@@ -25,12 +25,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.minimart.pos.data.entity.PaymentMethod
+import com.minimart.pos.data.entity.Sale
+import com.minimart.pos.data.entity.SaleItem
+import com.minimart.pos.data.entity.SaleStatus
 import com.minimart.pos.data.entity.SaleWithItems
-import com.minimart.pos.printer.PrintResult
+import com.minimart.pos.data.repository.SaleRepository
 import com.minimart.pos.printer.ThermalPrinter
 import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.util.PdfReceiptGenerator
@@ -40,8 +42,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
+import javax.inject.Inject
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiptScreen(
     saleId: Long,
@@ -55,16 +57,29 @@ fun ReceiptScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var pdfStatus by remember { mutableStateOf<String?>(null) }
+    var statusMsg by remember { mutableStateOf<String?>(null) }
     var isGeneratingPdf by remember { mutableStateOf(false) }
-    var printStatus by remember { mutableStateOf<String?>(null) }
-
-    // Bounce animation for checkmark
-    val scale by animateFloatAsState(targetValue = 1f, animationSpec = spring(
-        dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow
-    ), label = "checkmark")
-
+    // Dummy sale for display — in production load from DB via ViewModel
+    val sale = remember {
+        Sale(
+            id = saleId,
+            receiptNumber = "RCP-${saleId.toString().padStart(4, '0')}",
+            subtotal = 0.0, taxAmount = 0.0, discountAmount = 0.0,
+            totalAmount = 0.0, amountPaid = 0.0, changeGiven = 0.0,
+            paymentMethod = PaymentMethod.CASH,
+            status = SaleStatus.COMPLETED, cashierId = 1L
+        )
+    }
     val df = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+
+    // Spring bounce animation for checkmark
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+    val scale by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow),
+        label = "checkScale"
+    )
 
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
         Column(
@@ -74,115 +89,85 @@ fun ReceiptScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ── Success animation ──────────────────────────────────────────────
-            AnimatedVisibility(visible = true, enter = scaleIn(spring(Spring.DampingRatioMediumBouncy)) + fadeIn()) {
-                Box(
-                    modifier = Modifier.size(96.dp).scale(scale).clip(CircleShape)
-                        .background(DT.Green.copy(0.15f)).border(3.dp, DT.Green, CircleShape)
-                        .semantics { contentDescription = "Sale complete checkmark" },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.CheckCircle, null, tint = DT.Green, modifier = Modifier.size(56.dp))
-                }
+            // ── Animated checkmark ────────────────────────────────────────────
+            Box(
+                modifier = Modifier.size(96.dp).scale(scale).clip(CircleShape)
+                    .background(DT.Green.copy(0.15f)).border(3.dp, DT.Green, CircleShape)
+                    .semantics { contentDescription = "Sale complete" },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.CheckCircle, null, tint = DT.Green, modifier = Modifier.size(56.dp))
             }
 
             Text("Sale Complete!", color = DT.Green, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
-            Text("Receipt #$saleId  •  ${df.format(Date())}",
+            Text("Receipt ${sale.receiptNumber}  •  ${df.format(Date())}",
                 color = DT.SubText, style = MaterialTheme.typography.bodySmall)
 
-            // ── Share / Print actions ────────────────────────────────────────
+            HorizontalDivider(color = DT.Border)
+
+            // ── Share / Print row ─────────────────────────────────────────────
             Text("Share Receipt", color = DT.OnSurface, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.fillMaxWidth())
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                // PDF + WhatsApp
-                ActionButton(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.PictureAsPdf,
-                    label = "Save PDF",
-                    color = DT.Red,
-                    isLoading = isGeneratingPdf
-                ) {
+
+                ReceiptActionBtn(Modifier.weight(1f), Icons.Default.PictureAsPdf, "Save PDF",
+                    DT.Red, isGeneratingPdf) {
                     scope.launch {
                         isGeneratingPdf = true
                         try {
-                            val data = ReceiptData(
-                                sale = com.minimart.pos.data.entity.Sale(
-                                    id = saleId, totalAmount = 0.0, paymentMethod = PaymentMethod.CASH,
-                                    status = com.minimart.pos.data.entity.SaleStatus.COMPLETED,
-                                    cashierId = 1L
-                                ),
-                                items = emptyList(),
-                                productNames = emptyMap(),
-                                storeName = storeName,
-                                currency = currency,
-                                cashierName = cashierName,
-                                footerMessage = footerMessage
-                            )
+                            val data = buildReceiptData(sale, emptyList(), storeName, currency, cashierName, footerMessage)
                             val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
-                            pdfStatus = "PDF saved: ${file.name}"
+                            statusMsg = "✓ PDF saved: ${file.name}"
                         } catch (e: Exception) {
-                            pdfStatus = "PDF error: ${e.message}"
+                            statusMsg = "PDF error: ${e.message}"
                         }
                         isGeneratingPdf = false
                     }
                 }
 
-                // WhatsApp
-                ActionButton(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.Share,
-                    label = "WhatsApp",
-                    color = Color(0xFF25D366)
-                ) {
+                ReceiptActionBtn(Modifier.weight(1f), Icons.Default.Share, "WhatsApp",
+                    Color(0xFF25D366)) {
                     scope.launch {
                         try {
-                            val data = ReceiptData(
-                                sale = com.minimart.pos.data.entity.Sale(
-                                    id = saleId, totalAmount = 0.0, paymentMethod = PaymentMethod.CASH,
-                                    status = com.minimart.pos.data.entity.SaleStatus.COMPLETED,
-                                    cashierId = 1L
-                                ),
-                                items = emptyList(), productNames = emptyMap(),
-                                storeName = storeName, currency = currency,
-                                cashierName = cashierName, footerMessage = footerMessage
-                            )
+                            val data = buildReceiptData(sale, emptyList(), storeName, currency, cashierName, footerMessage)
                             val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                             val uri = PdfReceiptGenerator.getShareUri(context, file)
-                            PdfReceiptGenerator.shareViaWhatsApp(context, uri, storeName, "$currency 0.00")
+                            PdfReceiptGenerator.shareViaWhatsApp(context, uri, storeName, "$currency ${String.format("%.2f", sale.totalAmount)}")
                         } catch (e: Exception) {
-                            pdfStatus = "Share error: ${e.message}"
+                            statusMsg = "Share error: ${e.message}"
                         }
                     }
                 }
 
-                // Print
-                ActionButton(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.Print,
-                    label = "Print",
-                    color = DT.Teal
-                ) {
+                ReceiptActionBtn(Modifier.weight(1f), Icons.Default.IosShare, "Share",
+                    DT.Teal) {
                     scope.launch {
-                        val result = printer.printTest()
-                        printStatus = if (result is PrintResult.Success) "Printed!" else "No printer"
+                        try {
+                            val data = buildReceiptData(sale, emptyList(), storeName, currency, cashierName, footerMessage)
+                            val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
+                            val uri = PdfReceiptGenerator.getShareUri(context, file)
+                            PdfReceiptGenerator.shareGeneric(context, uri)
+                        } catch (e: Exception) {
+                            statusMsg = "Error: ${e.message}"
+                        }
                     }
                 }
             }
 
-            // Status messages
-            AnimatedVisibility(visible = pdfStatus != null) {
+            // Status feedback
+            AnimatedVisibility(visible = statusMsg != null) {
                 Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
                     .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(10.dp)).padding(12.dp)) {
                     Icon(Icons.Default.Info, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(pdfStatus ?: "", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                    Text(statusMsg ?: "", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
             HorizontalDivider(color = DT.Border)
 
-            // ── Navigation buttons ────────────────────────────────────────────
+            // ── Navigation ────────────────────────────────────────────────────
             Button(
                 onClick = onNewSale,
                 modifier = Modifier.fillMaxWidth().height(52.dp)
@@ -210,38 +195,37 @@ fun ReceiptScreen(
     }
 }
 
+private fun buildReceiptData(
+    sale: Sale, items: List<SaleItem>,
+    storeName: String, currency: String,
+    cashierName: String, footerMessage: String
+) = ReceiptData(
+    sale = sale,
+    items = items,
+    productNames = items.associate { it.productId to it.productName },
+    storeName = storeName,
+    currency = currency,
+    cashierName = cashierName,
+    footerMessage = footerMessage
+)
+
 @Composable
-private fun ActionButton(
-    modifier: Modifier = Modifier,
-    icon: ImageVector,
-    label: String,
-    color: Color,
-    isLoading: Boolean = false,
-    onClick: () -> Unit
+private fun ReceiptActionBtn(
+    modifier: Modifier, icon: ImageVector, label: String,
+    color: Color, isLoading: Boolean = false, onClick: () -> Unit
 ) {
     Box(
         modifier = modifier.clip(RoundedCornerShape(14.dp))
             .background(color.copy(0.12f)).border(1.dp, color.copy(0.3f), RoundedCornerShape(14.dp))
-            .padding(vertical = 12.dp)
-            .then(if (!isLoading) Modifier.then(
-                Modifier.clickableNoRipple(onClick)
-            ) else Modifier),
+            .clickable(enabled = !isLoading, indication = null,
+                interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
+            .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = color, strokeWidth = 2.dp)
-            } else {
-                Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
-            }
+            if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = color, strokeWidth = 2.dp)
+            else Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
             Text(label, color = color, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
         }
     }
 }
-
-private fun Modifier.clickableNoRipple(onClick: () -> Unit) =
-    this.clickable(
-        indication = null,
-        interactionSource = androidx.compose.foundation.interaction.MutableInteractionSource(),
-        onClick = onClick
-    )
