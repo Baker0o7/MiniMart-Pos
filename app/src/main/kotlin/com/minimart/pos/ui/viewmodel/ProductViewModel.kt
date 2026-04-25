@@ -45,13 +45,13 @@ class ProductViewModel @Inject constructor(
                 else               -> repo.getAllProducts()
             }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 
     val categories: StateFlow<List<String>> = repo.getCategories()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 
     val lowStockProducts: StateFlow<List<Product>> = repo.getLowStockProducts()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 
     fun setSearchQuery(q: String) { _searchQuery.value = q }
     fun setCategory(cat: String?) { _selectedCategory.value = cat }

@@ -64,7 +64,7 @@ fun ScannerCartScreen(
     }
 
     LaunchedEffect(state.lastScannedProduct) {
-        if (state.lastScannedProduct != null) { kotlinx.coroutines.delay(1500); vm.clearError() }
+        if (state.lastScannedProduct != null) { kotlinx.coroutines.delay(2500); vm.clearError() }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {

@@ -40,7 +40,7 @@ class ShiftViewModel @Inject constructor(
                 }
         }
         viewModelScope.launch {
-            settingsRepo.loggedInUserId.collect { userId ->
+            settingsRepo.loggedInUserId.catch { emit(null) }.collect { userId ->
                 if (userId != null) {
                     val open = shiftRepo.getOpenShift(userId)
                     _uiState.update { it.copy(activeShift = open) }

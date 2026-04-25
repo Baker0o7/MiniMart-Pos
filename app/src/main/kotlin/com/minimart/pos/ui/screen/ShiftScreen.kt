@@ -119,7 +119,7 @@ fun ShiftScreen(
             // ── Shift history ──
             if (state.allShifts.isNotEmpty()) {
                 item { Text("Shift History", fontWeight = FontWeight.SemiBold, fontSize = 16.sp) }
-                items(state.allShifts.take(20)) { shift ->
+                items(state.allShifts.take(20), key = { it.id }) { shift ->
                     ShiftHistoryRow(shift = shift, onClick = { showSummaryDialog = shift })
                 }
             }

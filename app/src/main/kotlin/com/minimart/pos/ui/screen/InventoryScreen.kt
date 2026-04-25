@@ -130,6 +130,7 @@ fun InventoryScreen(
                 items(products, key = { it.id }) { product ->
                     DarkInventoryRow(
                         product = product,
+                        canEdit = canEditPrices,
                         onEdit = { editProduct = it; showAddDialog = true },
                         onAdjustStock = { showStockDialog = it },
                         onDelete = { vm.deleteProduct(product.id) }
@@ -182,13 +183,14 @@ private fun CategoryChip(label: String, selected: Boolean, onClick: () -> Unit) 
 private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
     this.clickable(
         indication = null,
-        interactionSource = androidx.compose.foundation.interaction.MutableInteractionSource(),
+        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
         onClick = onClick
     )
 
 @Composable
 private fun DarkInventoryRow(
     product: Product,
+    canEdit: Boolean = true,
     onEdit: (Product) -> Unit,
     onAdjustStock: (Product) -> Unit,
     onDelete: () -> Unit
@@ -243,9 +245,11 @@ private fun DarkInventoryRow(
             // Action buttons
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ActionBtn("Stock", DT.Surface2, DT.TealLight) { onAdjustStock(product) }
-                ActionBtn("Edit",  DT.Surface2, DT.Teal)      { onEdit(product) }
-                Spacer(Modifier.weight(1f))
-                ActionBtn("Delete", DT.Surface2, DT.Red)       { showDeleteConfirm = true }
+                if (canEdit) {
+                    ActionBtn("Edit",  DT.Surface2, DT.Teal) { onEdit(product) }
+                    Spacer(Modifier.weight(1f))
+                    ActionBtn("Delete", DT.Surface2, DT.Red) { showDeleteConfirm = true }
+                }
             }
         }
     }
@@ -271,7 +275,7 @@ private fun ActionBtn(label: String, bg: Color, textColor: Color, onClick: () ->
             .border(1.dp, textColor.copy(0.3f), RoundedCornerShape(20.dp))
             .clickable(
                 indication = null,
-                interactionSource = androidx.compose.foundation.interaction.MutableInteractionSource(),
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                 onClick = onClick
             )
             .padding(horizontal = 16.dp, vertical = 7.dp)

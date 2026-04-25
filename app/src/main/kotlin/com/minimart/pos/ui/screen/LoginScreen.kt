@@ -169,7 +169,7 @@ fun LoginScreen(
 
                 // PIN pad
                 DarkPinPad(
-                    onDigit = { d ->
+                    onDigit = { d -> biometricError = null;
                         if (pin.length < 6) {
                             pin += d
                             if (pin.length == 6) { vm.login(username, pin); pin = "" }

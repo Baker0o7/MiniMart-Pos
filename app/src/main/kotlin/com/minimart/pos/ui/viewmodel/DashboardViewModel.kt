@@ -83,7 +83,7 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    /** Pull-to-refresh: re-trigger a fresh load of today's stats */
+    /** Pull-to-refresh: re-triggers DB queries for fresh data */
     fun refresh() {
         viewModelScope.launch {
             val todayStart = java.util.Calendar.getInstance().apply {

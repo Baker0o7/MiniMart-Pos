@@ -1,53 +1,52 @@
-# MiniMart POS ProGuard rules
-
-# ── Kotlin ────────────────────────────────────────────────────────────────────
--keep class kotlin.** { *; }
--keep class kotlinx.** { *; }
--dontwarn kotlin.**
-
 # ── Room ──────────────────────────────────────────────────────────────────────
 -keep class * extends androidx.room.RoomDatabase
 -keep @androidx.room.Entity class *
--keep @androidx.room.Dao interface *
--keepclassmembers class * extends androidx.room.RoomDatabase {
-    abstract ** *Dao();
-}
--dontwarn androidx.room.**
+-keepclassmembers class * extends androidx.room.RoomDatabase { abstract *; }
+-keep interface * extends androidx.room.RoomDatabase
 
-# ── Hilt / Dagger ─────────────────────────────────────────────────────────────
+# ── Hilt ──────────────────────────────────────────────────────────────────────
 -keep class dagger.hilt.** { *; }
 -keep class javax.inject.** { *; }
--dontwarn dagger.hilt.**
+-keepclasseswithmembers class * {
+    @dagger.hilt.android.lifecycle.HiltViewModel <init>(...);
+}
+-keep @dagger.hilt.android.AndroidEntryPoint class *
 
-# ── ML Kit ────────────────────────────────────────────────────────────────────
--keep class com.google.mlkit.** { *; }
--dontwarn com.google.mlkit.**
+# ── DataStore ─────────────────────────────────────────────────────────────────
+-keep class androidx.datastore.** { *; }
+-keepclassmembers class * implements kotlinx.serialization.KSerializer { *; }
 
-# ── Retrofit / OkHttp ────────────────────────────────────────────────────────
--dontwarn retrofit2.**
--dontwarn okhttp3.**
--dontwarn okio.**
--keep class retrofit2.** { *; }
--keepattributes Signature
--keepattributes Exceptions
+# ── Kotlin coroutines ─────────────────────────────────────────────────────────
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
 
-# ── Gson / JSON ───────────────────────────────────────────────────────────────
--keep class com.google.gson.** { *; }
--keepattributes *Annotation*
-
-# ── App entities / models ─────────────────────────────────────────────────────
--keep class com.minimart.pos.data.entity.** { *; }
--keep class com.minimart.pos.domain.model.** { *; }
-
-# ── Enum names for Room TypeConverters ────────────────────────────────────────
--keepclassmembers enum * { *; }
-
-# ── CameraX ───────────────────────────────────────────────────────────────────
--dontwarn androidx.camera.**
-
-# ── WorkManager ───────────────────────────────────────────────────────────────
+# ── WorkManager + Hilt Worker ─────────────────────────────────────────────────
 -keep class * extends androidx.work.Worker
 -keep class * extends androidx.work.CoroutineWorker
--keep class * extends androidx.work.ListenableWorker {
-    public <init>(android.content.Context,androidx.work.WorkerParameters);
+-keepclassmembers class * extends androidx.work.CoroutineWorker {
+    public <init>(android.content.Context, androidx.work.WorkerParameters);
 }
+
+# ── Biometric ─────────────────────────────────────────────────────────────────
+-keep class androidx.biometric.** { *; }
+
+# ── MLKit barcode ─────────────────────────────────────────────────────────────
+-keep class com.google.mlkit.** { *; }
+-keep class com.google.android.gms.internal.mlkit_vision_barcode.** { *; }
+
+# ── CameraX ───────────────────────────────────────────────────────────────────
+-keep class androidx.camera.** { *; }
+
+# ── Entities & DAOs (prevent field name obfuscation) ─────────────────────────
+-keep class com.minimart.pos.data.entity.** { *; }
+-keep class com.minimart.pos.data.dao.** { *; }
+-keep class com.minimart.pos.data.db.** { *; }
+
+# ── General ───────────────────────────────────────────────────────────────────
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn kotlin.**
+-dontwarn kotlinx.**

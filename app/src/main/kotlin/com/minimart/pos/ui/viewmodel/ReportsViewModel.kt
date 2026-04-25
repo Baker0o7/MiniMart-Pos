@@ -72,7 +72,7 @@ class ReportsViewModel @Inject constructor(
             }
             ReportPeriod.WEEK -> end - 7L * 24 * 60 * 60 * 1000
             ReportPeriod.MONTH -> end - 30L * 24 * 60 * 60 * 1000
-            ReportPeriod.CUSTOM -> end - 30L * 24 * 60 * 60 * 1000 // placeholder
+            ReportPeriod.CUSTOM -> end - 90L * 24 * 60 * 60 * 1000 // placeholder
         }
         return Pair(start, end)
     }

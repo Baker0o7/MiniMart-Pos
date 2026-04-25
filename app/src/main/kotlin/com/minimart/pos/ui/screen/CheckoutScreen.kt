@@ -190,8 +190,8 @@ fun CheckoutScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                PaymentCard(Modifier.weight(1f), "Cash", Icons.Default.Money, PaymentMethod.CASH, selectedMethod) { selectedMethod = it }
-                PaymentCard(Modifier.weight(1f), "M-Pesa", Icons.Default.PhoneAndroid, PaymentMethod.MPESA, selectedMethod) { selectedMethod = it }
+                PaymentCard(Modifier.weight(1f), "Cash", Icons.Default.Money, PaymentMethod.CASH, selectedMethod) { selectedMethod = it; if (it == PaymentMethod.MPESA) cashInput = "" }
+                PaymentCard(Modifier.weight(1f), "M-Pesa", Icons.Default.PhoneAndroid, PaymentMethod.MPESA, selectedMethod) { selectedMethod = it; if (it == PaymentMethod.CASH) mpesaRef = "" }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -290,7 +290,11 @@ fun CheckoutScreen(
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
                 } else {
                     Text(
-                        "COMPLETE CHECKOUT",
+                        when {
+                            !canComplete && selectedMethod == PaymentMethod.CASH && state.total > 0 -> "ENTER CASH AMOUNT"
+                            !canComplete -> "SELECT PAYMENT"
+                            else -> "COMPLETE CHECKOUT"
+                        },
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp,
                         color = if (canComplete) Color.Black else DT.SubText,

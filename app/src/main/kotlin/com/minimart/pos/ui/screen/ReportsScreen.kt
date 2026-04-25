@@ -131,7 +131,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         modifier = Modifier.padding(horizontal = 20.dp))
                     Spacer(Modifier.height(8.dp))
                 }
-                items(state.topSellers.take(8)) { seller ->
+                items(state.topSellers.take(8), key = { it.productId }) { seller ->
                     Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 3.dp)
                         .clip(RoundedCornerShape(12.dp)).background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(12.dp)).padding(12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {

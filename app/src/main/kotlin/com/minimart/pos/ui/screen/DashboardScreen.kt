@@ -199,7 +199,7 @@ fun DashboardScreen(
                     Text("Top Items Today", color = OnDark, fontWeight = FontWeight.Bold, fontSize = 18.sp,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
                 }
-                items(state.topSellers.take(5)) { seller ->
+                items(state.topSellers.take(5), key = { it.productId }) { seller ->
                     TopItemRow(seller = seller, currency = state.currency)
                 }
             }
