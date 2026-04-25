@@ -183,7 +183,7 @@ private fun CategoryChip(label: String, selected: Boolean, onClick: () -> Unit) 
 private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
     this.clickable(
         indication = null,
-        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+        interactionSource = androidx.compose.foundation.interaction.MutableInteractionSource(),
         onClick = onClick
     )
 
