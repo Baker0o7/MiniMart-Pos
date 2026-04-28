@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.minimart.pos.data.entity.Expense
 import com.minimart.pos.data.entity.ExpenseCategory
+import com.minimart.pos.util.toEmoji
 import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.ExpenseViewModel
 import com.minimart.pos.ui.viewmodel.ReportPeriod
