@@ -171,7 +171,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
             items(byCategory.entries.sortedByDescending { it.value }.toList()) { (cat, amount) ->
                 Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(12.dp)).padding(12.dp)) {
                     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                        Text("${categoryEmoji(cat)} ${cat.name}", color = DT.OnSurface)
+                        Text("${cat.toEmoji()} ${cat.name}", color = DT.OnSurface)
                         Text("$currency ${String.format("%.2f", amount)}", color = DT.Red, fontWeight = FontWeight.Bold)
                     }
                 }
@@ -217,7 +217,7 @@ private fun ExpenseListTab(expenses: List<Expense>, currency: String, onDelete: 
                 val df = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
                 Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(12.dp)).padding(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(categoryEmoji(expense.category), fontSize = 22.sp)
+                        Text(expense.category.toEmoji(), fontSize = 22.sp)
                         Spacer(Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(expense.title, color = DT.OnSurface, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
@@ -259,12 +259,12 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onSave: (Expense) -> Unit) {
                 OutlinedTextField(amount, { amount = it }, label = { Text("Amount *", color = DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), singleLine = true, modifier = Modifier.fillMaxWidth(), colors = fieldColors, shape = RoundedCornerShape(10.dp))
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                    OutlinedTextField("${categoryEmoji(category)} ${category.name}", {}, readOnly = true,
+                    OutlinedTextField("${category.toEmoji()} ${category.name}", {}, readOnly = true,
                         label = { Text("Category", color = DT.SubText) }, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier.fillMaxWidth().menuAnchor(), colors = fieldColors, shape = RoundedCornerShape(10.dp))
                     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, containerColor = DT.Surface2) {
                         ExpenseCategory.entries.forEach { cat ->
-                            DropdownMenuItem(text = { Text("${categoryEmoji(cat)} ${cat.name}", color = DT.OnSurface) }, onClick = { category = cat; expanded = false })
+                            DropdownMenuItem(text = { Text("${cat.toEmoji()} ${cat.name}", color = DT.OnSurface) }, onClick = { category = cat; expanded = false })
                         }
                     }
                 }
@@ -282,9 +282,3 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onSave: (Expense) -> Unit) {
     )
 }
 
-private fun categoryEmoji(cat: ExpenseCategory) = when (cat) {
-    ExpenseCategory.SUPPLIER -> "🏪"; ExpenseCategory.ELECTRICITY -> "⚡"; ExpenseCategory.WATER -> "💧"
-    ExpenseCategory.RENT -> "🏠"; ExpenseCategory.SALARY -> "👤"; ExpenseCategory.TRANSPORT -> "🚗"
-    ExpenseCategory.PACKAGING -> "📦"; ExpenseCategory.CLEANING -> "🧹"; ExpenseCategory.MAINTENANCE -> "🔧"
-    ExpenseCategory.TAXES -> "📋"; ExpenseCategory.OTHER -> "💰"
-}

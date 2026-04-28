@@ -35,6 +35,7 @@ import com.minimart.pos.data.entity.Product
 import com.minimart.pos.scanner.BarcodeScannerView
 import com.minimart.pos.scanner.ScannerOverlay
 import com.minimart.pos.ui.theme.DT
+import com.minimart.pos.util.vibrateShort
 import com.minimart.pos.ui.viewmodel.CartViewModel
 import com.minimart.pos.ui.viewmodel.ProductSearchViewModel
 
@@ -54,14 +55,7 @@ fun ScannerCartScreen(
     var searchText by remember { mutableStateOf("") }
     val searchResults: List<Product> by searchVm.results.collectAsState()
 
-    fun vibrate() {
-        val vib = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as android.os.Vibrator
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            vib.vibrate(android.os.VibrationEffect.createOneShot(60, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
-        } else {
-            @Suppress("DEPRECATION") vib.vibrate(60)
-        }
-    }
+
 
     LaunchedEffect(state.lastScannedProduct) {
         if (state.lastScannedProduct != null) { kotlinx.coroutines.delay(2500); vm.clearError() }
@@ -164,7 +158,7 @@ fun ScannerCartScreen(
                     BarcodeScannerView(
                         modifier = Modifier.fillMaxSize(),
                         onBarcodeDetected = {
-                            vibrate()
+                            context.vibrateShort()
                             vm.processBarcode(it)
                             searchText = ""
                             searchVm.clear()

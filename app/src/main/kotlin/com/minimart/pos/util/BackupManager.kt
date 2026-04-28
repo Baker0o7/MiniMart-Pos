@@ -27,6 +27,15 @@ object BackupManager {
             val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
             if (!dbFile.exists()) return@withContext BackupResult.Error("Database file not found")
 
+            // Checkpoint WAL using direct SQLite to flush all data into main db file
+            try {
+                val sqLiteDb = android.database.sqlite.SQLiteDatabase.openDatabase(
+                    dbFile.absolutePath, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
+                )
+                sqLiteDb.execSQL("PRAGMA wal_checkpoint(TRUNCATE)")
+                sqLiteDb.close()
+            } catch (_: Exception) { /* continue with backup even if checkpoint fails */ }
+
             val timestamp = df.format(Date())
             val backupDir = File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),

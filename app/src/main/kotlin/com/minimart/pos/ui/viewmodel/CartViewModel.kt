@@ -83,20 +83,20 @@ class CartViewModel @Inject constructor(
     // ── Cart mutations ────────────────────────────────────────────────────────
 
     fun addToCart(product: Product) {
-        _uiState.update { state ->
-            val existing = state.items.indexOfFirst { it.product.id == product.id }
-            val updated = if (existing >= 0) {
-                val item = state.items[existing]
-                if (item.quantity < product.stock) {
-                    state.items.toMutableList().also { it[existing] = item.copy(quantity = item.quantity + 1) }
-                } else {
-                    _uiState.value = state.copy(error = "Max stock reached for ${product.name}")
-                    return
-                }
-            } else {
-                state.items + CartItem(product = product, quantity = 1)
+        val state = _uiState.value
+        val existing = state.items.indexOfFirst { it.product.id == product.id }
+        if (existing >= 0) {
+            val item = state.items[existing]
+            if (item.quantity >= product.stock) {
+                _uiState.update { it.copy(error = "Max stock reached for ${product.name}") }
+                return
             }
-            state.copy(items = updated, error = null)
+            val updated = state.items.toMutableList().also {
+                it[existing] = item.copy(quantity = item.quantity + 1)
+            }
+            _uiState.update { it.copy(items = updated, error = null) }
+        } else {
+            _uiState.update { it.copy(items = it.items + CartItem(product = product, quantity = 1), error = null) }
         }
     }
 

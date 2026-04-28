@@ -34,12 +34,14 @@ class ShiftRepository @Inject constructor(
     suspend fun clockOut(shiftId: Long, closingFloat: Double, notes: String): Shift? {
         val shift = shiftDao.getShiftById(shiftId) ?: return null
 
-        // Collect all sales during this shift window
+        // Collect sales for THIS cashier only during their shift window
         val salesList: List<Sale> = saleRepo
             .getSalesByDateRange(shift.clockIn, System.currentTimeMillis())
             .first()
 
-        val completed = salesList.filter { it.status == SaleStatus.COMPLETED }
+        val completed = salesList.filter { 
+            it.status == SaleStatus.COMPLETED && it.cashierId == shift.cashierId 
+        }
 
         var cashSales  = 0.0
         var mpesaSales = 0.0

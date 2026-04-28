@@ -10,6 +10,7 @@ import com.minimart.pos.data.repository.SaleRepository
 import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.minimart.pos.util.todayStartMs
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -86,10 +87,7 @@ class DashboardViewModel @Inject constructor(
     /** Pull-to-refresh: re-triggers DB queries for fresh data */
     fun refresh() {
         viewModelScope.launch {
-            val todayStart = java.util.Calendar.getInstance().apply {
-                set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
-                set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
-            }.timeInMillis
+            val todayStart = todayStartMs()
             try {
                 val revenue = saleRepo.getTotalRevenueToday(todayStart).first() ?: 0.0
                 val count = saleRepo.getSaleCountToday(todayStart).first()

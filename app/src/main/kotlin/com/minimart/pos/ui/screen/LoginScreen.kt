@@ -73,6 +73,15 @@ fun LoginScreen(
         if (state.isLoggedIn) onLoginSuccess()
     }
 
+    // Auto-submit when 6 digits entered - small delay prevents race with VM
+    LaunchedEffect(pin) {
+        if (pin.length == 6) {
+            kotlinx.coroutines.delay(50)
+            vm.login(username, pin)
+            pin = ""
+        }
+    }
+
     // Auto-show biometric on load
     LaunchedEffect(Unit) {
         delay(400)
@@ -172,7 +181,7 @@ fun LoginScreen(
                     onDigit = { d -> biometricError = null;
                         if (pin.length < 6) {
                             pin += d
-                            if (pin.length == 6) { vm.login(username, pin); pin = "" }
+                            // Auto-submit handled by LaunchedEffect below
                         }
                     },
                     onDelete = { if (pin.isNotEmpty()) pin = pin.dropLast(1) }

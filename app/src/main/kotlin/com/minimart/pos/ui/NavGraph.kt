@@ -139,7 +139,8 @@ fun MiniMartNavGraph(
                             navController.navigate(Routes.receipt(saleId)) { popUpTo(Routes.SCANNER) { inclusive = true } }
                         },
                         onBack = { navController.popBackStack() },
-                        vm = cartVm
+                        vm = cartVm,
+                        canApplyDiscounts = RoleManager.canApplyDiscounts(authState.currentUser?.role)
                     )
                 }
 

@@ -52,7 +52,7 @@ interface ProductDao {
     @Update
     suspend fun updateProduct(product: Product)
 
-    @Query("UPDATE products SET stock = stock - :quantity, updatedAt = :now WHERE id = :productId")
+    @Query("UPDATE products SET stock = MAX(0, stock - :quantity), updatedAt = :now WHERE id = :productId AND stock >= :quantity")
     suspend fun decrementStock(productId: Long, quantity: Int, now: Long = System.currentTimeMillis())
 
     @Query("UPDATE products SET stock = stock + :quantity, updatedAt = :now WHERE id = :productId")

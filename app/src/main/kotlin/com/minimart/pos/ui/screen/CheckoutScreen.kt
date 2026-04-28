@@ -37,7 +37,8 @@ import kotlinx.coroutines.launch
 fun CheckoutScreen(
     onSaleComplete: (Long) -> Unit,
     onBack: () -> Unit,
-    vm: CartViewModel
+    vm: CartViewModel,
+    canApplyDiscounts: Boolean = true
 ) {
     val state by vm.uiState.collectAsState()
     val currency by vm.currency.collectAsState()
@@ -125,22 +126,24 @@ fun CheckoutScreen(
 
                     HorizontalDivider(color = DT.Border)
 
-                    // Discount field
-                    OutlinedTextField(
-                        value = globalDiscount,
-                        onValueChange = { globalDiscount = it; vm.setGlobalDiscount(it.toDoubleOrNull() ?: 0.0) },
-                        label = { Text("Discount ($currency)", color = DT.SubText) },
-                        leadingIcon = { Icon(Icons.Default.Discount, null, tint = DT.SubText) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                            focusedTextColor = DT.OnSurface, unfocusedTextColor = DT.OnSurface,
-                            cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg
+                    // Discount field — only shown for managers/owners
+                    if (canApplyDiscounts) {
+                        OutlinedTextField(
+                            value = globalDiscount,
+                            onValueChange = { globalDiscount = it; vm.setGlobalDiscount(it.toDoubleOrNull() ?: 0.0) },
+                            label = { Text("Discount ($currency)", color = DT.SubText) },
+                            leadingIcon = { Icon(Icons.Default.Discount, null, tint = DT.SubText) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                                focusedTextColor = DT.OnSurface, unfocusedTextColor = DT.OnSurface,
+                                cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg
+                            )
                         )
-                    )
+                    }
 
                     // Tax row
                     if (state.totalTax > 0) {

@@ -8,6 +8,7 @@ import com.minimart.pos.data.repository.SaleRepository
 import com.minimart.pos.data.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import com.minimart.pos.util.todayStartMs
 import kotlinx.coroutines.flow.*
 import java.util.Calendar
 import javax.inject.Inject
@@ -63,16 +64,11 @@ class ReportsViewModel @Inject constructor(
 
     private fun periodRange(period: ReportPeriod): Pair<Long, Long> {
         val end = System.currentTimeMillis()
-        val cal = Calendar.getInstance()
         val start = when (period) {
-            ReportPeriod.TODAY -> {
-                cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0)
-                cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
-                cal.timeInMillis
-            }
-            ReportPeriod.WEEK -> end - 7L * 24 * 60 * 60 * 1000
-            ReportPeriod.MONTH -> end - 30L * 24 * 60 * 60 * 1000
-            ReportPeriod.CUSTOM -> end - 90L * 24 * 60 * 60 * 1000 // placeholder
+            ReportPeriod.TODAY  -> todayStartMs()
+            ReportPeriod.WEEK   -> end - 7L * 24 * 60 * 60 * 1000
+            ReportPeriod.MONTH  -> end - 30L * 24 * 60 * 60 * 1000
+            ReportPeriod.CUSTOM -> end - 90L * 24 * 60 * 60 * 1000
         }
         return Pair(start, end)
     }

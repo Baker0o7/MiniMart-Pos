@@ -90,3 +90,21 @@ fun categoryEmoji(category: String): String = when (category.lowercase()) {
     "vegetables"    -> "🥦"
     else            -> "📦"
 }
+
+// ─── Expense category emoji (typed) ──────────────────────────────────────────
+
+fun com.minimart.pos.data.entity.ExpenseCategory.toEmoji(): String = when (this) {
+    com.minimart.pos.data.entity.ExpenseCategory.SUPPLIER    -> "🏪"
+    com.minimart.pos.data.entity.ExpenseCategory.ELECTRICITY -> "⚡"
+    com.minimart.pos.data.entity.ExpenseCategory.WATER       -> "💧"
+    com.minimart.pos.data.entity.ExpenseCategory.RENT        -> "🏠"
+    com.minimart.pos.data.entity.ExpenseCategory.SALARY      -> "👤"
+    com.minimart.pos.data.entity.ExpenseCategory.TRANSPORT   -> "🚗"
+    com.minimart.pos.data.entity.ExpenseCategory.PACKAGING   -> "📦"
+    com.minimart.pos.data.entity.ExpenseCategory.CLEANING    -> "🧹"
+    com.minimart.pos.data.entity.ExpenseCategory.MAINTENANCE -> "🔧"
+    com.minimart.pos.data.entity.ExpenseCategory.TAXES       -> "📋"
+    com.minimart.pos.data.entity.ExpenseCategory.OTHER       -> "💰"
+}
+
+
