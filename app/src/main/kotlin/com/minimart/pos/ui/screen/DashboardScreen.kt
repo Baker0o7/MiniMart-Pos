@@ -59,10 +59,11 @@ fun DashboardScreen(
     onNavigateToSettings:     () -> Unit,
     onNavigateToSalesHistory: () -> Unit = {},
     onNavigateToLowStock:     () -> Unit = {},
+    currentRole: com.minimart.pos.data.entity.UserRole? = null,
     vm: DashboardViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
-    val role   = null  // role-based UI gating uses null = show all
+    val role   = currentRole
     val rm     = com.minimart.pos.util.RoleManager
     var isRefreshing by remember { mutableStateOf(false) }
 

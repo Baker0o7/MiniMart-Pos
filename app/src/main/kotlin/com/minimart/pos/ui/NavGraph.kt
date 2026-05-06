@@ -125,7 +125,8 @@ fun MiniMartNavGraph(
                         onNavigateToExpenses     = { navController.navigate(Routes.EXPENSES) },
                         onNavigateToSettings     = { navController.navigate(Routes.SETTINGS) },
                         onNavigateToSalesHistory = { navController.navigate(Routes.SALES_HISTORY) },
-                        onNavigateToLowStock     = { navController.navigate(Routes.LOW_STOCK) }
+                        onNavigateToLowStock     = { navController.navigate(Routes.LOW_STOCK) },
+                        currentRole              = authState.currentUser?.role
                     )
                 }
 

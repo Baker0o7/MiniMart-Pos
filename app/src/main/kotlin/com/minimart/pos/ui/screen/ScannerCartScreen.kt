@@ -52,6 +52,7 @@ fun ScannerCartScreen(
     val context = LocalContext.current
     val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
     var showScanner by remember { mutableStateOf(false) }
+    var continuousScan by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
     val searchResults: List<Product> by searchVm.results.collectAsState()
 
@@ -144,6 +145,19 @@ fun ScannerCartScreen(
                         null, tint = Color.White, modifier = Modifier.size(24.dp)
                     )
                 }
+                // Continuous scan toggle
+                FilledIconButton(
+                    onClick = { continuousScan = !continuousScan },
+                    modifier = Modifier.size(52.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = if (continuousScan) DT.Teal else DT.Surface2
+                    ),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Icon(Icons.Default.AllInclusive, null,
+                        tint = if (continuousScan) Color.White else DT.SubText,
+                        modifier = Modifier.size(22.dp))
+                }
             }
 
             // ── Compact inline scanner (like Add Product dialog) ──────────────
@@ -162,7 +176,8 @@ fun ScannerCartScreen(
                             vm.processBarcode(it)
                             searchText = ""
                             searchVm.clear()
-                            showScanner = false
+                            if (!continuousScan) showScanner = false
+                            // In continuous mode scanner stays open for next item
                         }
                     )
                     // Corner bracket overlay

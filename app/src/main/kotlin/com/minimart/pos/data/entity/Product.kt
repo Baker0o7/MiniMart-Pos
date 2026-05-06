@@ -25,6 +25,8 @@ data class Product(
     @androidx.room.ColumnInfo(defaultValue = "") val supplierName: String = "",
     @androidx.room.ColumnInfo(defaultValue = "") val supplierPhone: String = "",
     @androidx.room.ColumnInfo(defaultValue = "0") val reorderQuantity: Int = 0,
+    @androidx.room.ColumnInfo(defaultValue = "") val batchNumber: String = "",
+    @androidx.room.ColumnInfo(defaultValue = "0") val expiryDate: Long = 0L,  // 0 = no expiry
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

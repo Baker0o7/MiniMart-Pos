@@ -213,6 +213,12 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
     var supplierName  by remember { mutableStateOf(product?.supplierName ?: "") }
     var supplierPhone by remember { mutableStateOf(product?.supplierPhone ?: "") }
     var reorderQty    by remember { mutableStateOf(product?.reorderQuantity?.toString() ?: "") }
+    var batchNumber   by remember { mutableStateOf(product?.batchNumber ?: "") }
+    var expiryDateStr by remember { mutableStateOf(
+        if ((product?.expiryDate ?: 0L) > 0L)
+            java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date(product!!.expiryDate))
+        else ""
+    ) }
     var showScanner by remember { mutableStateOf(false) }
     val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -263,16 +269,31 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                     DarkField(supplierPhone, { supplierPhone = it }, "Supplier Phone", Modifier.weight(1f))
                     DarkField(reorderQty, { reorderQty = it }, "Reorder Qty", Modifier.weight(1f))
                 }
+                Spacer(Modifier.height(4.dp))
+                Text("Batch & Expiry", color = DT.SubText,
+                    style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DarkField(batchNumber, { batchNumber = it }, "Batch No.", Modifier.weight(1f))
+                    DarkField(expiryDateStr, { expiryDateStr = it }, "Expiry dd/MM/yyyy", Modifier.weight(1f))
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onSave(Product(id = product?.id ?: 0L, barcode = barcode.trim(), sku = sku.trim(),
-                    name = name.trim(), price = price.toDoubleOrNull() ?: 0.0,
-                    costPrice = costPrice.toDoubleOrNull() ?: 0.0, stock = stock.toIntOrNull() ?: 0,
-                    category = category.ifBlank { "General" }, unit = unit.ifBlank { "pcs" },
-                    supplierName = supplierName.trim(), supplierPhone = supplierPhone.trim(),
-                    reorderQuantity = reorderQty.toIntOrNull() ?: 0)) },
+                onClick = {
+                    val expiryMs = try {
+                        if (expiryDateStr.isNotBlank())
+                            java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).parse(expiryDateStr)?.time ?: 0L
+                        else 0L
+                    } catch (_: Exception) { 0L }
+                    onSave(Product(id = product?.id ?: 0L, barcode = barcode.trim(), sku = sku.trim(),
+                        name = name.trim(), price = price.toDoubleOrNull() ?: 0.0,
+                        costPrice = costPrice.toDoubleOrNull() ?: 0.0, stock = stock.toIntOrNull() ?: 0,
+                        category = category.ifBlank { "General" }, unit = unit.ifBlank { "pcs" },
+                        supplierName = supplierName.trim(), supplierPhone = supplierPhone.trim(),
+                        reorderQuantity = reorderQty.toIntOrNull() ?: 0,
+                        batchNumber = batchNumber.trim(), expiryDate = expiryMs))
+                },
                 enabled = barcode.isNotBlank() && name.isNotBlank() && price.toDoubleOrNull() != null,
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
             ) { Text("Save") }

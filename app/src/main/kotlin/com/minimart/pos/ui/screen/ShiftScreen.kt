@@ -51,16 +51,17 @@ fun ShiftScreen(
     }
 
     Scaffold(
+        containerColor = com.minimart.pos.ui.theme.DT.Bg,
         topBar = {
             TopAppBar(
-                title = { Text("Shift Management", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Brand500, titleContentColor = Color.White, navigationIconContentColor = Color.White)
+                title = { Text("Shift Management", fontWeight = FontWeight.Bold, color = Color.White) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White) } },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = com.minimart.pos.ui.theme.DT.Teal)
             )
         }
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier.fillMaxSize().background(com.minimart.pos.ui.theme.DT.Bg).padding(padding),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
