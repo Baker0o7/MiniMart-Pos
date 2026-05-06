@@ -210,6 +210,9 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
     var category   by remember { mutableStateOf(product?.category ?: "") }
     var unit       by remember { mutableStateOf(product?.unit ?: "pcs") }
     var sku        by remember { mutableStateOf(product?.sku ?: "") }
+    var supplierName  by remember { mutableStateOf(product?.supplierName ?: "") }
+    var supplierPhone by remember { mutableStateOf(product?.supplierPhone ?: "") }
+    var reorderQty    by remember { mutableStateOf(product?.reorderQuantity?.toString() ?: "") }
     var showScanner by remember { mutableStateOf(false) }
     val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -252,6 +255,14 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                     DarkField(category, { category = it }, "Category", Modifier.weight(1f))
                     DarkField(sku, { sku = it }, "SKU", Modifier.weight(1f))
                 }
+                Spacer(Modifier.height(4.dp))
+                Text("Supplier Info", color = DT.SubText,
+                    style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                DarkField(supplierName, { supplierName = it }, "Supplier Name", Modifier.fillMaxWidth())
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DarkField(supplierPhone, { supplierPhone = it }, "Supplier Phone", Modifier.weight(1f))
+                    DarkField(reorderQty, { reorderQty = it }, "Reorder Qty", Modifier.weight(1f))
+                }
             }
         },
         confirmButton = {
@@ -259,7 +270,9 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                 onClick = { onSave(Product(id = product?.id ?: 0L, barcode = barcode.trim(), sku = sku.trim(),
                     name = name.trim(), price = price.toDoubleOrNull() ?: 0.0,
                     costPrice = costPrice.toDoubleOrNull() ?: 0.0, stock = stock.toIntOrNull() ?: 0,
-                    category = category.ifBlank { "General" }, unit = unit.ifBlank { "pcs" })) },
+                    category = category.ifBlank { "General" }, unit = unit.ifBlank { "pcs" },
+                    supplierName = supplierName.trim(), supplierPhone = supplierPhone.trim(),
+                    reorderQuantity = reorderQty.toIntOrNull() ?: 0)) },
                 enabled = barcode.isNotBlank() && name.isNotBlank() && price.toDoubleOrNull() != null,
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
             ) { Text("Save") }

@@ -51,12 +51,14 @@ private val DarkBg      = Color(0xFF0F1E1D)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    onNavigateToScanner:   () -> Unit,
-    onNavigateToProducts:  () -> Unit,
-    onNavigateToInventory: () -> Unit,
-    onNavigateToReports:   () -> Unit,
-    onNavigateToExpenses:  () -> Unit,
-    onNavigateToSettings:  () -> Unit,
+    onNavigateToScanner:      () -> Unit,
+    onNavigateToProducts:     () -> Unit,
+    onNavigateToInventory:    () -> Unit,
+    onNavigateToReports:      () -> Unit,
+    onNavigateToExpenses:     () -> Unit,
+    onNavigateToSettings:     () -> Unit,
+    onNavigateToSalesHistory: () -> Unit = {},
+    onNavigateToLowStock:     () -> Unit = {},
     vm: DashboardViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
@@ -192,6 +194,17 @@ fun DashboardScreen(
                 }
             }
 
+            // ── Sales History + Low Stock shortcuts ───────────────────────────
+            item {
+                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    BigActionCard(Modifier.weight(1f), "Sales History", Icons.Default.History,
+                        Color(0xFF1A2E3D), Color(0xFF64B5F6), onNavigateToSalesHistory)
+                    BigActionCard(Modifier.weight(1f), "Low Stock", Icons.Default.Warning,
+                        Color(0xFF2E1A1A), Color(0xFFFFB74D), onNavigateToLowStock)
+                }
+            }
+
             // ── Top Items Today ───────────────────────────────────────────────
             if (state.topSellers.isNotEmpty()) {
                 item { Spacer(Modifier.height(20.dp)) }
@@ -220,7 +233,7 @@ fun DashboardScreen(
                                 Text("Low Stock Alert", color = Color(0xFFEF5350), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
                                 Text("${state.lowStockProducts.size} items need restocking", color = SubText, style = MaterialTheme.typography.labelSmall)
                             }
-                            TextButton(onClick = onNavigateToInventory) {
+                            TextButton(onClick = onNavigateToLowStock) {
                                 Text("View", color = TealGlow, style = MaterialTheme.typography.labelMedium)
                             }
                         }

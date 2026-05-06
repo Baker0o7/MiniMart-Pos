@@ -31,4 +31,24 @@ class SaleRepository @Inject constructor(
         }
         return saleId
     }
+
+    fun searchSales(query: String) = saleDao.searchSales(query)
+    fun getCompletedSales() = saleDao.getCompletedSales()
+
+    suspend fun refundSale(saleId: Long, reason: String) {
+        val saleWithItems = saleDao.getSaleWithItems(saleId) ?: return
+        // Restore stock for each item
+        saleWithItems.items.forEach { item ->
+            productRepository.incrementStock(item.productId, item.quantity)
+        }
+        saleDao.refundSale(saleId, reason)
+    }
+
+    suspend fun voidSale(saleId: Long, reason: String) {
+        val saleWithItems = saleDao.getSaleWithItems(saleId) ?: return
+        saleWithItems.items.forEach { item ->
+            productRepository.incrementStock(item.productId, item.quantity)
+        }
+        saleDao.voidSale(saleId, reason)
+    }
 }

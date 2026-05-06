@@ -11,17 +11,20 @@ import androidx.room.PrimaryKey
 data class Product(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val barcode: String,
-    val sku: String = "",                // Stock Keeping Unit (internal code)
+    val sku: String = "",
     val name: String,
     val description: String = "",
     val price: Double,
-    val costPrice: Double = 0.0,         // for profit margin reports
+    val costPrice: Double = 0.0,
     val stock: Int,
     val lowStockThreshold: Int = 5,
     val category: String = "General",
-    val unit: String = "pcs",            // pcs, kg, litre, etc.
+    val unit: String = "pcs",
     val imageUri: String? = null,
-    val taxRate: Double = 0.0,           // 0.0 = no tax, 0.16 = 16% VAT
+    val taxRate: Double = 0.0,
+    val supplierName: String = "",       // supplier / vendor name
+    val supplierPhone: String = "",      // supplier contact number
+    val reorderQuantity: Int = 0,        // how many to order when restocking
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

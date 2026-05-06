@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 @Database(
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)

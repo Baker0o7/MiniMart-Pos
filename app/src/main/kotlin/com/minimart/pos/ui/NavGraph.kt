@@ -43,6 +43,8 @@ object Routes {
     const val INVENTORY = "inventory"
     const val REPORTS   = "reports"
     const val EXPENSES  = "expenses"
+    const val SALES_HISTORY = "sales_history"
+    const val LOW_STOCK     = "low_stock"
     const val USERS     = "users"
     const val SHIFTS    = "shifts"
     const val SETTINGS  = "settings"
@@ -116,12 +118,14 @@ fun MiniMartNavGraph(
 
                 composable(Routes.DASHBOARD) {
                     DashboardScreen(
-                        onNavigateToScanner   = { navController.navigate(Routes.SCANNER) },
-                        onNavigateToProducts  = { navController.navigate(Routes.PRODUCTS) },
-                        onNavigateToInventory = { navController.navigate(Routes.INVENTORY) },
-                        onNavigateToReports   = { navController.navigate(Routes.REPORTS) },
-                        onNavigateToExpenses  = { navController.navigate(Routes.EXPENSES) },
-                        onNavigateToSettings  = { navController.navigate(Routes.SETTINGS) }
+                        onNavigateToScanner      = { navController.navigate(Routes.SCANNER) },
+                        onNavigateToProducts     = { navController.navigate(Routes.PRODUCTS) },
+                        onNavigateToInventory    = { navController.navigate(Routes.INVENTORY) },
+                        onNavigateToReports      = { navController.navigate(Routes.REPORTS) },
+                        onNavigateToExpenses     = { navController.navigate(Routes.EXPENSES) },
+                        onNavigateToSettings     = { navController.navigate(Routes.SETTINGS) },
+                        onNavigateToSalesHistory = { navController.navigate(Routes.SALES_HISTORY) },
+                        onNavigateToLowStock     = { navController.navigate(Routes.LOW_STOCK) }
                     )
                 }
 
@@ -162,6 +166,16 @@ fun MiniMartNavGraph(
                 composable(Routes.INVENTORY) { InventoryScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role)) }
                 composable(Routes.REPORTS)   { ReportsScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.EXPENSES)  { ExpenseScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.SALES_HISTORY) {
+                    SalesHistoryScreen(
+                        onBack = { navController.popBackStack() },
+                        onSaleClick = { saleId -> navController.navigate(Routes.receipt(saleId)) },
+                        currency = currency
+                    )
+                }
+                composable(Routes.LOW_STOCK) {
+                    LowStockScreen(onBack = { navController.popBackStack() })
+                }
                 composable(Routes.USERS)     { UserManagementScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.SHIFTS)    { ShiftScreen(onBack = { navController.popBackStack() }) }
 

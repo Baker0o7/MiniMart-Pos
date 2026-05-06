@@ -48,8 +48,27 @@ interface SaleDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSaleItems(items: List<SaleItem>)
 
-    @Query("UPDATE sales SET status = 'VOIDED' WHERE id = :saleId")
-    suspend fun voidSale(saleId: Long)
+
+    @Transaction
+    @Query("""
+        SELECT * FROM sales 
+        WHERE receiptNumber LIKE '%' || :query || '%'
+           OR notes LIKE '%' || :query || '%'
+           OR mpesaRef LIKE '%' || :query || '%'
+        ORDER BY createdAt DESC
+        LIMIT 100
+    """)
+    fun searchSales(query: String): Flow<List<SaleWithItems>>
+
+    @Transaction
+    @Query("SELECT * FROM sales WHERE status = 'COMPLETED' ORDER BY createdAt DESC")
+    fun getCompletedSales(): Flow<List<SaleWithItems>>
+
+    @Query("UPDATE sales SET status = 'REFUNDED', notes = :reason WHERE id = :saleId")
+    suspend fun refundSale(saleId: Long, reason: String)
+
+    @Query("UPDATE sales SET status = 'VOIDED', notes = :reason WHERE id = :saleId")
+    suspend fun voidSale(saleId: Long, reason: String)
 
     @Transaction
     suspend fun insertSaleWithItems(sale: Sale, items: List<SaleItem>): Long {
@@ -66,3 +85,6 @@ data class TopSellerResult(
     val totalQty: Int,
     val totalRevenue: Double
 )
+
+// Search extension added at end — actually must go inside interface
+// Will patch inline instead
