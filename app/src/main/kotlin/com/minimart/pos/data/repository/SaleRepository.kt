@@ -20,7 +20,6 @@ class SaleRepository @Inject constructor(
     fun getSalesByDateRange(start: Long, end: Long): Flow<List<Sale>> = saleDao.getSalesByDateRange(start, end)
 
     suspend fun getSaleWithItems(saleId: Long): SaleWithItems? = saleDao.getSaleWithItems(saleId)
-    suspend fun voidSale(saleId: Long) = saleDao.voidSale(saleId)
 
     /** Complete a sale: persist the sale, items, and decrement stock. */
     suspend fun completeSale(sale: Sale, items: List<SaleItem>): Long {
