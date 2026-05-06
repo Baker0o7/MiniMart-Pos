@@ -22,9 +22,9 @@ data class Product(
     val unit: String = "pcs",
     val imageUri: String? = null,
     val taxRate: Double = 0.0,
-    val supplierName: String = "",       // supplier / vendor name
-    val supplierPhone: String = "",      // supplier contact number
-    val reorderQuantity: Int = 0,        // how many to order when restocking
+    @androidx.room.ColumnInfo(defaultValue = "") val supplierName: String = "",
+    @androidx.room.ColumnInfo(defaultValue = "") val supplierPhone: String = "",
+    @androidx.room.ColumnInfo(defaultValue = "0") val reorderQuantity: Int = 0,
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
