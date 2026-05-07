@@ -187,41 +187,49 @@ fun DashboardScreen(
             }
             item {
                 val hidden = hiddenActions.split(",").filter { it.isNotBlank() }.toSet()
-                val scope = rememberCoroutineScope()
+                val hideScope = rememberCoroutineScope()
 
-                @Composable
-                fun RowScope.ActionSlot(id: String, content: @Composable () -> Unit) {
-                    if (id in hidden) { Spacer(Modifier.weight(1f)); return }
-                    Box(modifier = Modifier.weight(1f)) {
-                        content()
-                        if (showManageActions) {
-                            Box(modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
-                                .size(22.dp).clip(CircleShape)
-                                .background(DT.Red)
-                                .clickable {
-                                    val newHidden = (hidden + id).joinToString(",")
-                                    scope.launch { settingsRepo?.setHiddenActions(newHidden) }
-                                },
-                                contentAlignment = Alignment.Center
-                            ) { Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(14.dp)) }
-                        }
-                    }
+                // Inline helper: wraps a card with optional remove badge
+                fun hideCard(id: String) {
+                    val newHidden = (hidden + id).joinToString(",")
+                    hideScope.launch { settingsRepo?.setHiddenActions(newHidden) }
                 }
 
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // Row 1: New Sale + Products
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        ActionSlot("sale") { BigActionCard(Modifier.fillMaxWidth(), "New Sale", Icons.Default.QrCode, TealCard, TealGlow, onNavigateToScanner) }
-                        ActionSlot("products") { BigActionCard(Modifier.fillMaxWidth(), "Products", Icons.Default.Inventory2, Color(0xFF1A3530), DT.TealLight, onNavigateToProducts) }
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        if (rm.canViewReports(role)) {
-                            ActionSlot("reports") { BigActionCard(Modifier.fillMaxWidth(), "Reports", Icons.Default.BarChart, PurpleCard, Color(0xFFCE93D8), onNavigateToReports) }
-                        } else {
-                            ActionSlot("inventory") { BigActionCard(Modifier.fillMaxWidth(), "Inventory", Icons.Default.Store, Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory) }
+                        if ("sale" !in hidden) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                BigActionCard(Modifier.fillMaxWidth(), "New Sale", Icons.Default.QrCode, TealCard, TealGlow, onNavigateToScanner)
+                                if (showManageActions) RemoveBadge { hideCard("sale") }
+                            }
                         }
-                        if (rm.canViewExpenses(role)) {
-                            ActionSlot("expenses") { BigActionCard(Modifier.fillMaxWidth(), "Expenses", Icons.Default.Receipt, RoseCard.copy(alpha = 0.4f), Color(0xFFEF9A9A), onNavigateToExpenses) }
-                        } else {
+                        if ("products" !in hidden) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                BigActionCard(Modifier.fillMaxWidth(), "Products", Icons.Default.Inventory2, Color(0xFF1A3530), DT.TealLight, onNavigateToProducts)
+                                if (showManageActions) RemoveBadge { hideCard("products") }
+                            }
+                        } else Spacer(Modifier.weight(1f))
+                    }
+                    // Row 2: Reports/Inventory + Expenses/Manager
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                        val leftId = if (rm.canViewReports(role)) "reports" else "inventory"
+                        if (leftId !in hidden) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                if (rm.canViewReports(role))
+                                    BigActionCard(Modifier.fillMaxWidth(), "Reports", Icons.Default.BarChart, PurpleCard, Color(0xFFCE93D8), onNavigateToReports)
+                                else
+                                    BigActionCard(Modifier.fillMaxWidth(), "Inventory", Icons.Default.Store, Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory)
+                                if (showManageActions) RemoveBadge { hideCard(leftId) }
+                            }
+                        } else Spacer(Modifier.weight(1f))
+
+                        if (rm.canViewExpenses(role) && "expenses" !in hidden) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                BigActionCard(Modifier.fillMaxWidth(), "Expenses", Icons.Default.Receipt, RoseCard.copy(alpha = 0.4f), Color(0xFFEF9A9A), onNavigateToExpenses)
+                                if (showManageActions) RemoveBadge { hideCard("expenses") }
+                            }
+                        } else if (!rm.canViewExpenses(role)) {
                             Box(modifier = Modifier.weight(1f).height(130.dp).clip(RoundedCornerShape(20.dp))
                                 .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(20.dp)),
                                 contentAlignment = Alignment.Center) {
@@ -232,11 +240,11 @@ fun DashboardScreen(
                                         textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                                 }
                             }
-                        }
+                        } else Spacer(Modifier.weight(1f))
                     }
-                    // Restore hidden cards button
+                    // Restore button
                     if (hidden.isNotEmpty()) {
-                        TextButton(onClick = { scope.launch { settingsRepo?.setHiddenActions("") } },
+                        TextButton(onClick = { hideScope.launch { settingsRepo?.setHiddenActions("") } },
                             modifier = Modifier.fillMaxWidth()) {
                             Icon(Icons.Default.Restore, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
@@ -294,6 +302,24 @@ fun DashboardScreen(
             }
         }
     }  // end PullToRefreshBox
+}
+
+// ─── Remove badge overlay ─────────────────────────────────────────────────────
+
+@Composable
+private fun BoxScope.RemoveBadge(onRemove: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(4.dp)
+            .size(22.dp)
+            .clip(CircleShape)
+            .background(Color(0xFFEF5350))
+            .clickable(onClick = onRemove),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(14.dp))
+    }
 }
 
 // ─── Big action card ──────────────────────────────────────────────────────────
