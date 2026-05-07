@@ -279,7 +279,7 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                     style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     DarkField(batchNumber, { batchNumber = it }, "Batch No.", Modifier.weight(1f))
-                    DarkField(expiryDateStr, { expiryDateStr = it }, "Expiry dd/MM/yyyy", Modifier.weight(1f))
+                    DarkField(expiryDateStr, { expiryDateStr = it }, "Expiry (dd/MM/yy)", Modifier.weight(1f))
                 }
             }
         },
@@ -287,9 +287,13 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
             Button(
                 onClick = {
                     val expiryMs = try {
-                        if (expiryDateStr.isNotBlank())
-                            java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).parse(expiryDateStr)?.time ?: 0L
-                        else 0L
+                        if (expiryDateStr.isNotBlank()) {
+                            val fmt = if (expiryDateStr.length <= 8)
+                                java.text.SimpleDateFormat("dd/MM/yy", java.util.Locale.getDefault())
+                            else
+                                java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                            fmt.parse(expiryDateStr)?.time ?: 0L
+                        } else 0L
                     } catch (_: Exception) { 0L }
                     onSave(Product(id = product?.id ?: 0L, barcode = barcode.trim(), sku = sku.trim(),
                         name = name.trim(), price = price.toDoubleOrNull() ?: 0.0,
@@ -310,10 +314,24 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
 @Composable
 private fun DarkField(value: String, onValueChange: (String) -> Unit, label: String,
     modifier: Modifier = Modifier.fillMaxWidth(), keyboardType: KeyboardType = KeyboardType.Text) {
-    OutlinedTextField(value = value, onValueChange = onValueChange, label = { Text(label, color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
-        singleLine = true, modifier = modifier,
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label, color = DT.SubText, maxLines = 1) },
+        singleLine = true,
+        modifier = modifier,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-            focusedTextColor = DT.OnSurface, unfocusedTextColor = DT.OnSurface, cursorColor = DT.Teal,
-            focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
+        textStyle = androidx.compose.ui.text.TextStyle(color = DT.OnSurface, fontSize = 15.sp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = DT.Teal,
+            unfocusedBorderColor = DT.Border,
+            focusedTextColor = DT.OnSurface,
+            unfocusedTextColor = DT.OnSurface,
+            cursorColor = DT.Teal,
+            focusedLabelColor = DT.Teal,
+            unfocusedLabelColor = DT.SubText,
+            focusedContainerColor = DT.Surface,
+            unfocusedContainerColor = DT.Surface
+        )
+    )
 }

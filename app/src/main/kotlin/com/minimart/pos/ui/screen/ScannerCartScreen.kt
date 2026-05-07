@@ -252,7 +252,9 @@ fun ScannerCartScreen(
                     modifier = Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                         .background(DT.Surface2)
-                        .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 88.dp)
+                        .padding(start = 20.dp, end = 20.dp, top = 16.dp)
+                        .navigationBarsPadding()
+                        .padding(bottom = 80.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
