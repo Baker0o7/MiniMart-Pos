@@ -195,13 +195,12 @@ fun DashboardScreen(
                     Box(modifier = Modifier.weight(1f)) {
                         content()
                         if (showManageActions) {
-                            val coroutineScope = rememberCoroutineScope()
                             Box(modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
                                 .size(22.dp).clip(CircleShape)
                                 .background(DT.Red)
                                 .clickable {
                                     val newHidden = (hidden + id).joinToString(",")
-                                    coroutineScope.launch { settingsRepo?.setHiddenActions(newHidden) }
+                                    scope.launch { settingsRepo?.setHiddenActions(newHidden) }
                                 },
                                 contentAlignment = Alignment.Center
                             ) { Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(14.dp)) }
@@ -237,8 +236,7 @@ fun DashboardScreen(
                     }
                     // Restore hidden cards button
                     if (hidden.isNotEmpty()) {
-                        val scope2 = rememberCoroutineScope()
-                        TextButton(onClick = { scope2.launch { settingsRepo?.setHiddenActions("") } },
+                        TextButton(onClick = { scope.launch { settingsRepo?.setHiddenActions("") } },
                             modifier = Modifier.fillMaxWidth()) {
                             Icon(Icons.Default.Restore, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
