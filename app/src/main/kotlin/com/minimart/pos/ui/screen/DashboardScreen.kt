@@ -197,51 +197,52 @@ fun DashboardScreen(
                 }
 
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    // Row 1: New Sale + Products
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        if ("sale" !in hidden) {
-                            Box(modifier = Modifier.weight(1f)) {
+                    // Build visible cards list for Row 1
+                    val showSale    = "sale"     !in hidden
+                    val showProds   = "products" !in hidden
+                    val leftId      = if (rm.canViewReports(role)) "reports" else "inventory"
+                    val showLeft    = leftId !in hidden
+                    val showExpenses = rm.canViewExpenses(role) && "expenses" !in hidden
+
+                    // Row 1 - fills full width when only one card visible
+                    if (showSale || showProds) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                            if (showSale) Box(modifier = Modifier.weight(1f)) {
                                 BigActionCard(Modifier.fillMaxWidth(), "New Sale", Icons.Default.QrCode, TealCard, TealGlow, onNavigateToScanner)
                                 if (showManageActions) RemoveBadge { hideCard("sale") }
                             }
-                        }
-                        if ("products" !in hidden) {
-                            Box(modifier = Modifier.weight(1f)) {
+                            if (showProds) Box(modifier = Modifier.weight(1f)) {
                                 BigActionCard(Modifier.fillMaxWidth(), "Products", Icons.Default.Inventory2, Color(0xFF1A3530), DT.TealLight, onNavigateToProducts)
                                 if (showManageActions) RemoveBadge { hideCard("products") }
                             }
-                        } else Spacer(Modifier.weight(1f))
+                        }
                     }
-                    // Row 2: Reports/Inventory + Expenses/Manager
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        val leftId = if (rm.canViewReports(role)) "reports" else "inventory"
-                        if (leftId !in hidden) {
-                            Box(modifier = Modifier.weight(1f)) {
+                    // Row 2
+                    if (showLeft || showExpenses || !rm.canViewExpenses(role)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                            if (showLeft) Box(modifier = Modifier.weight(1f)) {
                                 if (rm.canViewReports(role))
                                     BigActionCard(Modifier.fillMaxWidth(), "Reports", Icons.Default.BarChart, PurpleCard, Color(0xFFCE93D8), onNavigateToReports)
                                 else
                                     BigActionCard(Modifier.fillMaxWidth(), "Inventory", Icons.Default.Store, Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory)
                                 if (showManageActions) RemoveBadge { hideCard(leftId) }
                             }
-                        } else Spacer(Modifier.weight(1f))
-
-                        if (rm.canViewExpenses(role) && "expenses" !in hidden) {
-                            Box(modifier = Modifier.weight(1f)) {
+                            if (showExpenses) Box(modifier = Modifier.weight(1f)) {
                                 BigActionCard(Modifier.fillMaxWidth(), "Expenses", Icons.Default.Receipt, RoseCard.copy(alpha = 0.4f), Color(0xFFEF9A9A), onNavigateToExpenses)
                                 if (showManageActions) RemoveBadge { hideCard("expenses") }
-                            }
-                        } else if (!rm.canViewExpenses(role)) {
-                            Box(modifier = Modifier.weight(1f).height(130.dp).clip(RoundedCornerShape(20.dp))
-                                .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(20.dp)),
-                                contentAlignment = Alignment.Center) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Default.Lock, null, tint = DT.SubText.copy(0.4f), modifier = Modifier.size(22.dp))
-                                    Spacer(Modifier.height(4.dp))
-                                    Text("Manager Only", color = DT.SubText.copy(0.4f), style = MaterialTheme.typography.labelSmall,
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                            } else if (!rm.canViewExpenses(role)) {
+                                Box(modifier = Modifier.weight(1f).height(130.dp).clip(RoundedCornerShape(20.dp))
+                                    .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(20.dp)),
+                                    contentAlignment = Alignment.Center) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(Icons.Default.Lock, null, tint = DT.SubText.copy(0.4f), modifier = Modifier.size(22.dp))
+                                        Spacer(Modifier.height(4.dp))
+                                        Text("Manager Only", color = DT.SubText.copy(0.4f), style = MaterialTheme.typography.labelSmall,
+                                            textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                                    }
                                 }
                             }
-                        } else Spacer(Modifier.weight(1f))
+                        }
                     }
                     // Restore button
                     if (hidden.isNotEmpty()) {

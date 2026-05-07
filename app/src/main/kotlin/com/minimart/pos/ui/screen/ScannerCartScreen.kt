@@ -78,6 +78,7 @@ fun ScannerCartScreen(
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White)
                         }
                         Spacer(Modifier.weight(1f))
+                        if (continuousScan) { Icon(Icons.Default.AllInclusive, null, tint = Color.White.copy(0.7f), modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)) }
                         Text("New Sale", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Spacer(Modifier.weight(1f))
                         if (state.items.isNotEmpty()) {
@@ -234,7 +235,7 @@ fun ScannerCartScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, top = 4.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(state.items, key = { it.product.id }) { item ->
@@ -250,7 +251,8 @@ fun ScannerCartScreen(
                 Box(
                     modifier = Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                        .background(DT.Surface2).padding(20.dp)
+                        .background(DT.Surface2)
+                        .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 88.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
