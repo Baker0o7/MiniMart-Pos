@@ -1,5 +1,7 @@
 package com.minimart.pos.ui.screen
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -128,12 +131,17 @@ fun InventoryScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(products, key = { it.id }) { product ->
+                    val context = LocalContext.current
                     DarkInventoryRow(
                         product = product,
                         canEdit = canEditPrices,
                         onEdit = { editProduct = it; showAddDialog = true },
                         onAdjustStock = { showStockDialog = it },
-                        onDelete = { vm.deleteProduct(product.id) }
+                        onDelete = { vm.deleteProduct(product.id) },
+                        onCallSupplier = {
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${product.supplierPhone}"))
+                            context.startActivity(intent)
+                        }
                     )
                 }
                 if (products.isEmpty()) {
@@ -193,7 +201,8 @@ private fun DarkInventoryRow(
     canEdit: Boolean = true,
     onEdit: (Product) -> Unit,
     onAdjustStock: (Product) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onCallSupplier: () -> Unit = {}
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
     val stockColor = when {
@@ -243,11 +252,22 @@ private fun DarkInventoryRow(
             }
             Spacer(Modifier.height(10.dp))
             // Action buttons
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 ActionBtn("Stock", DT.Surface2, DT.TealLight) { onAdjustStock(product) }
                 if (canEdit) {
                     ActionBtn("Edit",  DT.Surface2, DT.Teal) { onEdit(product) }
-                    Spacer(Modifier.weight(1f))
+                }
+                Spacer(Modifier.weight(1f))
+                // Call supplier button
+                if (product.supplierPhone.isNotBlank()) {
+                    IconButton(
+                        onClick = onCallSupplier,
+                        modifier = Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(DT.TealDim)
+                    ) {
+                        Icon(Icons.Default.Phone, "Call supplier", tint = DT.Teal, modifier = Modifier.size(18.dp))
+                    }
+                }
+                if (canEdit) {
                     ActionBtn("Delete", DT.Surface2, DT.Red) { showDeleteConfirm = true }
                 }
             }

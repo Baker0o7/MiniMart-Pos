@@ -60,11 +60,15 @@ fun DashboardScreen(
     onNavigateToSalesHistory: () -> Unit = {},
     onNavigateToLowStock:     () -> Unit = {},
     currentRole: com.minimart.pos.data.entity.UserRole? = null,
+    settingsRepo: com.minimart.pos.data.repository.SettingsRepository? = null,
     vm: DashboardViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
     val role   = currentRole
     val rm     = com.minimart.pos.util.RoleManager
+    val hiddenActions by (settingsRepo?.hiddenActions
+        ?: kotlinx.coroutines.flow.flowOf("")).collectAsState("")
+    var showManageActions by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
 
     LaunchedEffect(isRefreshing) {
@@ -162,23 +166,61 @@ fun DashboardScreen(
             // ── Quick Actions ─────────────────────────────────────────────────
             item { Spacer(Modifier.height(20.dp)) }
             item {
-                Text("Quick Actions", color = OnDark, fontWeight = FontWeight.Bold, fontSize = 18.sp,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
+                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text("Quick Actions", color = OnDark, fontWeight = FontWeight.Bold, fontSize = 18.sp,
+                        modifier = Modifier.weight(1f))
+                    IconButton(onClick = { showManageActions = !showManageActions },
+                        modifier = Modifier.size(32.dp)) {
+                        Icon(if (showManageActions) Icons.Default.Check else Icons.Default.Tune,
+                            null, tint = DT.Teal, modifier = Modifier.size(18.dp))
+                    }
+                }
+            }
+            // Manage mode hint
+            if (showManageActions) {
+                item {
+                    Text("Tap ✕ to hide an action card",
+                        color = DT.SubText, style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 20.dp))
+                }
             }
             item {
+                val hidden = hiddenActions.split(",").filter { it.isNotBlank() }.toSet()
+                val scope = rememberCoroutineScope()
+
+                @Composable
+                fun ActionSlot(id: String, content: @Composable BoxScope.() -> Unit) {
+                    if (id in hidden) return
+                    Box(modifier = Modifier.weight(1f)) {
+                        content()
+                        if (showManageActions) {
+                            Box(modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
+                                .size(22.dp).clip(CircleShape)
+                                .background(DT.Red)
+                                .clickable {
+                                    val newHidden = (hidden + id).joinToString(",")
+                                    scope.launch { settingsRepo?.setHiddenActions(newHidden) }
+                                },
+                                contentAlignment = Alignment.Center
+                            ) { Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(14.dp)) }
+                        }
+                    }
+                }
+
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        BigActionCard(Modifier.weight(1f), "New Sale", Icons.Default.QrCode, TealCard, TealGlow, onNavigateToScanner)
-                        BigActionCard(Modifier.weight(1f), "Products", Icons.Default.Inventory2, Color(0xFF1A3530), DT.TealLight, onNavigateToProducts)
+                        ActionSlot("sale") { BigActionCard(Modifier.fillMaxWidth(), "New Sale", Icons.Default.QrCode, TealCard, TealGlow, onNavigateToScanner) }
+                        ActionSlot("products") { BigActionCard(Modifier.fillMaxWidth(), "Products", Icons.Default.Inventory2, Color(0xFF1A3530), DT.TealLight, onNavigateToProducts) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                         if (rm.canViewReports(role)) {
-                            BigActionCard(Modifier.weight(1f), "Reports", Icons.Default.BarChart, PurpleCard, Color(0xFFCE93D8), onNavigateToReports)
+                            ActionSlot("reports") { BigActionCard(Modifier.fillMaxWidth(), "Reports", Icons.Default.BarChart, PurpleCard, Color(0xFFCE93D8), onNavigateToReports) }
                         } else {
-                            BigActionCard(Modifier.weight(1f), "Inventory", Icons.Default.Store, Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory)
+                            ActionSlot("inventory") { BigActionCard(Modifier.fillMaxWidth(), "Inventory", Icons.Default.Store, Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory) }
                         }
                         if (rm.canViewExpenses(role)) {
-                            BigActionCard(Modifier.weight(1f), "Expenses", Icons.Default.Receipt, RoseCard.copy(alpha = 0.4f), Color(0xFFEF9A9A), onNavigateToExpenses)
+                            ActionSlot("expenses") { BigActionCard(Modifier.fillMaxWidth(), "Expenses", Icons.Default.Receipt, RoseCard.copy(alpha = 0.4f), Color(0xFFEF9A9A), onNavigateToExpenses) }
                         } else {
                             Box(modifier = Modifier.weight(1f).height(130.dp).clip(RoundedCornerShape(20.dp))
                                 .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(20.dp)),
@@ -190,6 +232,16 @@ fun DashboardScreen(
                                         textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                                 }
                             }
+                        }
+                    }
+                    // Restore hidden cards button
+                    if (hidden.isNotEmpty()) {
+                        val scope2 = rememberCoroutineScope()
+                        TextButton(onClick = { scope2.launch { settingsRepo?.setHiddenActions("") } },
+                            modifier = Modifier.fillMaxWidth()) {
+                            Icon(Icons.Default.Restore, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Restore hidden cards", color = DT.Teal, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

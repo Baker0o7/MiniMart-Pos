@@ -228,7 +228,10 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
         containerColor = DT.Surface,
         title = { Text(if (product == null) "Add Product" else "Edit Product", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     DarkField(barcode, { barcode = it }, "Barcode *", modifier = Modifier.weight(1f))
                     FilledIconButton(onClick = {

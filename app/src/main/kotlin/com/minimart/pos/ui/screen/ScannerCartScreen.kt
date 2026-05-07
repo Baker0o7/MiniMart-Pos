@@ -128,36 +128,7 @@ fun ScannerCartScreen(
                     ),
                     modifier = Modifier.weight(1f)
                 )
-                // Scan toggle button
-                FilledIconButton(
-                    onClick = {
-                        if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
-                        else showScanner = !showScanner
-                    },
-                    modifier = Modifier.size(52.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = if (showScanner) DT.Surface2 else DT.Teal
-                    ),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Icon(
-                        if (showScanner) Icons.Default.Close else Icons.Default.QrCode,
-                        null, tint = Color.White, modifier = Modifier.size(24.dp)
-                    )
-                }
-                // Continuous scan toggle
-                FilledIconButton(
-                    onClick = { continuousScan = !continuousScan },
-                    modifier = Modifier.size(52.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = if (continuousScan) DT.Teal else DT.Surface2
-                    ),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Icon(Icons.Default.AllInclusive, null,
-                        tint = if (continuousScan) Color.White else DT.SubText,
-                        modifier = Modifier.size(22.dp))
-                }
+
             }
 
             // ── Compact inline scanner (like Add Product dialog) ──────────────
@@ -302,6 +273,57 @@ fun ScannerCartScreen(
             }
         }
 
+        // ── Bottom FAB: Scan + Continuous toggle ──────────────────────────
+        Box(modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .fillMaxWidth()
+            .background(DT.Bg.copy(alpha = 0.95f))
+            .navigationBarsPadding()
+            .padding(horizontal = 24.dp, vertical = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Continuous scan toggle (small, left of main FAB)
+                FilledIconButton(
+                    onClick = { continuousScan = !continuousScan },
+                    modifier = Modifier.size(44.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = if (continuousScan) DT.Teal else DT.Surface2
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.AllInclusive, "Continuous scan",
+                        tint = if (continuousScan) Color.White else DT.SubText,
+                        modifier = Modifier.size(20.dp))
+                }
+                Spacer(Modifier.width(16.dp))
+                // Main scan FAB
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
+                        else showScanner = !showScanner
+                    },
+                    containerColor = if (showScanner) DT.Red else DT.Teal,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(50.dp),
+                    modifier = Modifier.height(56.dp)
+                ) {
+                    Icon(
+                        if (showScanner) Icons.Default.Close else Icons.Default.QrCode,
+                        null, modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (showScanner) "Close Scanner" else "Scan",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+        }
     }
 }
 

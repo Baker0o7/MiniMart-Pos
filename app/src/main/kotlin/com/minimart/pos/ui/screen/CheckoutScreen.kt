@@ -264,7 +264,7 @@ fun CheckoutScreen(
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
 
             // ── Complete Checkout button ───────────────────────────────────────
             val canComplete = when (selectedMethod) {
@@ -305,7 +305,7 @@ fun CheckoutScreen(
                     )
                 }
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(36.dp))
         }
     }
 }

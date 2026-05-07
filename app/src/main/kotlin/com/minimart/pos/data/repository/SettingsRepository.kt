@@ -20,6 +20,7 @@ class SettingsRepository @Inject constructor(
         val KEY_STORE_NAME       = stringPreferencesKey("store_name")
         val KEY_CURRENCY         = stringPreferencesKey("currency")
         val KEY_TAX_RATE         = floatPreferencesKey("tax_rate")
+        val KEY_HIDDEN_ACTIONS    = stringPreferencesKey("hidden_actions")
         val KEY_PRINTER_ADDRESS  = stringPreferencesKey("printer_address")
         val KEY_PRINTER_NAME     = stringPreferencesKey("printer_name")
         val KEY_RECEIPT_FOOTER   = stringPreferencesKey("receipt_footer")
@@ -36,6 +37,10 @@ class SettingsRepository @Inject constructor(
     val storeName: Flow<String>         = context.dataStore.data.map { it[KEY_STORE_NAME] ?: "My MiniMart" }
     val currency: Flow<String>          = context.dataStore.data.map { it[KEY_CURRENCY] ?: "KES" }
     val taxRate: Flow<Float>            = context.dataStore.data.map { it[KEY_TAX_RATE] ?: 0.16f }
+    // comma-separated list of hidden action ids
+    val hiddenActions: Flow<String> = context.dataStore.data.map { it[KEY_HIDDEN_ACTIONS] ?: "" }
+    suspend fun setHiddenActions(ids: String) = context.dataStore.edit { it[KEY_HIDDEN_ACTIONS] = ids }
+
     val printerAddress: Flow<String?>   = context.dataStore.data.map { it[KEY_PRINTER_ADDRESS] }
     val printerName: Flow<String?>      = context.dataStore.data.map { it[KEY_PRINTER_NAME] }
     val receiptFooter: Flow<String>     = context.dataStore.data.map { it[KEY_RECEIPT_FOOTER] ?: "Thank you for shopping with us!" }
