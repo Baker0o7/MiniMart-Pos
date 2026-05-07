@@ -190,17 +190,18 @@ fun DashboardScreen(
                 val scope = rememberCoroutineScope()
 
                 @Composable
-                fun ActionSlot(id: String, content: @Composable BoxScope.() -> Unit) {
-                    if (id in hidden) return
+                fun RowScope.ActionSlot(id: String, content: @Composable () -> Unit) {
+                    if (id in hidden) { Spacer(Modifier.weight(1f)); return }
                     Box(modifier = Modifier.weight(1f)) {
                         content()
                         if (showManageActions) {
+                            val coroutineScope = rememberCoroutineScope()
                             Box(modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
                                 .size(22.dp).clip(CircleShape)
                                 .background(DT.Red)
                                 .clickable {
                                     val newHidden = (hidden + id).joinToString(",")
-                                    scope.launch { settingsRepo?.setHiddenActions(newHidden) }
+                                    coroutineScope.launch { settingsRepo?.setHiddenActions(newHidden) }
                                 },
                                 contentAlignment = Alignment.Center
                             ) { Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(14.dp)) }
