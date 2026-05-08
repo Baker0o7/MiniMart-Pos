@@ -23,6 +23,7 @@ class MiniMartApp : Application(), Configuration.Provider {
         // issue never prevents the app from starting
         try {
             com.minimart.pos.worker.LowStockWorker.schedule(this)
+            com.minimart.pos.worker.ExpiryAlertWorker.schedule(this)
         } catch (_: Exception) {}
     }
 }

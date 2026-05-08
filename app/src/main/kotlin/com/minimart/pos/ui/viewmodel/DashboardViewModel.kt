@@ -24,7 +24,9 @@ data class DashboardUiState(
     val todayRevenue: Double = 0.0,
     val todaySaleCount: Int = 0,
     val lowStockProducts: List<Product> = emptyList(),
-    val topSellers: List<TopSellerResult> = emptyList()
+    val topSellers: List<TopSellerResult> = emptyList(),
+    val expiringProducts: List<Product> = emptyList(),
+    val expiredProducts: List<Product> = emptyList()
 )
 
 @HiltViewModel
@@ -80,6 +82,22 @@ class DashboardViewModel @Inject constructor(
                 .catch { emit(emptyList()) }
                 .collect { sellers ->
                     _uiState.update { it.copy(topSellers = sellers) }
+                }
+        }
+        // Expiry alerts
+        viewModelScope.launch {
+            settingsRepo.expiryAlertMonths
+                .catch { emit(1) }
+                .collect { months ->
+                    val now = System.currentTimeMillis()
+                    val cutoff = now + months * 30L * 24 * 60 * 60 * 1000
+                    productRepo.getAllProducts()
+                        .catch { emit(emptyList()) }
+                        .collect { all ->
+                            val expiring = all.filter { p -> p.expiryDate > 0L && p.expiryDate in now..cutoff }
+                            val expired  = all.filter { p -> p.expiryDate > 0L && p.expiryDate < now }
+                            _uiState.update { it.copy(expiringProducts = expiring, expiredProducts = expired) }
+                        }
                 }
         }
     }

@@ -283,11 +283,8 @@ fun DashboardScreen(
             if (state.lowStockProducts.isNotEmpty()) {
                 item { Spacer(Modifier.height(12.dp)) }
                 item {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        color = Color(0xFF3B1A1A)
-                    ) {
+                    Surface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        shape = RoundedCornerShape(16.dp), color = Color(0xFF3B1A1A)) {
                         Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Warning, null, tint = Color(0xFFEF5350), modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(10.dp))
@@ -295,9 +292,31 @@ fun DashboardScreen(
                                 Text("Low Stock Alert", color = Color(0xFFEF5350), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
                                 Text("${state.lowStockProducts.size} items need restocking", color = SubText, style = MaterialTheme.typography.labelSmall)
                             }
-                            TextButton(onClick = onNavigateToLowStock) {
-                                Text("View", color = TealGlow, style = MaterialTheme.typography.labelMedium)
+                            TextButton(onClick = onNavigateToLowStock) { Text("View", color = TealGlow, style = MaterialTheme.typography.labelMedium) }
+                        }
+                    }
+                }
+            }
+
+            // ── Expiry alert banner ───────────────────────────────────────────
+            if (state.expiringProducts.isNotEmpty() || state.expiredProducts.isNotEmpty()) {
+                item { Spacer(Modifier.height(8.dp)) }
+                item {
+                    val hasExpired = state.expiredProducts.isNotEmpty()
+                    val bannerColor = if (hasExpired) Color(0xFF3B1A1A) else Color(0xFF2E2408)
+                    val iconColor   = if (hasExpired) Color(0xFFEF5350) else DT.Amber
+                    Surface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        shape = RoundedCornerShape(16.dp), color = bannerColor) {
+                        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.CalendarToday, null, tint = iconColor, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                if (hasExpired) Text("${state.expiredProducts.size} products EXPIRED", color = iconColor,
+                                    fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                if (state.expiringProducts.isNotEmpty()) Text("${state.expiringProducts.size} expiring soon",
+                                    color = DT.Amber, style = MaterialTheme.typography.labelSmall)
                             }
+                            TextButton(onClick = onNavigateToInventory) { Text("View", color = TealGlow, style = MaterialTheme.typography.labelMedium) }
                         }
                     }
                 }

@@ -55,7 +55,7 @@ fun SettingsScreen(
     val currency      by settingsRepo.currency.collectAsState("KES")
     val receiptFooter by settingsRepo.receiptFooter.collectAsState("")
     val darkMode      by settingsRepo.darkMode.collectAsState(false)
-    val mpesaPaybill  by settingsRepo.mpesaPaybill.collectAsState("")
+    val expiryAlertMonths by settingsRepo.expiryAlertMonths.collectAsState(1)
     val mpesaTill     by settingsRepo.mpesaTill.collectAsState("")
     val mpesaWithdraw by settingsRepo.mpesaWithdraw.collectAsState("")
     val mpesaName     by settingsRepo.mpesaAccountName.collectAsState("")
@@ -224,6 +224,35 @@ fun SettingsScreen(
                         }
                         printerStatus?.let { Text(it, color = if (it.startsWith("✓")) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall) }
                     }
+                }
+
+                // ── Expiry Alerts ─────────────────────────────────────────────
+                DSection("Expiry Alerts", Icons.Default.CalendarToday) {
+                    Text("Alert me when products expire within:", color = DT.SubText,
+                        style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                        listOf(1 to "1 month", 2 to "2 months", 3 to "3 months").forEach { (months, label) ->
+                            val selected = expiryAlertMonths == months
+                            Box(
+                                modifier = Modifier.weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (selected) DT.Teal else DT.Bg)
+                                    .border(1.dp, if (selected) DT.Teal else DT.Border, RoundedCornerShape(12.dp))
+                                    .clickable { scope.launch { settingsRepo.setExpiryAlertMonths(months) } }
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(label,
+                                    color = if (selected) Color.White else DT.SubText,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                    style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text("Checks every 12 hours. Runs in background.",
+                        color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                 }
 
                 // ── Appearance ────────────────────────────────────────────────
