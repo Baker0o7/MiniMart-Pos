@@ -258,14 +258,9 @@ private fun DarkInventoryRow(
                     ActionBtn("Edit",  DT.Surface2, DT.Teal) { onEdit(product) }
                 }
                 Spacer(Modifier.weight(1f))
-                // Call supplier button
+                // Call supplier button - matches Stock/Edit pill style
                 if (product.supplierPhone.isNotBlank()) {
-                    IconButton(
-                        onClick = onCallSupplier,
-                        modifier = Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(DT.TealDim)
-                    ) {
-                        Icon(Icons.Default.Phone, "Call supplier", tint = DT.Teal, modifier = Modifier.size(18.dp))
-                    }
+                    ActionBtn("Call", DT.Surface2, DT.Teal) { onCallSupplier() }
                 }
                 if (canEdit) {
                     ActionBtn("Delete", DT.Surface2, DT.Red) { showDeleteConfirm = true }

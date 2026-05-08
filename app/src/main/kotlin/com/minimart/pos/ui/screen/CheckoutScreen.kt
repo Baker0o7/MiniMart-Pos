@@ -305,7 +305,7 @@ fun CheckoutScreen(
                     )
                 }
             }
-            Spacer(Modifier.height(56.dp))
+            Spacer(Modifier.height(16.dp).navigationBarsPadding())
         }
     }
 }

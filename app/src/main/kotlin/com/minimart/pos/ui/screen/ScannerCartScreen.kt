@@ -278,19 +278,24 @@ fun ScannerCartScreen(
         }
 
         // ── Bottom FAB: Scan + Continuous toggle ──────────────────────────
-        Box(modifier = Modifier
-            .align(Alignment.BottomCenter)
-            .fillMaxWidth()
-            .background(DT.Bg.copy(alpha = 0.95f))
-            .navigationBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 12.dp)
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(Color.Transparent, DT.Bg.copy(alpha = 0.98f), DT.Bg)
+                    )
+                )
+                .navigationBarsPadding()
+                .padding(horizontal = 24.dp, top = 16.dp, bottom = 16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Continuous scan toggle (small, left of main FAB)
+                // Continuous scan toggle
                 FilledIconButton(
                     onClick = { continuousScan = !continuousScan },
                     modifier = Modifier.size(44.dp),
@@ -313,18 +318,11 @@ fun ScannerCartScreen(
                     containerColor = if (showScanner) DT.Red else DT.Teal,
                     contentColor = Color.White,
                     shape = RoundedCornerShape(50.dp),
-                    modifier = Modifier.height(56.dp)
+                    modifier = Modifier.height(52.dp)
                 ) {
-                    Icon(
-                        if (showScanner) Icons.Default.Close else Icons.Default.QrCode,
-                        null, modifier = Modifier.size(24.dp)
-                    )
+                    Icon(if (showScanner) Icons.Default.Close else Icons.Default.QrCode, null, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(
-                        if (showScanner) "Close Scanner" else "Scan",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Text(if (showScanner) "Close" else "Scan", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
                 }
             }
         }
