@@ -56,6 +56,7 @@ fun SettingsScreen(
     val receiptFooter by settingsRepo.receiptFooter.collectAsState("")
     val darkMode      by settingsRepo.darkMode.collectAsState(false)
     val expiryAlertMonths by settingsRepo.expiryAlertMonths.collectAsState(1)
+    val mpesaPaybill  by settingsRepo.mpesaPaybill.collectAsState("")
     val mpesaTill     by settingsRepo.mpesaTill.collectAsState("")
     val mpesaWithdraw by settingsRepo.mpesaWithdraw.collectAsState("")
     val mpesaName     by settingsRepo.mpesaAccountName.collectAsState("")
