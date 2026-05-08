@@ -288,7 +288,7 @@ fun ScannerCartScreen(
                     )
                 )
                 .navigationBarsPadding()
-                .padding(horizontal = 24.dp, top = 16.dp, bottom = 16.dp)
+                .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
