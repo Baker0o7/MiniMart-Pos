@@ -196,7 +196,7 @@ fun DashboardScreen(
                     hideScope.launch { settingsRepo?.setHiddenActions(newHidden) }
                 }
 
-                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).animateContentSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     // Build visible cards list for Row 1
                     val showSale    = "sale"     !in hidden
                     val showProds   = "products" !in hidden

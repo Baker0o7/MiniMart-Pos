@@ -255,14 +255,29 @@ private fun BottomNavBar(
 
 @Composable
 private fun RowScope.NavItem(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
+    val iconScale by animateFloatAsState(
+        targetValue = if (selected) 1.12f else 1f,
+        animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium),
+        label = "navScale"
+    )
+    val iconTint = if (selected) NavSel else NavUnsel
     Column(
-        modifier = Modifier.weight(1f).fillMaxHeight().clickable(onClick = onClick),
+        modifier = Modifier.weight(1f).fillMaxHeight()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(icon, null, tint = if (selected) NavSel else NavUnsel, modifier = Modifier.size(24.dp))
-        Spacer(Modifier.height(3.dp))
-        Text(label, color = if (selected) NavSel else NavUnsel, fontSize = 10.sp,
+        Box(contentAlignment = Alignment.Center) {
+            if (selected) {
+                Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))
+                    .background(NavSel.copy(alpha = 0.15f)))
+            }
+            Icon(icon, null, tint = iconTint,
+                modifier = Modifier.size(22.dp).graphicsLayer { scaleX = iconScale; scaleY = iconScale })
+        }
+        Spacer(Modifier.height(2.dp))
+        Text(label, color = iconTint, fontSize = 10.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
     }
 }

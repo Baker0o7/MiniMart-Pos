@@ -338,48 +338,34 @@ private fun DarkCartRow(
 ) {
     Box(
         modifier = Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(DT.Surface)
-            .border(1.dp, DT.Border, RoundedCornerShape(14.dp))
-            .padding(14.dp)
+            .border(1.dp, DT.Border, RoundedCornerShape(16.dp))
+            .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
-        Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("${item.product.name} x${item.quantity}", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
-                    Text("$currency ${String.format("%.2f", item.lineTotal)}", color = DT.TealLight,
-                        fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(10.dp)).background(DT.TealDim), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.Inventory2, null, tint = DT.Teal, modifier = Modifier.size(22.dp))
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(item.product.name, color = DT.OnSurface, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                Text("$currency ${String.format("%.2f", item.product.price)} x${item.quantity}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+            }
+            Spacer(Modifier.width(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(modifier = Modifier.size(30.dp).clip(CircleShape).background(DT.Surface2), contentAlignment = Alignment.Center) {
+                    IconButton(onClick = { onQtyChange(item.quantity - 1) }, modifier = Modifier.size(30.dp)) { Icon(Icons.Default.Remove, null, tint = DT.OnSurface, modifier = Modifier.size(14.dp)) }
                 }
-                Box(
-                    modifier = Modifier.size(32.dp).clip(CircleShape).background(DT.Surface2),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Close, null, tint = DT.SubText, modifier = Modifier.size(16.dp))
-                    }
+                Text(item.quantity.toString(), color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                Box(modifier = Modifier.size(30.dp).clip(CircleShape).background(DT.TealDim), contentAlignment = Alignment.Center) {
+                    IconButton(onClick = { onQtyChange(item.quantity + 1) }, modifier = Modifier.size(30.dp)) { Icon(Icons.Default.Add, null, tint = DT.Teal, modifier = Modifier.size(14.dp)) }
                 }
             }
-            Spacer(Modifier.height(10.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(
-                    modifier = Modifier.size(36.dp).clip(CircleShape)
-                        .background(DT.Surface2).border(1.dp, DT.Border, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(onClick = { onQtyChange(item.quantity - 1) }, modifier = Modifier.size(36.dp)) {
-                        Icon(Icons.Default.Remove, null, tint = DT.OnSurface, modifier = Modifier.size(18.dp))
-                    }
-                }
-                Text(item.quantity.toString(), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Box(
-                    modifier = Modifier.size(36.dp).clip(CircleShape)
-                        .background(DT.Surface2).border(1.dp, DT.Border, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(onClick = { onQtyChange(item.quantity + 1) }, modifier = Modifier.size(36.dp)) {
-                        Icon(Icons.Default.Add, null, tint = DT.OnSurface, modifier = Modifier.size(18.dp))
-                    }
-                }
+            Spacer(Modifier.width(8.dp))
+            Column(horizontalAlignment = Alignment.End) {
+                Text("$currency ${String.format("%.2f", item.lineTotal)}", color = DT.TealLight, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                IconButton(onClick = onRemove, modifier = Modifier.size(24.dp)) { Icon(Icons.Default.Close, null, tint = DT.SubText.copy(0.6f), modifier = Modifier.size(14.dp)) }
             }
         }
     }
