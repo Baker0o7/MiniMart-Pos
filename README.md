@@ -1,160 +1,220 @@
+<div align="center">
+
+<img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" width="120" alt="MiniMart POS Logo"/>
+
 # 🛒 MiniMart POS
 
-A lightweight, fully offline Android Point-of-Sale app built in **100% Kotlin + Jetpack Compose** for small mini-markets, kiosks, and convenience stores.
+**A beautiful, fully offline Android Point-of-Sale app**  
+Built 100% in Kotlin + Jetpack Compose for mini-markets, kiosks & convenience stores in Kenya and beyond.
+
+[![Release](https://img.shields.io/github/v/release/Baker0o7/MiniMart-Pos?color=00897B&label=Latest%20APK)](https://github.com/Baker0o7/MiniMart-Pos/releases/latest)
+[![Build](https://img.shields.io/github/actions/workflow/status/Baker0o7/MiniMart-Pos/release.yml?label=Build&color=00897B)](https://github.com/Baker0o7/MiniMart-Pos/actions)
+[![Android](https://img.shields.io/badge/Android-7.0%2B-00897B)](https://developer.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF)](https://kotlinlang.org)
+[![License](https://img.shields.io/badge/license-MIT-00897B)](LICENSE)
+
+</div>
+
+---
+
+## 📱 Screenshots
+
+| Login | Dashboard | New Sale |
+|-------|-----------|----------|
+| ![Login](screenshots/login.jpg) | ![Dashboard](screenshots/dashboard.jpg) | ![New Sale](screenshots/new_sale.jpg) |
+
+| Checkout | Inventory | Settings |
+|----------|-----------|----------|
+| ![Checkout](screenshots/checkout.jpg) | ![Inventory](screenshots/inventory.jpg) | ![Settings](screenshots/settings.jpg) |
+
+| Sales History | Low Stock | Reports |
+|---------------|-----------|---------|
+| ![History](screenshots/sales_history.jpg) | ![Low Stock](screenshots/low_stock.jpg) | ![Reports](screenshots/reports.jpg) |
+
+> **To add screenshots:** Create a `screenshots/` folder in the repo root and add `.jpg` images with the names above.
 
 ---
 
 ## ✨ Features
 
-| Module | What's implemented |
-|---|---|
-| **Barcode Scanning** | ML Kit camera (EAN-13/UPC/QR/Code128) + USB/Bluetooth HID keyboard scanners |
-| **Cart & Checkout** | Scan-to-add, quantity stepper, per-item & global discounts, hold state |
-| **Payments** | Cash (with change calculator), M-Pesa (with ref capture), Card |
-| **Thermal Printer** | Bluetooth ESC/POS 80mm receipts via BluetoothSocket |
-| **Product Management** | Add/edit/delete products, categories, stock tracking, low-stock alerts |
-| **Reports** | Daily / weekly / monthly revenue, transaction count, avg basket, top sellers |
-| **User Auth** | PIN-based login, cashier + manager + owner roles |
-| **Settings** | Store name, currency, tax rate, receipt footer, M-Pesa paybill, dark mode |
-| **Offline-first** | 100% Room/SQLite — zero internet required for daily ops |
-| **Cloud sync** | WorkManager stub ready for Supabase/Firebase integration |
-| **CI/CD** | GitHub Actions → signed APK + AAB on every version tag |
+### 🛍️ Sales & Cart
+- **Barcode scanning** — ML Kit camera (EAN-13/UPC/QR/Code128) + USB/Bluetooth HID keyboard scanners
+- **Continuous scan mode** — ∞ toggle keeps camera open for rapid multi-item scanning
+- **Smart cart** — quantity stepper, per-item & global discounts (manager/owner only), tax calculation
+- **Payments** — Cash (with change calculator & quick-amount buttons), M-Pesa (with ref capture)
+- **Refund / Void** — One-tap from receipt screen, automatically restores stock
+
+### 📦 Inventory & Products
+- **Product management** — Barcode, name, price, cost price, stock, category, SKU, unit
+- **Supplier info** — Name, phone number, reorder quantity per product
+- **Batch & expiry tracking** — Batch number, expiry date with color-coded urgency badges
+- **Low stock reminders** — With supplier name, phone, one-tap Call & WhatsApp reorder
+- **Stock adjustments** — +/- with reason log
+- **Expiry alerts** — Background notifications 1/2/3 months before expiry (configurable)
+
+### 💰 Payments & M-Pesa
+- **Cash** — Change calculation, quick-amount preset buttons (50/100/200/500/1000)
+- **M-Pesa** — Paybill, Till (Buy Goods), Withdrawal/Agent number, Account name
+- **Cashier view** — Shows till number read-only; editing locked to managers/owners
+
+### 📊 Reports & Analytics
+- Daily, weekly, monthly revenue & transaction counts
+- Average basket size, top-selling products
+- Expense tracking with 11 categories + P&L
+- Sales history with debounced search by receipt#, M-Pesa ref, or notes
+
+### 👥 Users & Access Control (RBAC)
+| Permission | Owner | Manager | Cashier |
+|---|:---:|:---:|:---:|
+| Process sales | ✅ | ✅ | ✅ |
+| View reports | ✅ | ✅ | ❌ |
+| Edit prices / add products | ✅ | ✅ | ❌ |
+| Apply discounts | ✅ | ✅ | ❌ |
+| M-Pesa settings (edit) | ✅ | ✅ | Read-only |
+| User management | ✅ | ❌ | ❌ |
+| Backup / restore | ✅ | ✅ | ❌ |
+
+- **6-digit PIN** with biometric (fingerprint/face) fallback
+- **3-strike lockout** — 30 second countdown after 3 failed attempts
+
+### 🔒 Security & Data
+- **100% offline** — No internet required. All data in local Room/SQLite DB
+- **Local backup** — One-tap backup to `Downloads/MiniMartPOS/backups/`
+- **Restore** — Select from list of saved backups
+- **Share backup** — via USB OTG, cloud, or any share target
+
+### 🖨️ Receipts & Sharing
+- **PDF receipts** — Generated locally using Android `PdfDocument` API
+- **WhatsApp share** — Send PDF receipt directly to WhatsApp (falls back to share sheet)
+- **Thermal printer** — Bluetooth ESC/POS 80mm receipts via `BluetoothSocket`
+
+### 📅 Shifts
+- Clock in / clock out with opening/closing float
+- Sales totals per cashier per shift
+- Cash discrepancy tracking
+
+### 🎨 UI/UX
+- Dark teal theme (`DT` color system) — beautiful in any lighting
+- Animated bottom navigation with spring-bounce icons
+- Pull-to-refresh on dashboard
+- Screen slide+fade transitions (280ms)
+- Quick action card customization — hide/rearrange dashboard cards
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Tech Stack
 
-```
-com.minimart.pos
-├── data/
-│   ├── db/          AppDatabase (Room), DatabaseCallback (seed)
-│   ├── dao/         ProductDao, SaleDao, UserDao
-│   ├── entity/      Product, Sale, SaleItem, CartItem, User
-│   └── repository/  ProductRepository, SaleRepository, UserRepository, SettingsRepository
-├── domain/          (use cases — expand as app grows)
-├── ui/
-│   ├── theme/       MiniMartTheme (Material 3, dynamic color, dark mode)
-│   ├── screen/      LoginScreen, DashboardScreen, ScannerCartScreen,
-│   │                CheckoutScreen, ReceiptScreen, ProductListScreen,
-│   │                ReportsScreen, SettingsScreen
-│   ├── viewmodel/   CartViewModel, ProductViewModel, DashboardViewModel,
-│   │                AuthViewModel, ReportsViewModel
-│   └── NavGraph.kt  Type-safe Compose Navigation
-├── di/              DatabaseModule (Hilt)
-├── scanner/         MLKitScanner.kt, KeyboardScanner.kt, ScannerManager.kt
-├── printer/         ThermalPrinter.kt (ESC/POS over BluetoothSocket)
-├── worker/          SyncWorker.kt (WorkManager)
-└── util/            Extensions.kt (money formatting, date helpers, haptics)
-```
-
-**Stack:** Kotlin • Jetpack Compose • Material 3 • MVVM + Clean Architecture  
-**DI:** Hilt • **DB:** Room + DataStore • **Scanner:** ML Kit + CameraX  
-**Printer:** BluetoothSocket ESC/POS • **Async:** Kotlin Flows + Coroutines
+| Layer | Technology |
+|---|---|
+| **Language** | Kotlin 2.0 |
+| **UI** | Jetpack Compose + Material3 |
+| **Architecture** | MVVM + Clean Architecture + Repository pattern |
+| **DI** | Hilt |
+| **Database** | Room 2.6 (SQLite) |
+| **Async** | Kotlin Coroutines + Flow |
+| **Camera** | CameraX + ML Kit Barcode Scanning |
+| **Background** | WorkManager (low-stock & expiry alerts) |
+| **Preferences** | DataStore |
+| **Printing** | Bluetooth BluetoothSocket (ESC/POS) |
+| **Navigation** | Navigation Compose |
+| **Build** | Gradle 8.7 + AGP 8.6.1 |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Android Studio Hedgehog or newer
-- JDK 17
-- Android device or emulator (API 26+)
+- Android Studio Ladybug or later
+- Android SDK 24+ (Android 7.0)
+- Java 17
 
-### Clone & Run
+### Build & Run
 ```bash
-git clone https://github.com/Baker0o7/minimart-pos.git
-cd minimart-pos
+git clone https://github.com/Baker0o7/MiniMart-Pos.git
+cd MiniMart-Pos
 ./gradlew assembleDebug
 ```
 
-### Default Login
-| Field    | Value   |
-|----------|---------|
-| Username | `admin` |
-| PIN      | `1234`  |
-
-> ⚠️ Change the default PIN immediately after first login via Settings → Users.
-
-### Seeded Products (for testing)
-The DB pre-loads 5 sample products on first install:
-- Coca-Cola 500ml — KES 50
-- Lays Chips 50g — KES 30
-- Mentos Roll — KES 15
-- Vaseline 250ml — KES 120
-- Marlboro Red 20s — KES 350
-
----
-
-## 🖨️ Thermal Printer Setup
-
-1. Pair your Bluetooth 80mm printer in Android **Settings → Bluetooth**
-2. Open MiniMart POS → **Settings → Pair Printer**
-3. Select your printer from the list
-4. Tap **Test Print** to verify
-
-Compatible with any ESC/POS 80mm Bluetooth printer (common brands: Epson TM, GOOJPRT, Xprinter, MUNBYN).
-
----
-
-## 📦 Adding Products
-
-**Manual:** Products → `+` button → fill barcode, name, price, stock  
-**Scan barcode:** On the Add Product dialog, scan the product's barcode directly  
-**Bulk import (Pro):** Products → Import → select CSV file
-
-CSV format:
-```csv
-barcode,name,price,costPrice,stock,category,unit
-6001007519173,Coca-Cola 500ml,50.00,35.00,48,Drinks,pcs
-```
-
----
-
-## 🔑 Release Signing (CI/CD)
-
-Add these secrets to your GitHub repository (`Settings → Secrets`):
-
-| Secret | Value |
+### Default Credentials
+| Field | Value |
 |---|---|
-| `KEYSTORE_BASE64` | `base64 -i minimart-release.jks` output |
-| `KEY_ALIAS` | Your key alias |
-| `KEY_PASSWORD` | Key password |
-| `STORE_PASSWORD` | Keystore password |
+| Username | `admin` |
+| PIN | `1234` |
+| Role | Owner (full access) |
 
-Then tag a release:
-```bash
-git tag v1.0.0
-git push origin v1.0.0
+> **First launch** seeds 5 sample products: Coca-Cola, Lays Chips, Mentos, Vaseline, Marlboro.
+
+### Download APK
+👉 **[Latest Release →](https://github.com/Baker0o7/MiniMart-Pos/releases/latest)**
+
+---
+
+## 📁 Project Structure
+
+```
+app/src/main/kotlin/com/minimart/pos/
+├── data/
+│   ├── dao/          ProductDao, SaleDao, UserDao, ExpenseDao, ShiftDao
+│   ├── db/           AppDatabase (v6), DatabaseCallback (seed data)
+│   ├── entity/       Product, Sale, SaleItem, User, Expense, Shift
+│   └── repository/   ProductRepository, SaleRepository, UserRepository,
+│                     SettingsRepository, ExpenseRepository, ShiftRepository
+├── di/               DatabaseModule (Hilt providers)
+├── printer/          ThermalPrinter (Bluetooth ESC/POS)
+├── scanner/          MLKitScanner, KeyboardScanner, ScannerManager
+├── ui/
+│   ├── screen/       17 screens (Login, Dashboard, Scanner, Checkout,
+│   │                 Receipt, Products, Inventory, Reports, Expenses,
+│   │                 Settings, Shifts, Users, SalesHistory, LowStock,
+│   │                 UserManagement, ScannerCart, ReceiptView)
+│   ├── viewmodel/    Per-screen ViewModels with StateFlow
+│   ├── theme/        DT color palette + MiniMartTheme
+│   └── NavGraph.kt   Navigation + bottom nav bar
+├── util/             Extensions, PdfReceiptGenerator, BackupManager,
+│                     RoleManager
+└── worker/           LowStockWorker, ExpiryAlertWorker, SyncWorker
 ```
 
-GitHub Actions will build and attach the signed APK + AAB to the release automatically.
+---
+
+## 🗄️ Database Schema (v6)
+
+**Products** — barcode, sku, name, price, costPrice, stock, lowStockThreshold, category, unit, taxRate, supplierName, supplierPhone, reorderQuantity, batchNumber, expiryDate  
+**Sales** — receiptNumber, subtotal, taxAmount, discountAmount, totalAmount, amountPaid, changeGiven, paymentMethod, status, cashierId, mpesaRef, notes  
+**SaleItems** — productId, productName, productBarcode, unitPrice, quantity, lineDiscount  
+**Users** — username, pinHash (SHA-256), displayName, role, isActive  
+**Expenses** — amount, category, description, cashierId, date  
+**Shifts** — cashierId, clockIn, clockOut, openingFloat, closingFloat, totalSales, status  
 
 ---
 
-## 🗺️ Roadmap
+## 🔧 Configuration
 
-### MVP (done ✅)
-- [x] Barcode scanning (ML Kit + HID keyboard)
-- [x] Cart with discounts
-- [x] Cash / M-Pesa / Card checkout
-- [x] Thermal receipt printing
-- [x] Product CRUD + stock management
-- [x] Daily/weekly/monthly reports
-- [x] PIN login with roles
-- [x] Signed release CI/CD
+### Signing (CI/CD)
+Set these GitHub Actions secrets:
+```
+SIGNING_KEY_ALIAS     = minimart
+SIGNING_KEY_PASSWORD  = android
+SIGNING_STORE_PASSWORD = android
+```
 
-### Pro Features (next)
-- [ ] CSV bulk product import
-- [ ] WhatsApp receipt sharing
-- [ ] Supabase cloud backup
-- [ ] Multi-cashier shift tracking
-- [ ] Customer loyalty points
-- [ ] Revenue dashboard charts (MPAndroidChart)
-- [ ] Low-stock email/SMS alerts
-- [ ] Multi-branch support
+### M-Pesa Setup
+Settings → M-Pesa Configuration:
+- **Account Name** — Business name on receipts
+- **Paybill Number** — For business payments
+- **Till Number** — Buy Goods (shown read-only to cashiers)
+- **Withdrawal Number** — Agent number for end-of-day cash-out
 
 ---
 
-## 📄 License
+## 📜 License
 
-MIT — free for personal and commercial use.
+```
+MIT License — Copyright (c) 2025 Baker0o7
+```
+
+---
+
+<div align="center">
+Made with ❤️ for Kenyan mini-markets 🇰🇪
+</div>
