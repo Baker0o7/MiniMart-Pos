@@ -234,28 +234,50 @@ private fun ClockInDialog(onDismiss: () -> Unit, onClockIn: (Double) -> Unit) {
     var openingFloat by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Clock In", fontWeight = FontWeight.Bold) },
+        containerColor = com.minimart.pos.ui.theme.DT.Surface,
+        title = { Text("Clock In", fontWeight = FontWeight.Bold, color = Color.White) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Enter the opening cash float in the drawer:", style = MaterialTheme.typography.bodyMedium)
+                Text("Enter the opening cash float in the drawer:",
+                    style = MaterialTheme.typography.bodyMedium, color = Color.White)
                 OutlinedTextField(
                     value = openingFloat,
                     onValueChange = { openingFloat = it },
-                    label = { Text("Opening Float (KES)") },
-                    leadingIcon = { Icon(Icons.Default.Money, null) },
+                    label = { Text("Opening Float (KES)", color = com.minimart.pos.ui.theme.DT.SubText) },
+                    leadingIcon = { Icon(Icons.Default.Money, null, tint = com.minimart.pos.ui.theme.DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = com.minimart.pos.ui.theme.DT.Teal,
+                        unfocusedBorderColor = com.minimart.pos.ui.theme.DT.Border,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = com.minimart.pos.ui.theme.DT.Teal,
+                        focusedContainerColor = com.minimart.pos.ui.theme.DT.Bg,
+                        unfocusedContainerColor = com.minimart.pos.ui.theme.DT.Bg
+                    )
                 )
-                Text("Leave 0 if no cash drawer is used.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Leave 0 if no cash drawer is used.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = com.minimart.pos.ui.theme.DT.SubText)
             }
         },
         confirmButton = {
             Button(onClick = { onClockIn(openingFloat.toDoubleOrNull() ?: 0.0) },
-                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen)
-            ) { Icon(Icons.Default.Login, null, tint = Color.White); Spacer(Modifier.width(6.dp)); Text("Clock In") }
+                colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
+            ) {
+                Icon(Icons.Default.Login, null, tint = Color.White)
+                Spacer(Modifier.width(6.dp))
+                Text("Clock In", color = Color.White, fontWeight = FontWeight.Bold)
+            }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = com.minimart.pos.ui.theme.DT.SubText)
+            }
+        }
     )
 }
 
