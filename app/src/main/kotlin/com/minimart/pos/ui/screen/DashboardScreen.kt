@@ -201,7 +201,7 @@ fun DashboardScreen(
                 val scope  = rememberCoroutineScope()
                 if (hidden.isNotEmpty()) {
                     TextButton(onClick = { scope.launch { settingsRepo?.setHiddenActions("") } }, Modifier.fillMaxWidth()) {
-                        Icon(Icons.Default.Restore, null, tint = TealGlow, Modifier.size(16.dp)); Spacer(Modifier.width(6.dp))
+                        Icon(Icons.Default.Restore, null, modifier = Modifier.size(16.dp), tint = TealGlow); Spacer(Modifier.width(6.dp))
                         Text("Restore hidden cards", color = TealGlow, fontSize = 12.sp)
                     }
                 }
@@ -224,7 +224,7 @@ fun DashboardScreen(
                 items(state.topSellers.take(5), key = { it.productId }) { s ->
                     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF0E2825)), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Inventory2, null, tint = TealGlow, Modifier.size(18.dp))
+                            Icon(Icons.Default.Inventory2, null, modifier = Modifier.size(18.dp), tint = TealGlow)
                         }
                         Spacer(Modifier.width(12.dp))
                         Text(s.productName, color = White, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -242,7 +242,7 @@ fun DashboardScreen(
         .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick).padding(12.dp)) {
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(glow.copy(0.18f)), contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = glow, Modifier.size(22.dp))
+                Icon(icon, null, modifier = Modifier.size(22.dp), tint = glow)
             }
             Spacer(Modifier.weight(1f))
             Text(title, color = White, fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -250,7 +250,7 @@ fun DashboardScreen(
             Text(subtitle, color = Sub, fontSize = 10.sp, lineHeight = 13.sp)
             Spacer(Modifier.height(8.dp))
             Box(Modifier.size(24.dp).clip(CircleShape).background(glow.copy(0.18f)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.ChevronRight, null, tint = glow, Modifier.size(16.dp))
+                Icon(Icons.Default.ChevronRight, null, modifier = Modifier.size(16.dp), tint = glow)
             }
         }
     }
@@ -260,7 +260,7 @@ fun DashboardScreen(
     Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
         .clip(RoundedCornerShape(14.dp)).background(bg).border(1.dp, glow.copy(0.3f), RoundedCornerShape(14.dp)).padding(14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = glow, Modifier.size(20.dp)); Spacer(Modifier.width(10.dp))
+            Icon(icon, null, modifier = Modifier.size(20.dp), tint = glow); Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 Text(title, color = White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 Text(sub, color = Sub, fontSize = 11.sp)
@@ -272,7 +272,7 @@ fun DashboardScreen(
 
 @Composable private fun BoxScope.DashRemoveBadge(onRemove: () -> Unit) {
     Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(22.dp).clip(CircleShape).background(RedGlow).clickable(onClick = onRemove), contentAlignment = Alignment.Center) {
-        Icon(Icons.Default.Close, null, tint = Color.White, Modifier.size(14.dp))
+        Icon(Icons.Default.Close, null, modifier = Modifier.size(14.dp), tint = Color.White)
     }
 }
 
