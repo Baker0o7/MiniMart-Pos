@@ -1,9 +1,11 @@
 package com.minimart.pos.ui.screen
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,42 +15,36 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.animation.animateContentSize
-import kotlinx.coroutines.launch
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.minimart.pos.data.dao.TopSellerResult
+import com.minimart.pos.data.entity.UserRole
+import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.DashboardViewModel
-import kotlin.math.max
+import kotlinx.coroutines.launch
 
-// ─── Color palette ────────────────────────────────────────────────────────────
-private val DarkCard    = Color(0xFF1E2D2C)
-private val TealCard    = Color(0xFF2A4A47)
-private val TealGlow    = Color(0xFF00897B)
-private val AmberCard   = Color(0xFFB8860B).copy(alpha = 0.85f)
-private val PurpleCard  = Color(0xFF6B4FA0)
-private val RoseCard    = Color(0xFFC2705A)
-private val OnDark      = Color(0xFFE8F5E9)
-private val SubText     = Color(0xFF9DB8B5)
-private val GreenBadge  = Color(0xFF4CAF50)
-private val DarkBg      = Color(0xFF0F1E1D)
+private val Bg         = Color(0xFF080E0D)
+private val TealGlow   = Color(0xFF00C9A7)
+private val GreenGlow  = Color(0xFF4CAF50)
+private val PurpleGlow = Color(0xFFB39DDB)
+private val BlueGlow   = Color(0xFF64B5F6)
+private val AmberGlow  = Color(0xFFFFB74D)
+private val RedGlow    = Color(0xFFEF5350)
+private val White      = Color.White
+private val Sub        = Color(0xFF7A9E9B)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,343 +57,235 @@ fun DashboardScreen(
     onNavigateToSettings:     () -> Unit,
     onNavigateToSalesHistory: () -> Unit = {},
     onNavigateToLowStock:     () -> Unit = {},
-    currentRole: com.minimart.pos.data.entity.UserRole? = null,
-    settingsRepo: com.minimart.pos.data.repository.SettingsRepository? = null,
+    currentRole: UserRole? = null,
+    settingsRepo: SettingsRepository? = null,
     vm: DashboardViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
-    val role   = currentRole
-    val rm     = com.minimart.pos.util.RoleManager
+    val rm    = com.minimart.pos.util.RoleManager
     val hiddenActions by (settingsRepo?.hiddenActions
         ?: kotlinx.coroutines.flow.flowOf("")).collectAsState("")
     var showManageActions by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
-
     LaunchedEffect(isRefreshing) {
         if (isRefreshing) { kotlinx.coroutines.delay(1000); vm.refresh(); isRefreshing = false }
     }
 
     PullToRefreshBox(
-        isRefreshing = isRefreshing,
-        onRefresh = { isRefreshing = true },
-        modifier = Modifier.fillMaxSize().background(DarkBg)
+        isRefreshing = isRefreshing, onRefresh = { isRefreshing = true },
+        modifier = Modifier.fillMaxSize().background(Bg)
     ) {
-        LazyColumn(
-            contentPadding = PaddingValues(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
-        ) {
-            // ── Top bar ───────────────────────────────────────────────────────
+        LazyColumn(contentPadding = PaddingValues(bottom = 80.dp)) {
+
+            // ── Header ────────────────────────────────────────────────────────
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("🇰🇪", fontSize = 28.sp)
-                        Column {
-                            Text("Habari!", fontWeight = FontWeight.Bold, fontSize = 22.sp, color = OnDark)
-                            Text(state.storeName, color = SubText, style = MaterialTheme.typography.bodySmall)
+                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 18.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text("🇰🇪", fontSize = 26.sp)
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Habari! ", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                            Text("👋", fontSize = 20.sp)
+                        }
+                        Text(state.storeName, color = Sub, fontSize = 12.sp)
+                    }
+                    // Status pill
+                    Box(modifier = Modifier.clip(RoundedCornerShape(20.dp))
+                        .background(Color(0xFF0F1F1C)).border(1.dp, Color(0xFF1A3530), RoundedCornerShape(20.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(6.dp).clip(CircleShape).background(TealGlow))
+                            Text(" Offline  ", color = TealGlow, fontSize = 11.sp)
+                            Box(Modifier.size(6.dp).clip(CircleShape).background(GreenGlow))
+                            Text(" Ready", color = GreenGlow, fontSize = 11.sp)
                         }
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        // Offline badge
-                        Surface(shape = RoundedCornerShape(20.dp), color = DarkCard) {
-                            Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                                Box(modifier = Modifier.size(7.dp).background(GreenBadge, CircleShape))
-                                Text("Offline • Ready", color = GreenBadge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-                        // Avatar
-                        IconButton(onClick = onNavigateToSettings, modifier = Modifier.size(40.dp).background(DarkCard, CircleShape)) {
-                            Icon(Icons.Default.Person, null, tint = SubText, modifier = Modifier.size(22.dp))
-                        }
+                    Spacer(Modifier.width(10.dp))
+                    Box(modifier = Modifier.size(40.dp).clip(CircleShape)
+                        .background(Color(0xFF0F1F1C)).border(1.dp, Color(0xFF1A3530), CircleShape)
+                        .clickable { onNavigateToSettings() }, contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Person, null, tint = Sub, modifier = Modifier.size(20.dp))
                     }
                 }
             }
 
-            // ── KPI row ───────────────────────────────────────────────────────
+            // ── Stats ─────────────────────────────────────────────────────────
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Big Sales card
-                    Box(
-                        modifier = Modifier.weight(1.6f).height(160.dp).clip(RoundedCornerShape(20.dp))
-                            .background(Brush.linearGradient(listOf(TealCard, Color(0xFF1A3530))))
-                    ) {
-                        Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
-                            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text("Today's Sales", color = SubText, style = MaterialTheme.typography.labelMedium)
-                                Surface(shape = RoundedCornerShape(12.dp), color = GreenBadge.copy(alpha = 0.2f)) {
-                                    Text("+${state.todaySaleCount * 8}%", color = GreenBadge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp))
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // Sales card
+                    Box(modifier = Modifier.weight(1.4f).clip(RoundedCornerShape(20.dp))
+                        .background(Brush.verticalGradient(listOf(Color(0xFF0E2C26), Color(0xFF071512))))
+                        .border(1.dp, TealGlow.copy(0.2f), RoundedCornerShape(20.dp)).padding(16.dp)) {
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("Today's Sales", color = Sub, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                                Box(Modifier.clip(RoundedCornerShape(10.dp)).background(GreenGlow.copy(0.2f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                                    Text("+${if (state.todayRevenue > 0) "8" else "0"}%", color = GreenGlow, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
-                            Text(
-                                "${state.currency} ${String.format("%,.0f", state.todayRevenue)}",
-                                color = OnDark, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp
-                            )
-                            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-                                Text("+${state.todaySaleCount * 8}%", color = GreenBadge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
-                                MiniBarChart(
-                                    data = listOf(0.3f, 0.5f, 0.4f, 0.7f, 0.6f, 0.9f, 1.0f),
-                                    color = TealGlow.copy(alpha = 0.6f),
-                                    modifier = Modifier.width(80.dp).height(36.dp)
-                                )
-                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text("KES ${String.format("%,.0f", state.todayRevenue)}", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
+                            Text("vs yesterday", color = Sub, fontSize = 10.sp)
+                            Text("+${if (state.todayRevenue > 0) "8" else "0"}%", color = TealGlow, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.height(10.dp))
+                            MiniLineChart(listOf(0.2f, 0.4f, 0.3f, 0.6f, 0.5f, 0.8f, 0.7f, 1f), TealGlow, Modifier.fillMaxWidth().height(40.dp))
                         }
                     }
-
                     // Transactions card
-                    Box(
-                        modifier = Modifier.weight(1f).height(160.dp).clip(RoundedCornerShape(20.dp))
-                            .background(Brush.linearGradient(listOf(Color(0xFF1E2A28), TealCard.copy(alpha = 0.6f))))
-                    ) {
-                        Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Default.Star, null, tint = TealGlow.copy(0.7f), modifier = Modifier.size(22.dp))
+                    Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(20.dp))
+                        .background(Brush.verticalGradient(listOf(Color(0xFF12121F), Color(0xFF0A0A16))))
+                        .border(1.dp, PurpleGlow.copy(0.2f), RoundedCornerShape(20.dp)).padding(16.dp)) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                             Spacer(Modifier.height(8.dp))
-                            Text(state.todaySaleCount.toString(), color = OnDark, fontWeight = FontWeight.ExtraBold, fontSize = 36.sp)
+                            Box(Modifier.size(44.dp).clip(CircleShape).background(Color(0xFF1E1E35)), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Star, null, tint = TealGlow, modifier = Modifier.size(22.dp))
+                            }
+                            Spacer(Modifier.height(10.dp))
+                            Text(state.todaySaleCount.toString(), color = White, fontWeight = FontWeight.ExtraBold, fontSize = 34.sp)
                             Spacer(Modifier.height(4.dp))
-                            Text("Transactions\nToday", color = SubText, style = MaterialTheme.typography.labelSmall, maxLines = 2, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                            Text("Transactions\nToday", color = Sub, fontSize = 11.sp, textAlign = TextAlign.Center)
                         }
                     }
                 }
             }
+
+            item { Spacer(Modifier.height(24.dp)) }
 
             // ── Quick Actions ─────────────────────────────────────────────────
-            item { Spacer(Modifier.height(20.dp)) }
             item {
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text("Quick Actions", color = OnDark, fontWeight = FontWeight.Bold, fontSize = 18.sp,
-                        modifier = Modifier.weight(1f))
-                    IconButton(onClick = { showManageActions = !showManageActions },
-                        modifier = Modifier.size(32.dp)) {
-                        Icon(if (showManageActions) Icons.Default.Check else Icons.Default.Tune,
-                            null, tint = DT.Teal, modifier = Modifier.size(18.dp))
+                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Quick Actions", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { showManageActions = !showManageActions }) {
+                        Text(if (showManageActions) "Done" else "Edit", color = TealGlow, fontWeight = FontWeight.SemiBold)
                     }
+                    Icon(Icons.Default.Tune, null, tint = TealGlow, modifier = Modifier.size(18.dp))
                 }
             }
-            // Manage mode hint
-            if (showManageActions) {
-                item {
-                    Text("Tap ✕ to hide an action card",
-                        color = DT.SubText, style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 20.dp))
-                }
-            }
+
             item {
                 val hidden = hiddenActions.split(",").filter { it.isNotBlank() }.toSet()
-                val hideScope = rememberCoroutineScope()
+                val scope  = rememberCoroutineScope()
+                fun hide(id: String) { scope.launch { settingsRepo?.setHiddenActions((hidden + id).joinToString(",")) } }
 
-                // Inline helper: wraps a card with optional remove badge
-                fun hideCard(id: String) {
-                    val newHidden = (hidden + id).joinToString(",")
-                    hideScope.launch { settingsRepo?.setHiddenActions(newHidden) }
+                data class Card(val id: String, val title: String, val sub: String, val icon: ImageVector, val bg: Color, val glow: Color, val action: () -> Unit)
+                val cards = buildList {
+                    if ("sale" !in hidden)     add(Card("sale",     "New Sale",      "Scan items or\nadd products",    Icons.Default.QrCode,   Color(0xFF0E2825), TealGlow,   onNavigateToScanner))
+                    if ("products" !in hidden) add(Card("products", "Products",      "Manage your\ninventory",         Icons.Default.Inventory2,Color(0xFF0D1F0E), GreenGlow,  onNavigateToProducts))
+                    if (rm.canViewReports(currentRole) && "reports" !in hidden)
+                        add(Card("reports",  "Reports",       "View detailed\ninsights",        Icons.Default.BarChart, Color(0xFF180E2E), PurpleGlow, onNavigateToReports))
+                    if (rm.canViewExpenses(currentRole) && "expenses" !in hidden)
+                        add(Card("expenses", "Expenses",      "Track your\nexpenses",           Icons.Default.Receipt,  Color(0xFF1F1205), AmberGlow,  onNavigateToExpenses))
+                    if ("history" !in hidden)  add(Card("history",  "Sales History", "View past\ntransactions",       Icons.Default.History,  Color(0xFF0A1628), BlueGlow,   onNavigateToSalesHistory))
+                    if ("lowstock" !in hidden) add(Card("lowstock", "Low Stock",     "Items running\nlow",            Icons.Default.Warning,  Color(0xFF1F0A0A), RedGlow,    onNavigateToLowStock))
                 }
 
-                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).animateContentSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    // Build visible cards list for Row 1
-                    val showSale    = "sale"     !in hidden
-                    val showProds   = "products" !in hidden
-                    val leftId      = if (rm.canViewReports(role)) "reports" else "inventory"
-                    val showLeft    = leftId !in hidden
-                    val showExpenses = rm.canViewExpenses(role) && "expenses" !in hidden
-
-                    // Row 1 - fills full width when only one card visible
-                    if (showSale || showProds) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                            if (showSale) Box(modifier = Modifier.weight(1f)) {
-                                BigActionCard(Modifier.fillMaxWidth(), "New Sale", Icons.Default.QrCode, TealCard, TealGlow, onNavigateToScanner)
-                                if (showManageActions) RemoveBadge { hideCard("sale") }
-                            }
-                            if (showProds) Box(modifier = Modifier.weight(1f)) {
-                                BigActionCard(Modifier.fillMaxWidth(), "Products", Icons.Default.Inventory2, Color(0xFF1A3530), DT.TealLight, onNavigateToProducts)
-                                if (showManageActions) RemoveBadge { hideCard("products") }
-                            }
-                        }
-                    }
-                    // Row 2
-                    if (showLeft || showExpenses || !rm.canViewExpenses(role)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                            if (showLeft) Box(modifier = Modifier.weight(1f)) {
-                                if (rm.canViewReports(role))
-                                    BigActionCard(Modifier.fillMaxWidth(), "Reports", Icons.Default.BarChart, PurpleCard, Color(0xFFCE93D8), onNavigateToReports)
-                                else
-                                    BigActionCard(Modifier.fillMaxWidth(), "Inventory", Icons.Default.Store, Color(0xFF3D2E08), Color(0xFFD4A017), onNavigateToInventory)
-                                if (showManageActions) RemoveBadge { hideCard(leftId) }
-                            }
-                            if (showExpenses) Box(modifier = Modifier.weight(1f)) {
-                                BigActionCard(Modifier.fillMaxWidth(), "Expenses", Icons.Default.Receipt, RoseCard.copy(alpha = 0.4f), Color(0xFFEF9A9A), onNavigateToExpenses)
-                                if (showManageActions) RemoveBadge { hideCard("expenses") }
-                            } else if (!rm.canViewExpenses(role)) {
-                                Box(modifier = Modifier.weight(1f).height(130.dp).clip(RoundedCornerShape(20.dp))
-                                    .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(20.dp)),
-                                    contentAlignment = Alignment.Center) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Icon(Icons.Default.Lock, null, tint = DT.SubText.copy(0.4f), modifier = Modifier.size(22.dp))
-                                        Spacer(Modifier.height(4.dp))
-                                        Text("Manager Only", color = DT.SubText.copy(0.4f), style = MaterialTheme.typography.labelSmall,
-                                            textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                                    }
+                Column(Modifier.padding(horizontal = 12.dp).animateContentSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    cards.chunked(3).forEach { row ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            row.forEach { c ->
+                                Box(Modifier.weight(1f)) {
+                                    DashCard(c.title, c.sub, c.icon, c.bg, c.glow, c.action)
+                                    if (showManageActions) DashRemoveBadge { hide(c.id) }
                                 }
                             }
-                        }
-                    }
-                    // Restore button
-                    if (hidden.isNotEmpty()) {
-                        TextButton(onClick = { hideScope.launch { settingsRepo?.setHiddenActions("") } },
-                            modifier = Modifier.fillMaxWidth()) {
-                            Icon(Icons.Default.Restore, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Restore hidden cards", color = DT.Teal, style = MaterialTheme.typography.labelSmall)
+                            repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
                         }
                     }
                 }
             }
 
-            // ── Sales History + Low Stock shortcuts ───────────────────────────
+            // Restore hidden
             item {
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    BigActionCard(Modifier.weight(1f), "Sales History", Icons.Default.History,
-                        Color(0xFF1A2E3D), Color(0xFF64B5F6), onNavigateToSalesHistory)
-                    BigActionCard(Modifier.weight(1f), "Low Stock", Icons.Default.Warning,
-                        Color(0xFF2E1A1A), Color(0xFFFFB74D), onNavigateToLowStock)
+                val hidden = hiddenActions.split(",").filter { it.isNotBlank() }.toSet()
+                val scope  = rememberCoroutineScope()
+                if (hidden.isNotEmpty()) {
+                    TextButton(onClick = { scope.launch { settingsRepo?.setHiddenActions("") } }, Modifier.fillMaxWidth()) {
+                        Icon(Icons.Default.Restore, null, tint = TealGlow, Modifier.size(16.dp)); Spacer(Modifier.width(6.dp))
+                        Text("Restore hidden cards", color = TealGlow, fontSize = 12.sp)
+                    }
                 }
             }
 
-            // ── Top Items Today ───────────────────────────────────────────────
-            if (state.topSellers.isNotEmpty()) {
-                item { Spacer(Modifier.height(20.dp)) }
-                item {
-                    Text("Top Items Today", color = OnDark, fontWeight = FontWeight.Bold, fontSize = 18.sp,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
-                }
-                items(state.topSellers.take(5), key = { it.productId }) { seller ->
-                    TopItemRow(seller = seller, currency = state.currency)
-                }
-            }
-
-            // ── Low stock alert ───────────────────────────────────────────────
+            // ── Alert banners ─────────────────────────────────────────────────
             if (state.lowStockProducts.isNotEmpty()) {
-                item { Spacer(Modifier.height(12.dp)) }
-                item {
-                    Surface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(16.dp), color = Color(0xFF3B1A1A)) {
-                        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Warning, null, tint = Color(0xFFEF5350), modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(10.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text("Low Stock Alert", color = Color(0xFFEF5350), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
-                                Text("${state.lowStockProducts.size} items need restocking", color = SubText, style = MaterialTheme.typography.labelSmall)
-                            }
-                            TextButton(onClick = onNavigateToLowStock) { Text("View", color = TealGlow, style = MaterialTheme.typography.labelMedium) }
-                        }
-                    }
-                }
+                item { DashAlert(Icons.Default.Warning, RedGlow, Color(0xFF1F0A0A), "${state.lowStockProducts.size} items low on stock", "Tap to restock", onNavigateToLowStock) }
+            }
+            if (state.expiredProducts.isNotEmpty() || state.expiringProducts.isNotEmpty()) {
+                item { DashAlert(Icons.Default.CalendarToday,
+                    if (state.expiredProducts.isNotEmpty()) RedGlow else AmberGlow,
+                    if (state.expiredProducts.isNotEmpty()) Color(0xFF1F0A0A) else Color(0xFF1F1205),
+                    "${state.expiredProducts.size + state.expiringProducts.size} expiry alert(s)", "Tap to view", onNavigateToInventory) }
             }
 
-            // ── Expiry alert banner ───────────────────────────────────────────
-            if (state.expiringProducts.isNotEmpty() || state.expiredProducts.isNotEmpty()) {
-                item { Spacer(Modifier.height(8.dp)) }
-                item {
-                    val hasExpired = state.expiredProducts.isNotEmpty()
-                    val bannerColor = if (hasExpired) Color(0xFF3B1A1A) else Color(0xFF2E2408)
-                    val iconColor   = if (hasExpired) Color(0xFFEF5350) else DT.Amber
-                    Surface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(16.dp), color = bannerColor) {
-                        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.CalendarToday, null, tint = iconColor, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(10.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                if (hasExpired) Text("${state.expiredProducts.size} products EXPIRED", color = iconColor,
-                                    fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                if (state.expiringProducts.isNotEmpty()) Text("${state.expiringProducts.size} expiring soon",
-                                    color = DT.Amber, style = MaterialTheme.typography.labelSmall)
-                            }
-                            TextButton(onClick = onNavigateToInventory) { Text("View", color = TealGlow, style = MaterialTheme.typography.labelMedium) }
+            // ── Top sellers ───────────────────────────────────────────────────
+            if (state.topSellers.isNotEmpty()) {
+                item { Text("Top Items Today", color = White, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 6.dp)) }
+                items(state.topSellers.take(5), key = { it.productId }) { s ->
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF0E2825)), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Inventory2, null, tint = TealGlow, Modifier.size(18.dp))
                         }
+                        Spacer(Modifier.width(12.dp))
+                        Text(s.productName, color = White, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text("×${s.totalQty}", color = TealGlow, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
-    }  // end PullToRefreshBox
-}
-
-// ─── Remove badge overlay ─────────────────────────────────────────────────────
-
-@Composable
-private fun BoxScope.RemoveBadge(onRemove: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(4.dp)
-            .size(22.dp)
-            .clip(CircleShape)
-            .background(Color(0xFFEF5350))
-            .clickable(onClick = onRemove),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(14.dp))
     }
 }
 
-// ─── Big action card ──────────────────────────────────────────────────────────
-
-@Composable
-private fun BigActionCard(modifier: Modifier, label: String, icon: ImageVector, bg: Color, iconColor: Color, onClick: () -> Unit) {
-    Box(
-        modifier = modifier.height(130.dp).clip(RoundedCornerShape(20.dp)).background(bg).clickable(onClick = onClick),
-        contentAlignment = Alignment.BottomStart
-    ) {
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Box(modifier = Modifier.size(44.dp).background(Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = iconColor, modifier = Modifier.size(24.dp))
+@Composable private fun DashCard(title: String, subtitle: String, icon: ImageVector, bg: Color, glow: Color, onClick: () -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth().aspectRatio(0.82f).clip(RoundedCornerShape(18.dp))
+        .background(Brush.verticalGradient(listOf(bg, Bg))).border(1.dp, glow.copy(0.22f), RoundedCornerShape(18.dp))
+        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick).padding(12.dp)) {
+        Column(Modifier.fillMaxSize()) {
+            Box(Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(glow.copy(0.18f)), contentAlignment = Alignment.Center) {
+                Icon(icon, null, tint = glow, Modifier.size(22.dp))
             }
-            Text(label, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1)
-        }
-    }
-}
-
-// ─── Top item row ─────────────────────────────────────────────────────────────
-
-@Composable
-private fun TopItemRow(seller: TopSellerResult, currency: String) {
-    Surface(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), shape = RoundedCornerShape(14.dp), color = DarkCard) {
-        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            // Placeholder product icon
-            Box(modifier = Modifier.size(44.dp).background(TealCard, RoundedCornerShape(10.dp)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.Inventory2, null, tint = TealGlow.copy(0.7f), modifier = Modifier.size(22.dp))
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(seller.productName, color = OnDark, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("$currency ${String.format("%.0f", seller.totalRevenue / seller.totalQty.toDouble().coerceAtLeast(1.0))}", color = SubText, style = MaterialTheme.typography.labelSmall)
-            }
-            Surface(shape = RoundedCornerShape(20.dp), color = TealGlow.copy(alpha = 0.2f)) {
-                Text("×${seller.totalQty}", color = TealGlow, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp))
+            Spacer(Modifier.weight(1f))
+            Text(title, color = White, fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(3.dp))
+            Text(subtitle, color = Sub, fontSize = 10.sp, lineHeight = 13.sp)
+            Spacer(Modifier.height(8.dp))
+            Box(Modifier.size(24.dp).clip(CircleShape).background(glow.copy(0.18f)), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.ChevronRight, null, tint = glow, Modifier.size(16.dp))
             }
         }
     }
 }
 
-// ─── Mini bar chart ───────────────────────────────────────────────────────────
-
-@Composable
-private fun MiniBarChart(data: List<Float>, color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val barW = size.width / (data.size * 2f - 1)
-        data.forEachIndexed { i, v ->
-            val h = v * size.height
-            val x = i * barW * 2f
-            drawRoundRect(
-                color = color,
-                topLeft = Offset(x, size.height - h),
-                size = androidx.compose.ui.geometry.Size(barW, h),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(3.dp.toPx())
-            )
+@Composable private fun DashAlert(icon: ImageVector, glow: Color, bg: Color, title: String, sub: String, action: () -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+        .clip(RoundedCornerShape(14.dp)).background(bg).border(1.dp, glow.copy(0.3f), RoundedCornerShape(14.dp)).padding(14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = glow, Modifier.size(20.dp)); Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, color = White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                Text(sub, color = Sub, fontSize = 11.sp)
+            }
+            TextButton(onClick = action) { Text("View", color = glow, fontWeight = FontWeight.Bold, fontSize = 12.sp) }
         }
+    }
+}
+
+@Composable private fun BoxScope.DashRemoveBadge(onRemove: () -> Unit) {
+    Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(22.dp).clip(CircleShape).background(RedGlow).clickable(onClick = onRemove), contentAlignment = Alignment.Center) {
+        Icon(Icons.Default.Close, null, tint = Color.White, Modifier.size(14.dp))
+    }
+}
+
+@Composable private fun MiniLineChart(data: List<Float>, color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier) {
+        if (data.size < 2) return@Canvas
+        val w = size.width; val h = size.height; val max = data.maxOrNull() ?: 1f
+        val pts = data.mapIndexed { i, v -> Offset(i * w / (data.size - 1), h - (v / max) * h * 0.85f) }
+        val fill = Path().apply { moveTo(pts.first().x, h); pts.forEach { lineTo(it.x, it.y) }; lineTo(pts.last().x, h); close() }
+        drawPath(fill, Brush.verticalGradient(listOf(color.copy(0.35f), Color.Transparent)))
+        val line = Path().apply { moveTo(pts.first().x, pts.first().y); pts.drop(1).forEach { lineTo(it.x, it.y) } }
+        drawPath(line, color, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
+        drawCircle(color, 4.dp.toPx(), pts.last())
+        drawCircle(Color.White, 2.dp.toPx(), pts.last())
     }
 }
