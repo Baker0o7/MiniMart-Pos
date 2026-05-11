@@ -205,7 +205,7 @@ private fun ShiftHistoryRow(shift: Shift, onClick: () -> Unit) {
         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier.size(42.dp).background(
-                    if (shift.status == ShiftStatus.OPEN) SuccessGreen.copy(0.15f) else com.minimart.pos.ui.theme.DT.SurfaceVariant,
+                    if (shift.status == ShiftStatus.OPEN) SuccessGreen.copy(0.15f) else com.minimart.pos.ui.theme.DT.Surface2,
                     RoundedCornerShape(10.dp)
                 ),
                 contentAlignment = Alignment.Center
