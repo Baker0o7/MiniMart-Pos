@@ -200,27 +200,36 @@ private fun ActiveShiftCard(shift: Shift, onClockOut: () -> Unit) {
 
 @Composable
 private fun ShiftHistoryRow(shift: Shift, onClick: () -> Unit) {
+    val DT = com.minimart.pos.ui.theme.DT
     val df = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
-    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), onClick = onClick) {
-        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        onClick = onClick,
+        colors = CardDefaults.cardColors(containerColor = DT.Surface)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                modifier = Modifier.size(42.dp).background(
-                    if (shift.status == ShiftStatus.OPEN) SuccessGreen.copy(0.15f) else com.minimart.pos.ui.theme.DT.Surface2,
-                    RoundedCornerShape(10.dp)
+                modifier = Modifier.size(44.dp).background(
+                    if (shift.status == ShiftStatus.OPEN) SuccessGreen.copy(0.15f) else DT.Surface2,
+                    RoundedCornerShape(12.dp)
                 ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(if (shift.status == ShiftStatus.OPEN) Icons.Default.PlayArrow else Icons.Default.CheckCircle,
-                    null, tint = if (shift.status == ShiftStatus.OPEN) SuccessGreen else com.minimart.pos.ui.theme.DT.SubText,
-                    modifier = Modifier.size(20.dp))
+                Icon(
+                    if (shift.status == ShiftStatus.OPEN) Icons.Default.PlayArrow else Icons.Default.CheckCircle,
+                    null,
+                    tint = if (shift.status == ShiftStatus.OPEN) SuccessGreen else DT.Teal,
+                    modifier = Modifier.size(22.dp)
+                )
             }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(shift.cashierName, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                Text(shift.cashierName, fontWeight = FontWeight.SemiBold, color = Color.White, style = MaterialTheme.typography.bodyMedium)
                 Text(df.format(Date(shift.clockIn)), style = MaterialTheme.typography.labelSmall, color = com.minimart.pos.ui.theme.DT.SubText)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text("KES ${String.format("%.0f", shift.totalSales)}", fontWeight = FontWeight.Bold, color = Brand500)
+                Text("KES ${String.format("%.0f", shift.totalSales)}", fontWeight = FontWeight.Bold, color = com.minimart.pos.ui.theme.DT.Teal)
                 Text("${shift.totalTransactions} sales", style = MaterialTheme.typography.labelSmall, color = com.minimart.pos.ui.theme.DT.SubText)
             }
         }
@@ -285,37 +294,38 @@ private fun ClockInDialog(onDismiss: () -> Unit, onClockIn: (Double) -> Unit) {
 
 @Composable
 private fun ClockOutDialog(onDismiss: () -> Unit, onClockOut: (Double, String) -> Unit) {
+    val DT = com.minimart.pos.ui.theme.DT
     var closingFloat by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("End Shift", fontWeight = FontWeight.Bold) },
+        containerColor = DT.Surface,
+        title = { Text("End Shift", fontWeight = FontWeight.Bold, color = Color.White) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = closingFloat,
-                    onValueChange = { closingFloat = it },
-                    label = { Text("Closing Cash Float (KES)") },
-                    leadingIcon = { Icon(Icons.Default.Money, null) },
+                OutlinedTextField(value = closingFloat, onValueChange = { closingFloat = it },
+                    label = { Text("Closing Cash Float (KES)", color = DT.SubText) },
+                    leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text("Notes / Discrepancy reason") },
-                    maxLines = 3,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                        focusedTextColor = Color.White, unfocusedTextColor = Color.White, cursorColor = DT.Teal,
+                        focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
+                OutlinedTextField(value = notes, onValueChange = { notes = it },
+                    label = { Text("Notes / Discrepancy reason", color = DT.SubText) },
+                    maxLines = 3, modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                        focusedTextColor = Color.White, unfocusedTextColor = Color.White, cursorColor = DT.Teal,
+                        focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
             }
         },
         confirmButton = {
             Button(onClick = { onClockOut(closingFloat.toDoubleOrNull() ?: 0.0, notes) },
-                colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
-            ) { Icon(Icons.Default.Logout, null, tint = Color.White); Spacer(Modifier.width(6.dp)); Text("End Shift") }
+                colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
+            ) { Icon(Icons.Default.Logout, null, tint = Color.White, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("End Shift", color = Color.White, fontWeight = FontWeight.Bold) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
     )
 }
 
@@ -323,17 +333,19 @@ private fun ClockOutDialog(onDismiss: () -> Unit, onClockOut: (Double, String) -
 
 @Composable
 private fun ShiftSummaryDialog(shift: Shift, onDismiss: () -> Unit) {
+    val DT = com.minimart.pos.ui.theme.DT
     val df = SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault())
     val durationMs = (shift.clockOut ?: System.currentTimeMillis()) - shift.clockIn
     val hours = durationMs / 3600000; val mins = (durationMs % 3600000) / 60000
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = DT.Surface,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.BarChart, null, tint = Brand500, modifier = Modifier.size(22.dp))
+                Icon(Icons.Default.BarChart, null, tint = DT.Teal, modifier = Modifier.size(22.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Shift Summary", fontWeight = FontWeight.Bold)
+                Text("Shift Summary", fontWeight = FontWeight.Bold, color = Color.White)
             }
         },
         text = {
@@ -342,15 +354,15 @@ private fun ShiftSummaryDialog(shift: Shift, onDismiss: () -> Unit) {
                 SummaryRow("Clock In", df.format(Date(shift.clockIn)))
                 shift.clockOut?.let { SummaryRow("Clock Out", df.format(Date(it))) }
                 SummaryRow("Duration", "${hours}h ${mins}m")
-                HorizontalDivider()
+                HorizontalDivider(color = DT.Border)
                 SummaryRow("Cash Sales", "KES ${String.format("%.2f", shift.totalCashSales)}")
                 SummaryRow("M-Pesa Sales", "KES ${String.format("%.2f", shift.totalMpesaSales)}")
                 if (shift.totalCardSales > 0) SummaryRow("Card Sales", "KES ${String.format("%.2f", shift.totalCardSales)}")
-                HorizontalDivider()
-                SummaryRow("Total Sales", "KES ${String.format("%.2f", shift.totalSales)}", bold = true, color = Brand500)
+                HorizontalDivider(color = DT.Border)
+                SummaryRow("Total Sales", "KES ${String.format("%.2f", shift.totalSales)}", bold = true, color = DT.Teal)
                 SummaryRow("Transactions", shift.totalTransactions.toString())
                 if (shift.totalDiscounts > 0) SummaryRow("Discounts Given", "KES ${String.format("%.2f", shift.totalDiscounts)}", color = ErrorRed)
-                HorizontalDivider()
+                HorizontalDivider(color = DT.Border)
                 SummaryRow("Opening Float", "KES ${String.format("%.2f", shift.openingFloat)}")
                 shift.closingFloat?.let { cf ->
                     SummaryRow("Closing Float", "KES ${String.format("%.2f", cf)}")
@@ -360,20 +372,16 @@ private fun ShiftSummaryDialog(shift: Shift, onDismiss: () -> Unit) {
                         "Discrepancy",
                         "${if (disc >= 0) "+" else ""}KES ${String.format("%.2f", disc)}",
                         bold = true,
-                        color = when {
-                            disc > 10  -> SuccessGreen
-                            disc < -10 -> ErrorRed
-                            else       -> Color.White
-                        }
+                        color = when { disc > 10 -> SuccessGreen; disc < -10 -> ErrorRed; else -> Color.White }
                     )
                 }
                 if (shift.notes.isNotBlank()) {
-                    HorizontalDivider()
-                    Text("Notes: ${shift.notes}", style = MaterialTheme.typography.bodySmall, color = com.minimart.pos.ui.theme.DT.SubText)
+                    HorizontalDivider(color = DT.Border)
+                    Text("Notes: ${shift.notes}", style = MaterialTheme.typography.bodySmall, color = DT.SubText)
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close", color = com.minimart.pos.ui.theme.DT.SubText) } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close", color = DT.SubText) } }
     )
 }
 
