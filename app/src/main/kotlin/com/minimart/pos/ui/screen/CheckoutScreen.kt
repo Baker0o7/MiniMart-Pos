@@ -61,6 +61,7 @@ fun CheckoutScreen(
         Column(
             modifier = Modifier.fillMaxSize()
                 .navigationBarsPadding()
+                .imePadding()
                 .verticalScroll(rememberScrollState())
         ) {
             // ── Header ────────────────────────────────────────────────────────
@@ -305,7 +306,7 @@ fun CheckoutScreen(
                     )
                 }
             }
-            Spacer(Modifier.height(16.dp).navigationBarsPadding())
+            Spacer(Modifier.height(24.dp))
         }
     }
 }
