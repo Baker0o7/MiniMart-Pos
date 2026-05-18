@@ -6,8 +6,8 @@ import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -101,11 +101,18 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Logo
-            Image(
-                painter = androidx.compose.ui.res.painterResource(id = com.minimart.pos.R.mipmap.ic_launcher),
-                contentDescription = "MiniMart POS Logo",
-                modifier = Modifier.size(100.dp).clip(RoundedCornerShape(24.dp))
-            )
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier.size(96.dp).clip(RoundedCornerShape(24.dp))
+                    .background(androidx.compose.ui.graphics.Color(0xFF2B2B2B)),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.foundation.Image(
+                    painter = painterResource(id = com.minimart.pos.R.mipmap.ic_launcher),
+                    contentDescription = "MiniMart POS Logo",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                )
+            }
             Spacer(Modifier.height(16.dp))
             Text("MiniMart POS", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
             Text("Sign in to continue", color = DT.SubText, style = MaterialTheme.typography.bodyMedium)

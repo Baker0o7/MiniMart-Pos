@@ -84,21 +84,20 @@ class DashboardViewModel @Inject constructor(
                     _uiState.update { it.copy(topSellers = sellers) }
                 }
         }
-        // Expiry alerts
+        // Expiry alerts — use combine() to avoid nested collect deadlock
         viewModelScope.launch {
-            settingsRepo.expiryAlertMonths
-                .catch { emit(1) }
-                .collect { months ->
-                    val now = System.currentTimeMillis()
-                    val cutoff = now + months * 30L * 24 * 60 * 60 * 1000
-                    productRepo.getAllProducts()
-                        .catch { emit(emptyList()) }
-                        .collect { all ->
-                            val expiring = all.filter { p -> p.expiryDate > 0L && p.expiryDate in now..cutoff }
-                            val expired  = all.filter { p -> p.expiryDate > 0L && p.expiryDate < now }
-                            _uiState.update { it.copy(expiringProducts = expiring, expiredProducts = expired) }
-                        }
-                }
+            kotlinx.coroutines.flow.combine(
+                settingsRepo.expiryAlertMonths.catch { emit(1) },
+                productRepo.getAllProducts().catch { emit(emptyList()) }
+            ) { months, all ->
+                val now    = System.currentTimeMillis()
+                val cutoff = now + months * 30L * 24 * 60 * 60 * 1000
+                val expiring = all.filter { p -> p.expiryDate > 0L && p.expiryDate in now..cutoff }
+                val expired  = all.filter { p -> p.expiryDate > 0L && p.expiryDate < now }
+                Pair(expiring, expired)
+            }.collect { (expiring, expired) ->
+                _uiState.update { it.copy(expiringProducts = expiring, expiredProducts = expired) }
+            }
         }
     }
 

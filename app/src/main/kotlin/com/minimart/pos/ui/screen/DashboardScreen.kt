@@ -46,6 +46,8 @@ private val RedGlow    = Color(0xFFEF5350)
 private val White      = Color.White
 private val Sub        = Color(0xFF7A9E9B)
 
+private data class DashCard_(val id: String, val title: String, val sub: String, val icon: ImageVector, val bg: Color, val glow: Color, val action: () -> Unit)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -168,16 +170,15 @@ fun DashboardScreen(
                 val scope  = rememberCoroutineScope()
                 fun hide(id: String) { scope.launch { settingsRepo?.setHiddenActions((hidden + id).joinToString(",")) } }
 
-                data class Card(val id: String, val title: String, val sub: String, val icon: ImageVector, val bg: Color, val glow: Color, val action: () -> Unit)
                 val cards = buildList {
-                    if ("sale" !in hidden)     add(Card("sale",     "New Sale",      "Scan items or\nadd products",    Icons.Default.QrCode,   Color(0xFF0E2825), TealGlow,   onNavigateToScanner))
-                    if ("products" !in hidden) add(Card("products", "Products",      "Manage your\ninventory",         Icons.Default.Inventory2,Color(0xFF0D1F0E), GreenGlow,  onNavigateToProducts))
+                    if ("sale" !in hidden)     add(DashCard_("sale",     "New Sale",      "Scan items or\nadd products",    Icons.Default.QrCode,   Color(0xFF0E2825), TealGlow,   onNavigateToScanner))
+                    if ("products" !in hidden) add(DashCard_("products", "Products",      "Manage your\ninventory",         Icons.Default.Inventory2,Color(0xFF0D1F0E), GreenGlow,  onNavigateToProducts))
                     if (rm.canViewReports(currentRole) && "reports" !in hidden)
-                        add(Card("reports",  "Reports",       "View detailed\ninsights",        Icons.Default.BarChart, Color(0xFF180E2E), PurpleGlow, onNavigateToReports))
+                        add(DashCard_("reports",  "Reports",       "View detailed\ninsights",        Icons.Default.BarChart, Color(0xFF180E2E), PurpleGlow, onNavigateToReports))
                     if (rm.canViewExpenses(currentRole) && "expenses" !in hidden)
-                        add(Card("expenses", "Expenses",      "Track your\nexpenses",           Icons.Default.Receipt,  Color(0xFF1F1205), AmberGlow,  onNavigateToExpenses))
-                    if ("history" !in hidden)  add(Card("history",  "Sales History", "View past\ntransactions",       Icons.Default.History,  Color(0xFF0A1628), BlueGlow,   onNavigateToSalesHistory))
-                    if ("lowstock" !in hidden) add(Card("lowstock", "Low Stock",     "Items running\nlow",            Icons.Default.Warning,  Color(0xFF1F0A0A), RedGlow,    onNavigateToLowStock))
+                        add(DashCard_("expenses", "Expenses",      "Track your\nexpenses",           Icons.Default.Receipt,  Color(0xFF1F1205), AmberGlow,  onNavigateToExpenses))
+                    if ("history" !in hidden)  add(DashCard_("history",  "Sales History", "View past\ntransactions",       Icons.Default.History,  Color(0xFF0A1628), BlueGlow,   onNavigateToSalesHistory))
+                    if ("lowstock" !in hidden) add(DashCard_("lowstock", "Low Stock",     "Items running\nlow",            Icons.Default.Warning,  Color(0xFF1F0A0A), RedGlow,    onNavigateToLowStock))
                 }
 
                 Column(Modifier.padding(horizontal = 12.dp).animateContentSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
