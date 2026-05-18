@@ -250,22 +250,30 @@ fun ScannerCartScreen(
             if (state.items.isNotEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                         .background(DT.Surface2)
-                        .padding(start = 20.dp, end = 20.dp, top = 16.dp)
+                        .padding(start = 20.dp, end = 20.dp, top = 18.dp)
                         .navigationBarsPadding()
-                        .padding(bottom = 80.dp)
+                        .padding(bottom = 82.dp)
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("TOTAL", color = DT.SubText, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // TOTAL label + amount
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("TOTAL", color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.Medium, letterSpacing = 1.sp)
                             Text("$currency ${String.format("%.2f", state.total)}", color = Color.White,
-                                fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+                                fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
                         }
+                        // Vertical divider
+                        Box(modifier = Modifier.width(1.dp).height(48.dp).background(DT.Border))
+                        Spacer(Modifier.width(16.dp))
+                        // Checkout pill button
                         Button(
                             onClick = onNavigateToCheckout,
-                            modifier = Modifier.fillMaxWidth().height(52.dp),
-                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.height(52.dp),
+                            shape = RoundedCornerShape(50.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
                         ) {
                             Icon(Icons.Default.ShoppingCart, null, tint = Color.White, modifier = Modifier.size(20.dp))
@@ -277,52 +285,49 @@ fun ScannerCartScreen(
             }
         }
 
-        // ── Bottom FAB: Scan + Continuous toggle ──────────────────────────
+        // ── Bottom FAB row ────────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .background(
-                    androidx.compose.ui.graphics.Brush.verticalGradient(
-                        listOf(Color.Transparent, DT.Bg.copy(alpha = 0.98f), DT.Bg)
-                    )
-                )
+                .background(DT.Bg)
                 .navigationBarsPadding()
-                .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 16.dp)
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Continuous scan toggle
-                FilledIconButton(
-                    onClick = { continuousScan = !continuousScan },
-                    modifier = Modifier.size(44.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = if (continuousScan) DT.Teal else DT.Surface2
-                    ),
-                    shape = RoundedCornerShape(12.dp)
+                // ∞ Continuous scan — square rounded tile
+                Box(
+                    modifier = Modifier.size(56.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(if (continuousScan) DT.Teal else DT.Surface2)
+                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { continuousScan = !continuousScan },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Default.AllInclusive, "Continuous scan",
                         tint = if (continuousScan) Color.White else DT.SubText,
-                        modifier = Modifier.size(20.dp))
+                        modifier = Modifier.size(24.dp))
                 }
-                Spacer(Modifier.width(16.dp))
-                // Main scan FAB
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
-                        else showScanner = !showScanner
-                    },
-                    containerColor = if (showScanner) DT.Red else DT.Teal,
-                    contentColor = Color.White,
-                    shape = RoundedCornerShape(50.dp),
-                    modifier = Modifier.height(52.dp)
+                // Scan — wide rounded pill
+                Box(
+                    modifier = Modifier.weight(1f).height(56.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(if (showScanner) DT.Red else DT.Teal)
+                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                            if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
+                            else showScanner = !showScanner
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(if (showScanner) Icons.Default.Close else Icons.Default.QrCode, null, modifier = Modifier.size(22.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(if (showScanner) "Close" else "Scan", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Icon(if (showScanner) Icons.Default.Close else Icons.Default.QrCode, null,
+                            tint = Color.White, modifier = Modifier.size(22.dp))
+                        Text(if (showScanner) "Close" else "Scan",
+                            color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
                 }
             }
         }
