@@ -218,7 +218,7 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
     var batchNumber   by remember { mutableStateOf(product?.batchNumber ?: "") }
     var expiryDateStr by remember { mutableStateOf(
         if ((product?.expiryDate ?: 0L) > 0L)
-            java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date(product!!.expiryDate))
+            java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date(product?.expiryDate ?: 0L))
         else ""
     ) }
     var showScanner by remember { mutableStateOf(false) }

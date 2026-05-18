@@ -225,7 +225,7 @@ private fun DarkUserRow(user: User, isMe: Boolean, onChangePin: () -> Unit, onRe
             // Avatar
             Box(modifier = Modifier.size(44.dp).clip(CircleShape).background(DT.TealDim),
                 contentAlignment = Alignment.Center) {
-                Text(user.displayName.first().uppercase(), color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(user.displayName.firstOrNull()?.uppercase() ?: "?", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {

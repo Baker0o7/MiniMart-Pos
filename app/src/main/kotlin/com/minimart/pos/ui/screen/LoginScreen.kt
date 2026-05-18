@@ -109,8 +109,7 @@ fun LoginScreen(
                 androidx.compose.foundation.Image(
                     painter = painterResource(id = com.minimart.pos.R.mipmap.ic_launcher),
                     contentDescription = "MiniMart POS Logo",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                    modifier = Modifier.size(80.dp)
                 )
             }
             Spacer(Modifier.height(16.dp))
