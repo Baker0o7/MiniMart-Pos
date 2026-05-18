@@ -69,7 +69,7 @@ fun ShiftScreen(
             item {
                 if (state.activeShift != null) {
                     ActiveShiftCard(
-                        shift = state.activeShift ?: return@LaunchedEffect,
+                        shift = state.activeShift!!,
                         onClockOut = { showClockOutDialog = true }
                     )
                 } else {
