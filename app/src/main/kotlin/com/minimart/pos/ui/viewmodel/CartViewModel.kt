@@ -40,7 +40,7 @@ class CartViewModel @Inject constructor(
     private val productRepo: ProductRepository,
     private val saleRepo: SaleRepository,
     private val settingsRepo: SettingsRepository,
-    private val cashDrawer: com.minimart.pos.printer.CashDrawerManager
+    private val cashDrawer: com.minimart.pos.printer.CashDrawerManager,
     keyboardScanner: KeyboardScanner
 ) : ViewModel() {
 
