@@ -70,8 +70,15 @@ data class CartItem(
     var quantity: Int = 1,
     var discount: Double = 0.0
 ) {
+    // ── Inclusive VAT (tax is already inside the selling price) ───────────────
+    // Total line before discount (price already includes VAT)
     val lineSubtotal: Double get() = product.price * quantity
-    val lineTax: Double get() = lineSubtotal * product.taxRate
+    // VAT extracted from the inclusive price: tax = price - (price / (1 + rate))
+    val lineTax: Double get() = if (product.taxRate > 0)
+        lineSubtotal - (lineSubtotal / (1.0 + product.taxRate)) else 0.0
+    // Pre-tax (net) amount = subtotal - tax
+    val lineNet: Double get() = lineSubtotal - lineTax
     val lineDiscount: Double get() = discount
-    val lineTotal: Double get() = lineSubtotal + lineTax - lineDiscount
+    // Customer pays the sticker price — no extra tax added on top
+    val lineTotal: Double get() = lineSubtotal - lineDiscount
 }

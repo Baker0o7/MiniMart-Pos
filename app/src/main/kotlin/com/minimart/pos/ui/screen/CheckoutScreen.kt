@@ -149,7 +149,7 @@ fun CheckoutScreen(
                     // Tax row
                     if (state.totalTax > 0) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Tax:", color = DT.SubText)
+                            Text("VAT (incl.):", color = DT.SubText)
                             Text("$currency ${String.format("%.2f", state.totalTax)}", color = DT.SubText)
                         }
                     }

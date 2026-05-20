@@ -23,9 +23,9 @@ data class CartUiState(
     val completedSaleId: Long? = null
 ) {
     val subtotal: Double get() = items.sumOf { it.lineSubtotal }
-    val totalTax: Double get() = items.sumOf { it.lineTax }
+    val totalTax: Double get() = items.sumOf { it.lineTax }          // extracted VAT (display only)
     val totalDiscount: Double get() = items.sumOf { it.lineDiscount } + discount
-    val total: Double get() = subtotal + totalTax - totalDiscount
+    val total: Double get() = subtotal - totalDiscount               // inclusive: no extra tax added
     val itemCount: Int get() = items.sumOf { it.quantity }
     val isEmpty: Boolean get() = items.isEmpty()
 }
