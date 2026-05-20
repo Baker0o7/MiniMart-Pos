@@ -227,6 +227,93 @@ fun SettingsScreen(
                     }
                 }
 
+                // ── Cash Drawer ───────────────────────────────────────────────
+                if (isAdmin) {
+                    val cashDrawerAddress by settingsRepo.cashDrawerAddress.collectAsState("")
+                    val cashDrawerOnSale  by settingsRepo.cashDrawerOnSale.collectAsState(true)
+                    var testStatus by remember { mutableStateOf<String?>(null) }
+
+                    DSection("Cash Drawer", Icons.Default.LocalAtm) {
+                        Text("Cash drawer connected to thermal printer via RJ11 is auto-detected.",
+                            color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                        Spacer(Modifier.height(10.dp))
+                        // Auto open on sale toggle
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Open on cash sale", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text("Auto-opens when cash payment completes", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                            }
+                            Switch(checked = cashDrawerOnSale, onCheckedChange = { scope.launch { settingsRepo.setCashDrawerOnSale(it) } },
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border))
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        // Direct BT drawer address (optional)
+                        OutlinedTextField(value = cashDrawerAddress, onValueChange = { scope.launch { settingsRepo.setCashDrawerAddress(it) } },
+                            label = { Text("Direct BT Drawer Address (optional)", color = DT.SubText) },
+                            placeholder = { Text("00:11:22:33:44:55", color = DT.SubText.copy(0.5f)) },
+                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
+                        Spacer(Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            OutlinedButton(onClick = {
+                                scope.launch {
+                                    testStatus = "Opening drawer..."
+                                    // Just send kick via printer if connected
+                                    val r = printer.sendRaw(byteArrayOf(0x1B, 0x70, 0x00, 0x19, 0xFA.toByte()))
+                                    testStatus = if (r is com.minimart.pos.printer.PrintResult.Success) "✓ Drawer opened!" else "✗ Not connected to printer"
+                                }
+                            }, border = androidx.compose.foundation.BorderStroke(1.dp, DT.Teal), shape = RoundedCornerShape(12.dp)) {
+                                Icon(Icons.Default.LocalAtm, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Test Open", color = DT.Teal, style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                        testStatus?.let {
+                            Spacer(Modifier.height(4.dp))
+                            Text(it, color = if (it.startsWith("✓")) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+
+                // ── Bluetooth Scanner ─────────────────────────────────────────
+                DSection("Bluetooth Barcode Scanner", Icons.Default.QrCodeScanner) {
+                    Text("HID scanners pair as keyboards — connect via Android Bluetooth settings. Once paired, scan works automatically in the New Sale screen.",
+                        color = DT.SubText, style = MaterialTheme.typography.labelSmall, lineHeight = 18.sp)
+                    Spacer(Modifier.height(10.dp))
+                    val btScanners = remember {
+                        try {
+                            android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+                                ?.bondedDevices?.filter { d ->
+                                    val name = (d.name ?: "").lowercase()
+                                    listOf("scanner","barcode","honeywell","zebra","datalogic","newland","sunmi")
+                                        .any { name.contains(it) } || d.bluetoothClass?.majorDeviceClass == 0x0500
+                                }?.map { it.name ?: it.address } ?: emptyList()
+                        } catch (_: Exception) { emptyList() }
+                    }
+                    if (btScanners.isEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Default.BluetoothDisabled, null, tint = DT.SubText, modifier = Modifier.size(18.dp))
+                            Text("No paired BT scanners found", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                        }
+                    } else {
+                        btScanners.forEach { name ->
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.padding(vertical = 4.dp)) {
+                                Icon(Icons.Default.Bluetooth, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
+                                Text(name, color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Box(Modifier.clip(RoundedCornerShape(6.dp)).background(DT.Green.copy(0.15f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                                    Text("Paired", color = DT.Green, style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text("Tip: Enable continuous scan mode (∞) in New Sale for rapid scanning.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                }
+
                 // ── Expiry Alerts ─────────────────────────────────────────────
                 DSection("Expiry Alerts", Icons.Default.CalendarToday) {
                     Text("Alert me when products expire within:", color = DT.SubText,

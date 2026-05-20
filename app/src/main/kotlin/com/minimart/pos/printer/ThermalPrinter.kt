@@ -94,6 +94,12 @@ class ThermalPrinter @Inject constructor(
 
     val isConnected: Boolean get() = socket?.isConnected == true
 
+    /** Send raw bytes — used by CashDrawerManager for ESC/POS drawer kick */
+    suspend fun sendRaw(bytes: ByteArray): PrintResult = withContext(Dispatchers.IO) {
+        try { write(bytes); PrintResult.Success }
+        catch (e: Exception) { PrintResult.Error(e.localizedMessage ?: "Send failed") }
+    }
+
     // ── Low-level write ───────────────────────────────────────────────────────
 
     private suspend fun write(vararg chunks: ByteArray) = withContext(Dispatchers.IO) {

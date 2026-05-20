@@ -40,6 +40,7 @@ class CartViewModel @Inject constructor(
     private val productRepo: ProductRepository,
     private val saleRepo: SaleRepository,
     private val settingsRepo: SettingsRepository,
+    private val cashDrawer: com.minimart.pos.printer.CashDrawerManager
     keyboardScanner: KeyboardScanner
 ) : ViewModel() {
 
@@ -181,6 +182,13 @@ class CartViewModel @Inject constructor(
                 }
 
                 val saleId = saleRepo.completeSale(sale, saleItems)
+                // Auto-open cash drawer on cash payment if enabled
+                if (sale.paymentMethod == PaymentMethod.CASH) {
+                    try {
+                        val autoOpen = settingsRepo.cashDrawerOnSale.first()
+                        if (autoOpen) cashDrawer.openDrawer()
+                    } catch (_: Exception) {}
+                }
                 _uiState.update { CartUiState() } // clear cart after sale
                 _checkoutResult.emit(CheckoutResult.Success(saleId, sale.changeGiven))
             } catch (e: Exception) {
