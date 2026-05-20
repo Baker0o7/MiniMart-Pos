@@ -23,7 +23,8 @@ class SettingsRepository @Inject constructor(
         val KEY_HIDDEN_ACTIONS    = stringPreferencesKey("hidden_actions")
         val KEY_EXPIRY_ALERT_MONTHS = intPreferencesKey("expiry_alert_months")
         val KEY_CASH_DRAWER_ADDRESS = stringPreferencesKey("cash_drawer_address")
-        val KEY_CASH_DRAWER_ON_SALE = booleanPreferencesKey("cash_drawer_on_sale")  = stringPreferencesKey("printer_address")
+        val KEY_CASH_DRAWER_ON_SALE = booleanPreferencesKey("cash_drawer_on_sale")
+        val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
         val KEY_PRINTER_NAME     = stringPreferencesKey("printer_name")
         val KEY_RECEIPT_FOOTER   = stringPreferencesKey("receipt_footer")
         val KEY_DARK_MODE        = booleanPreferencesKey("dark_mode")
@@ -47,7 +48,7 @@ class SettingsRepository @Inject constructor(
     val hiddenActions: Flow<String> = context.dataStore.data.map { it[KEY_HIDDEN_ACTIONS] ?: "" }
     suspend fun setHiddenActions(ids: String) = context.dataStore.edit { it[KEY_HIDDEN_ACTIONS] = ids }
 
-        val KEY_PRINTER_ADDRESS   = context.dataStore.data.map { it[KEY_PRINTER_ADDRESS] }
+    val printerAddress: Flow<String?>   = context.dataStore.data.map { it[KEY_PRINTER_ADDRESS] }
     val printerName: Flow<String?>      = context.dataStore.data.map { it[KEY_PRINTER_NAME] }
     val receiptFooter: Flow<String>     = context.dataStore.data.map { it[KEY_RECEIPT_FOOTER] ?: "Thank you for shopping with us!" }
     val darkMode: Flow<Boolean>         = context.dataStore.data.map { it[KEY_DARK_MODE] ?: false }
