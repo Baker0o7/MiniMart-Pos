@@ -75,7 +75,7 @@ fun ScannerCartScreen(
                 modifier = Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
                     .background(Brush.verticalGradient(listOf(DT.Teal, TopGrad, TopGrad2)))
-                    .padding(horizontal = 16.dp, top = 12.dp, bottom = 20.dp)
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 20.dp)
             ) {
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
