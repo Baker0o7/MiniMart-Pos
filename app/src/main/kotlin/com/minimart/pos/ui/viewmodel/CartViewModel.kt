@@ -143,7 +143,8 @@ class CartViewModel @Inject constructor(
     fun checkout(
         paymentMethod: PaymentMethod,
         amountPaid: Double,
-        mpesaRef: String? = null
+        mpesaRef: String? = null,
+        customerId: Long? = null
     ) {
         viewModelScope.launch {
             val state = _uiState.value

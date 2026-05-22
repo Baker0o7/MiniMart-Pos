@@ -9,7 +9,7 @@ import androidx.room.Relation
 
 // ─── Sale (header) ────────────────────────────────────────────────────────────
 
-enum class PaymentMethod { CASH, MPESA, CARD, MIXED }
+enum class PaymentMethod { CASH, MPESA, CARD, MIXED, CREDIT }
 enum class SaleStatus { COMPLETED, REFUNDED, VOIDED }
 
 @Entity(tableName = "sales")
