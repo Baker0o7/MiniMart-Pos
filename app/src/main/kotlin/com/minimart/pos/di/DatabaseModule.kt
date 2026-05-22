@@ -34,5 +34,6 @@ object DatabaseModule {
     @Provides fun provideSaleDao(db: AppDatabase): SaleDao = db.saleDao()
     @Provides fun provideUserDao(db: AppDatabase): UserDao = db.userDao()
     @Provides fun provideExpenseDao(db: AppDatabase): ExpenseDao = db.expenseDao()
-    @Provides fun provideShiftDao(db: AppDatabase): ShiftDao = db.shiftDao()
+    @Provides @Singleton fun provideShiftDao(db: AppDatabase): ShiftDao = db.shiftDao()
+    @Provides @Singleton fun provideCustomerDao(db: AppDatabase) = db.customerDao()
 }
