@@ -10,8 +10,8 @@ import com.minimart.pos.data.entity.*
 import javax.inject.Inject
 
 @Database(
-    entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class],
-    version = 6,
+    entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class],
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -21,6 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun expenseDao(): ExpenseDao
     abstract fun shiftDao(): ShiftDao
+    abstract fun customerDao(): com.minimart.pos.data.dao.CustomerDao
     companion object { const val DATABASE_NAME = "minimart_pos.db" }
 }
 

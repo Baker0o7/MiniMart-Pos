@@ -64,6 +64,7 @@ fun DashboardScreen(
     onNavigateToSettings:     () -> Unit,
     onNavigateToSalesHistory: () -> Unit = {},
     onNavigateToLowStock:     () -> Unit = {},
+    onNavigateToCustomers:    () -> Unit = {},
     currentRole: UserRole? = null,
     settingsRepo: SettingsRepository? = null,
     vm: DashboardViewModel = hiltViewModel()

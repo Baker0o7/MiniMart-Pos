@@ -47,11 +47,16 @@ fun CheckoutScreen(
     var mpesaRef       by remember { mutableStateOf("") }
     var globalDiscount by remember { mutableStateOf("") }
 
+    var selectedCustomerId by remember { mutableStateOf<Long?>(null) }
+    var selectedCustomerName by remember { mutableStateOf<String?>(null) }
+    var selectedCustomerCredit by remember { mutableStateOf(0.0) }
+    var showCustomerSearch by remember { mutableStateOf(false) }
     val cashAmount = cashInput.toDoubleOrNull() ?: 0.0
     val change     = (cashAmount - state.total).coerceAtLeast(0.0)
     val canComplete = when (selectedMethod) {
-        PaymentMethod.CASH  -> cashAmount >= state.total && state.total > 0
-        PaymentMethod.MPESA -> state.total > 0
+        PaymentMethod.CASH   -> cashAmount >= state.total && state.total > 0
+        PaymentMethod.MPESA  -> state.total > 0
+        PaymentMethod.CREDIT -> selectedCustomerId != null && selectedCustomerCredit >= state.total && state.total > 0
         else -> false
     }
 
@@ -223,6 +228,14 @@ fun CheckoutScreen(
                     selectedMethod = it; if (it == PaymentMethod.CASH) mpesaRef = ""
                 }
             }
+            Spacer(Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                PaymentCard(Modifier.weight(1f), "Credit", Icons.Default.AccountBalanceWallet, PaymentMethod.CREDIT, selectedMethod) {
+                    selectedMethod = it
+                }
+                Spacer(Modifier.weight(1f))
+            }
 
             Spacer(Modifier.height(16.dp))
 
@@ -285,6 +298,34 @@ fun CheckoutScreen(
                                 }
                             }
                         }
+                        PaymentMethod.CREDIT -> {
+                            // Customer selector
+                            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                                .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(14.dp))
+                                .clickable { showCustomerSearch = true }.padding(14.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Person, null, tint = DT.Teal, modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(10.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(selectedCustomerName ?: "Select Customer", color = if (selectedCustomerName != null) Color.White else DT.SubText, fontWeight = FontWeight.SemiBold)
+                                        if (selectedCustomerId != null)
+                                            Text("Credit: KES ${String.format("%.2f", selectedCustomerCredit)}", color = DT.Teal, fontSize = 12.sp)
+                                    }
+                                    Icon(Icons.Default.ChevronRight, null, tint = DT.SubText, modifier = Modifier.size(18.dp))
+                                }
+                            }
+                            if (selectedCustomerId != null && selectedCustomerCredit < state.total) {
+                                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                    .background(DT.Red.copy(0.1f)).border(1.dp, DT.Red.copy(0.3f), RoundedCornerShape(12.dp))
+                                    .padding(12.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Warning, null, tint = DT.Red, modifier = Modifier.size(16.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text("Insufficient credit. Balance: KES ${String.format("%.2f", selectedCustomerCredit)}", color = DT.Red, fontSize = 12.sp)
+                                    }
+                                }
+                            }
+                        }
                         else -> {}
                     }
                 }
@@ -299,7 +340,8 @@ fun CheckoutScreen(
                         vm.checkout(
                             paymentMethod = selectedMethod,
                             amountPaid = if (selectedMethod == PaymentMethod.CASH) cashAmount else state.total,
-                            mpesaRef = mpesaRef.takeIf { it.isNotBlank() }
+                            mpesaRef = mpesaRef.takeIf { it.isNotBlank() },
+                            customerId = selectedCustomerId
                         )
                     },
                     modifier = Modifier.fillMaxWidth().height(60.dp),

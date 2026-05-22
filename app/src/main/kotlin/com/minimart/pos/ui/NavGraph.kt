@@ -47,6 +47,7 @@ object Routes {
     const val EXPENSES  = "expenses"
     const val SALES_HISTORY = "sales_history"
     const val LOW_STOCK     = "low_stock"
+    const val CUSTOMERS     = "customers"
     const val USERS     = "users"
     const val SHIFTS    = "shifts"
     const val SETTINGS  = "settings"
@@ -128,6 +129,7 @@ fun MiniMartNavGraph(
                         onNavigateToSettings     = { navController.navigate(Routes.SETTINGS) },
                         onNavigateToSalesHistory = { navController.navigate(Routes.SALES_HISTORY) },
                         onNavigateToLowStock     = { navController.navigate(Routes.LOW_STOCK) },
+                        onNavigateToCustomers    = { navController.navigate(Routes.CUSTOMERS) },
                         currentRole              = authState.currentUser?.role,
                         settingsRepo             = settingsRepo
                     )
@@ -179,6 +181,9 @@ fun MiniMartNavGraph(
                 }
                 composable(Routes.LOW_STOCK) {
                     LowStockScreen(onBack = { navController.popBackStack() })
+                }
+                composable(Routes.CUSTOMERS) {
+                    CustomerScreen(onBack = { navController.popBackStack() })
                 }
                 composable(Routes.USERS)     { UserManagementScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.SHIFTS)    { ShiftScreen(onBack = { navController.popBackStack() }) }
