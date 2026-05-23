@@ -285,7 +285,9 @@ fun SettingsScreen(
                     Spacer(Modifier.height(10.dp))
                     val btScanners = remember {
                         try {
-                            android.bluetooth.@Suppress("DEPRECATION") BluetoothAdapter.getDefaultAdapter()
+                            @Suppress("DEPRECATION")
+                            val btAdapter = android.bluetooth.BluetoothAdapter.getDefaultAdapter()
+                            btAdapter
                                 ?.bondedDevices?.filter { d ->
                                     val name = (d.name ?: "").lowercase()
                                     listOf("scanner","barcode","honeywell","zebra","datalogic","newland","sunmi")
