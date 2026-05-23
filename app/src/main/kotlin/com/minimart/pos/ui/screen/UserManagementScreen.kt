@@ -297,7 +297,7 @@ private fun AddUserDialog(onDismiss: () -> Unit, onAdd: (String, String, String,
                         readOnly = true,
                         label = { Text("Role", color = DT.SubText) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(),
+                        modifier = Modifier.fillMaxWidth().menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable),
                         colors = darkTextFieldColors()
                     )
                     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false },

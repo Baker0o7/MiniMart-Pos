@@ -23,8 +23,27 @@ class UserRepository @Inject constructor(private val dao: UserDao) {
         return if (sha256(pin.trim()) == user.pinHash) user else null
     }
 
+    /** Login using PinHasher — supports both Argon2id and legacy SHA-256 */
+    suspend fun loginWithHasher(
+        username: String, pin: String,
+        hasher: com.minimart.pos.util.PinHasher
+    ): User? {
+        val user = dao.getUserByUsername(username.trim()) ?: return null
+        return if (hasher.verify(pin.trim(), user.pinHash)) user else null
+    }
+
+    /** Upgrade a user's stored hash to Argon2id after successful login */
+    suspend fun upgradePinHash(userId: Long, newHash: String) {
+        val user = dao.getUserById(userId) ?: return
+        dao.updateUser(user.copy(pinHash = newHash))
+    }
+
+    /** Hash a new PIN using Argon2id via PinHasher */
+    fun hashPin(pin: String, hasher: com.minimart.pos.util.PinHasher): String =
+        hasher.hash(pin)
+
     fun sha256(input: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(input.toByteArray())
+        val bytes = java.security.MessageDigest.getInstance("SHA-256").digest(input.toByteArray())
         return bytes.joinToString("") { "%02x".format(it) }
     }
 }

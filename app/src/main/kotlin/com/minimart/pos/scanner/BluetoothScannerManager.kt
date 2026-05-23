@@ -46,7 +46,7 @@ class BluetoothScannerManager @Inject constructor(
         )
     }
 
-    private val adapter = BluetoothAdapter.getDefaultAdapter()
+    private val adapter = @Suppress("DEPRECATION") BluetoothAdapter.getDefaultAdapter()
 
     private val _scannerInfo = MutableStateFlow<BtScannerInfo?>(null)
     val scannerInfo: StateFlow<BtScannerInfo?> = _scannerInfo

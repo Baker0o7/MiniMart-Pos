@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -88,7 +89,7 @@ fun ShiftScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = Brand500)
                             ) {
-                                Icon(Icons.Default.Login, null)
+                                Icon(Icons.AutoMirrored.Filled.Login, null)
                                 Spacer(Modifier.width(8.dp))
                                 Text("Clock In", fontWeight = FontWeight.Bold)
                             }
@@ -188,7 +189,7 @@ private fun ActiveShiftCard(shift: Shift, onClockOut: () -> Unit) {
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
             ) {
-                Icon(Icons.Default.Logout, null)
+                Icon(Icons.AutoMirrored.Filled.Logout, null)
                 Spacer(Modifier.width(8.dp))
                 Text("Clock Out & End Shift", fontWeight = FontWeight.Bold)
             }
@@ -277,7 +278,7 @@ private fun ClockInDialog(onDismiss: () -> Unit, onClockIn: (Double) -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
             ) {
-                Icon(Icons.Default.Login, null, tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.Login, null, tint = Color.White)
                 Spacer(Modifier.width(6.dp))
                 Text("Clock In", color = Color.White, fontWeight = FontWeight.Bold)
             }
@@ -323,7 +324,7 @@ private fun ClockOutDialog(onDismiss: () -> Unit, onClockOut: (Double, String) -
             Button(onClick = { onClockOut(closingFloat.toDoubleOrNull() ?: 0.0, notes) },
                 colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
-            ) { Icon(Icons.Default.Logout, null, tint = Color.White, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("End Shift", color = Color.White, fontWeight = FontWeight.Bold) }
+            ) { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = Color.White, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("End Shift", color = Color.White, fontWeight = FontWeight.Bold) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
     )

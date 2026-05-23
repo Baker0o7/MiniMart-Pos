@@ -128,7 +128,8 @@ data class AuthUiState(
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val userRepo: UserRepository,
-    private val settingsRepo: SettingsRepository
+    private val settingsRepo: SettingsRepository,
+    private val pinHasher: com.minimart.pos.util.PinHasher
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -157,9 +158,15 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val user = userRepo.login(username.trim(), pin.trim())
+                // Use PinHasher.verify() which supports both Argon2id and legacy SHA-256
+                val user = userRepo.loginWithHasher(username.trim(), pin.trim(), pinHasher)
                 if (user != null) {
                     settingsRepo.setLoggedInUser(user.id)
+                    // Silently upgrade legacy SHA-256 hash to Argon2id on successful login
+                    if (pinHasher.needsUpgrade(user.pinHash)) {
+                        try { userRepo.upgradePinHash(user.id, pinHasher.hash(pin.trim())) }
+                        catch (_: Exception) {}
+                    }
                     _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user) }
                 } else {
                     _uiState.update { it.copy(isLoading = false, error = "Invalid username or PIN") }
@@ -172,9 +179,7 @@ class AuthViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
-            try {
-                settingsRepo.setLoggedInUser(null)
-            } catch (_: Exception) {}
+            try { settingsRepo.setLoggedInUser(null) } catch (_: Exception) {}
             _uiState.update { AuthUiState() }
         }
     }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -192,7 +193,7 @@ private fun LowStockCard(
                         // WhatsApp button
                         IconButton(onClick = { onWhatsApp(product.supplierPhone) },
                             modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF25D366).copy(0.15f))) {
-                            Icon(Icons.Default.Chat, null, tint = Color(0xFF25D366), modifier = Modifier.size(18.dp))
+                            Icon(Icons.AutoMirrored.Filled.Chat, null, tint = Color(0xFF25D366), modifier = Modifier.size(18.dp))
                         }
                     }
                 }

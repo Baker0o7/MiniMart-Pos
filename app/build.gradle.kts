@@ -105,6 +105,8 @@ dependencies {
     implementation(libs.coil.compose)
     // Accompanist
     implementation(libs.accompanist.permissions)
+    // Argon2id PIN hashing
+    implementation("com.lambdapioneer.argon2kt:argon2kt:1.4.0")
     // Chart
     implementation(libs.mpandroidchart)
 

@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -154,7 +155,7 @@ fun DashboardScreen(
                                 TealGlow, Modifier.fillMaxWidth().height(44.dp))
                             Spacer(Modifier.height(4.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.TrendingUp, null, tint = GreenGlow, modifier = Modifier.size(12.dp))
+                                Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = GreenGlow, modifier = Modifier.size(12.dp))
                                 Spacer(Modifier.width(4.dp))
                                 Text("+${if (state.todayRevenue > 0) "8" else "0"}% from yesterday",
                                     color = GreenGlow, fontSize = 10.sp)

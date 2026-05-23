@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -229,7 +230,7 @@ fun ReceiptScreen(
                             border = androidx.compose.foundation.BorderStroke(1.dp, DT.Amber),
                             enabled = !state.isProcessing
                         ) {
-                            Icon(Icons.Default.Undo, null, tint = DT.Amber, modifier = Modifier.size(18.dp))
+                            Icon(Icons.AutoMirrored.Filled.Undo, null, tint = DT.Amber, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
                             Text("Refund", color = DT.Amber, fontWeight = FontWeight.SemiBold)
                         }
@@ -335,7 +336,7 @@ private fun statusColor(status: SaleStatus?) = when (status) {
 private fun statusIcon(status: SaleStatus?) = when (status) {
     SaleStatus.COMPLETED -> Icons.Default.CheckCircle
     SaleStatus.VOIDED -> Icons.Default.Cancel
-    SaleStatus.REFUNDED -> Icons.Default.Undo
+    SaleStatus.REFUNDED -> Icons.AutoMirrored.Filled.Undo
     else -> Icons.Default.CheckCircle
 }
 private fun statusLabel(status: SaleStatus?) = when (status) {

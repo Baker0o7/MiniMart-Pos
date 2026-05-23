@@ -262,7 +262,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onSave: (Expense) -> Unit) {
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
                     OutlinedTextField("${category.toEmoji()} ${category.name}", {}, readOnly = true,
                         label = { Text("Category", color = DT.SubText) }, trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(), colors = fieldColors, shape = RoundedCornerShape(10.dp))
+                        modifier = Modifier.fillMaxWidth().menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable), colors = fieldColors, shape = RoundedCornerShape(10.dp))
                     ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, containerColor = DT.Surface2) {
                         ExpenseCategory.entries.forEach { cat ->
                             DropdownMenuItem(text = { Text("${cat.toEmoji()} ${cat.name}", color = DT.OnSurface) }, onClick = { category = cat; expanded = false })

@@ -41,6 +41,7 @@ class AppTypeConverters {
 class DatabaseCallback @Inject constructor() : RoomDatabase.Callback() {
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
+        // SHA-256("1234") — will auto-upgrade to Argon2id on first login
         val pinHash = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
         db.execSQL("""INSERT INTO users (username, pinHash, displayName, role, isActive, createdAt)
                VALUES ('admin', '$pinHash', 'Owner', 'OWNER', 1, ${System.currentTimeMillis()})""")

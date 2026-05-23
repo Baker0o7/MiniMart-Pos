@@ -19,6 +19,7 @@ data class CustomerUiState(
     val message: String? = null
 )
 
+@OptIn(kotlinx.coroutines.FlowPreview::class)
 @HiltViewModel
 class CustomerViewModel @Inject constructor(
     private val repo: CustomerRepository
