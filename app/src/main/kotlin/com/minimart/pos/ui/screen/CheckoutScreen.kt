@@ -1,5 +1,7 @@
 package com.minimart.pos.ui.screen
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -433,9 +435,16 @@ fun CheckoutScreen(
                     selectedCustomer = cust
                     showCustomerSearch = false
                     customerQuery = ""
-                    // Auto-switch to credit if enough balance
                     if (cust.creditBalance >= state.total && state.total > 0)
                         selectedMethod = PaymentMethod.CREDIT
+                },
+                onNewCustomer = { name, phone ->
+                    val newCust = Customer(name = name, phone = phone)
+                    customerVm.saveCustomer(newCust)
+                    // Refresh list and auto-select the new customer
+                    customerVm.setQuery("")
+                    showCustomerSearch = false
+                    customerQuery = ""
                 },
                 onDismiss = { showCustomerSearch = false; customerQuery = "" }
             )
@@ -445,32 +454,144 @@ fun CheckoutScreen(
 
 // ─── Customer Search Sheet ─────────────────────────────────────────────────────
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, com.google.accompanist.permissions.ExperimentalPermissionsApi::class)
 @Composable
 private fun CustomerSearchSheet(
-    query: String, customers: List<Customer>,
-    onQueryChange: (String) -> Unit, onSelect: (Customer) -> Unit, onDismiss: () -> Unit
+    query: String,
+    customers: List<Customer>,
+    onQueryChange: (String) -> Unit,
+    onSelect: (Customer) -> Unit,
+    onNewCustomer: (String, String) -> Unit,  // name, phone
+    onDismiss: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val contactsPermission = com.google.accompanist.permissions.rememberPermissionState(android.Manifest.permission.READ_CONTACTS)
+    var showAddForm by remember { mutableStateOf(false) }
+    var newName  by remember { mutableStateOf("") }
+    var newPhone by remember { mutableStateOf("") }
+
+    // Contact picker launcher
+    val contactPicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.PickContact()
+    ) { uri ->
+        uri?.let {
+            try {
+                val cursor = context.contentResolver.query(uri, arrayOf(
+                    android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER
+                ), null, null, null)
+                cursor?.use { c ->
+                    if (c.moveToFirst()) {
+                        newName  = c.getString(0) ?: ""
+                        newPhone = c.getString(1)?.replace(" ", "") ?: ""
+                        showAddForm = true
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = DT.Surface) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
-            Text("Select Customer", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Spacer(Modifier.height(12.dp))
+        Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+            // Header
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Select Customer", color = Color.White, fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp, modifier = Modifier.weight(1f))
+                // Import from contacts
+                IconButton(onClick = {
+                    if (contactsPermission.status.isGranted) contactPicker.launch(null)
+                    else contactsPermission.launchPermissionRequest()
+                }) {
+                    Icon(Icons.Default.ImportContacts, null, tint = DT.Teal, modifier = Modifier.size(22.dp))
+                }
+                // Quick add new
+                Box(modifier = Modifier.size(36.dp).clip(CircleShape)
+                    .background(DT.Teal)
+                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                        showAddForm = !showAddForm; newName = ""; newPhone = ""
+                    },
+                    contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.PersonAdd, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                }
+            }
+
+            // Quick-add form (expands when + tapped or contact selected)
+            AnimatedVisibility(visible = showAddForm) {
+                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+                    .background(DT.Surface2).border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(16.dp))
+                    .padding(14.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("New Customer", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        OutlinedTextField(value = newName, onValueChange = { newName = it },
+                            label = { Text("Full Name *", color = DT.SubText) },
+                            leadingIcon = { Icon(Icons.Default.Person, null, tint = DT.SubText) },
+                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
+                        OutlinedTextField(value = newPhone, onValueChange = { newPhone = it },
+                            label = { Text("Phone Number", color = DT.SubText) },
+                            leadingIcon = { Icon(Icons.Default.Phone, null, tint = DT.SubText) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            OutlinedButton(onClick = { showAddForm = false },
+                                modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) {
+                                Text("Cancel", color = DT.SubText)
+                            }
+                            Button(onClick = {
+                                if (newName.isNotBlank()) {
+                                    onNewCustomer(newName.trim(), newPhone.trim())
+                                    showAddForm = false
+                                }
+                            }, modifier = Modifier.weight(1f),
+                                enabled = newName.isNotBlank(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
+                                Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Save & Select", color = Color.White, fontSize = 13.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Search field
             OutlinedTextField(value = query, onValueChange = onQueryChange,
                 placeholder = { Text("Search by name or phone", color = DT.SubText) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
+                trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { onQueryChange("") }) {
+                    Icon(Icons.Default.Close, null, tint = DT.SubText, modifier = Modifier.size(16.dp)) }
+                },
                 singleLine = true, modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
                     focusedTextColor = Color.White, unfocusedTextColor = Color.White,
                     cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
-            Spacer(Modifier.height(12.dp))
+
+            // Customer list
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.heightIn(max = 360.dp)) {
+                modifier = Modifier.heightIn(max = 320.dp)) {
                 if (customers.isEmpty()) {
                     item {
-                        Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                        Column(Modifier.fillMaxWidth().padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Default.PeopleOutline, null, tint = DT.SubText.copy(0.4f), modifier = Modifier.size(40.dp))
                             Text("No customers found", color = DT.SubText)
+                            Text("Tap + to add one now", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
                         }
                     }
                 }
@@ -491,6 +612,8 @@ private fun CustomerSearchSheet(
                             Column(Modifier.weight(1f)) {
                                 Text(cust.name, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                 if (cust.phone.isNotBlank()) Text(cust.phone, color = DT.SubText, fontSize = 12.sp)
+                                Text("${cust.visitCount} visits  •  KES ${String.format("%.0f", cust.totalPurchases)} total",
+                                    color = DT.SubText, fontSize = 10.sp)
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Box(Modifier.clip(RoundedCornerShape(8.dp))
@@ -501,7 +624,6 @@ private fun CustomerSearchSheet(
                                         color = if (cust.creditBalance > 0) DT.Teal else DT.SubText,
                                         fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 }
-                                Text("${cust.visitCount} visits", color = DT.SubText, fontSize = 10.sp)
                             }
                         }
                     }
