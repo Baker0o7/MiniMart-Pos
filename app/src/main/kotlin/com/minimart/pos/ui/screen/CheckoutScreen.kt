@@ -501,7 +501,8 @@ private fun CustomerSearchSheet(
                     fontSize = 18.sp, modifier = Modifier.weight(1f))
                 // Import from contacts
                 IconButton(onClick = {
-                    if (contactsPermission.status.isGranted) contactPicker.launch(null)
+                    if (contactsPermission.status is com.google.accompanist.permissions.PermissionStatus.Granted)
+                        contactPicker.launch(null)
                     else contactsPermission.launchPermissionRequest()
                 }) {
                     Icon(Icons.Default.ImportContacts, null, tint = DT.Teal, modifier = Modifier.size(22.dp))
