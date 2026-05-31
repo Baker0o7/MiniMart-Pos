@@ -213,4 +213,40 @@ class CartViewModel @Inject constructor(
         val date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
         return "RCP-$date-${counter.toString().padStart(4, '0')}"
     }
+
+    /** Split payment: credit portion + cash portion */
+    fun checkoutSplit(creditAmount: Double, cashAmount: Double, customerId: Long, mpesaRef: String? = null) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                val state = _uiState.value
+                val userId = settingsRepo.loggedInUserId.first()
+                val receiptNum = buildReceiptNumber((System.currentTimeMillis() % 9999).toInt())
+                val sale = Sale(
+                    receiptNumber = receiptNum,
+                    subtotal = state.subtotal, taxAmount = state.totalTax,
+                    discountAmount = state.totalDiscount, totalAmount = state.total,
+                    amountPaid = creditAmount + cashAmount,
+                    changeGiven = ((creditAmount + cashAmount) - state.total).coerceAtLeast(0.0),
+                    paymentMethod = PaymentMethod.MIXED, mpesaRef = mpesaRef, cashierId = userId
+                )
+                val saleItems = state.items.map { ci ->
+                    SaleItem(saleId = 0L, productId = ci.product.id, productName = ci.product.name,
+                        productBarcode = ci.product.barcode, unitPrice = ci.product.price,
+                        quantity = ci.quantity, lineDiscount = ci.lineDiscount,
+                        taxAmount = ci.lineTax, lineTotal = ci.lineTotal)
+                }
+                val saleId = saleRepo.completeSale(sale, saleItems)
+                if (creditAmount > 0) customerRepo.useCredit(customerId, creditAmount, saleId)
+                if (cashAmount > 0) {
+                    try { val ao = settingsRepo.cashDrawerOnSale.first(); if (ao) cashDrawer.openDrawer() }
+                    catch (_: Exception) {}
+                }
+                _uiState.update { CartUiState() }
+                _checkoutResult.emit(CheckoutResult.Success(saleId, sale.changeGiven))
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.localizedMessage) }
+            }
+        }
+    }
 }

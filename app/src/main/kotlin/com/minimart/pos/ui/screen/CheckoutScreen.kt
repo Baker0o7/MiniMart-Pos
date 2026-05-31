@@ -59,16 +59,26 @@ fun CheckoutScreen(
     var selectedCustomer        by remember { mutableStateOf<Customer?>(null) }
     var showCustomerSearch      by remember { mutableStateOf(false) }
     var customerQuery           by remember { mutableStateOf("") }
+    var showConfirmCredit       by remember { mutableStateOf(false) }
+    // Split payment: use partial credit + cash for remainder
+    var splitCreditInput        by remember { mutableStateOf("") }
+    var useSplitPayment         by remember { mutableStateOf(false) }
 
-    val cashAmount = cashInput.toDoubleOrNull() ?: 0.0
-    val change     = (cashAmount - state.total).coerceAtLeast(0.0)
-    val creditBalance = selectedCustomer?.creditBalance ?: 0.0
+    val cashAmount      = cashInput.toDoubleOrNull() ?: 0.0
+    val change          = (cashAmount - state.total).coerceAtLeast(0.0)
+    val creditBalance   = selectedCustomer?.creditBalance ?: 0.0
+    val splitCredit     = splitCreditInput.toDoubleOrNull()?.coerceIn(0.0, creditBalance) ?: 0.0
+    val splitCashNeeded = (state.total - splitCredit).coerceAtLeast(0.0)
 
-    val canComplete = when (selectedMethod) {
-        PaymentMethod.CASH   -> cashAmount >= state.total && state.total > 0
-        PaymentMethod.MPESA  -> state.total > 0
-        PaymentMethod.CREDIT -> selectedCustomer != null && creditBalance >= state.total && state.total > 0
-        else                 -> state.total > 0
+    val canComplete = when {
+        state.total <= 0 -> false
+        useSplitPayment  -> selectedCustomer != null && splitCredit > 0 && cashAmount >= splitCashNeeded
+        else -> when (selectedMethod) {
+            PaymentMethod.CASH   -> cashAmount >= state.total
+            PaymentMethod.MPESA  -> true
+            PaymentMethod.CREDIT -> selectedCustomer != null && creditBalance >= state.total
+            else                 -> true
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -340,44 +350,103 @@ fun CheckoutScreen(
                             }
                         }
                         PaymentMethod.CREDIT -> {
-                            // Credit summary card
-                            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                                .background(Brush.linearGradient(listOf(Color(0xFF0B2822), Color(0xFF081510))))
-                                .border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(16.dp))
-                                .padding(16.dp)) {
-                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Box(Modifier.size(42.dp).clip(CircleShape)
-                                            .background(DT.Teal), contentAlignment = Alignment.Center) {
-                                            Text(selectedCustomer?.name?.firstOrNull()?.uppercase() ?: "?",
-                                                color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-                                        }
-                                        Spacer(Modifier.width(12.dp))
-                                        Column(Modifier.weight(1f)) {
-                                            Text(selectedCustomer?.name ?: "", color = Color.White,
-                                                fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                                            if (selectedCustomer?.phone?.isNotBlank() == true)
-                                                Text(selectedCustomer!!.phone, color = DT.SubText, fontSize = 12.sp)
-                                        }
-                                    }
-                                    HorizontalDivider(color = DT.Border.copy(0.5f))
-                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        CreditStat("Available Balance", "$currency ${String.format("%.2f", creditBalance)}", DT.Teal)
-                                        CreditStat("Order Total", "$currency ${String.format("%.2f", state.total)}", Color.White)
-                                        val remaining = creditBalance - state.total
-                                        CreditStat("After Payment", "$currency ${String.format("%.2f", remaining)}", if (remaining >= 0) DT.Green else DT.Red)
-                                    }
-                                    if (creditBalance < state.total) {
-                                        Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                                            .background(DT.Red.copy(0.12f)).border(1.dp, DT.Red.copy(0.3f), RoundedCornerShape(10.dp))
-                                            .padding(10.dp)) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(Icons.Default.Warning, null, tint = DT.Red, modifier = Modifier.size(16.dp))
-                                                Spacer(Modifier.width(6.dp))
-                                                Text("Insufficient credit. Short by $currency ${String.format("%.2f", state.total - creditBalance)}",
-                                                    color = DT.Red, fontSize = 12.sp)
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                // Credit summary card
+                                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+                                    .background(Brush.linearGradient(listOf(Color(0xFF0B2822), Color(0xFF081510))))
+                                    .border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(16.dp))
+                                    .padding(16.dp)) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Box(Modifier.size(42.dp).clip(CircleShape).background(DT.Teal), contentAlignment = Alignment.Center) {
+                                                Text(selectedCustomer?.name?.firstOrNull()?.uppercase() ?: "?",
+                                                    color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                                            }
+                                            Spacer(Modifier.width(12.dp))
+                                            Column(Modifier.weight(1f)) {
+                                                Text(selectedCustomer?.name ?: "", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                                if (selectedCustomer?.phone?.isNotBlank() == true)
+                                                    Text(selectedCustomer!!.phone, color = DT.SubText, fontSize = 12.sp)
+                                            }
+                                            // Visit count badge
+                                            Box(Modifier.clip(RoundedCornerShape(8.dp)).background(DT.Surface2).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                                                Text("${selectedCustomer?.visitCount ?: 0} visits", color = DT.SubText, fontSize = 10.sp)
                                             }
                                         }
+                                        HorizontalDivider(color = DT.Border.copy(0.5f))
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                            CreditStat("Available", "$currency ${String.format("%.2f", creditBalance)}", DT.Teal)
+                                            CreditStat("Order", "$currency ${String.format("%.2f", state.total)}", Color.White)
+                                            val remaining = creditBalance - state.total
+                                            CreditStat("After", "$currency ${String.format("%.2f", remaining)}", if (remaining >= 0) DT.Green else DT.Red)
+                                        }
+                                        // Insufficient warning
+                                        if (creditBalance < state.total && !useSplitPayment) {
+                                            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                                .background(DT.Amber.copy(0.1f)).border(1.dp, DT.Amber.copy(0.3f), RoundedCornerShape(10.dp))
+                                                .padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(Icons.Default.Warning, null, tint = DT.Amber, modifier = Modifier.size(16.dp))
+                                                Spacer(Modifier.width(8.dp))
+                                                Column(Modifier.weight(1f)) {
+                                                    Text("Short by $currency ${String.format("%.2f", state.total - creditBalance)}", color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                    Text("Use split payment below to combine credit + cash", color = DT.SubText, fontSize = 11.sp)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Split payment toggle
+                                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                                    .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(14.dp))
+                                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { useSplitPayment = !useSplitPayment; splitCreditInput = "" }
+                                    .padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(if (useSplitPayment) Icons.Default.CheckBox else Icons.Default.CheckBoxOutlineBlank,
+                                        null, tint = if (useSplitPayment) DT.Teal else DT.SubText, modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(10.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text("Split payment (Credit + Cash)", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                        Text("Pay part with credit, rest with cash", color = DT.SubText, fontSize = 11.sp)
+                                    }
+                                }
+
+                                // Split inputs
+                                AnimatedVisibility(visible = useSplitPayment) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        OutlinedTextField(value = splitCreditInput, onValueChange = { splitCreditInput = it },
+                                            label = { Text("Credit Amount (max $currency ${String.format("%.2f", creditBalance)})", color = DT.SubText) },
+                                            leadingIcon = { Icon(Icons.Default.AccountBalanceWallet, null, tint = DT.Teal) },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                                            shape = RoundedCornerShape(14.dp),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                                cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface))
+                                        if (splitCredit > 0) {
+                                            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                                .background(DT.Teal.copy(0.08f)).border(1.dp, DT.Teal.copy(0.25f), RoundedCornerShape(12.dp))
+                                                .padding(12.dp)) {
+                                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                                    CreditStat("Credit used", "$currency ${String.format("%.2f", splitCredit)}", DT.Teal)
+                                                    CreditStat("Cash needed", "$currency ${String.format("%.2f", splitCashNeeded)}", Color.White)
+                                                    val balAfter = creditBalance - splitCredit
+                                                    CreditStat("Credit left", "$currency ${String.format("%.2f", balAfter)}", DT.Green)
+                                                }
+                                            }
+                                        }
+                                        // Cash input for split
+                                        OutlinedTextField(value = cashInput, onValueChange = { cashInput = it },
+                                            label = { Text("Cash for remaining $currency ${String.format("%.2f", splitCashNeeded)}", color = DT.SubText) },
+                                            leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                                            shape = RoundedCornerShape(14.dp),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                                cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface))
                                     }
                                 }
                             }
@@ -392,12 +461,22 @@ fun CheckoutScreen(
             // ── Complete button ───────────────────────────────────────────────
             Button(
                 onClick = {
-                    vm.checkout(
-                        paymentMethod = selectedMethod,
-                        amountPaid    = if (selectedMethod == PaymentMethod.CASH) cashAmount else state.total,
-                        mpesaRef      = mpesaRef.takeIf { it.isNotBlank() },
-                        customerId    = selectedCustomer?.id
-                    )
+                    if (useSplitPayment && selectedCustomer != null) {
+                        // Split: deduct credit portion first, then record cash portion
+                        vm.checkoutSplit(
+                            creditAmount  = splitCredit,
+                            cashAmount    = cashAmount,
+                            customerId    = selectedCustomer!!.id,
+                            mpesaRef      = null
+                        )
+                    } else {
+                        vm.checkout(
+                            paymentMethod = selectedMethod,
+                            amountPaid    = if (selectedMethod == PaymentMethod.CASH) cashAmount else state.total,
+                            mpesaRef      = mpesaRef.takeIf { it.isNotBlank() },
+                            customerId    = selectedCustomer?.id
+                        )
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().height(60.dp).padding(horizontal = 16.dp),
                 enabled = canComplete && !state.isLoading,
@@ -414,9 +493,12 @@ fun CheckoutScreen(
                         tint = if (canComplete) Color.White else DT.SubText, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(10.dp))
                     Text(when {
+                        !canComplete && useSplitPayment && splitCredit <= 0 -> "ENTER CREDIT AMOUNT"
+                        !canComplete && useSplitPayment -> "ENTER CASH AMOUNT"
                         !canComplete && selectedMethod == PaymentMethod.CASH && state.total > 0 -> "ENTER CASH AMOUNT"
                         !canComplete && selectedMethod == PaymentMethod.CREDIT -> "INSUFFICIENT CREDIT"
                         !canComplete -> "SELECT PAYMENT METHOD"
+                        useSplitPayment -> "COMPLETE SPLIT PAYMENT"
                         else -> "COMPLETE CHECKOUT"
                     }, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, letterSpacing = 0.5.sp,
                         color = if (canComplete) Color.White else DT.SubText)
