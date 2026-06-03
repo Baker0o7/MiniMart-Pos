@@ -228,12 +228,12 @@ class CartViewModel @Inject constructor(
                     discountAmount = state.totalDiscount, totalAmount = state.total,
                     amountPaid = creditAmount + cashAmount,
                     changeGiven = ((creditAmount + cashAmount) - state.total).coerceAtLeast(0.0),
-                    paymentMethod = PaymentMethod.MIXED, mpesaRef = mpesaRef, cashierId = userId
+                    paymentMethod = PaymentMethod.MIXED, mpesaRef = mpesaRef, cashierId = userId ?: 0L
                 )
                 val saleItems = state.items.map { ci ->
                     SaleItem(saleId = 0L, productId = ci.product.id, productName = ci.product.name,
                         productBarcode = ci.product.barcode, unitPrice = ci.product.price,
-                        quantity = ci.quantity, lineDiscount = ci.lineDiscount,
+                        quantity = ci.quantity, discountAmount = ci.lineDiscount,
                         taxAmount = ci.lineTax, lineTotal = ci.lineTotal)
                 }
                 val saleId = saleRepo.completeSale(sale, saleItems)
