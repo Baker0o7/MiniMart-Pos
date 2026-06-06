@@ -146,9 +146,10 @@ fun CreditOverviewScreen(
                 Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 4.dp)) {
                     // Customer row
                     Box(modifier = Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(if (isExpanded) RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 0.dp, bottomEnd = 0.dp) else RoundedCornerShape(18.dp)))
+                        .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 0.dp, bottomEnd = 0.dp))
                         .background(Brush.horizontalGradient(listOf(DT.Surface, DT.Surface2)))
-                        .border(1.dp, if (isExpanded) DT.Teal.copy(0.4f) else DT.Border, RoundedCornerShape(if (isExpanded) 18.dp else 18.dp))
+                        .border(1.dp, if (isExpanded) DT.Teal.copy(0.4f) else DT.Border,
+                            RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 0.dp, bottomEnd = 0.dp))
                         .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
                             expandedId = if (isExpanded) null else customer.id
                         }.padding(14.dp)) {

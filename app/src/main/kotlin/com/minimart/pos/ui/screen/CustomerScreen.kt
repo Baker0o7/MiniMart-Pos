@@ -351,7 +351,7 @@ private fun AddCustomerDialog(customer: Customer?, onDismiss: () -> Unit, onSave
 }
 
 @Composable
-private fun AddCreditDialog(customer: Customer, onDismiss: () -> Unit, onAdd: (Double, String) -> Unit) {
+internal fun AddCreditDialog(customer: Customer, onDismiss: () -> Unit, onAdd: (Double, String) -> Unit) {
     var amount by remember { mutableStateOf("") }
     var notes  by remember { mutableStateOf("") }
 
