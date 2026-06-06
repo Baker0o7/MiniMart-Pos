@@ -205,7 +205,7 @@ fun LoginScreen(
             Spacer(Modifier.height(24.dp))
 
             // Numeric keypad
-            val keys = listOf("1","2","3","4","5","6","7","8","9","","0","⌫")
+            val keys = listOf("1","2","3","4","5","6","7","8","9","✓","0","⌫")
             Box(modifier = Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
                 .background(Color(0xFF0D1F1C).copy(0.6f))
@@ -218,13 +218,13 @@ fun LoginScreen(
                                 Box(modifier = Modifier.weight(1f).aspectRatio(1.6f)
                                     .clip(RoundedCornerShape(14.dp))
                                     .background(when (key) {
-                                        ""  -> Color.Transparent
+                                        "✓"  -> DT.Green.copy(0.2f)
                                         "⌫" -> DT.Red.copy(0.12f)
                                         else -> DT.Surface
                                     })
                                     .border(if (key.isEmpty()) 0.dp else 1.dp,
                                         when (key) {
-                                            ""  -> Color.Transparent
+                                            "✓"  -> DT.Green.copy(0.5f)
                                             "⌫" -> DT.Red.copy(0.3f)
                                             else -> DT.Border
                                         }, RoundedCornerShape(14.dp))
@@ -232,17 +232,14 @@ fun LoginScreen(
                                         indication = null, interactionSource = remember { MutableInteractionSource() }) {
                                         when (key) {
                                             "⌫" -> { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
+                                            "✓" -> { if (pin.isNotEmpty()) { vm.login(username, pin); pin = "" } }
                                             else -> { if (pin.length < 6) pin += key }
                                         }
                                     }, contentAlignment = Alignment.Center) {
-                                    if (key.isNotEmpty()) {
-                                        if (key == "⌫") {
-                                            Icon(Icons.Default.Backspace, null, tint = DT.Red,
-                                                modifier = Modifier.size(20.dp))
-                                        } else {
-                                            Text(key, color = Color.White, fontWeight = FontWeight.SemiBold,
-                                                fontSize = 22.sp, textAlign = TextAlign.Center)
-                                        }
+                                    when (key) {
+                                        "⌫" -> Icon(Icons.Default.Backspace, null, tint = DT.Red, modifier = Modifier.size(20.dp))
+                                        "✓" -> Icon(Icons.Default.Check, null, tint = DT.Green, modifier = Modifier.size(24.dp))
+                                        else -> if (key.isNotEmpty()) Text(key, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, textAlign = TextAlign.Center)
                                     }
                                 }
                             }
