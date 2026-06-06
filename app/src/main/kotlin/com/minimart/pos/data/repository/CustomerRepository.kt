@@ -39,10 +39,9 @@ class CustomerRepository @Inject constructor(private val dao: CustomerDao) {
         return true
     }
 
-    /** Use credit for a sale — returns false if insufficient balance */
+    /** Use credit for a sale — allows negative balance (buy on account) */
     suspend fun useCredit(customerId: Long, amount: Double, saleId: Long): Boolean {
         val customer = dao.getCustomerById(customerId) ?: return false
-        if (customer.creditBalance < amount) return false
         dao.updateBalance(customerId, -amount, purchase = amount, visit = 1)
         dao.insertCreditTx(CreditTransaction(
             customerId = customerId, amount = -amount,

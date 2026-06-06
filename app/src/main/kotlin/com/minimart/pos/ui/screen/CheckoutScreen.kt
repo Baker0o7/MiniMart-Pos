@@ -283,10 +283,9 @@ fun CheckoutScreen(
                 PaymentCard(Modifier.weight(1f), "M-Pesa", Icons.Default.PhoneAndroid, PaymentMethod.MPESA, selectedMethod) { selectedMethod = it }
                 // Credit only shown when customer selected
                 AnimatedVisibility(visible = selectedCustomer != null, modifier = Modifier.weight(1f)) {
-                    val balOk = creditBalance >= state.total
                     PaymentCard(Modifier.fillMaxWidth(), "Credit", Icons.Default.AccountBalanceWallet,
                         PaymentMethod.CREDIT, selectedMethod,
-                        enabled = balOk) { if (balOk) selectedMethod = it }
+                        enabled = true) { selectedMethod = it }
                 }
             }
 
@@ -496,9 +495,10 @@ fun CheckoutScreen(
                         !canComplete && useSplitPayment && splitCredit <= 0 -> "ENTER CREDIT AMOUNT"
                         !canComplete && useSplitPayment -> "ENTER CASH AMOUNT"
                         !canComplete && selectedMethod == PaymentMethod.CASH && state.total > 0 -> "ENTER CASH AMOUNT"
-                        !canComplete && selectedMethod == PaymentMethod.CREDIT -> "INSUFFICIENT CREDIT"
+                        !canComplete && selectedMethod == PaymentMethod.CREDIT -> "SELECT CUSTOMER"
                         !canComplete -> "SELECT PAYMENT METHOD"
                         useSplitPayment -> "COMPLETE SPLIT PAYMENT"
+                        selectedMethod == PaymentMethod.CREDIT && creditBalance < state.total -> "PURCHASE ON CREDIT"
                         else -> "COMPLETE CHECKOUT"
                     }, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, letterSpacing = 0.5.sp,
                         color = if (canComplete) Color.White else DT.SubText)
