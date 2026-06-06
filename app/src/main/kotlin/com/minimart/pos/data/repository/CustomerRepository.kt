@@ -15,6 +15,8 @@ class CustomerRepository @Inject constructor(private val dao: CustomerDao) {
     fun searchCustomers(q: String): Flow<List<Customer>> = dao.searchCustomers(q)
     fun getTransactions(customerId: Long): Flow<List<CreditTransaction>> = dao.getTransactions(customerId)
     fun getCustomerCount(): Flow<Int> = dao.getCustomerCount()
+    fun getCustomersWithCredit(): Flow<List<Customer>> = dao.getCustomersWithCredit()
+    fun getTotalCreditOutstanding(): Flow<Double?> = dao.getTotalCreditOutstanding()
 
     suspend fun getById(id: Long): Customer? = dao.getCustomerById(id)
     suspend fun getByPhone(phone: String): Customer? = dao.getCustomerByPhone(phone)

@@ -41,4 +41,10 @@ interface CustomerDao {
 
     @Query("SELECT COUNT(*) FROM customers")
     fun getCustomerCount(): Flow<Int>
+
+    @Query("SELECT * FROM customers WHERE creditBalance > 0 ORDER BY creditBalance DESC")
+    fun getCustomersWithCredit(): Flow<List<Customer>>
+
+    @Query("SELECT SUM(creditBalance) FROM customers")
+    fun getTotalCreditOutstanding(): Flow<Double?>
 }
