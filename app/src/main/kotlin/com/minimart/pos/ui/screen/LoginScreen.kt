@@ -1,11 +1,9 @@
 package com.minimart.pos.ui.screen
 
-import android.content.Context
 import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricPrompt
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,33 +32,24 @@ import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.AuthViewModel
 import kotlinx.coroutines.delay
 
-private const val MAX_ATTEMPTS = 3
 private const val LOCKOUT_SECONDS = 30
+private const val MAX_ATTEMPTS = 3
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     vm: AuthViewModel = hiltViewModel()
 ) {
-    val state by vm.uiState.collectAsState()
+    val state   = vm.uiState.collectAsState().value
     val context = LocalContext.current
 
-    var username by remember { mutableStateOf("admin") }
-    var pin by remember { mutableStateOf("") }
-    var attempts by remember { mutableIntStateOf(0) }
-    var lockedOut by remember { mutableStateOf(false) }
-    var lockoutSeconds by remember { mutableIntStateOf(LOCKOUT_SECONDS) }
-    var biometricError by remember { mutableStateOf<String?>(null) }
+    var username       by remember { mutableStateOf("admin") }
+    var pin            by remember { mutableStateOf("") }
+    var attempts       by remember { mutableStateOf(0) }
+    var lockedOut      by remember { mutableStateOf(false) }
+    var lockoutSeconds by remember { mutableStateOf(LOCKOUT_SECONDS) }
+    var showPin        by remember { mutableStateOf(false) }
 
-    // Track failed attempts
-    LaunchedEffect(state.error) {
-        if (state.error != null && !state.isLoggedIn && !lockedOut) {
-            attempts++
-            if (attempts >= MAX_ATTEMPTS) lockedOut = true
-        }
-    }
-
-    // Lockout countdown
     LaunchedEffect(lockedOut) {
         if (lockedOut) {
             lockoutSeconds = LOCKOUT_SECONDS
@@ -68,202 +57,215 @@ fun LoginScreen(
             lockedOut = false; attempts = 0; pin = ""
         }
     }
-
-    LaunchedEffect(state.isLoggedIn) {
-        if (state.isLoggedIn) onLoginSuccess()
-    }
-
-    // Auto-submit when 6 digits entered - small delay prevents race with VM
+    LaunchedEffect(state.isLoggedIn) { if (state.isLoggedIn) onLoginSuccess() }
     LaunchedEffect(pin) {
         if (pin.length == 6) {
             kotlinx.coroutines.delay(50)
-            vm.login(username, pin)
-            pin = ""
+            vm.login(username, pin); pin = ""
+        }
+    }
+    LaunchedEffect(state.error) {
+        if (state.error != null) {
+            attempts++
+            if (attempts >= MAX_ATTEMPTS) lockedOut = true
         }
     }
 
-    // Auto-show biometric on load
-    LaunchedEffect(Unit) {
-        delay(400)
-        if (isBiometricAvailable(context)) {
-            triggerBiometric(context, username, vm) { biometricError = it }
-        }
-    }
-
-    Box(
-        modifier = Modifier.fillMaxSize()
-            .background(Brush.verticalGradient(listOf(DT.Bg, Color(0xFF0D2420), DT.Bg))),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp).padding(top = 56.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Logo
-            Box(
-                modifier = Modifier.size(96.dp).clip(RoundedCornerShape(24.dp))
-                    .background(Brush.radialGradient(listOf(Color(0xFF2B2B2B), Color(0xFF1A1A1A)))),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = "MiniMart POS Logo",
-                    tint = Color(0xFFB2FF59),
-                    modifier = Modifier.size(52.dp)
-                )
-            }
-            Spacer(Modifier.height(16.dp))
-            Text("MiniMart POS", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
-            Text("Sign in to continue", color = DT.SubText, style = MaterialTheme.typography.bodyMedium)
-            Spacer(Modifier.height(28.dp))
-
-            // Lockout banner
-            AnimatedVisibility(visible = lockedOut) {
-                Box(
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-                        .background(DT.Red.copy(0.15f)).border(1.dp, DT.Red.copy(0.4f), RoundedCornerShape(14.dp))
-                        .padding(16.dp)
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Default.Lock, null, tint = DT.Red, modifier = Modifier.size(32.dp))
-                        Spacer(Modifier.height(6.dp))
-                        Text("Account Locked", color = DT.Red, fontWeight = FontWeight.Bold)
-                        Text("3 failed attempts", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
-                        Spacer(Modifier.height(6.dp))
-                        Text("Try again in ${lockoutSeconds}s", color = DT.Amber, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    }
-                }
-            }
-
-            if (!lockedOut) {
-                // Username
-                OutlinedTextField(
-                    value = username, onValueChange = { username = it },
-                    label = { Text("Username", color = DT.SubText) },
-                    leadingIcon = { Icon(Icons.Default.Person, null, tint = DT.Teal) },
-                    singleLine = true, shape = RoundedCornerShape(14.dp),
-                    colors = fieldColors(), modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(12.dp))
-
-                // PIN dots
-                Row(
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-                        .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(14.dp))
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Lock, null, tint = DT.Teal, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(4.dp))
-                    repeat(6) { i ->
-                        Box(modifier = Modifier.size(14.dp).clip(CircleShape)
-                            .background(if (i < pin.length) DT.Teal else DT.Border))
-                    }
-                    Spacer(Modifier.weight(1f))
-                    if (isBiometricAvailable(context)) {
-                        IconButton(onClick = { triggerBiometric(context, username, vm) { biometricError = it } },
-                            modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Default.Fingerprint, null, tint = DT.Teal, modifier = Modifier.size(26.dp))
-                        }
-                    }
-                }
-
-                if (attempts > 0) {
-                    Spacer(Modifier.height(6.dp))
-                    Text("${MAX_ATTEMPTS - attempts} attempt${if (MAX_ATTEMPTS - attempts == 1) "" else "s"} remaining",
-                        color = DT.Amber, style = MaterialTheme.typography.labelSmall)
-                }
-                (state.error ?: biometricError)?.let {
-                    Spacer(Modifier.height(4.dp))
-                    Text(it, color = DT.Red, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                // PIN pad
-                DarkPinPad(
-                    onDigit = { d -> biometricError = null;
-                        if (pin.length < 6) {
-                            pin += d
-                            // Auto-submit handled by LaunchedEffect below
-                        }
-                    },
-                    onDelete = { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
-                )
-
-                Spacer(Modifier.height(16.dp))
-
-                Button(
-                    onClick = { vm.login(username, pin); pin = "" },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    enabled = username.isNotBlank() && pin.length >= 4 && !state.isLoading,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.TealDim)
-                ) {
-                    if (state.isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
-                    else Text("Login", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
-                }
-            }
-        }
-    }
-}
-
-private fun isBiometricAvailable(context: Context): Boolean = try {
-    BiometricManager.from(context)
-        .canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) == BiometricManager.BIOMETRIC_SUCCESS
-} catch (e: Exception) { false }
-
-private fun triggerBiometric(context: Context, username: String, vm: AuthViewModel, onError: (String) -> Unit) {
-    try {
-        val activity = context as? FragmentActivity ?: return
+    // Biometric
+    fun launchBiometric() {
+        val bio = BiometricManager.from(context)
+        if (bio.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_SUCCESS) return
         val executor = ContextCompat.getMainExecutor(context)
-        val prompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                vm.loginWithBiometric(username)
-            }
-            override fun onAuthenticationError(code: Int, msg: CharSequence) {
-                if (code != BiometricPrompt.ERROR_USER_CANCELED && code != BiometricPrompt.ERROR_NEGATIVE_BUTTON)
-                    onError("Biometric: $msg")
-            }
-            override fun onAuthenticationFailed() { onError("Biometric not recognized") }
-        })
-        val info = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("MiniMart POS").setSubtitle("Verify your identity")
-            .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL).build()
-        prompt.authenticate(info)
-    } catch (e: Exception) { /* biometric unavailable — silently ignore */ }
-}
+        val prompt = BiometricPrompt(context as FragmentActivity, executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(r: BiometricPrompt.AuthenticationResult) { vm.login(username, "__biometric__") }
+            })
+        prompt.authenticate(BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Biometric Login").setSubtitle("Use fingerprint or face")
+            .setNegativeButtonText("Use PIN").build())
+    }
+    LaunchedEffect(Unit) { launchBiometric() }
 
-@Composable
-private fun DarkPinPad(onDigit: (String) -> Unit, onDelete: () -> Unit) {
-    val digits = listOf("1","2","3","4","5","6","7","8","9","","0","⌫")
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        digits.chunked(3).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                row.forEach { d ->
-                    if (d.isEmpty()) Spacer(Modifier.weight(1f))
-                    else Box(
-                        modifier = Modifier.weight(1f).aspectRatio(1.6f)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(DT.Surface)
-                            .border(1.dp, DT.Border, RoundedCornerShape(14.dp))
-                            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
-                                if (d == "⌫") onDelete() else onDigit(d)
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(d, color = DT.TealLight, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+    Box(modifier = Modifier.fillMaxSize()
+        .background(Brush.verticalGradient(listOf(Color(0xFF061510), Color(0xFF030A07), Color(0xFF020805))))) {
+
+        // Background glow
+        Box(modifier = Modifier.size(300.dp).offset(x = (-50).dp, y = (-50).dp)
+            .clip(CircleShape).background(DT.Teal.copy(0.04f)).align(Alignment.TopStart))
+        Box(modifier = Modifier.size(200.dp).offset(x = 50.dp, y = 80.dp)
+            .clip(CircleShape).background(DT.Teal.copy(0.03f)).align(Alignment.BottomEnd))
+
+        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center) {
+
+            // Logo area
+            Box(modifier = Modifier.size(90.dp).clip(RoundedCornerShape(26.dp))
+                .background(Brush.linearGradient(listOf(DT.Teal, Color(0xFF004D40)))),
+                contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.ShoppingCart, null, tint = Color.White, modifier = Modifier.size(46.dp))
+            }
+            Spacer(Modifier.height(20.dp))
+            Text("MiniMart POS", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
+            Text("Point of Sale System", color = DT.SubText, fontSize = 14.sp, letterSpacing = 0.5.sp)
+            Spacer(Modifier.height(36.dp))
+
+            // Login card
+            Box(modifier = Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(Brush.verticalGradient(listOf(Color(0xFF0D2420), Color(0xFF091A16))))
+                .border(1.dp, DT.Teal.copy(0.2f), RoundedCornerShape(24.dp))
+                .padding(24.dp)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(14.dp)) {
+
+                    Text("Welcome Back 👋", color = Color.White,
+                        fontWeight = FontWeight.Bold, fontSize = 18.sp)
+
+                    // Username
+                    OutlinedTextField(value = username, onValueChange = { username = it },
+                        label = { Text("Username", color = DT.SubText) },
+                        leadingIcon = { Icon(Icons.Default.Person, null, tint = DT.SubText) },
+                        singleLine = true, modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                            focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                            cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
+
+                    // PIN label + dots
+                    Column(horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Text("PIN", color = DT.SubText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            TextButton(onClick = { showPin = !showPin },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
+                                Icon(if (showPin) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    null, tint = DT.SubText, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text(if (showPin) "Hide" else "Show", color = DT.SubText, fontSize = 12.sp)
+                            }
+                        }
+                        // PIN dots
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            repeat(6) { i ->
+                                val filled = i < pin.length
+                                Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(12.dp))
+                                    .background(if (filled) DT.Teal.copy(0.2f) else DT.Surface)
+                                    .border(1.5.dp, if (filled) DT.Teal else DT.Border, RoundedCornerShape(12.dp)),
+                                    contentAlignment = Alignment.Center) {
+                                    if (showPin && filled) {
+                                        Text(pin[i].toString(), color = DT.Teal,
+                                            fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                                    } else if (filled) {
+                                        Box(Modifier.size(10.dp).clip(CircleShape).background(DT.Teal))
+                                    }
+                                }
+                            }
+                        }
                     }
+
+                    // Lockout banner
+                    AnimatedVisibility(visible = lockedOut) {
+                        Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .background(DT.Red.copy(0.12f)).border(1.dp, DT.Red.copy(0.3f), RoundedCornerShape(12.dp))
+                            .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Lock, null, tint = DT.Red, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Too many attempts. Wait ${lockoutSeconds}s", color = DT.Red, fontSize = 13.sp)
+                        }
+                    }
+
+                    // Error banner
+                    AnimatedVisibility(visible = state.error != null && !lockedOut) {
+                        Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .background(DT.Red.copy(0.1f)).border(1.dp, DT.Red.copy(0.25f), RoundedCornerShape(12.dp))
+                            .padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.ErrorOutline, null, tint = DT.Red, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(state.error ?: "", color = DT.Red, fontSize = 12.sp)
+                        }
+                    }
+
+                    // Attempts warning
+                    if (attempts in 1 until MAX_ATTEMPTS && !lockedOut) {
+                        Text("${MAX_ATTEMPTS - attempts} attempt${if (MAX_ATTEMPTS - attempts != 1) "s" else ""} remaining",
+                            color = DT.Amber, fontSize = 12.sp)
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            // Numeric keypad
+            val keys = listOf("1","2","3","4","5","6","7","8","9","","0","⌫")
+            Box(modifier = Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF0D1F1C).copy(0.6f))
+                .border(1.dp, DT.Border.copy(0.5f), RoundedCornerShape(20.dp))
+                .padding(16.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    keys.chunked(3).forEach { row ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            row.forEach { key ->
+                                Box(modifier = Modifier.weight(1f).aspectRatio(1.6f)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(when (key) {
+                                        ""  -> Color.Transparent
+                                        "⌫" -> DT.Red.copy(0.12f)
+                                        else -> DT.Surface
+                                    })
+                                    .border(if (key.isEmpty()) 0.dp else 1.dp,
+                                        when (key) {
+                                            ""  -> Color.Transparent
+                                            "⌫" -> DT.Red.copy(0.3f)
+                                            else -> DT.Border
+                                        }, RoundedCornerShape(14.dp))
+                                    .clickable(enabled = key.isNotEmpty() && !lockedOut,
+                                        indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                                        when (key) {
+                                            "⌫" -> { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
+                                            else -> { if (pin.length < 6) pin += key }
+                                        }
+                                    }, contentAlignment = Alignment.Center) {
+                                    if (key.isNotEmpty()) {
+                                        if (key == "⌫") {
+                                            Icon(Icons.Default.Backspace, null, tint = DT.Red,
+                                                modifier = Modifier.size(20.dp))
+                                        } else {
+                                            Text(key, color = Color.White, fontWeight = FontWeight.SemiBold,
+                                                fontSize = 22.sp, textAlign = TextAlign.Center)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            // Biometric + loading row
+            Row(horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically) {
+                if (state.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = DT.Teal, strokeWidth = 2.dp)
+                    Spacer(Modifier.width(10.dp))
+                    Text("Signing in…", color = DT.SubText, fontSize = 13.sp)
+                } else {
+                    Box(modifier = Modifier.size(48.dp).clip(CircleShape)
+                        .background(DT.Surface)
+                        .border(1.dp, DT.Border, CircleShape)
+                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { launchBiometric() },
+                        contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Fingerprint, null, tint = DT.Teal, modifier = Modifier.size(26.dp))
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Text("Use biometric", color = DT.SubText, fontSize = 13.sp)
                 }
             }
         }
     }
 }
-
-@Composable
-private fun fieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-    focusedTextColor = DT.OnSurface, unfocusedTextColor = DT.OnSurface,
-    cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface
-)

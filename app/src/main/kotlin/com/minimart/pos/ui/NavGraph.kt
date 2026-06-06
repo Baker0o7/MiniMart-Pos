@@ -3,6 +3,7 @@ package com.minimart.pos.ui
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -223,44 +224,31 @@ private fun BottomNavBar(
     onExpenses: () -> Unit,
     onInventory: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-    ) {
-        // Nav bar surface
-        Surface(
-            modifier = Modifier.fillMaxWidth().height(68.dp).align(Alignment.BottomCenter),
-            color = NavSurface,
-            shadowElevation = 12.dp,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+    Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding()) {
+        // Background surface
+        Box(modifier = Modifier.fillMaxWidth().height(68.dp).align(Alignment.BottomCenter)
+            .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
+            .background(NavSurface)
+            .border(1.dp, Color(0xFF1A3530), RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))) {
+            Row(modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                NavItem(Icons.Default.Home,          "Home",      currentRoute == Routes.DASHBOARD, onHome)
-                NavItem(Icons.Default.Inventory2,    "Products",  currentRoute == Routes.PRODUCTS,  onProducts)
-                Spacer(Modifier.width(64.dp)) // space for center button
+                verticalAlignment = Alignment.CenterVertically) {
+                NavItem(Icons.Default.Home,      "Home",      currentRoute == Routes.DASHBOARD, onHome)
+                NavItem(Icons.Default.Inventory2,"Products",  currentRoute == Routes.PRODUCTS,  onProducts)
+                Spacer(Modifier.width(68.dp))
                 NavItem(Icons.Default.Receipt,   "Expenses",  currentRoute == Routes.EXPENSES,  onExpenses)
-                NavItem(Icons.Default.Store,         "Inventory", currentRoute == Routes.INVENTORY, onInventory)
+                NavItem(Icons.Default.Store,     "Inventory", currentRoute == Routes.INVENTORY, onInventory)
             }
         }
-
-        // Raised center scan button
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .align(Alignment.TopCenter)
-                .offset(y = (-12).dp)
-                .shadow(8.dp, CircleShape)
-                .clip(CircleShape)
-                .background(NavSel)
-                .clickable(onClick = onScan),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Default.QrCode, null, tint = Color.White, modifier = Modifier.size(28.dp))
+        // Raised center QR scan button
+        Box(modifier = Modifier.size(68.dp).align(Alignment.TopCenter).offset(y = (-14).dp)
+            .shadow(12.dp, CircleShape)
+            .clip(CircleShape)
+            .background(Brush.linearGradient(listOf(NavSel, Color(0xFF00897B))))
+            .border(3.dp, Color(0xFF0D2420), CircleShape)
+            .clickable(onClick = onScan),
+            contentAlignment = Alignment.Center) {
+            Icon(Icons.Default.QrCode, null, tint = Color.White, modifier = Modifier.size(30.dp))
         }
     }
 }
@@ -268,7 +256,7 @@ private fun BottomNavBar(
 @Composable
 private fun RowScope.NavItem(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
     val iconScale by animateFloatAsState(
-        targetValue = if (selected) 1.12f else 1f,
+        targetValue = if (selected) 1.15f else 1f,
         animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium),
         label = "navScale"
     )
