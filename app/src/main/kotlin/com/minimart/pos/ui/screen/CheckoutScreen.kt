@@ -76,7 +76,7 @@ fun CheckoutScreen(
         else -> when (selectedMethod) {
             PaymentMethod.CASH   -> cashAmount >= state.total
             PaymentMethod.MPESA  -> true
-            PaymentMethod.CREDIT -> selectedCustomer != null && creditBalance >= state.total
+            PaymentMethod.CREDIT -> selectedCustomer != null && state.total > 0
             else                 -> true
         }
     }
@@ -387,8 +387,8 @@ fun CheckoutScreen(
                                                 Icon(Icons.Default.Warning, null, tint = DT.Amber, modifier = Modifier.size(16.dp))
                                                 Spacer(Modifier.width(8.dp))
                                                 Column(Modifier.weight(1f)) {
-                                                    Text("Short by $currency ${String.format("%.2f", state.total - creditBalance)}", color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                                    Text("Use split payment below to combine credit + cash", color = DT.SubText, fontSize = 11.sp)
+                                                    Text("${selectedCustomer?.name ?: "Customer"} will owe $currency ${String.format("%.2f", state.total - creditBalance)}", color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                    Text("Purchase on credit — balance goes to -$currency ${String.format("%.2f", state.total - creditBalance)}", color = DT.SubText, fontSize = 11.sp)
                                                 }
                                             }
                                         }
