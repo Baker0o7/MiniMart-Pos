@@ -233,7 +233,7 @@ fun CheckoutScreen(
                         .background(if (selectedCustomer != null) DT.Teal else DT.Surface2),
                         contentAlignment = Alignment.Center) {
                         if (selectedCustomer != null) {
-                            Text(selectedCustomer!!.name.firstOrNull()?.uppercase() ?: "?",
+                            Text(selectedCustomer?.name?.firstOrNull()?.uppercase() ?: "?",
                                 color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                         } else {
                             Icon(Icons.Default.PersonSearch, null, tint = DT.SubText, modifier = Modifier.size(20.dp))
@@ -246,8 +246,8 @@ fun CheckoutScreen(
                             fontWeight = if (selectedCustomer != null) FontWeight.SemiBold else FontWeight.Normal)
                         if (selectedCustomer != null) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                if (selectedCustomer!!.phone.isNotBlank())
-                                    Text(selectedCustomer!!.phone, color = DT.SubText, fontSize = 12.sp)
+                                if (selectedCustomer?.phone?.isNotBlank() == true)
+                                    Text(selectedCustomer?.phone ?: "", color = DT.SubText, fontSize = 12.sp)
                                 Box(Modifier.clip(RoundedCornerShape(6.dp)).background(DT.Teal.copy(0.15f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
                                     Text("Credit: $currency ${String.format("%.2f", creditBalance)}",
                                         color = DT.Teal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -366,7 +366,7 @@ fun CheckoutScreen(
                                             Column(Modifier.weight(1f)) {
                                                 Text(selectedCustomer?.name ?: "", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                                 if (selectedCustomer?.phone?.isNotBlank() == true)
-                                                    Text(selectedCustomer!!.phone, color = DT.SubText, fontSize = 12.sp)
+                                                    Text(selectedCustomer?.phone ?: "", color = DT.SubText, fontSize = 12.sp)
                                             }
                                             // Visit count badge
                                             Box(Modifier.clip(RoundedCornerShape(8.dp)).background(DT.Surface2).padding(horizontal = 8.dp, vertical = 4.dp)) {
@@ -466,7 +466,7 @@ fun CheckoutScreen(
                         vm.checkoutSplit(
                             creditAmount  = splitCredit,
                             cashAmount    = cashAmount,
-                            customerId    = selectedCustomer!!.id,
+                            customerId    = selectedCustomer?.id,
                             mpesaRef      = null
                         )
                     } else {

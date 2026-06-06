@@ -68,12 +68,12 @@ fun ShiftScreen(
         ) {
             // ── Active shift card ──
             item {
-                if (state.activeShift != null) {
+                state.activeShift?.let { shift ->
                     ActiveShiftCard(
-                        shift = state.activeShift!!,
+                        shift = shift,
                         onClockOut = { showClockOutDialog = true }
                     )
-                } else {
+                } ?: run {
                     // No active shift
                     Card(
                         shape = RoundedCornerShape(16.dp),

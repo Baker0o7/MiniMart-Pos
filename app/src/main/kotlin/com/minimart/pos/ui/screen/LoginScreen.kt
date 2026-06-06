@@ -65,7 +65,8 @@ fun LoginScreen(
         }
     }
     LaunchedEffect(state.error) {
-        if (state.error != null) {
+        // Only increment on a genuine non-null error from a PIN attempt
+        if (!state.error.isNullOrBlank() && !lockedOut) {
             attempts++
             if (attempts >= MAX_ATTEMPTS) lockedOut = true
         }
@@ -73,16 +74,21 @@ fun LoginScreen(
 
     // Biometric
     fun launchBiometric() {
-        val bio = BiometricManager.from(context)
-        if (bio.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_SUCCESS) return
-        val executor = ContextCompat.getMainExecutor(context)
-        val prompt = BiometricPrompt(context as FragmentActivity, executor,
-            object : BiometricPrompt.AuthenticationCallback() {
-                override fun onAuthenticationSucceeded(r: BiometricPrompt.AuthenticationResult) { vm.login(username, "__biometric__") }
-            })
-        prompt.authenticate(BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Biometric Login").setSubtitle("Use fingerprint or face")
-            .setNegativeButtonText("Use PIN").build())
+        try {
+            val activity = context as? FragmentActivity ?: return
+            val bio = BiometricManager.from(context)
+            if (bio.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) != BiometricManager.BIOMETRIC_SUCCESS) return
+            val executor = ContextCompat.getMainExecutor(context)
+            val prompt = BiometricPrompt(activity, executor,
+                object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(r: BiometricPrompt.AuthenticationResult) {
+                        vm.loginWithBiometric(username)
+                    }
+                })
+            prompt.authenticate(BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Biometric Login").setSubtitle("Use fingerprint or face")
+                .setNegativeButtonText("Use PIN").build())
+        } catch (_: Exception) {}
     }
     LaunchedEffect(Unit) { launchBiometric() }
 
