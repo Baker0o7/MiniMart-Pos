@@ -466,7 +466,7 @@ fun CheckoutScreen(
                         vm.checkoutSplit(
                             creditAmount  = splitCredit,
                             cashAmount    = cashAmount,
-                            customerId    = selectedCustomer?.id,
+                            customerId    = selectedCustomer?.id ?: 0L,
                             mpesaRef      = null
                         )
                     } else {
