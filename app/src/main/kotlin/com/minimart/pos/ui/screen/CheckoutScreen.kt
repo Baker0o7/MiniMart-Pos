@@ -551,25 +551,48 @@ private fun CustomerSearchSheet(
     var showAddForm by remember { mutableStateOf(false) }
     var newName  by remember { mutableStateOf("") }
     var newPhone by remember { mutableStateOf("") }
+    var pendingPickAfterPermission by remember { mutableStateOf(false) }
 
-    // Contact picker launcher
+    // Contact picker — queries phone number directly from Contacts
     val contactPicker = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickContact()
     ) { uri ->
         uri?.let {
             try {
-                val cursor = context.contentResolver.query(uri, arrayOf(
+                // Query via Phone content URI to get number directly
+                val phoneCursor = context.contentResolver.query(
+                    android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    arrayOf(
+                        android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                        android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER
+                    ),
+                    null, null, null
+                )
+                // Fallback: query the returned URI directly
+                val cursor = phoneCursor ?: context.contentResolver.query(uri, arrayOf(
                     android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
                     android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER
                 ), null, null, null)
                 cursor?.use { c ->
                     if (c.moveToFirst()) {
                         newName  = c.getString(0) ?: ""
-                        newPhone = c.getString(1)?.replace(" ", "") ?: ""
+                        newPhone = c.getString(1)?.replace(" ", "")?.replace("-", "") ?: ""
                         showAddForm = true
                     }
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+                // Permission denied at read time - still open add form for manual entry
+                showAddForm = true
+            }
+        }
+    }
+
+    // Auto-launch picker once permission is granted
+    LaunchedEffect(contactsPermission.status) {
+        if (pendingPickAfterPermission &&
+            contactsPermission.status is com.google.accompanist.permissions.PermissionStatus.Granted) {
+            pendingPickAfterPermission = false
+            contactPicker.launch(null)
         }
     }
 
@@ -583,9 +606,12 @@ private fun CustomerSearchSheet(
                     fontSize = 18.sp, modifier = Modifier.weight(1f))
                 // Import from contacts
                 IconButton(onClick = {
-                    if (contactsPermission.status is com.google.accompanist.permissions.PermissionStatus.Granted)
+                    if (contactsPermission.status is com.google.accompanist.permissions.PermissionStatus.Granted) {
                         contactPicker.launch(null)
-                    else contactsPermission.launchPermissionRequest()
+                    } else {
+                        pendingPickAfterPermission = true
+                        contactsPermission.launchPermissionRequest()
+                    }
                 }) {
                     Icon(Icons.Default.ImportContacts, null, tint = DT.Teal, modifier = Modifier.size(22.dp))
                 }
