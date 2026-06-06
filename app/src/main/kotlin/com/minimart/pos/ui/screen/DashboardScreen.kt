@@ -247,6 +247,8 @@ fun DashboardScreen(
                         add(DashCard_("expenses","Expenses","Track costs",Icons.Default.Receipt,Color(0xFF1E1005),AmberGlow,onNavigateToExpenses))
                     if ("history"  !in hidden) add(DashCard_("history",  "Sales History","Past sales",        Icons.Default.History,   Color(0xFF081525), BlueGlow,   onNavigateToSalesHistory))
                     if ("lowstock" !in hidden) add(DashCard_("lowstock", "Low Stock",    "Items running low", Icons.Default.Warning,   Color(0xFF1E0808), RedGlow,    onNavigateToLowStock))
+                    if ("customers" !in hidden) add(DashCard_("customers", "Customers", "Credit & loyalty",  Icons.Default.People,    Color(0xFF0B1525), BlueGlow,   onNavigateToCustomers))
+                    if ("creditoverview" !in hidden) add(DashCard_("creditoverview", "Credit Ledger", "Outstanding balances", Icons.Default.AccountBalanceWallet, Color(0xFF1A0808), RedGlow, onNavigateToCreditOverview))
                 }
 
                 Column(Modifier.padding(horizontal = 12.dp).animateContentSize(),
