@@ -25,8 +25,6 @@ object DatabaseModule {
         callback: DatabaseCallback,
         keyManager: DatabaseKeyManager
     ): AppDatabase {
-        // Load SQLCipher native libs before opening the DB
-        net.sqlcipher.database.SQLiteDatabase.loadLibs(context)
         // Get or create the AES-256 key (managed by Android Keystore)
         val keyBytes    = keyManager.getOrCreateKey()
         val factory     = SupportFactory(keyBytes)

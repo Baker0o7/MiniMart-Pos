@@ -19,6 +19,8 @@ class MiniMartApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        // Load SQLCipher native libs FIRST — before any DB access
+        net.sqlcipher.database.SQLiteDatabase.loadLibs(this)
         // Schedule low-stock check — wrapped in try/catch so a WorkManager
         // issue never prevents the app from starting
         try {

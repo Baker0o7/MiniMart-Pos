@@ -553,35 +553,40 @@ private fun CustomerSearchSheet(
     var newPhone by remember { mutableStateOf("") }
     var pendingPickAfterPermission by remember { mutableStateOf(false) }
 
-    // Contact picker — queries phone number directly from Contacts
+    // Contact picker — queries the specific picked contact's phone number
     val contactPicker = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickContact()
     ) { uri ->
         uri?.let {
             try {
-                // Query via Phone content URI to get number directly
-                val phoneCursor = context.contentResolver.query(
+                // Get contact ID from the returned URI
+                val contactId = uri.lastPathSegment
+                // Query phone number for THIS specific contact
+                val cursor = context.contentResolver.query(
                     android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                     arrayOf(
                         android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
                         android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER
                     ),
-                    null, null, null
+                    "${android.provider.ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
+                    arrayOf(contactId),
+                    "${android.provider.ContactsContract.CommonDataKinds.Phone.IS_PRIMARY} DESC"
                 )
-                // Fallback: query the returned URI directly
-                val cursor = phoneCursor ?: context.contentResolver.query(uri, arrayOf(
-                    android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-                    android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER
-                ), null, null, null)
                 cursor?.use { c ->
                     if (c.moveToFirst()) {
                         newName  = c.getString(0) ?: ""
-                        newPhone = c.getString(1)?.replace(" ", "")?.replace("-", "") ?: ""
+                        // Clean number: keep only digits and +
+                        newPhone = c.getString(1)
+                            ?.replace(" ", "")
+                            ?.replace("-", "")
+                            ?.replace("(", "")
+                            ?.replace(")", "")
+                            ?: ""
                         showAddForm = true
                     }
                 }
             } catch (_: Exception) {
-                // Permission denied at read time - still open add form for manual entry
+                // Permission denied — open form for manual entry
                 showAddForm = true
             }
         }
