@@ -34,21 +34,6 @@ fun LowStockScreen(
     onBack: () -> Unit,
     vm: ProductViewModel = hiltViewModel()
 ) {
-            item {
-                Box(Modifier.fillMaxWidth()
-                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(DT.Teal, androidx.compose.ui.graphics.Color(0xFF004D40))))
-                    .padding(start=20.dp, end=20.dp, top=12.dp, bottom=20.dp)) {
-                    Row(verticalAlignment=Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Low Stock", color=androidx.compose.ui.graphics.Color.White, fontWeight=FontWeight.ExtraBold, fontSize=22.sp)
-                            Text("Items needing reorder", color=androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize=12.sp)
-                        }
-                        Icon(Icons.Default.Warning, null, tint=androidx.compose.ui.graphics.Color.White.copy(0.7f), modifier=Modifier.size(28.dp))
-                    }
-                }
-            }
-            item { Spacer(Modifier.height(4.dp)) }
-
     val lowStock by vm.lowStockProducts.collectAsState()
     val context  = LocalContext.current
 
@@ -80,6 +65,24 @@ fun LowStockScreen(
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+            item {
+                Box(Modifier.fillMaxWidth()
+                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(DT.Teal, androidx.compose.ui.graphics.Color(0xFF004D40))))
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Low Stock", color = androidx.compose.ui.graphics.Color.White,
+                                fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                            Text("Items needing reorder", color = androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize = 12.sp)
+                        }
+                        Icon(Icons.Default.Warning, null,
+                            tint = androidx.compose.ui.graphics.Color.White.copy(0.7f),
+                            modifier = Modifier.size(28.dp))
+                    }
+                }
+            }
+
                     items(lowStock, key = { it.id }) { product ->
                         LowStockCard(
                             product = product,

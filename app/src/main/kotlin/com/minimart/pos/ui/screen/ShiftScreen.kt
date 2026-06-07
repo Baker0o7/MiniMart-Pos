@@ -37,21 +37,6 @@ fun ShiftScreen(
     onBack: () -> Unit,
     vm: ShiftViewModel = hiltViewModel()
 ) {
-            item {
-                Box(Modifier.fillMaxWidth()
-                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(DT.Teal, androidx.compose.ui.graphics.Color(0xFF004D40))))
-                    .padding(start=20.dp, end=20.dp, top=12.dp, bottom=20.dp)) {
-                    Row(verticalAlignment=Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Shift Management", color=androidx.compose.ui.graphics.Color.White, fontWeight=FontWeight.ExtraBold, fontSize=22.sp)
-                            Text("Clock in & track cash", color=androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize=12.sp)
-                        }
-                        Icon(Icons.Default.Schedule, null, tint=androidx.compose.ui.graphics.Color.White.copy(0.7f), modifier=Modifier.size(28.dp))
-                    }
-                }
-            }
-            item { Spacer(Modifier.height(4.dp)) }
-
     val state by vm.uiState.collectAsState()
     var showClockInDialog by remember { mutableStateOf(false) }
     var showClockOutDialog by remember { mutableStateOf(false) }
@@ -81,6 +66,24 @@ fun ShiftScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item {
+                Box(Modifier.fillMaxWidth()
+                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(DT.Teal, androidx.compose.ui.graphics.Color(0xFF004D40))))
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Shift Management", color = androidx.compose.ui.graphics.Color.White,
+                                fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                            Text("Clock in & track cash", color = androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize = 12.sp)
+                        }
+                        Icon(Icons.Default.Schedule, null,
+                            tint = androidx.compose.ui.graphics.Color.White.copy(0.7f),
+                            modifier = Modifier.size(28.dp))
+                    }
+                }
+            }
+
             // ── Active shift card ──
             item {
                 state.activeShift?.let { shift ->
