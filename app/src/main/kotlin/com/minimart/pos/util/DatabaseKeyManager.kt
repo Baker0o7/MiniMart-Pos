@@ -75,11 +75,15 @@ class DatabaseKeyManager @Inject constructor(
                 rawKey
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Key operation failed — regenerating", e)
-            // If key is corrupted, wipe and regenerate
-            // (this means existing data is unrecoverable — acceptable for fresh install)
-            prefs.edit().clear().apply()
-            getOrCreateKey()
+            Log.e(TAG, "Key operation failed — using fallback key", e)
+            // Fallback: derive a device-stable key from Android ID
+            // Not hardware-backed but prevents crash on devices where Keystore fails
+            val androidId = android.provider.Settings.Secure.getString(
+                context.contentResolver, android.provider.Settings.Secure.ANDROID_ID
+            ) ?: "minimart_fallback"
+            val digest = java.security.MessageDigest.getInstance("SHA-256")
+                .digest("minimart_db_$androidId".toByteArray(Charsets.UTF_8))
+            digest // 32 bytes
         }
     }
 

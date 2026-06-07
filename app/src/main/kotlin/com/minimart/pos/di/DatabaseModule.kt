@@ -25,10 +25,27 @@ object DatabaseModule {
         callback: DatabaseCallback,
         keyManager: DatabaseKeyManager
     ): AppDatabase {
-        // Get or create the AES-256 key (managed by Android Keystore)
-        val keyBytes    = keyManager.getOrCreateKey()
-        val factory     = SupportFactory(keyBytes)
-        // Wipe key bytes from memory after handing to factory
+        // If an unencrypted DB exists from a previous install, delete it first.
+        // SQLCipher cannot open a plain SQLite file — it throws before Room
+        // can run fallbackToDestructiveMigration().
+        val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
+        if (dbFile.exists()) {
+            try {
+                // Quick check: SQLite plain files start with "SQLite format 3\000"
+                val header = ByteArray(16)
+                dbFile.inputStream().use { it.read(header) }
+                val plainMagic = "SQLite format 3\u0000".toByteArray(Charsets.UTF_8)
+                if (header.take(16) == plainMagic.toList()) {
+                    android.util.Log.w("DatabaseModule", "Deleting unencrypted DB — migrating to SQLCipher")
+                    dbFile.delete()
+                    context.getDatabasePath("${AppDatabase.DATABASE_NAME}-shm").delete()
+                    context.getDatabasePath("${AppDatabase.DATABASE_NAME}-wal").delete()
+                }
+            } catch (_: Exception) { /* if check fails, let Room handle it */ }
+        }
+
+        val keyBytes = keyManager.getOrCreateKey()
+        val factory  = SupportFactory(keyBytes)
         keyBytes.fill(0)
 
         return Room.databaseBuilder(
