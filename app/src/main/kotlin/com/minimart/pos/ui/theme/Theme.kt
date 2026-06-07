@@ -65,7 +65,7 @@ fun MiniMartTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
+            val window = (view.context as? android.app.Activity)?.window ?: return@SideEffect
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

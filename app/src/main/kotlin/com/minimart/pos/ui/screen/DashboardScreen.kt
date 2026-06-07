@@ -415,7 +415,7 @@ private fun BoxScope.DashBadge(onRemove: () -> Unit) {
 @Composable
 private fun MiniLineChart(data: List<Float>, color: Color, modifier: Modifier = Modifier) {
     Canvas(modifier) {
-        if (data.size < 2) return@Canvas
+        if (data.size < 2 || data.isEmpty()) return@Canvas
         val w = size.width; val h = size.height; val max = data.maxOrNull() ?: 1f
         val pts = data.mapIndexed { i, v -> Offset(i * w / (data.size - 1), h - (v / max) * h * 0.85f) }
         val fill = Path().apply { moveTo(pts.first().x, h); pts.forEach { lineTo(it.x, it.y) }; lineTo(pts.last().x, h); close() }

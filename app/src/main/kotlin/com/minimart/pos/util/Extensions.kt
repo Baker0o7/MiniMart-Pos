@@ -43,11 +43,11 @@ fun todayStartMs(): Long {
 fun Context.vibrateShort() {
     try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vm = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            val vm = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager ?: return
             vm.defaultVibrator.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             @Suppress("DEPRECATION")
-            val v = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            val v = getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 v.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
             } else {

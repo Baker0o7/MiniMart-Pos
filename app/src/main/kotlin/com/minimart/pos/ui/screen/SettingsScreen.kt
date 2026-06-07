@@ -455,7 +455,7 @@ fun SettingsScreen(
                                 if (result is PrintResult.Success) {
                                     settingsRepo.setPrinterAddress(device.address, device.name ?: "Printer")
                                     printerStatus = "✓ Connected to ${device.name}"
-                                } else printerStatus = (result as PrintResult.Error).message
+                                } else printerStatus = (result as? PrintResult.Error)?.message ?: "Error"
                             }
                         }, modifier = Modifier.fillMaxWidth()) {
                             Icon(Icons.Default.Print, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
