@@ -24,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.minimart.pos.data.entity.Shift
 import com.minimart.pos.data.entity.ShiftStatus
 import com.minimart.pos.ui.theme.Brand500
+import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.theme.ErrorRed
 import com.minimart.pos.ui.theme.SuccessGreen
 import com.minimart.pos.ui.viewmodel.ShiftViewModel
