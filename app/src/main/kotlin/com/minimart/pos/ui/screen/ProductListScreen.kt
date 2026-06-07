@@ -43,6 +43,21 @@ fun ProductListScreen(
     canEditPrices: Boolean = true,
     vm: ProductViewModel = hiltViewModel()
 ) {
+            item {
+                Box(Modifier.fillMaxWidth()
+                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(DT.Teal, androidx.compose.ui.graphics.Color(0xFF004D40))))
+                    .padding(start=20.dp, end=20.dp, top=12.dp, bottom=20.dp)) {
+                    Row(verticalAlignment=Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Products", color=androidx.compose.ui.graphics.Color.White, fontWeight=FontWeight.ExtraBold, fontSize=22.sp)
+                            Text("Manage your catalogue", color=androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize=12.sp)
+                        }
+                        Icon(Icons.Default.Inventory2, null, tint=androidx.compose.ui.graphics.Color.White.copy(0.7f), modifier=Modifier.size(28.dp))
+                    }
+                }
+            }
+            item { Spacer(Modifier.height(4.dp)) }
+
     val products by vm.products.collectAsState()
     val categories by vm.categories.collectAsState()
     val selectedCat by vm.selectedCategory.collectAsState()

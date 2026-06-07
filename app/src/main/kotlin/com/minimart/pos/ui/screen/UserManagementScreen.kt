@@ -52,6 +52,21 @@ class UserManagementViewModel @Inject constructor(
     private val userRepo: UserRepository,
     private val settingsRepo: SettingsRepository
 ) : ViewModel() {
+            item {
+                Box(Modifier.fillMaxWidth()
+                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(DT.Teal, androidx.compose.ui.graphics.Color(0xFF004D40))))
+                    .padding(start=20.dp, end=20.dp, top=12.dp, bottom=20.dp)) {
+                    Row(verticalAlignment=Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Staff", color=androidx.compose.ui.graphics.Color.White, fontWeight=FontWeight.ExtraBold, fontSize=22.sp)
+                            Text("Manage team access", color=androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize=12.sp)
+                        }
+                        Icon(Icons.Default.People, null, tint=androidx.compose.ui.graphics.Color.White.copy(0.7f), modifier=Modifier.size(28.dp))
+                    }
+                }
+            }
+            item { Spacer(Modifier.height(4.dp)) }
+
 
     private val _state = MutableStateFlow(UserMgmtState())
     val state: StateFlow<UserMgmtState> = _state.asStateFlow()
