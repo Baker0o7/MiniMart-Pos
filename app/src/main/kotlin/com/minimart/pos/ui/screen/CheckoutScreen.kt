@@ -671,7 +671,7 @@ private fun CustomerSearchSheet(
                             }, modifier = Modifier.weight(1f),
                                 enabled = newName.isNotBlank(),
                                 shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
+                                colors = ButtonDefaults.buttonColors(containerColor = DT.Green)) {
                                 Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
                                 Text("Save & Select", color = Color.White, fontSize = 13.sp)

@@ -343,8 +343,8 @@ private fun AddCustomerDialog(customer: Customer?, onDismiss: () -> Unit, onSave
                 totalPurchases = customer?.totalPurchases ?: 0.0,
                 visitCount = customer?.visitCount ?: 0)) },
                 enabled = name.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal),
-                shape = RoundedCornerShape(12.dp)) { Text("Save", color = Color.White) }
+                colors = ButtonDefaults.buttonColors(containerColor = DT.Green),
+                shape = RoundedCornerShape(12.dp)) { Text("Save", color = Color.White, fontWeight = FontWeight.Bold) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
     )
@@ -392,7 +392,7 @@ internal fun AddCreditDialog(customer: Customer, onDismiss: () -> Unit, onAdd: (
         confirmButton = {
             Button(onClick = { onAdd(amount.toDoubleOrNull() ?: 0.0, notes.trim()) },
                 enabled = (amount.toDoubleOrNull() ?: 0.0) > 0,
-                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal),
+                colors = ButtonDefaults.buttonColors(containerColor = DT.Green),
                 shape = RoundedCornerShape(12.dp)) { Text("Add Credit", color = Color.White) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }

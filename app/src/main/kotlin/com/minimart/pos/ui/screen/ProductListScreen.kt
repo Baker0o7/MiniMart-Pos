@@ -322,7 +322,7 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                         batchNumber = batchNumber.trim(), expiryDate = expiryMs))
                 },
                 enabled = barcode.isNotBlank() && name.isNotBlank() && price.toDoubleOrNull() != null,
-                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
+                colors = ButtonDefaults.buttonColors(containerColor = DT.Green)
             ) { Text("Save") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }

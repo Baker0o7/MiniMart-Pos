@@ -365,7 +365,7 @@ private fun ChangePinDialog(userName: String, onDismiss: () -> Unit, onSave: (St
             Button(
                 onClick = { onSave(newPin) },
                 enabled = pinsMatch,
-                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
+                colors = ButtonDefaults.buttonColors(containerColor = DT.Green)
             ) { Text("Save") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
