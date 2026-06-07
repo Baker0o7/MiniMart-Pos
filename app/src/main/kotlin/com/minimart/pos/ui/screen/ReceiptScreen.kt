@@ -113,7 +113,7 @@ fun ReceiptScreen(
                 Text(statusLabel(sale?.status), color = statusColor(sale?.status),
                     fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
 
-                Text("Receipt ${sale?.receiptNumber ?: "#$saleId"}  •  ${sale?.createdAt?.let { df.format(Date(it)) } ?: ""}",
+                Text("Receipt #${sale?.receiptNumber ?: saleId}",
                     color = DT.SubText, style = MaterialTheme.typography.bodySmall)
 
                 // Status badge for voided/refunded
@@ -127,30 +127,121 @@ fun ReceiptScreen(
                     sale?.notes?.let { if (it.isNotBlank()) Text("Reason: $it", color = DT.SubText, style = MaterialTheme.typography.labelSmall) }
                 }
 
-                // ── Items summary ─────────────────────────────────────────────
+                // ── Receipt card ─────────────────────────────────────────────
                 if (items.isNotEmpty()) {
-                    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                        .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(16.dp)).padding(14.dp)) {
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("Order Summary", color = DT.OnSurface, fontWeight = FontWeight.Bold)
+                    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
+                        .background(androidx.compose.ui.graphics.Brush.verticalGradient(
+                            listOf(DT.Surface, DT.Surface2)))
+                        .border(1.dp, DT.Border, RoundedCornerShape(20.dp))) {
+                        Column(modifier = Modifier.padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                            // Store header
+                            Column(modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(storeName, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                                Text("TAX RECEIPT", color = DT.Teal, fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                            }
+                            Spacer(Modifier.height(10.dp))
                             HorizontalDivider(color = DT.Border)
-                            items.forEach { item ->
-                                Row(modifier = Modifier.fillMaxWidth()) {
-                                    Text("${item.productName} ×${item.quantity}",
-                                        color = DT.OnSurface, modifier = Modifier.weight(1f),
-                                        style = MaterialTheme.typography.bodySmall)
-                                    Text("$currency ${String.format("%.2f", item.unitPrice * item.quantity)}",
-                                        color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                            Spacer(Modifier.height(10.dp))
+                            // Cashier + date
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Column(Modifier.weight(1f)) {
+                                    Text("Cashier", color = DT.SubText, fontSize = 10.sp)
+                                    Text(cashierName.ifBlank { "Admin" }, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text("Date", color = DT.SubText, fontSize = 10.sp)
+                                    Text(sale?.createdAt?.let { java.text.SimpleDateFormat("dd/MM/yy HH:mm", java.util.Locale.getDefault()).format(java.util.Date(it)) } ?: "", color = Color.White, fontSize = 12.sp)
                                 }
                             }
+                            Spacer(Modifier.height(10.dp))
                             HorizontalDivider(color = DT.Border)
+                            Spacer(Modifier.height(10.dp))
+                            // Header row
                             Row(modifier = Modifier.fillMaxWidth()) {
-                                Text("TOTAL", color = DT.OnSurface, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                                Text("$currency ${String.format("%.2f", sale?.totalAmount ?: 0.0)}",
-                                    color = DT.Teal, fontWeight = FontWeight.Bold)
+                                Text("ITEM", color = DT.SubText, fontSize = 10.sp, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
+                                Text("QTY", color = DT.SubText, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
+                                Spacer(Modifier.width(16.dp))
+                                Text("AMOUNT", color = DT.SubText, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
                             }
+                            Spacer(Modifier.height(6.dp))
+                            // Items
+                            items.forEach { item ->
+                                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically) {
+                                    Column(Modifier.weight(1f)) {
+                                        Text(item.productName, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                        Text("@ $currency ${String.format("%.2f", item.unitPrice)}", color = DT.SubText, fontSize = 10.sp)
+                                    }
+                                    Text("×${item.quantity}", color = DT.SubText, fontSize = 12.sp)
+                                    Spacer(Modifier.width(16.dp))
+                                    Text("$currency ${String.format("%.2f", item.unitPrice * item.quantity)}",
+                                        color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            HorizontalDivider(color = DT.Teal.copy(0.3f), thickness = 1.5.dp)
+                            Spacer(Modifier.height(10.dp))
+                            // Totals
+                            sale?.discountAmount?.let { disc ->
+                                if (disc > 0) {
+                                    Row(modifier = Modifier.fillMaxWidth()) {
+                                        Text("Discount", color = DT.Amber, modifier = Modifier.weight(1f), fontSize = 13.sp)
+                                        Text("- $currency ${String.format("%.2f", disc)}", color = DT.Amber, fontSize = 13.sp)
+                                    }
+                                    Spacer(Modifier.height(4.dp))
+                                }
+                            }
+                            sale?.taxAmount?.let { tax ->
+                                if (tax > 0) {
+                                    Row(modifier = Modifier.fillMaxWidth()) {
+                                        Text("VAT (incl.)", color = DT.SubText, modifier = Modifier.weight(1f), fontSize = 12.sp)
+                                        Text("$currency ${String.format("%.2f", tax)}", color = DT.SubText, fontSize = 12.sp)
+                                    }
+                                    Spacer(Modifier.height(6.dp))
+                                }
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text("TOTAL", color = Color.White, fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 18.sp, modifier = Modifier.weight(1f), letterSpacing = 1.sp)
+                                Text("$currency ${String.format("%.2f", sale?.totalAmount ?: 0.0)}",
+                                    color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                            }
+                            sale?.changeGiven?.let { change ->
+                                if (change > 0) {
+                                    Spacer(Modifier.height(4.dp))
+                                    Row(modifier = Modifier.fillMaxWidth()) {
+                                        Text("Change", color = DT.Green, modifier = Modifier.weight(1f), fontSize = 13.sp)
+                                        Text("$currency ${String.format("%.2f", change)}", color = DT.Green, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                            Spacer(Modifier.height(10.dp))
+                            HorizontalDivider(color = DT.Border)
+                            Spacer(Modifier.height(10.dp))
+                            // Payment method badge
                             sale?.paymentMethod?.let { pm ->
-                                Text("Paid via ${pm.name}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Payment", color = DT.SubText, fontSize = 12.sp)
+                                    Box(modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                        .background(DT.Teal.copy(0.15f))
+                                        .border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 12.dp, vertical = 4.dp)) {
+                                        Text(pm.name, color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    }
+                                }
+                            }
+                            if (footerMessage.isNotBlank()) {
+                                Spacer(Modifier.height(10.dp))
+                                HorizontalDivider(color = DT.Border)
+                                Spacer(Modifier.height(8.dp))
+                                Text(footerMessage, color = DT.SubText, fontSize = 11.sp,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth())
                             }
                         }
                     }
@@ -159,8 +250,12 @@ fun ReceiptScreen(
                 HorizontalDivider(color = DT.Border)
 
                 // ── Share / PDF row ───────────────────────────────────────────
-                Text("Share Receipt", color = DT.OnSurface, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.fillMaxWidth())
+                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Share, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Share Receipt", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     ReceiptActionBtn(Modifier.weight(1f), Icons.Default.PictureAsPdf, "PDF", DT.Red, isGeneratingPdf) {
