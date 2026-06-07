@@ -24,39 +24,39 @@ object DatabaseModule {
         @ApplicationContext context: Context,
         callback: DatabaseCallback,
         keyManager: DatabaseKeyManager
+    ): AppDatabase = buildDatabase(context, callback, keyManager, retryOnFailure = true)
+
+    private fun buildDatabase(
+        context: Context,
+        callback: DatabaseCallback,
+        keyManager: DatabaseKeyManager,
+        retryOnFailure: Boolean
     ): AppDatabase {
-        // If an unencrypted DB exists from a previous install, delete it first.
-        // SQLCipher cannot open a plain SQLite file — it throws before Room
-        // can run fallbackToDestructiveMigration().
-        val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
-        if (dbFile.exists()) {
-            try {
-                // Quick check: SQLite plain files start with "SQLite format 3\000"
-                val header = ByteArray(16)
-                dbFile.inputStream().use { it.read(header) }
-                val plainMagic = "SQLite format 3\u0000".toByteArray(Charsets.UTF_8)
-                if (header.take(16) == plainMagic.toList()) {
-                    android.util.Log.w("DatabaseModule", "Deleting unencrypted DB — migrating to SQLCipher")
-                    dbFile.delete()
-                    context.getDatabasePath("${AppDatabase.DATABASE_NAME}-shm").delete()
-                    context.getDatabasePath("${AppDatabase.DATABASE_NAME}-wal").delete()
+        return try {
+            val keyBytes = keyManager.getOrCreateKey()
+            val factory  = SupportFactory(keyBytes)
+            keyBytes.fill(0)
+            Room.databaseBuilder(context, AppDatabase::class.java, AppDatabase.DATABASE_NAME)
+                .fallbackToDestructiveMigration()
+                .addCallback(callback)
+                .openHelperFactory(factory)
+                .build()
+                .also {
+                    // Force open to trigger any exception NOW rather than on first query
+                    it.openHelper.writableDatabase
                 }
-            } catch (_: Exception) { /* if check fails, let Room handle it */ }
+        } catch (e: Exception) {
+            android.util.Log.e("DatabaseModule", "DB open failed (${e.message}) — wiping and rebuilding", e)
+            if (retryOnFailure) {
+                // Wipe all DB files and retry once with a fresh encrypted DB
+                listOf("", "-shm", "-wal", "-journal").forEach { suffix ->
+                    context.getDatabasePath("${AppDatabase.DATABASE_NAME}$suffix").delete()
+                }
+                buildDatabase(context, callback, keyManager, retryOnFailure = false)
+            } else {
+                throw e
+            }
         }
-
-        val keyBytes = keyManager.getOrCreateKey()
-        val factory  = SupportFactory(keyBytes)
-        keyBytes.fill(0)
-
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            AppDatabase.DATABASE_NAME
-        )
-            .fallbackToDestructiveMigration()
-            .addCallback(callback)
-            .openHelperFactory(factory)
-            .build()
     }
 
     @Provides fun provideProductDao(db: AppDatabase): ProductDao = db.productDao()
