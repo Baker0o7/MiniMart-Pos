@@ -279,7 +279,7 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onSave: (Expense) -> Unit) {
                 enabled = title.isNotBlank() && (amount.toDoubleOrNull() ?: 0.0) > 0,
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) { Text("Save") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
     )
 }
 

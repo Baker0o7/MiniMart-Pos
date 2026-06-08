@@ -345,7 +345,7 @@ private fun ClockOutDialog(onDismiss: () -> Unit, onClockOut: (Double, String) -
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
             ) { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = Color.White, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("End Shift", color = Color.White, fontWeight = FontWeight.Bold) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
     )
 }
 

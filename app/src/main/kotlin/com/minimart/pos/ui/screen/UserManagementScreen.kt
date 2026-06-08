@@ -334,7 +334,7 @@ private fun AddUserDialog(onDismiss: () -> Unit, onAdd: (String, String, String,
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
             ) { Text("Add User") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
     )
 }
 
@@ -365,10 +365,17 @@ private fun ChangePinDialog(userName: String, onDismiss: () -> Unit, onSave: (St
             Button(
                 onClick = { onSave(newPin) },
                 enabled = pinsMatch,
-                colors = ButtonDefaults.buttonColors(containerColor = DT.Green)
-            ) { Text("Save") }
+                colors = ButtonDefaults.buttonColors(
+                containerColor = DT.Green, contentColor = Color.White,
+                disabledContainerColor = DT.Green.copy(0.45f), disabledContentColor = Color.White.copy(0.7f)
+            )
+            ) {
+                Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Save", fontWeight = FontWeight.ExtraBold)
+            }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
     )
 }
 

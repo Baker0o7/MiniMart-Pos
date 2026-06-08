@@ -420,7 +420,7 @@ private fun ReasonDialog(title: String, subtitle: String, color: Color,
                 Text("Confirm", color = if (color == DT.Red) Color.White else Color.Black, fontWeight = FontWeight.Bold)
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } })
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } })
 }
 
 private fun statusColor(status: SaleStatus?) = when (status) {

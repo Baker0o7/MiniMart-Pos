@@ -322,10 +322,26 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                         batchNumber = batchNumber.trim(), expiryDate = expiryMs))
                 },
                 enabled = barcode.isNotBlank() && name.isNotBlank() && price.toDoubleOrNull() != null,
-                colors = ButtonDefaults.buttonColors(containerColor = DT.Green)
-            ) { Text("Save") }
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = DT.Green,
+                    contentColor = Color.White,
+                    disabledContainerColor = DT.Green.copy(0.45f),
+                    disabledContentColor = Color.White.copy(0.7f)
+                )
+            ) {
+                Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Save", fontWeight = FontWeight.ExtraBold)
+            }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)
+            ) { Text("Cancel", color = DT.SubText) }
+        }
     )
 }
 

@@ -350,6 +350,6 @@ private fun StockAdjustDialog(product: Product, onDismiss: () -> Unit, onAdjust:
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
             ) { Text("Confirm") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
     )
 }
