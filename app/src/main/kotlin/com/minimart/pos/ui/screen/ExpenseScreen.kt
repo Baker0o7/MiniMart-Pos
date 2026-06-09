@@ -122,58 +122,99 @@ fun ExpenseScreen(onBack: () -> Unit, vm: ExpenseViewModel = hiltViewModel()) {
 @Composable
 private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
     margin: Double, byCategory: Map<ExpenseCategory, Double>, currency: String) {
+    val maxCat = byCategory.values.maxOrNull() ?: 1.0
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // Revenue + Expenses side by side with line charts
+        // Revenue + Expenses side by side
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                // Revenue card
-                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp))
-                    .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(16.dp)).padding(16.dp)) {
+                // Revenue card — green tint
+                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
+                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(Color(0xFF0B2210), Color(0xFF060E08))))
+                    .border(1.dp, DT.Green.copy(0.25f), RoundedCornerShape(18.dp)).padding(14.dp)) {
                     Column {
-                        Text("Revenue", color = DT.OnSurface, fontWeight = FontWeight.Bold)
-                        Text("$currency ${String.format("%.2f", revenue)}", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
-                        Spacer(Modifier.height(12.dp))
-                        LineChart(listOf(0.3f,0.5f,0.8f,0.6f,1.0f), DT.Teal, modifier = Modifier.fillMaxWidth().height(60.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.TrendingUp, null, tint = DT.Green, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Revenue", color = DT.SubText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text("$currency ${String.format("%.2f", revenue)}",
+                            color = DT.Green, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
+                        Spacer(Modifier.height(10.dp))
+                        LineChart(listOf(0.3f,0.5f,0.8f,0.6f,1.0f), DT.Green, modifier = Modifier.fillMaxWidth().height(48.dp))
                     }
                 }
-                // Expenses card
-                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(16.dp))
-                    .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(16.dp)).padding(16.dp)) {
+                // Expenses card — red tint
+                Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
+                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(Color(0xFF220B0B), Color(0xFF0E0606))))
+                    .border(1.dp, DT.Red.copy(0.25f), RoundedCornerShape(18.dp)).padding(14.dp)) {
                     Column {
-                        Text("Expenses", color = DT.OnSurface, fontWeight = FontWeight.Bold)
-                        Text("$currency ${String.format("%.2f", expenses)}", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
-                        Spacer(Modifier.height(12.dp))
-                        LineChart(listOf(0.2f,0.6f,0.4f,0.9f,0.7f), DT.Red, modifier = Modifier.fillMaxWidth().height(60.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.TrendingDown, null, tint = DT.Red, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Expenses", color = DT.SubText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Text("$currency ${String.format("%.2f", expenses)}",
+                            color = DT.Red, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
+                        Spacer(Modifier.height(10.dp))
+                        LineChart(listOf(0.2f,0.6f,0.4f,0.9f,0.7f), DT.Red, modifier = Modifier.fillMaxWidth().height(48.dp))
                     }
                 }
             }
         }
         // Net Profit card
         item {
-            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(16.dp)).padding(20.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            val profitColor = if (netProfit >= 0) DT.Green else DT.Red
+            val profitBg    = if (netProfit >= 0) Color(0xFF0B2210) else Color(0xFF220B0B)
+            val profitBorder= if (netProfit >= 0) DT.Green.copy(0.25f) else DT.Red.copy(0.25f)
+            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+                .background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(profitBg, DT.Surface)))
+                .border(1.dp, profitBorder, RoundedCornerShape(18.dp)).padding(18.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically) {
                     Column {
-                        Text("Net Profit", color = DT.SubText, fontWeight = FontWeight.SemiBold)
+                        Text("Net Profit", color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(4.dp))
                         Text("${if (netProfit >= 0) "+" else ""}$currency ${String.format("%.2f", netProfit)}",
-                            color = if (netProfit >= 0) DT.Green else DT.Red, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
+                            color = profitColor, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
                     }
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("Margin", color = DT.SubText, fontWeight = FontWeight.SemiBold)
+                        Text("Margin", color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(4.dp))
-                        Text("${String.format("%.1f", margin)}%", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                        Text("${String.format("%.1f", margin)}%",
+                            color = profitColor, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
                     }
                 }
             }
         }
         if (byCategory.isNotEmpty()) {
-            item { Text("By Category", color = DT.OnSurface, fontWeight = FontWeight.Bold) }
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.BarChart, null, tint = DT.Red, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("By Category", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                }
+            }
             items(byCategory.entries.sortedByDescending { it.value }.toList()) { (cat, amount) ->
-                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(12.dp)).padding(12.dp)) {
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                        Text("${cat.toEmoji()} ${cat.name}", color = DT.OnSurface)
-                        Text("$currency ${String.format("%.2f", amount)}", color = DT.Red, fontWeight = FontWeight.Bold)
+                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                    .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(14.dp)).padding(14.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Text("${cat.toEmoji()} ${cat.name.replace("_", " ")}", color = Color.White, fontWeight = FontWeight.SemiBold)
+                            Text("$currency ${String.format("%.2f", amount)}", color = DT.Red, fontWeight = FontWeight.Bold)
+                        }
+                        // Progress bar
+                        Box(modifier = Modifier.fillMaxWidth().height(4.dp)
+                            .clip(RoundedCornerShape(2.dp)).background(DT.Border)) {
+                            Box(modifier = Modifier.fillMaxWidth((amount / maxCat).toFloat().coerceIn(0f, 1f))
+                                .height(4.dp).clip(RoundedCornerShape(2.dp)).background(DT.Red.copy(0.7f)))
+                        }
                     }
                 }
             }
@@ -277,7 +318,15 @@ private fun AddExpenseDialog(onDismiss: () -> Unit, onSave: (Expense) -> Unit) {
         confirmButton = {
             Button(onClick = { onSave(Expense(title = title.trim(), amount = amount.toDoubleOrNull() ?: 0.0, category = category, supplierName = supplierName, notes = notes)) },
                 enabled = title.isNotBlank() && (amount.toDoubleOrNull() ?: 0.0) > 0,
-                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) { Text("Save") }
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = DT.Green, contentColor = Color.White,
+                    disabledContainerColor = DT.Green.copy(0.45f), disabledContentColor = Color.White.copy(0.7f)
+                )) {
+                Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Save", fontWeight = FontWeight.ExtraBold)
+            }
         },
         dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
     )
