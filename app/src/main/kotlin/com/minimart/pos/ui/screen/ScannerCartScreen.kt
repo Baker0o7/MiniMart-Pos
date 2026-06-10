@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,6 +19,8 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,6 +67,9 @@ fun ScannerCartScreen(
     var showScanner by remember { mutableStateOf(false) }
     var continuousScan by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
+    var scanCount by remember { mutableIntStateOf(0) }
+    var showScanFlash by remember { mutableStateOf(false) }
+    val flashAlpha by animateFloatAsState(if (showScanFlash) 0.35f else 0f, animationSpec = tween(150), label = "flash")
     val searchResults: List<Product> by searchVm.results.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
@@ -187,9 +193,26 @@ fun ScannerCartScreen(
                         onBarcodeDetected = {
                             context.vibrateShort(); vm.processBarcode(it)
                             searchText = ""; searchVm.clear()
+                            scanCount++
+                            showScanFlash = true
+                            kotlinx.coroutines.MainScope().launch {
+                                kotlinx.coroutines.delay(150); showScanFlash = false
+                            }
                             if (!continuousScan) showScanner = false
                         })
                     ScannerOverlay(modifier = Modifier.fillMaxSize())
+                    // Green flash overlay on scan
+                    if (flashAlpha > 0f)
+                        Box(Modifier.fillMaxSize().background(DT.Green.copy(flashAlpha)))
+                    // Scan count badge
+                    if (scanCount > 0)
+                        Box(modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(DT.Teal.copy(0.85f))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)) {
+                            Text("$scanCount scanned", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    // Close button
                     IconButton(onClick = { showScanner = false },
                         modifier = Modifier.align(Alignment.TopEnd).padding(6.dp)) {
                         Box(Modifier.size(26.dp).clip(CircleShape).background(Color.Black.copy(0.6f)),
