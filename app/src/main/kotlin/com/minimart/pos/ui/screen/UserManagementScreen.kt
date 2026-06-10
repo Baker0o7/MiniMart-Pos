@@ -331,8 +331,16 @@ private fun AddUserDialog(onDismiss: () -> Unit, onAdd: (String, String, String,
             Button(
                 onClick = { onAdd(username, displayName, pin, role) },
                 enabled = username.isNotBlank() && displayName.isNotBlank() && pinsMatch,
-                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
-            ) { Text("Add User") }
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = DT.Green, contentColor = Color.White,
+                    disabledContainerColor = DT.Green.copy(0.45f), disabledContentColor = Color.White.copy(0.7f)
+                )
+            ) {
+                Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Add User", fontWeight = FontWeight.ExtraBold)
+            }
         },
         dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
     )
