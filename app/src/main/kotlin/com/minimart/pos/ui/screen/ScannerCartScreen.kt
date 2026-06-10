@@ -70,6 +70,10 @@ fun ScannerCartScreen(
     var scanCount by remember { mutableIntStateOf(0) }
     var showScanFlash by remember { mutableStateOf(false) }
     val flashAlpha by animateFloatAsState(if (showScanFlash) 0.35f else 0f, animationSpec = tween(150), label = "flash")
+    LaunchedEffect(scanCount) {
+        if (showScanFlash) { kotlinx.coroutines.delay(150); showScanFlash = false }
+    }
+
     val scanScope = rememberCoroutineScope()
     val searchResults: List<Product> by searchVm.results.collectAsState()
 
@@ -196,9 +200,6 @@ fun ScannerCartScreen(
                             searchText = ""; searchVm.clear()
                             scanCount++
                             showScanFlash = true
-                            scanScope.launch {
-                                kotlinx.coroutines.delay(150); showScanFlash = false
-                            }
                             if (!continuousScan) showScanner = false
                         })
                     ScannerOverlay(modifier = Modifier.fillMaxSize())
