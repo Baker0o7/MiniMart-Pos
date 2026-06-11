@@ -33,6 +33,11 @@ import androidx.navigation.navArgument
 import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.printer.ThermalPrinter
 import com.minimart.pos.ui.screen.*
+import com.minimart.pos.util.RoleManager
+import com.minimart.pos.util.SessionManager
+import com.minimart.pos.util.AuditLogger
+import com.minimart.pos.data.entity.UserRole
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.minimart.pos.ui.viewmodel.AuthViewModel
 import com.minimart.pos.ui.viewmodel.CartViewModel
 import com.minimart.pos.util.RoleManager
@@ -75,7 +80,17 @@ fun MiniMartNavGraph(
 ) {
     val navController = rememberNavController()
     val authVm: AuthViewModel = hiltViewModel()
+    val sessionVm: com.minimart.pos.ui.viewmodel.SessionViewModel = hiltViewModel()
     val authState by authVm.uiState.collectAsState()
+    val sessionExpired by sessionVm.sessionManager.isExpired.collectAsState()
+
+    // Auto-logout on session expiry
+    LaunchedEffect(sessionExpired) {
+        if (sessionExpired && authState.isLoggedIn) {
+            sessionVm.onSessionExpired(authState.currentUser?.username ?: "")
+            authVm.logout()
+        }
+    }
     val cartVm: CartViewModel = hiltViewModel()
 
     val storeName by settingsRepo.storeName.collectAsState("My MiniMart")
@@ -196,18 +211,23 @@ fun MiniMartNavGraph(
                 composable(Routes.SHIFTS)    { ShiftScreen(onBack = { navController.popBackStack() }) }
 
                 composable(Routes.SETTINGS) {
-                    SettingsScreen(
-                        onBack       = { navController.popBackStack() },
-                        onShifts     = { navController.navigate(Routes.SHIFTS) },
-                        onUsers      = { navController.navigate(Routes.USERS) },
-                        onLogout     = {
-                            authVm.logout()
-                            navController.navigate(Routes.LOGIN) { popUpTo(0) { inclusive = true } }
-                        },
-                        settingsRepo  = settingsRepo,
-                        printer       = printer,
-                        currentRole   = authState.currentUser?.role
-                    )
+                    AccessGuard(
+                        hasAccess = com.minimart.pos.util.RoleManager.canAccessSettings(authState.currentUser?.role),
+                        onBack = { navController.popBackStack() }
+                    ) {
+                        SettingsScreen(
+                            onBack       = { navController.popBackStack() },
+                            onShifts     = { navController.navigate(Routes.SHIFTS) },
+                            onUsers      = { navController.navigate(Routes.USERS) },
+                            onLogout     = {
+                                authVm.logout()
+                                navController.navigate(Routes.LOGIN) { popUpTo(0) { inclusive = true } }
+                            },
+                            settingsRepo  = settingsRepo,
+                            printer       = printer,
+                            currentRole   = authState.currentUser?.role
+                        )
+                    }
                 }
             }
         }
@@ -280,5 +300,21 @@ private fun RowScope.NavItem(icon: ImageVector, label: String, selected: Boolean
         Spacer(Modifier.height(2.dp))
         Text(label, color = iconTint, fontSize = 10.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
+    }
+}
+
+
+// ─── Role-based access guard ─────────────────────────────────────────────────
+@Composable
+private fun AccessGuard(
+    hasAccess: Boolean,
+    onBack: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    if (hasAccess) {
+        content()
+    } else {
+        // Bounce back and show snackbar (handled by caller)
+        LaunchedEffect(Unit) { onBack() }
     }
 }
