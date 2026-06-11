@@ -40,7 +40,6 @@ import com.minimart.pos.data.entity.UserRole
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.minimart.pos.ui.viewmodel.AuthViewModel
 import com.minimart.pos.ui.viewmodel.CartViewModel
-import com.minimart.pos.util.RoleManager
 
 object Routes {
     const val LOGIN     = "login"
