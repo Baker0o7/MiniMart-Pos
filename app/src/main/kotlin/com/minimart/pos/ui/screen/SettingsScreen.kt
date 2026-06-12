@@ -32,6 +32,7 @@ import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.printer.PrintResult
 import com.minimart.pos.printer.ThermalPrinter
 import com.minimart.pos.ui.theme.DT
+import com.minimart.pos.ui.viewmodel.SyncViewModel
 import com.minimart.pos.util.RoleManager
 import kotlinx.coroutines.launch
 
