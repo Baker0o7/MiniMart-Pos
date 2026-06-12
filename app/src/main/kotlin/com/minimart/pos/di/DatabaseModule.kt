@@ -1,6 +1,7 @@
 package com.minimart.pos.di
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.room.Room
 import com.minimart.pos.data.dao.*
 import com.minimart.pos.data.db.AppDatabase
@@ -36,4 +37,9 @@ object DatabaseModule {
     @Provides fun provideExpenseDao(db: AppDatabase): ExpenseDao = db.expenseDao()
     @Provides @Singleton fun provideShiftDao(db: AppDatabase): ShiftDao = db.shiftDao()
     @Provides @Singleton fun provideCustomerDao(db: AppDatabase) = db.customerDao()
+    @Provides @Singleton fun provideSyncDao(db: AppDatabase) = db.syncDao()
+
+    @Provides @Singleton
+    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences =
+        context.getSharedPreferences("minimart_sync_prefs", Context.MODE_PRIVATE)
 }

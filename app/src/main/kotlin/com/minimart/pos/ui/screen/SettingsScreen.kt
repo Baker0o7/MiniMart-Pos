@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    syncVm: SyncViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     onBack: () -> Unit,
     onShifts: () -> Unit,
     onUsers: () -> Unit,
