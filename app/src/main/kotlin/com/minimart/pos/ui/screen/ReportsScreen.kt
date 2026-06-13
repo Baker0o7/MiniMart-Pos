@@ -33,6 +33,23 @@ import com.minimart.pos.ui.viewmodel.ReportsViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
+            item {
+                Box(Modifier.fillMaxWidth()
+                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(DT.Teal, androidx.compose.ui.graphics.Color(0xFF004D40))))
+                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Reports", color = androidx.compose.ui.graphics.Color.White,
+                                fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                            Text("Analytics & P&L overview", color = androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize = 12.sp)
+                        }
+                        Icon(Icons.Default.BarChart, null,
+                            tint = androidx.compose.ui.graphics.Color.White.copy(0.7f),
+                            modifier = Modifier.size(28.dp))
+                    }
+                }
+            }
     val state by vm.uiState.collectAsState()
     val period by vm.period.collectAsState()
 
