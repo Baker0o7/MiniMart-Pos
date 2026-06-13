@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -134,7 +135,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                     .border(1.dp, DT.Green.copy(0.25f), RoundedCornerShape(18.dp)).padding(14.dp)) {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.TrendingUp, null, tint = DT.Green, modifier = Modifier.size(16.dp))
+                            Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = DT.Green, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
                             Text("Revenue", color = DT.SubText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
@@ -152,7 +153,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                     .border(1.dp, DT.Red.copy(0.25f), RoundedCornerShape(18.dp)).padding(14.dp)) {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.TrendingDown, null, tint = DT.Red, modifier = Modifier.size(16.dp))
+                            Icon(Icons.AutoMirrored.Filled.TrendingDown, null, tint = DT.Red, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
                             Text("Expenses", color = DT.SubText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }

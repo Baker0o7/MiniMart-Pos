@@ -20,8 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class SyncServer @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val syncDao: SyncDao,
-    private val gson: com.google.gson.Gson
+    private val syncDao: SyncDao
 ) {
     companion object {
         const val PORT       = 9876

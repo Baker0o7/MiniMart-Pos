@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -237,7 +238,7 @@ fun LoginScreen(
                                         }
                                     }, contentAlignment = Alignment.Center) {
                                     when (key) {
-                                        "⌫" -> Icon(Icons.Default.Backspace, null, tint = DT.Red, modifier = Modifier.size(20.dp))
+                                        "⌫" -> Icon(Icons.AutoMirrored.Filled.Backspace, null, tint = DT.Red, modifier = Modifier.size(20.dp))
                                         "✓" -> Icon(Icons.Default.Check, null, tint = DT.Green, modifier = Modifier.size(24.dp))
                                         else -> if (key.isNotEmpty()) Text(key, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, textAlign = TextAlign.Center)
                                     }
