@@ -45,24 +45,6 @@ import javax.inject.Inject
 class SalesHistoryViewModel @Inject constructor(
     private val saleRepo: SaleRepository
 ) : ViewModel() {
-            item {
-                Box(Modifier.fillMaxWidth()
-                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(
-                        listOf(DT.Teal, androidx.compose.ui.graphics.Color(0xFF004D40))))
-                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Sales History", color = androidx.compose.ui.graphics.Color.White,
-                                fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
-                            Text("Past transactions", color = androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize = 12.sp)
-                        }
-                        Icon(Icons.Default.History, null,
-                            tint = androidx.compose.ui.graphics.Color.White.copy(0.7f),
-                            modifier = Modifier.size(28.dp))
-                    }
-                }
-            }
-
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
 
