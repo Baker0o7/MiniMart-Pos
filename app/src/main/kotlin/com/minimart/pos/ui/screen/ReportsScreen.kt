@@ -33,6 +33,11 @@ import com.minimart.pos.ui.viewmodel.ReportsViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
+    val state by vm.uiState.collectAsState()
+    val period by vm.period.collectAsState()
+
+    Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
+        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
             item {
                 Box(Modifier.fillMaxWidth()
                     .background(androidx.compose.ui.graphics.Brush.verticalGradient(
@@ -50,11 +55,6 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                     }
                 }
             }
-    val state by vm.uiState.collectAsState()
-    val period by vm.period.collectAsState()
-
-    Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
-        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
 
             // ── Header ──
             item {
