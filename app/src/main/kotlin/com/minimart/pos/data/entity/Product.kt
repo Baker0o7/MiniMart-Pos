@@ -27,6 +27,10 @@ data class Product(
     @androidx.room.ColumnInfo(defaultValue = "0") val reorderQuantity: Int = 0,
     @androidx.room.ColumnInfo(defaultValue = "") val batchNumber: String = "",
     @androidx.room.ColumnInfo(defaultValue = "0") val expiryDate: Long = 0L,  // 0 = no expiry
+    // ── Weighing scale / PLU ─────────────────────────────────────────────
+    @androidx.room.ColumnInfo(defaultValue = "") val pluCode: String = "",
+    @androidx.room.ColumnInfo(defaultValue = "0") val isWeighed: Boolean = false,
+    @androidx.room.ColumnInfo(defaultValue = "0.0") val pricePerKg: Double = 0.0,
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
