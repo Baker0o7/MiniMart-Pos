@@ -319,7 +319,9 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                         category = category.ifBlank { "General" }, unit = unit.ifBlank { "pcs" },
                         supplierName = supplierName.trim(), supplierPhone = supplierPhone.trim(),
                         reorderQuantity = reorderQty.toIntOrNull() ?: 0,
-                        batchNumber = batchNumber.trim(), expiryDate = expiryMs))
+                        batchNumber = batchNumber.trim(), expiryDate = expiryMs,
+                        pluCode = pluCode.trim().padStart(5, '0'), isWeighed = isWeighed,
+                        pricePerKg = pricePerKg.toDoubleOrNull() ?: 0.0))
                 },
                 enabled = barcode.isNotBlank() && name.isNotBlank() && price.toDoubleOrNull() != null,
                 shape = RoundedCornerShape(12.dp),

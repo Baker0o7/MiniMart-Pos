@@ -374,7 +374,9 @@ private fun CartItemCard(
                 }
                 // Unit price + qty pill + delete
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("$currency ${String.format("%.2f", item.product.price)}/unit",
+                    Text(if (item.product.isWeighed && item.weightKg > 0)
+                        "${String.format("%.3f", item.weightKg)} kg @ $currency ${String.format("%.2f", item.product.pricePerKg)}/kg"
+                    else "$currency ${String.format("%.2f", item.product.price)}/unit",
                         color = DT.SubText, fontSize = 12.sp, modifier = Modifier.weight(1f))
                     // Qty pill (dark bg matching reference)
                     Box(modifier = Modifier.clip(RoundedCornerShape(50.dp))

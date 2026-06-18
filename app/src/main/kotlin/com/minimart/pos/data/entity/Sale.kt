@@ -68,17 +68,20 @@ data class SaleWithItems(
 data class CartItem(
     val product: Product,
     var quantity: Int = 1,
-    var discount: Double = 0.0
+    var discount: Double = 0.0,
+    // For weighed products: actual weight from PLU barcode
+    val weightKg: Double = 0.0
 ) {
     // ── Inclusive VAT (tax is already inside the selling price) ───────────────
-    // Total line before discount (price already includes VAT)
-    val lineSubtotal: Double get() = product.price * quantity
-    // VAT extracted from the inclusive price: tax = price - (price / (1 + rate))
+    val lineSubtotal: Double get() = if (product.isWeighed && weightKg > 0)
+        com.minimart.pos.util.PluDecoder.calculatePrice(product.pricePerKg, weightKg)
+    else product.price * quantity
     val lineTax: Double get() = if (product.taxRate > 0)
         lineSubtotal - (lineSubtotal / (1.0 + product.taxRate)) else 0.0
-    // Pre-tax (net) amount = subtotal - tax
     val lineNet: Double get() = lineSubtotal - lineTax
     val lineDiscount: Double get() = discount
-    // Customer pays the sticker price — no extra tax added on top
     val lineTotal: Double get() = lineSubtotal - lineDiscount
+    // Display helpers
+    val displayWeight: String get() = if (product.isWeighed && weightKg > 0)
+        "${String.format("%.3f", weightKg)} kg" else "${quantity} pcs"
 }
