@@ -39,6 +39,7 @@ import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.CartViewModel
 import com.minimart.pos.ui.viewmodel.CheckoutResult
 import com.minimart.pos.ui.viewmodel.CustomerViewModel
+import com.minimart.pos.util.vibrateShort
 
 @Composable
 fun CheckoutScreen(
@@ -81,9 +82,13 @@ fun CheckoutScreen(
         }
     }
 
+    val checkoutContext = androidx.compose.ui.platform.LocalContext.current
     LaunchedEffect(Unit) {
         vm.checkoutResult.collect { result ->
-            if (result is CheckoutResult.Success) onSaleComplete(result.saleId)
+            if (result is CheckoutResult.Success) {
+                checkoutContext.vibrateShort()
+                onSaleComplete(result.saleId)
+            }
         }
     }
 

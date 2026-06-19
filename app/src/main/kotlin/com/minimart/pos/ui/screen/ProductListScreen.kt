@@ -211,10 +211,23 @@ private fun DarkProductRow(product: Product, onEdit: (Product) -> Unit, onDelete
     }
     if (showDeleteConfirm) {
         AlertDialog(onDismissRequest = { showDeleteConfirm = false }, containerColor = DT.Surface,
-            title = { Text("Delete?", color = DT.OnSurface) },
-            text = { Text(product.name, color = DT.SubText) },
-            confirmButton = { TextButton(onClick = { onDelete(); showDeleteConfirm = false }) { Text("Delete", color = DT.Red) } },
-            dismissButton = { TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel", color = DT.SubText) } })
+            title = { Text("Delete Product?", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text("\"${product.name}\" will be permanently removed. This cannot be undone.", color = DT.SubText) },
+            confirmButton = {
+                Button(
+                    onClick = { onDelete(); showDeleteConfirm = false },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)
+                ) {
+                    Icon(Icons.Default.Delete, null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Delete", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showDeleteConfirm = false }, shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+            })
     }
 }
 

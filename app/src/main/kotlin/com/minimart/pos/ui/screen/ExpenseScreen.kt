@@ -273,9 +273,21 @@ private fun ExpenseListTab(expenses: List<Expense>, currency: String, onDelete: 
                     }
                 }
                 if (showConfirm) AlertDialog(onDismissRequest = { showConfirm = false }, containerColor = DT.Surface,
-                    title = { Text("Delete?", color = DT.OnSurface) }, text = { Text(expense.title, color = DT.SubText) },
-                    confirmButton = { TextButton(onClick = { onDelete(expense); showConfirm = false }) { Text("Delete", color = DT.Red) } },
-                    dismissButton = { TextButton(onClick = { showConfirm = false }) { Text("Cancel", color = DT.SubText) } })
+                    title = { Text("Delete Expense?", color = Color.White, fontWeight = FontWeight.Bold) },
+                    text = { Text("\"${expense.title}\" will be permanently removed.", color = DT.SubText) },
+                    confirmButton = {
+                        Button(onClick = { onDelete(expense); showConfirm = false },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)) {
+                            Icon(Icons.Default.Delete, null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Delete", fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        OutlinedButton(onClick = { showConfirm = false }, shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+                    })
             }
         }
     }

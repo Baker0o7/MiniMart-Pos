@@ -90,6 +90,13 @@ fun CustomerScreen(
                 onValueChange = { vm.setQuery(it) },
                 placeholder = { Text("Search by name or phone", color = DT.SubText) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
+                trailingIcon = {
+                    if (state.query.isNotEmpty()) {
+                        IconButton(onClick = { vm.setQuery("") }) {
+                            Icon(Icons.Default.Close, null, tint = DT.SubText, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                },
                 singleLine = true,
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
