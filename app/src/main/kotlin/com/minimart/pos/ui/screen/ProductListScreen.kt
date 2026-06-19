@@ -234,6 +234,9 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
     var supplierPhone by remember { mutableStateOf(product?.supplierPhone ?: "") }
     var reorderQty    by remember { mutableStateOf(product?.reorderQuantity?.toString() ?: "") }
     var batchNumber   by remember { mutableStateOf(product?.batchNumber ?: "") }
+    var pluCode       by remember { mutableStateOf(product?.pluCode ?: "") }
+    var isWeighed     by remember { mutableStateOf(product?.isWeighed ?: false) }
+    var pricePerKg    by remember { mutableStateOf(if ((product?.pricePerKg ?: 0.0) > 0.0) product!!.pricePerKg.toString() else "") }
     var expiryDateStr by remember { mutableStateOf(
         if ((product?.expiryDate ?: 0L) > 0L)
             java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date(product?.expiryDate ?: 0L))
