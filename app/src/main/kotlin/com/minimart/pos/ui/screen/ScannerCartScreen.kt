@@ -378,6 +378,16 @@ private fun CartItemCard(
                         "${String.format("%.3f", item.weightKg)} kg @ $currency ${String.format("%.2f", item.product.pricePerKg)}/kg"
                     else "$currency ${String.format("%.2f", item.product.price)}/unit",
                         color = DT.SubText, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                    if (item.product.isWeighed && item.weightKg > 0) {
+                        // Weighed items: quantity is meaningless (weight comes from scale scan).
+                        // Show a read-only badge instead of a +/- stepper that would silently do nothing.
+                        Box(modifier = Modifier.clip(RoundedCornerShape(50.dp))
+                            .background(DT.Teal.copy(0.15f))
+                            .border(1.dp, DT.Teal.copy(0.35f), RoundedCornerShape(50.dp))
+                            .padding(horizontal = 12.dp, vertical = 8.dp)) {
+                            Text("Re-scan to adjust", color = DT.Teal, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    } else {
                     // Qty pill (dark bg matching reference)
                     Box(modifier = Modifier.clip(RoundedCornerShape(50.dp))
                         .background(Color(0xFF0A1410))
@@ -395,6 +405,7 @@ private fun CartItemCard(
                                 Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.size(14.dp))
                             }
                         }
+                    }
                     }
                     Spacer(Modifier.width(8.dp))
                     // Red circle trash

@@ -68,7 +68,12 @@ fun CheckoutScreen(
     val cashAmount      = cashInput.toDoubleOrNull() ?: 0.0
     val change          = (cashAmount - state.total).coerceAtLeast(0.0)
     val creditBalance   = selectedCustomer?.creditBalance ?: 0.0
-    val splitCredit     = splitCreditInput.toDoubleOrNull()?.coerceIn(0.0, creditBalance) ?: 0.0
+    // Bug fix: coerceIn(0.0, creditBalance) crashes with IllegalArgumentException when
+    // creditBalance is negative — which is now possible since "buy on account" allows
+    // customers to carry a negative balance. Clamp the upper bound to 0.0 first so the
+    // range is never inverted; a customer who already owes money simply can't use more credit.
+    val splitCredit     = splitCreditInput.toDoubleOrNull()
+        ?.coerceIn(0.0, creditBalance.coerceAtLeast(0.0)) ?: 0.0
     val splitCashNeeded = (state.total - splitCredit).coerceAtLeast(0.0)
 
     val canComplete = when {

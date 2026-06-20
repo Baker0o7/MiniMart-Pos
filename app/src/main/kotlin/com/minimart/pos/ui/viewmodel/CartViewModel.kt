@@ -68,9 +68,26 @@ class CartViewModel @Inject constructor(
     fun processBarcode(barcode: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            val product = productRepo.getByBarcode(barcode)
+            val clean = barcode.trim()
+
+            // ── PLU / variable-weight barcode (scale-printed, prefix "2", 13 digits) ──
+            val pluResult = com.minimart.pos.util.PluDecoder.decode(clean)
+            if (pluResult != null) {
+                val weighedProduct = productRepo.getProductByPlu(pluResult.pluCode)
+                if (weighedProduct != null && weighedProduct.isWeighed) {
+                    val price = com.minimart.pos.util.PluDecoder.calculatePrice(
+                        weighedProduct.pricePerKg, pluResult.weightKg)
+                    addWeighedItem(weighedProduct, pluResult.weightKg, price)
+                    _uiState.update { it.copy(isLoading = false, lastScannedProduct = weighedProduct, error = null) }
+                    return@launch
+                }
+                // Not a recognized PLU product — fall through and try as a regular barcode
+            }
+
+            // ── Regular fixed-price barcode ──────────────────────────────────
+            val product = productRepo.getByBarcode(clean)
             if (product == null) {
-                _uiState.update { it.copy(isLoading = false, error = "Product not found: $barcode") }
+                _uiState.update { it.copy(isLoading = false, error = "Product not found: $clean") }
                 return@launch
             }
             if (product.stock <= 0) {
@@ -79,6 +96,23 @@ class CartViewModel @Inject constructor(
             }
             addToCart(product)
             _uiState.update { it.copy(isLoading = false, lastScannedProduct = product, error = null) }
+        }
+    }
+
+    /** Adds or updates a weighed item in the cart. Weight comes from a scale-printed PLU barcode. */
+    fun addWeighedItem(product: Product, weightKg: Double, price: Double) {
+        _uiState.update { state ->
+            val existingIdx = state.items.indexOfFirst { it.product.id == product.id }
+            val newItems = if (existingIdx >= 0) {
+                // Re-scanning the same weighed product replaces its weight (doesn't stack — a
+                // second scale ticket means a fresh weighing, not "add another").
+                state.items.toMutableList().also {
+                    it[existingIdx] = it[existingIdx].copy(weightKg = weightKg, product = product.copy(price = price))
+                }
+            } else {
+                state.items + CartItem(product = product.copy(price = price), quantity = 1, weightKg = weightKg)
+            }
+            state.copy(items = newItems, error = null)
         }
     }
 
@@ -98,6 +132,12 @@ class CartViewModel @Inject constructor(
             }
             _uiState.update { it.copy(items = updated, error = null) }
         } else {
+            // Bug fix: previously a brand-new item skipped the stock check entirely,
+            // allowing out-of-stock products to be added with quantity = 1.
+            if (product.stock <= 0 && !product.isWeighed) {
+                _uiState.update { it.copy(error = "${product.name} is out of stock") }
+                return
+            }
             _uiState.update { it.copy(items = it.items + CartItem(product = product, quantity = 1), error = null) }
         }
     }
@@ -107,9 +147,16 @@ class CartViewModel @Inject constructor(
             if (quantity <= 0) {
                 state.copy(items = state.items.filter { it.product.id != productId })
             } else {
-                state.copy(items = state.items.map {
-                    if (it.product.id == productId) it.copy(quantity = quantity.coerceAtMost(it.product.stock)) else it
-                })
+                // Bug fix: coerceAtMost(stock) could silently produce 0 when stock == 0,
+                // leaving a ghost cart line (KES 0.00) that the stepper couldn't remove.
+                // Now: if the coerced result is 0, remove the line instead of keeping it.
+                val newItems = state.items.mapNotNull {
+                    if (it.product.id != productId) return@mapNotNull it
+                    if (it.product.isWeighed) return@mapNotNull it // weighed items aren't unit-tracked
+                    val coerced = quantity.coerceAtMost(it.product.stock)
+                    if (coerced <= 0) null else it.copy(quantity = coerced)
+                }
+                state.copy(items = newItems)
             }
         }
     }
@@ -221,7 +268,13 @@ class CartViewModel @Inject constructor(
             try {
                 val state = _uiState.value
                 val userId = settingsRepo.loggedInUserId.first()
-                val receiptNum = buildReceiptNumber((System.currentTimeMillis() % 9999).toInt())
+                // Bug fix: was using (System.currentTimeMillis() % 9999) which is NOT unique —
+                // two split-payment sales whose timestamps land on the same value mod 9999
+                // (recurs roughly every ~10 seconds) would silently get the same receipt
+                // number on the same day. Use the real persisted, atomically-incremented
+                // counter — the same one the regular checkout() path uses — instead.
+                val counter = settingsRepo.incrementReceiptCounter()
+                val receiptNum = buildReceiptNumber(counter)
                 val sale = Sale(
                     receiptNumber = receiptNum,
                     subtotal = state.subtotal, taxAmount = state.totalTax,

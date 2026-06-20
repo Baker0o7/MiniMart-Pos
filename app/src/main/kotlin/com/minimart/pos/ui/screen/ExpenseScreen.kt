@@ -213,7 +213,10 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                         // Progress bar
                         Box(modifier = Modifier.fillMaxWidth().height(4.dp)
                             .clip(RoundedCornerShape(2.dp)).background(DT.Border)) {
-                            Box(modifier = Modifier.fillMaxWidth((amount / maxCat).toFloat().coerceIn(0f, 1f))
+                            // Guard against NaN (0/0) which would crash fillMaxWidth's internal
+                            // fraction-range check rather than silently clamping like coerceIn does.
+                            val pct = if (maxCat > 0) (amount / maxCat).toFloat().coerceIn(0f, 1f) else 0f
+                            Box(modifier = Modifier.fillMaxWidth(pct)
                                 .height(4.dp).clip(RoundedCornerShape(2.dp)).background(DT.Red.copy(0.7f)))
                         }
                     }

@@ -17,6 +17,7 @@ class ProductRepository @Inject constructor(
     fun getCategories(): Flow<List<String>> = productDao.getCategories()
 
     suspend fun getByBarcode(barcode: String): Product? = productDao.getProductByBarcode(barcode)
+    suspend fun getProductByPlu(plu: String): Product? = productDao.getProductByPlu(plu)
     suspend fun getById(id: Long): Product? = productDao.getProductById(id)
     suspend fun insert(product: Product): Long = productDao.insertProduct(product)
     suspend fun insertAll(products: List<Product>) = productDao.insertProducts(products)
