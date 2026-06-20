@@ -27,7 +27,8 @@ object DatabaseModule {
         AppDatabase::class.java,
         AppDatabase.DATABASE_NAME
     )
-        .fallbackToDestructiveMigration()
+        .addMigrations(*com.minimart.pos.data.db.AppMigrations.ALL)
+        .fallbackToDestructiveMigration() // only applies to upgrade paths NOT covered above (pre-v8)
         .addCallback(callback)
         .build()
 

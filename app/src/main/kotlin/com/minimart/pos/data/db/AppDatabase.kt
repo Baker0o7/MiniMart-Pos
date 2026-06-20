@@ -26,6 +26,47 @@ abstract class AppDatabase : RoomDatabase() {
     companion object { const val DATABASE_NAME = "minimart_pos.db" }
 }
 
+/**
+ * Bug fix: AppDatabase used .fallbackToDestructiveMigration() with NO Migration objects,
+ * even though the version number has been bumped repeatedly (most recently v8→v9→v10 in
+ * this very project). Every one of those jumps would silently WIPE the entire database —
+ * every product, sale, customer, credit balance, and shift record — on any device updating
+ * across a version boundary, with no warning.
+ *
+ * Versions 1–7 were bumped during early, pre-release development (some bumps had no real
+ * schema change at all — see the v1→v2 commit, which only fixed a seed-SQL bug and bumped
+ * the version purely to force a fresh dev-device DB). Reconstructing exact migrations for
+ * that period isn't safe without the original schema JSON (exportSchema was false), so
+ * .fallbackToDestructiveMigration() is kept as the fallback for anything below v8.
+ *
+ * From v8 onward the schema deltas are fully known and verified against the entity diffs,
+ * so real migrations are provided. Room tries an explicit Migration first and only falls
+ * back to destructive recreation when no explicit path covers the upgrade — so any device
+ * currently on v8 or v9 will now upgrade to v10 with all data intact.
+ *
+ * IMPORTANT for future schema changes: every time the database `version` is bumped, add a
+ * matching Migration here (or data will be silently wiped again on the next release).
+ */
+object AppMigrations {
+    /** v8 → v9: weighing-scale / PLU support added to products. */
+    val MIGRATION_8_9 = object : androidx.room.migration.Migration(8, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE products ADD COLUMN pluCode TEXT NOT NULL DEFAULT ''")
+            db.execSQL("ALTER TABLE products ADD COLUMN isWeighed INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE products ADD COLUMN pricePerKg REAL NOT NULL DEFAULT 0.0")
+        }
+    }
+
+    /** v9 → v10: cashPortion added to sales for accurate shift cash reconciliation. */
+    val MIGRATION_9_10 = object : androidx.room.migration.Migration(9, 10) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE sales ADD COLUMN cashPortion REAL NOT NULL DEFAULT 0.0")
+        }
+    }
+
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10)
+}
+
 class AppTypeConverters {
     @TypeConverter fun fromPaymentMethod(v: PaymentMethod): String = v.name
     @TypeConverter fun toPaymentMethod(v: String): PaymentMethod = PaymentMethod.valueOf(v)
