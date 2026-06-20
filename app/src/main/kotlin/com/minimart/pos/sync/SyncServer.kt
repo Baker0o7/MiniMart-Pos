@@ -99,7 +99,21 @@ class SyncServer @Inject constructor(
                     respond(writer, 200, arr.toString())
                 }
                 method == "POST" && path == "/apply" -> {
-                    val body = CharArray(contentLength).also { reader.read(it) }.concatToString()
+                    // Bug fix: a single reader.read(buf) call is NOT guaranteed to fill the
+                    // buffer — over a real TCP/WiFi connection it commonly returns fewer
+                    // characters than requested for larger payloads, silently truncating the
+                    // JSON body. JSONArray(body) would then throw on the malformed/incomplete
+                    // array, which the outer catch swallows with no response sent back —
+                    // leaving the sync client to see a confusing generic failure instead of
+                    // the real cause. Loop until all contentLength chars are read (or EOF).
+                    val buf = CharArray(contentLength)
+                    var readTotal = 0
+                    while (readTotal < contentLength) {
+                        val n = reader.read(buf, readTotal, contentLength - readTotal)
+                        if (n == -1) break // peer closed early
+                        readTotal += n
+                    }
+                    val body = String(buf, 0, readTotal)
                     val arr  = JSONArray(body)
                     val ids  = mutableListOf<Long>()
                     for (i in 0 until arr.length()) {
@@ -122,6 +136,13 @@ class SyncServer @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Client handler error", e)
+            // Bug fix: previously the exception was only logged — the client's connection
+            // was closed with no HTTP response at all, making failures (e.g. a truncated
+            // body, bad JSON) indistinguishable from "server unreachable" on the client side.
+            try {
+                val writer = PrintWriter(socket.getOutputStream(), true)
+                respond(writer, 500, """{"error":"${(e.message ?: "Internal error").replace("\"", "'")}"}""")
+            } catch (_: Exception) { /* socket already broken, nothing more we can do */ }
         } finally {
             socket.close()
         }

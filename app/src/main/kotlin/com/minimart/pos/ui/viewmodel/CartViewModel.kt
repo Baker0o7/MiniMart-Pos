@@ -25,7 +25,14 @@ data class CartUiState(
     val subtotal: Double get() = items.sumOf { it.lineSubtotal }
     val totalTax: Double get() = items.sumOf { it.lineTax }          // extracted VAT (display only)
     val totalDiscount: Double get() = items.sumOf { it.lineDiscount } + discount
-    val total: Double get() = subtotal - totalDiscount               // inclusive: no extra tax added
+    // Bug fix: total had no floor — if a discount (global or per-item) ever exceeded the
+    // subtotal, total went negative. This broke checkout validation downstream: `cashAmount
+    // >= total` became trivially true for ANY amount (even KES 0) since any number is >= a
+    // negative number, and `change` could show a large bogus amount owed back to the
+    // customer. The setters above now clamp discounts at the source, but this floor is kept
+    // as a second line of defense in case any future code path mutates discount/lineDiscount
+    // directly without going through setItemDiscount/setGlobalDiscount.
+    val total: Double get() = (subtotal - totalDiscount).coerceAtLeast(0.0)
     val itemCount: Int get() = items.sumOf { it.quantity }
     val isEmpty: Boolean get() = items.isEmpty()
 }
@@ -168,13 +175,25 @@ class CartViewModel @Inject constructor(
     fun setItemDiscount(productId: Long, discount: Double) {
         _uiState.update { state ->
             state.copy(items = state.items.map {
-                if (it.product.id == productId) it.copy(discount = discount.coerceAtLeast(0.0)) else it
+                if (it.product.id == productId) {
+                    // Bug fix: discount was only floored at 0, never capped — a discount
+                    // larger than the line's own subtotal made that line's total negative,
+                    // which then let `total` (cart-wide) go negative too (see below).
+                    val maxAllowed = it.lineSubtotal
+                    it.copy(discount = discount.coerceIn(0.0, maxAllowed))
+                } else it
             })
         }
     }
 
     fun setGlobalDiscount(discount: Double) {
-        _uiState.update { it.copy(discount = discount.coerceAtLeast(0.0)) }
+        _uiState.update { state ->
+            // Bug fix: discount was only floored at 0, never capped — a global discount
+            // larger than the cart's subtotal made `total` go negative (see CartUiState.total).
+            // Cap it at what's left after per-item discounts are already accounted for.
+            val remainingAfterLineDiscounts = (state.subtotal - state.items.sumOf { it.lineDiscount }).coerceAtLeast(0.0)
+            state.copy(discount = discount.coerceIn(0.0, remainingAfterLineDiscounts))
+        }
     }
 
     fun clearCart() {
@@ -211,6 +230,9 @@ class CartViewModel @Inject constructor(
                     totalAmount = state.total,
                     amountPaid = amountPaid,
                     changeGiven = (amountPaid - state.total).coerceAtLeast(0.0),
+                    // Only CASH payments put physical cash in the till; everything else
+                    // (MPESA, CARD, CREDIT) is 0 for till-reconciliation purposes.
+                    cashPortion = if (paymentMethod == PaymentMethod.CASH) amountPaid else 0.0,
                     paymentMethod = paymentMethod,
                     mpesaRef = mpesaRef,
                     cashierId = userId
@@ -281,6 +303,12 @@ class CartViewModel @Inject constructor(
                     discountAmount = state.totalDiscount, totalAmount = state.total,
                     amountPaid = creditAmount + cashAmount,
                     changeGiven = ((creditAmount + cashAmount) - state.total).coerceAtLeast(0.0),
+                    // Bug fix: only the cash portion of a split payment is physical money
+                    // in the till. Previously this was never recorded anywhere, so
+                    // ShiftRepository's end-of-shift cash count silently dropped it
+                    // entirely (its `when` had no MIXED branch) — cashiers using split
+                    // payment would show a false "shortage" at shift close.
+                    cashPortion = cashAmount,
                     paymentMethod = PaymentMethod.MIXED, mpesaRef = mpesaRef, cashierId = userId ?: 0L
                 )
                 val saleItems = state.items.map { ci ->

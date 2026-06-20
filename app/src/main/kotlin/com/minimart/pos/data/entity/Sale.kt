@@ -1,5 +1,6 @@
 package com.minimart.pos.data.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -22,6 +23,12 @@ data class Sale(
     val totalAmount: Double,
     val amountPaid: Double,
     val changeGiven: Double,
+    // Bug fix: for MIXED (split cash+credit) payments, amountPaid stores
+    // creditAmount + cashAmount COMBINED — there was no way to recover just the
+    // cash portion for end-of-shift till reconciliation. This field always holds
+    // the actual cash physically collected for this sale (0.0 for MPESA/CARD/CREDIT,
+    // the full totalAmount for CASH, and just the cash share for MIXED).
+    @ColumnInfo(defaultValue = "0.0") val cashPortion: Double = 0.0,
     val paymentMethod: PaymentMethod,
     val mpesaRef: String? = null,        // M-Pesa transaction reference
     val status: SaleStatus = SaleStatus.COMPLETED,

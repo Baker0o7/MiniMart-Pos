@@ -50,16 +50,29 @@ class ShiftRepository @Inject constructor(
         val totalTx = completed.size
 
         completed.forEach { sale ->
+            // Bug fix: this `when` used to be `CASH/MPESA/CARD -> ...; else -> {}`, which
+            // silently dropped MIXED (split cash+credit) sales from cashSales entirely.
+            // The cash portion of a split payment is real money in the till — omitting it
+            // made expectedCash understated, showing a false "shortage" at shift close for
+            // any cashier who processed split payments. Now exhaustive (no `else` branch)
+            // so the compiler itself will flag it if a new PaymentMethod is ever added
+            // without updating this reconciliation logic.
             when (sale.paymentMethod) {
-                PaymentMethod.CASH  -> cashSales  += sale.totalAmount
-                PaymentMethod.MPESA -> mpesaSales += sale.totalAmount
-                PaymentMethod.CARD  -> cardSales  += sale.totalAmount
-                else -> {}
+                PaymentMethod.CASH   -> cashSales  += sale.totalAmount
+                PaymentMethod.MPESA  -> mpesaSales += sale.totalAmount
+                PaymentMethod.CARD   -> cardSales  += sale.totalAmount
+                PaymentMethod.MIXED  -> cashSales  += sale.cashPortion // only the cash actually collected
+                PaymentMethod.CREDIT -> { /* no cash collected — buy on account */ }
             }
             totalDiscount += sale.discountAmount
         }
 
-        val totalSales = cashSales + mpesaSales + cardSales
+        // Bug fix: was cashSales + mpesaSales + cardSales, which excludes MIXED and
+        // CREDIT sales entirely — understating total shift revenue for any cashier who
+        // processed a split payment or buy-on-account sale. totalSales should reflect
+        // every completed sale's value regardless of how it was paid; expectedCash (the
+        // till count) is the one that correctly stays cash-method-specific.
+        val totalSales = completed.sumOf { it.totalAmount }
         val expectedCash = shift.openingFloat + cashSales
         val discrepancy = closingFloat - expectedCash
 

@@ -29,6 +29,16 @@ class CustomerViewModel @Inject constructor(
     private val _state   = MutableStateFlow(CustomerUiState())
     val uiState: StateFlow<CustomerUiState> = _state
 
+    // Bug fix: previously selectCustomer() launched a brand-new viewModelScope.launch {
+    // repo.getTransactions(id).collect {...} } on every call, with nothing cancelling the
+    // PREVIOUS collector. Expanding customer A then B then C left three live Flow
+    // collectors running forever — and if A's transactions changed later (e.g. via LAN
+    // sync) while C was the one displayed, A's stale collector would fire and silently
+    // overwrite the screen with the wrong customer's data. flatMapLatest auto-cancels the
+    // previous inner Flow the moment a new customer ID comes in, same pattern already used
+    // for the search debounce below.
+    private val _selectedCustomerId = MutableStateFlow<Long?>(null)
+
     init {
         viewModelScope.launch {
             _query.debounce(200).collectLatest { q ->
@@ -38,19 +48,20 @@ class CustomerViewModel @Inject constructor(
                 }
             }
         }
+        viewModelScope.launch {
+            _selectedCustomerId.flatMapLatest { id ->
+                if (id == null) flowOf(emptyList()) else repo.getTransactions(id)
+            }.collect { txs ->
+                _state.update { it.copy(transactions = txs) }
+            }
+        }
     }
 
     fun setQuery(q: String) { _query.value = q; _state.update { it.copy(query = q) } }
 
     fun selectCustomer(customer: Customer?) {
         _state.update { it.copy(selectedCustomer = customer) }
-        if (customer != null) {
-            viewModelScope.launch {
-                repo.getTransactions(customer.id).collect { txs ->
-                    _state.update { it.copy(transactions = txs) }
-                }
-            }
-        }
+        _selectedCustomerId.value = customer?.id
     }
 
     fun saveCustomer(customer: Customer) = viewModelScope.launch {

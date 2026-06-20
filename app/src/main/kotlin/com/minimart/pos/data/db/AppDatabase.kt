@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 @Database(
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
