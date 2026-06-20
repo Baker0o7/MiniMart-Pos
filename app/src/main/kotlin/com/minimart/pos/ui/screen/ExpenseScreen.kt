@@ -250,10 +250,10 @@ private fun LineChart(points: List<Float>, color: Color, modifier: Modifier = Mo
 private fun ExpenseListTab(expenses: List<Expense>, currency: String, onDelete: (Expense) -> Unit) {
     if (expenses.isEmpty()) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Default.Receipt, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.3f))
-                Spacer(Modifier.height(8.dp))
-                Text("No expenses recorded", color = DT.SubText)
+                Text("No expenses recorded", color = DT.SubText, fontWeight = FontWeight.SemiBold)
+                Text("Tap + Add to log your first expense", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
             }
         }
     } else {

@@ -135,8 +135,15 @@ fun ProductListScreen(
                 }
                 if (products.isEmpty()) {
                     item {
-                        Box(Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
-                            Text(if (searchQuery.isNotBlank()) "No results for \"$searchQuery\"" else "No products yet", color = DT.SubText)
+                        Box(Modifier.fillMaxWidth().padding(top = 60.dp), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Icon(Icons.Default.Inventory2, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.3f))
+                                Text(if (searchQuery.isNotBlank()) "No results for \"$searchQuery\"" else "No products yet",
+                                    color = DT.SubText, fontWeight = FontWeight.SemiBold)
+                                if (searchQuery.isBlank())
+                                    Text("Tap + to add your first product", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
+                            }
                         }
                     }
                 }
