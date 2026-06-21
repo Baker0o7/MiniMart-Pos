@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.graphicsLayer
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -37,6 +39,17 @@ import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.DashboardViewModel
 import kotlinx.coroutines.launch
+
+/** Time-of-day aware Swahili greeting — was a static "Habari!" all day. */
+private fun timeOfDayGreeting(): String {
+    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    return when (hour) {
+        in 5..10  -> "Habari ya asubuhi! 👋"   // good morning
+        in 11..15 -> "Habari ya mchana! 👋"    // good afternoon
+        in 16..19 -> "Habari ya jioni! 👋"     // good evening
+        else      -> "Habari! 👋"              // late night / very early
+    }
+}
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
 private val Bg          = Color(0xFF060C0B)
@@ -101,7 +114,7 @@ fun DashboardScreen(
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Habari! 👋", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                            Text(timeOfDayGreeting(), color = White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
                             Text(state.storeName, color = Sub, fontSize = 12.sp)
                         }
                         // Status pill
@@ -351,12 +364,20 @@ fun DashboardScreen(
 @Composable
 private fun DashActionCard(title: String, sub: String, icon: ImageVector,
     bg: Color, glow: Color, onClick: () -> Unit) {
+    // Bug fix: indication = null gave zero visual feedback on tap — during the ~280ms
+    // screen-transition delay, a tap could feel like it didn't register. Added a subtle
+    // press-scale animation instead of a plain ripple, for a more deliberate, tactile feel.
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "cardPress")
+
     Box(modifier = Modifier.fillMaxWidth()
         .aspectRatio(0.8f)
+        .graphicsLayer { scaleX = scale; scaleY = scale }
         .clip(RoundedCornerShape(20.dp))
         .background(Brush.verticalGradient(listOf(bg, Bg)))
         .border(1.dp, glow.copy(0.2f), RoundedCornerShape(20.dp))
-        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
+        .clickable(indication = null, interactionSource = interactionSource, onClick = onClick)
         .padding(12.dp)) {
         Column(Modifier.fillMaxSize()) {
             // Icon with glow bg
