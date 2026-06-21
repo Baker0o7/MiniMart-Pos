@@ -33,7 +33,6 @@ import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.AuthViewModel
 import kotlinx.coroutines.delay
 
-private const val LOCKOUT_SECONDS = 30
 private const val MAX_ATTEMPTS = 3
 
 @Composable
@@ -46,18 +45,13 @@ fun LoginScreen(
 
     var username       by remember { mutableStateOf("admin") }
     var pin            by remember { mutableStateOf("") }
-    var attempts       by remember { mutableStateOf(0) }
-    var lockedOut      by remember { mutableStateOf(false) }
-    var lockoutSeconds by remember { mutableStateOf(LOCKOUT_SECONDS) }
     var showPin        by remember { mutableStateOf(false) }
+    // Bug fix: lockout used to be local `remember {}` state, wiped on process death —
+    // force-closing the app trivially reset the "3 failed attempts" lockout. Now sourced
+    // from AuthViewModel, which persists it via DataStore (see SettingsRepository).
+    val lockedOut      = state.isLockedOut
+    val lockoutSeconds = state.lockoutRemainingSeconds
 
-    LaunchedEffect(lockedOut) {
-        if (lockedOut) {
-            lockoutSeconds = LOCKOUT_SECONDS
-            while (lockoutSeconds > 0) { delay(1000); lockoutSeconds-- }
-            lockedOut = false; attempts = 0; pin = ""
-        }
-    }
     LaunchedEffect(state.isLoggedIn) { if (state.isLoggedIn) onLoginSuccess() }
     LaunchedEffect(pin) {
         if (pin.length == 6) {
@@ -65,13 +59,7 @@ fun LoginScreen(
             vm.login(username, pin); pin = ""
         }
     }
-    LaunchedEffect(state.error) {
-        // Only increment on a genuine non-null error from a PIN attempt
-        if (!state.error.isNullOrBlank() && !lockedOut) {
-            attempts++
-            if (attempts >= MAX_ATTEMPTS) lockedOut = true
-        }
-    }
+    LaunchedEffect(lockedOut) { if (lockedOut) pin = "" }
 
     // Biometric
     fun launchBiometric() {
@@ -196,8 +184,9 @@ fun LoginScreen(
                     }
 
                     // Attempts warning
-                    if (attempts in 1 until MAX_ATTEMPTS && !lockedOut) {
-                        Text("${MAX_ATTEMPTS - attempts} attempt${if (MAX_ATTEMPTS - attempts != 1) "s" else ""} remaining",
+                    if (state.failedAttempts in 1 until MAX_ATTEMPTS && !lockedOut) {
+                        val remaining = MAX_ATTEMPTS - state.failedAttempts
+                        Text("$remaining attempt${if (remaining != 1) "s" else ""} remaining",
                             color = DT.Amber, fontSize = 12.sp)
                     }
                 }

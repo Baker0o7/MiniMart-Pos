@@ -35,6 +35,13 @@ class SettingsRepository @Inject constructor(
         val KEY_MPESA_WITHDRAW   = stringPreferencesKey("mpesa_withdraw_number")
         val KEY_MPESA_NAME       = stringPreferencesKey("mpesa_account_name")
         val KEY_RECEIPT_COUNTER  = intPreferencesKey("receipt_counter")
+        // Bug fix: PIN-attempt lockout used to live only in LoginScreen's `remember {}`
+        // state, which is wiped on process death — force-closing the app (or the OS
+        // killing it under memory pressure, common on budget devices) instantly reset
+        // the lockout, making the "3 failed attempts" security feature trivially
+        // bypassable. Now persisted via DataStore so it survives app restarts.
+        val KEY_FAILED_ATTEMPTS  = intPreferencesKey("failed_pin_attempts")
+        val KEY_LOCKOUT_UNTIL    = longPreferencesKey("lockout_until_epoch_ms")
     }
 
     val storeName: Flow<String>         = context.dataStore.data.map { it[KEY_STORE_NAME] ?: "My MiniMart" }
@@ -87,5 +94,28 @@ class SettingsRepository @Inject constructor(
             prefs[KEY_RECEIPT_COUNTER] = newVal
         }
         return newVal
+    }
+
+    // ── PIN lockout (persisted — survives process death / force-close) ─────────
+    val failedAttempts: Flow<Int>     = context.dataStore.data.map { it[KEY_FAILED_ATTEMPTS] ?: 0 }
+    val lockoutUntilMs: Flow<Long>    = context.dataStore.data.map { it[KEY_LOCKOUT_UNTIL] ?: 0L }
+
+    suspend fun recordFailedAttempt(maxAttempts: Int, lockoutDurationMs: Long): Int {
+        var newCount = 0
+        context.dataStore.edit { prefs ->
+            newCount = (prefs[KEY_FAILED_ATTEMPTS] ?: 0) + 1
+            prefs[KEY_FAILED_ATTEMPTS] = newCount
+            if (newCount >= maxAttempts) {
+                prefs[KEY_LOCKOUT_UNTIL] = System.currentTimeMillis() + lockoutDurationMs
+            }
+        }
+        return newCount
+    }
+
+    suspend fun clearLockout() {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_FAILED_ATTEMPTS] = 0
+            prefs[KEY_LOCKOUT_UNTIL] = 0L
+        }
     }
 }
