@@ -63,6 +63,11 @@ fun LoginScreen(
 
     // Biometric
     fun launchBiometric() {
+        // Bug fix: previously showed the prompt for ANY device with biometric hardware
+        // enrolled, regardless of whether any account had opted in — and on success,
+        // logged in as whatever username happened to be typed in the field. Now gated
+        // on a specific user having explicitly bound biometric login via Settings.
+        if (!state.biometricEnabled) return
         try {
             val activity = context as? FragmentActivity ?: return
             val bio = BiometricManager.from(context)
@@ -71,7 +76,7 @@ fun LoginScreen(
             val prompt = BiometricPrompt(activity, executor,
                 object : BiometricPrompt.AuthenticationCallback() {
                     override fun onAuthenticationSucceeded(r: BiometricPrompt.AuthenticationResult) {
-                        vm.loginWithBiometric(username)
+                        vm.loginWithBiometric()
                     }
                 })
             prompt.authenticate(BiometricPrompt.PromptInfo.Builder()
@@ -79,7 +84,7 @@ fun LoginScreen(
                 .setNegativeButtonText("Use PIN").build())
         } catch (_: Exception) {}
     }
-    LaunchedEffect(Unit) { launchBiometric() }
+    LaunchedEffect(state.biometricEnabled) { if (state.biometricEnabled) launchBiometric() }
 
     Box(modifier = Modifier.fillMaxSize()
         .background(Brush.verticalGradient(listOf(Color(0xFF061510), Color(0xFF030A07), Color(0xFF020805))))) {

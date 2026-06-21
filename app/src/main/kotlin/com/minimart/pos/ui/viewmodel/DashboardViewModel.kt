@@ -128,7 +128,11 @@ data class AuthUiState(
     // force-closing the app trivially reset the "3 failed attempts" lockout.
     val isLockedOut: Boolean = false,
     val lockoutRemainingSeconds: Int = 0,
-    val failedAttempts: Int = 0
+    val failedAttempts: Int = 0,
+    // Bug fix: drives whether LoginScreen even shows the biometric prompt — only true
+    // once a specific user has explicitly opted in via Settings (see SettingsRepository
+    // .biometricUserId). Previously biometric login had no such gate at all.
+    val biometricEnabled: Boolean = false
 )
 
 @HiltViewModel
@@ -162,6 +166,14 @@ class AuthViewModel @Inject constructor(
                         _uiState.update { it.copy(isLoggedIn = false, currentUser = null) }
                     }
                 }
+        }
+        // Bug fix: drives whether the biometric prompt is even shown — only when a
+        // specific user has explicitly opted in (see loginWithBiometric() below for the
+        // matching fix on the login side).
+        viewModelScope.launch {
+            settingsRepo.biometricUserId.collect { id ->
+                _uiState.update { it.copy(biometricEnabled = id != null && id != 0L) }
+            }
         }
         // Bug fix: resume any in-progress lockout from the persisted deadline, so a
         // force-close mid-lockout doesn't reset it. Ticks once a second while locked.
@@ -228,16 +240,32 @@ class AuthViewModel @Inject constructor(
     }
 
     /** Called after biometric success — looks up the user by username only (no PIN check needed). */
-    fun loginWithBiometric(username: String) {
+    /** Bug fix: this used to take a `username: String` straight from whatever was typed
+     * in LoginScreen's text field (default "admin") and log that account in on ANY
+     * successful biometric match — with no verification the fingerprint/face belonged
+     * to that account. Android's BiometricPrompt only confirms "a biometric enrolled on
+     * this device matched," not "this specific app-user's biometric matched." On a
+     * shared shop device with multiple enrolled fingerprints, that meant any of them
+     * could become the Owner account instantly, bypassing PIN verification and lockout
+     * entirely. Now resolves the one specific user ID that was explicitly bound via
+     * Settings (which itself requires the account's PIN to set up) — there is no path
+     * from "a fingerprint matched" to "log in as whatever username is typed" anymore. */
+    fun loginWithBiometric() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val user = userRepo.getUserByUsername(username.trim())
+                val boundUserId = settingsRepo.biometricUserId.first()
+                if (boundUserId == null) {
+                    _uiState.update { it.copy(isLoading = false, error = "Biometric login not set up") }
+                    return@launch
+                }
+                val user = userRepo.getUserById(boundUserId)
                 if (user != null && user.isActive) {
                     settingsRepo.setLoggedInUser(user.id)
+                    settingsRepo.clearLockout()
                     _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user) }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, error = "User not found") }
+                    _uiState.update { it.copy(isLoading = false, error = "Biometric account no longer available") }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = "Biometric login failed") }

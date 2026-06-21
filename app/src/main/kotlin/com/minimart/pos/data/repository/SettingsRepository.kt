@@ -48,6 +48,12 @@ class SettingsRepository @Inject constructor(
         // with no barrier at all. This key holds a per-device, auto-generated shared
         // secret that must be entered on every device being paired for sync.
         val KEY_SYNC_SECRET      = stringPreferencesKey("sync_pairing_secret")
+        // Bug fix: biometric login used to resolve whatever username string was typed
+        // into the LoginScreen text field with NO verification that the fingerprint/face
+        // used actually belonged to that account — any biometric enrolled on a shared
+        // device could authenticate as ANY user, including admin by default. This key
+        // binds biometric unlock to exactly one specific, explicitly-opted-in user ID.
+        val KEY_BIOMETRIC_USER_ID = longPreferencesKey("biometric_bound_user_id")
     }
 
     val storeName: Flow<String>         = context.dataStore.data.map { it[KEY_STORE_NAME] ?: "My MiniMart" }
@@ -136,5 +142,21 @@ class SettingsRepository @Inject constructor(
         val generated = (100000..999999).random().toString()
         context.dataStore.edit { it[KEY_SYNC_SECRET] = generated }
         return generated
+    }
+
+    // ── Biometric login binding ─────────────────────────────────────────────────
+    /** The exact user ID biometric unlock is allowed to log in as, or null if no one
+     * has opted in. Deliberately NOT resolved from a typed username — see KEY_BIOMETRIC_USER_ID. */
+    val biometricUserId: Flow<Long?> = context.dataStore.data.map { it[KEY_BIOMETRIC_USER_ID] }
+
+    /** Bind biometric unlock to this user. Caller MUST have already verified the
+     * user's PIN in this same session before calling this — biometric opt-in itself
+     * must never be reachable without proving you know the account's PIN first. */
+    suspend fun setBiometricUser(userId: Long) {
+        context.dataStore.edit { it[KEY_BIOMETRIC_USER_ID] = userId }
+    }
+
+    suspend fun clearBiometricUser() {
+        context.dataStore.edit { it.remove(KEY_BIOMETRIC_USER_ID) }
     }
 }

@@ -57,21 +57,69 @@ object BackupManager {
         }
     }
 
-    /** Restore from a backup file — replaces current DB */
+    /** Restore from a backup file — replaces current DB.
+     *
+     * Bug fix: this previously only copied the backup's MAIN .db file over the live
+     * database, with no handling of the WAL (-wal) and SHM (-shm) companion files that
+     * SQLite uses in WAL mode (the default on Android/Room). Two problems:
+     *   1. The OLD -wal/-shm files (left over from BEFORE the restore) stayed in place
+     *      next to the freshly-restored main db file. On next open, SQLite's WAL
+     *      recovery logic would try to replay those stale frames against data they no
+     *      longer correspond to — risking either a failure to open the database at all,
+     *      or silent corruption of the just-restored data.
+     *   2. backup() saves the WAL/SHM alongside the main file, but restore() never
+     *      copied them back — so even a backup taken mid-write (before its own
+     *      checkpoint fully flushed) couldn't be restored completely.
+     * Also: the comment here used to say "(caller should have closed the DB)" as if
+     * that were already handled — it wasn't enforced anywhere. The UI just called
+     * restore() and showed a passive "please restart" message with nothing actually
+     * forcing a restart, leaving the live (Hilt-singleton) Room connection pointed at
+     * a database file that just got swapped out from under it. See restartApp() below,
+     * which the UI now calls immediately after a successful restore.
+     */
     suspend fun restore(context: Context, backupFile: File): BackupResult = withContext(Dispatchers.IO) {
         try {
             if (!backupFile.exists()) return@withContext BackupResult.Error("Backup file not found")
 
             val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
 
-            // Close all Room connections before replacing
-            // (caller should have closed the DB — restart recommended after restore)
+            // Remove the CURRENT database's stale -wal/-shm files first — they describe
+            // pending writes against the database we're about to replace wholesale, and
+            // must never be allowed to apply against the restored file.
+            listOf("-wal", "-shm").forEach { suffix ->
+                File(dbFile.parent, dbFile.name + suffix).let { if (it.exists()) it.delete() }
+            }
+
             backupFile.copyTo(dbFile, overwrite = true)
 
-            BackupResult.Success(dbFile, "Restore successful. Please restart the app to apply changes.")
+            // If the backup itself has matching -wal/-shm companions (e.g. it was taken
+            // before a full checkpoint completed), restore those too so no committed data
+            // is lost. Otherwise the deletion above already guarantees no stale ones remain.
+            listOf("-wal", "-shm").forEach { suffix ->
+                val backupCompanion = File(backupFile.parent, backupFile.name + suffix)
+                if (backupCompanion.exists()) {
+                    backupCompanion.copyTo(File(dbFile.parent, dbFile.name + suffix), overwrite = true)
+                }
+            }
+
+            BackupResult.Success(dbFile, "Restore successful. Restarting app…")
         } catch (e: Exception) {
             BackupResult.Error("Restore failed: ${e.message}")
         }
+    }
+
+    /** Forces a clean process restart — necessary after restore() since the live
+     * Room/SQLite connection (a Hilt @Singleton) is still pointed at the database file
+     * that just got replaced out from under it. Relaunches the app's own launcher
+     * activity in a fresh task, then kills the current process. */
+    fun restartApp(context: Context) {
+        val packageManager = context.packageManager
+        val intent = packageManager.getLaunchIntentForPackage(context.packageName)
+        if (intent != null) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            context.startActivity(intent)
+        }
+        Runtime.getRuntime().exit(0)
     }
 
     /** List all available backups from Downloads */

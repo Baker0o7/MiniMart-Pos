@@ -521,6 +521,15 @@ fun SettingsScreen(
                                                         is com.minimart.pos.util.BackupResult.Success -> r.message
                                                         is com.minimart.pos.util.BackupResult.Error -> r.message
                                                     }
+                                                    // Bug fix: previously this just showed a "please restart
+                                                    // manually" message — the live Room connection stayed
+                                                    // pointed at the now-replaced database file, risking a
+                                                    // crash or stale/corrupted reads if the user kept using
+                                                    // the app instead of remembering to close it themselves.
+                                                    if (r is com.minimart.pos.util.BackupResult.Success) {
+                                                        kotlinx.coroutines.delay(1200)
+                                                        com.minimart.pos.util.BackupManager.restartApp(context)
+                                                    }
                                                 }
                                             }, modifier = Modifier.fillMaxWidth()) { Text(f.name, color = DT.TealLight, style = MaterialTheme.typography.bodySmall) }
                                         }
@@ -541,6 +550,32 @@ fun SettingsScreen(
                         DMenuRow("Shift Management", Icons.Default.Schedule, DT.OnSurface) { onShifts() }
                         HDivider()
                     }
+                    // Bug fix: this toggle is the ONLY place biometricUserId is ever set.
+                    // Reaching this screen already requires a successful PIN login (Settings
+                    // is session-gated behind LoginScreen and AccessGuard), so binding
+                    // biometric to "whoever is logged in right now" here is safe — it can
+                    // never be set without the account's PIN having been proven first.
+                    val loggedInUserId by settingsRepo.loggedInUserId.collectAsState(initial = null)
+                    val biometricUserId by settingsRepo.biometricUserId.collectAsState(initial = null)
+                    val biometricOnForThisUser = loggedInUserId != null && loggedInUserId == biometricUserId
+                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Fingerprint / Face Login", color = DT.OnSurface, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                            Text("For this account on this device only", color = DT.SubText, fontSize = 11.sp)
+                        }
+                        Switch(
+                            checked = biometricOnForThisUser,
+                            onCheckedChange = { enabled ->
+                                scope.launch {
+                                    val uid = loggedInUserId
+                                    if (enabled && uid != null) settingsRepo.setBiometricUser(uid)
+                                    else settingsRepo.clearBiometricUser()
+                                }
+                            },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border)
+                        )
+                    }
+                    HDivider()
                     DMenuRow("Logout", Icons.AutoMirrored.Filled.Logout, DT.Red) { onLogout() }
                 }
             }
