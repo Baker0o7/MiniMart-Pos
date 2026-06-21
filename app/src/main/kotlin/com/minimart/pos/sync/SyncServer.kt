@@ -20,7 +20,8 @@ import javax.inject.Singleton
 @Singleton
 class SyncServer @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val syncDao: SyncDao
+    private val syncDao: SyncDao,
+    private val settingsRepo: com.minimart.pos.data.repository.SettingsRepository
 ) {
     companion object {
         const val PORT       = 9876
@@ -80,6 +81,23 @@ class SyncServer @Inject constructor(
 
             val method = requestLine.split(" ").firstOrNull() ?: "GET"
             val path   = requestLine.split(" ").getOrNull(1) ?: "/"
+
+            // Bug fix: previously NO authentication existed on this server at all — any
+            // device on the same WiFi network (a customer, a neighboring shop, anyone)
+            // could read pending sync data or inject arbitrary fabricated entries via
+            // /apply with zero barrier. /ping stays open (it reveals nothing but "a
+            // MiniMart POS server exists here"); /changes and /apply now require a
+            // matching X-Sync-Key header — the pairing secret shown on this device's
+            // Settings screen, which must be typed into the other device once.
+            val requiresAuth = path == "/changes" || path == "/apply"
+            if (requiresAuth) {
+                val mySecret = settingsRepo.getOrCreateSyncSecret()
+                val providedKey = headers["X-Sync-Key"]
+                if (providedKey != mySecret) {
+                    respond(writer, 401, """{"error":"Unauthorized — pairing key mismatch"}""")
+                    return
+                }
+            }
 
             when {
                 method == "GET" && path == "/ping" -> {

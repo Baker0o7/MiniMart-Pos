@@ -29,12 +29,14 @@ class SyncClient @Inject constructor(
         private const val TIMEOUT = 5000
     }
 
-    /** Full sync cycle: push local pending → pull remote pending */
-    suspend fun sync(serverIp: String, deviceId: String): SyncResult = withContext(Dispatchers.IO) {
+    /** Full sync cycle: push local pending → pull remote pending.
+     * @param peerKey the pairing secret shown on the SERVER device's Settings screen —
+     *   required now that /changes and /apply reject unauthenticated requests. */
+    suspend fun sync(serverIp: String, deviceId: String, peerKey: String): SyncResult = withContext(Dispatchers.IO) {
         try {
             val baseUrl = "http://$serverIp:${SyncServer.PORT}"
 
-            // 1. Ping
+            // 1. Ping (unauthenticated — just confirms a MiniMart server is there)
             val ping = get("$baseUrl/ping") ?: return@withContext SyncResult.Error("Server unreachable at $serverIp")
             Log.d(TAG, "Ping: $ping")
 
@@ -51,19 +53,21 @@ class SyncClient @Inject constructor(
                         put("createdAt", log.createdAt)
                     })
                 }
-                val pushResponse = post("$baseUrl/apply", arr.toString())
-                if (pushResponse != null) {
-                    val applied = JSONObject(pushResponse).optInt("applied", 0)
-                    syncDao.markSynced(pending.map { it.id })
-                    pushed = applied
-                    Log.i(TAG, "Pushed $pushed changes")
+                val pushResponse = post("$baseUrl/apply", arr.toString(), peerKey)
+                if (pushResponse == null) {
+                    return@withContext SyncResult.Error("Pairing key rejected by server — check the code and try again")
                 }
+                val applied = JSONObject(pushResponse).optInt("applied", 0)
+                syncDao.markSynced(pending.map { it.id })
+                pushed = applied
+                Log.i(TAG, "Pushed $pushed changes")
             }
 
             // 3. Pull remote pending changes
-            val remoteChanges = get("$baseUrl/changes")
+            val remoteChanges = get("$baseUrl/changes", peerKey)
+                ?: return@withContext SyncResult.Error("Pairing key rejected by server — check the code and try again")
             var pulled = 0
-            if (remoteChanges != null) {
+            run {
                 val arr = JSONArray(remoteChanges)
                 for (i in 0 until arr.length()) {
                     val obj = arr.getJSONObject(i)
@@ -94,21 +98,23 @@ class SyncClient @Inject constructor(
         }
     }
 
-    private fun get(url: String): String? = try {
+    private fun get(url: String, syncKey: String? = null): String? = try {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.connectTimeout = TIMEOUT; conn.readTimeout = TIMEOUT
         conn.requestMethod = "GET"
+        syncKey?.let { conn.setRequestProperty("X-Sync-Key", it) }
         if (conn.responseCode == 200) conn.inputStream.bufferedReader().readText()
         else null
     } catch (_: Exception) { null }
 
-    private fun post(url: String, body: String): String? = try {
+    private fun post(url: String, body: String, syncKey: String? = null): String? = try {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.connectTimeout = TIMEOUT; conn.readTimeout = TIMEOUT
         conn.requestMethod = "POST"
         conn.doOutput = true
         conn.setRequestProperty("Content-Type", "application/json")
         conn.setRequestProperty("Content-Length", body.toByteArray().size.toString())
+        syncKey?.let { conn.setRequestProperty("X-Sync-Key", it) }
         conn.outputStream.write(body.toByteArray())
         conn.outputStream.flush()
         if (conn.responseCode == 200) conn.inputStream.bufferedReader().readText()

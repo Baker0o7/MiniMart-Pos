@@ -358,6 +358,110 @@ fun SettingsScreen(
                     }
                 }
 
+                // ── Multi-Device Sync (LAN) ───────────────────────────────────
+                if (isAdmin) {
+                    val syncState by syncVm.state.collectAsState()
+                    DSection("Multi-Device Sync (LAN)", Icons.Default.Sync) {
+                        Text("Device ID: ${syncState.deviceId.take(8)}…", color = DT.SubText, fontSize = 11.sp)
+                        Spacer(Modifier.height(10.dp))
+
+                        // This device as server
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Act as Sync Server", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                if (syncState.serverRunning)
+                                    Text("Server IP: ${syncState.serverIp}:9876", color = DT.Teal, fontSize = 11.sp)
+                                else
+                                    Text("Other devices can connect to this one", color = DT.SubText, fontSize = 11.sp)
+                            }
+                            Switch(
+                                checked = syncState.serverRunning,
+                                onCheckedChange = { if (it) syncVm.startServer() else syncVm.stopServer() },
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border)
+                            )
+                        }
+
+                        // Bug fix: SyncServer previously had NO authentication — any device on
+                        // the same WiFi could read or inject sync data. Show this device's
+                        // pairing code so it can be typed into the device that wants to connect.
+                        if (syncState.serverRunning) {
+                            Spacer(Modifier.height(10.dp))
+                            Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                .background(DT.Teal.copy(0.1f)).border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(12.dp))
+                                .padding(12.dp)) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Lock, null, tint = DT.Teal, modifier = Modifier.size(14.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text("Pairing code — enter this on the other device", color = DT.Teal, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                    }
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(syncState.mySecret, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold,
+                                        letterSpacing = 4.sp)
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(14.dp))
+                        HorizontalDivider(color = DT.Border)
+                        Spacer(Modifier.height(14.dp))
+
+                        // Connect to another server
+                        Text("Connect to Server", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = syncState.peerIp,
+                            onValueChange = { syncVm.setPeerIp(it) },
+                            label = { Text("Server IP address", color = DT.SubText) },
+                            placeholder = { Text("e.g. 192.168.1.100", color = DT.SubText.copy(0.5f)) },
+                            leadingIcon = { Icon(Icons.Default.Wifi, null, tint = DT.SubText) },
+                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = syncState.peerKey,
+                            onValueChange = { syncVm.setPeerKey(it.filter(Char::isDigit).take(6)) },
+                            label = { Text("Pairing code", color = DT.SubText) },
+                            placeholder = { Text("6-digit code shown on the server", color = DT.SubText.copy(0.5f)) },
+                            leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.SubText) },
+                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
+                        Spacer(Modifier.height(10.dp))
+
+                        // Pending badge + Sync button
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            if (syncState.pendingCount > 0)
+                                Box(Modifier.clip(RoundedCornerShape(8.dp)).background(DT.Amber.copy(0.15f)).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                                    Text("${syncState.pendingCount} pending", color = DT.Amber, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            Button(
+                                onClick = { syncVm.syncNow() },
+                                enabled = !syncState.isSyncing && syncState.peerIp.isNotBlank() && syncState.peerKey.isNotBlank(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.Surface2)
+                            ) {
+                                if (syncState.isSyncing) {
+                                    CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                                } else {
+                                    Icon(Icons.Default.Sync, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Sync Now", color = Color.White, fontSize = 13.sp)
+                                }
+                            }
+                        }
+                        syncState.lastResult?.let {
+                            Spacer(Modifier.height(6.dp))
+                            Text(it, color = if (it.startsWith("✓")) DT.Green else DT.Red, fontSize = 12.sp)
+                        }
+                    }
+                }
+
                 // ── Data & Backup ─────────────────────────────────────────────
                 if (isAdmin) {
                     DSection("Data & Backup", Icons.Default.Storage) {

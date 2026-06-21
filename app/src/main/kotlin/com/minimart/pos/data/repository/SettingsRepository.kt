@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -42,6 +43,11 @@ class SettingsRepository @Inject constructor(
         // bypassable. Now persisted via DataStore so it survives app restarts.
         val KEY_FAILED_ATTEMPTS  = intPreferencesKey("failed_pin_attempts")
         val KEY_LOCKOUT_UNTIL    = longPreferencesKey("lockout_until_epoch_ms")
+        // Bug fix: SyncServer had ZERO authentication — any device on the same WiFi
+        // network could read pending sync data or inject arbitrary fabricated entries
+        // with no barrier at all. This key holds a per-device, auto-generated shared
+        // secret that must be entered on every device being paired for sync.
+        val KEY_SYNC_SECRET      = stringPreferencesKey("sync_pairing_secret")
     }
 
     val storeName: Flow<String>         = context.dataStore.data.map { it[KEY_STORE_NAME] ?: "My MiniMart" }
@@ -117,5 +123,18 @@ class SettingsRepository @Inject constructor(
             prefs[KEY_FAILED_ATTEMPTS] = 0
             prefs[KEY_LOCKOUT_UNTIL] = 0L
         }
+    }
+
+    // ── Sync pairing secret ─────────────────────────────────────────────────────
+    /** Returns this device's sync secret, generating one on first use. Shown to the
+     * owner when enabling "Act as Sync Server" so it can be typed into other devices. */
+    suspend fun getOrCreateSyncSecret(): String {
+        val existing = context.dataStore.data.map { it[KEY_SYNC_SECRET] }.first()
+        if (!existing.isNullOrBlank()) return existing
+        // 6-digit numeric code: easy to read off one screen and type on another,
+        // while still being far too large to brute-force over a handful of LAN requests.
+        val generated = (100000..999999).random().toString()
+        context.dataStore.edit { it[KEY_SYNC_SECRET] = generated }
+        return generated
     }
 }
