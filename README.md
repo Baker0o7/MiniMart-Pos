@@ -6,7 +6,7 @@
 
 **Fast · Offline · Secure Android Point-of-Sale for Kenyan mini-markets**
 
-Built with Kotlin + Jetpack Compose · Designed for Mambrui & beyond 🇰🇪
+Built with Kotlin + Jetpack Compose 🇰🇪
 
 [![Release](https://img.shields.io/github/v/release/Baker0o7/MiniMart-Pos?color=00897B&label=Download%20APK&style=for-the-badge)](https://github.com/Baker0o7/MiniMart-Pos/releases/latest)
 [![Build](https://img.shields.io/github/actions/workflow/status/Baker0o7/MiniMart-Pos/release.yml?label=Build&color=00897B&style=for-the-badge)](https://github.com/Baker0o7/MiniMart-Pos/actions)
