@@ -1,7 +1,9 @@
 package com.minimart.pos.data.repository
 
+import androidx.room.withTransaction
 import com.minimart.pos.data.dao.SaleDao
 import com.minimart.pos.data.dao.TopSellerResult
+import com.minimart.pos.data.db.AppDatabase
 import com.minimart.pos.data.entity.*
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -10,7 +12,8 @@ import javax.inject.Singleton
 @Singleton
 class SaleRepository @Inject constructor(
     private val saleDao: SaleDao,
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val db: AppDatabase
 ) {
     fun getAllSalesWithItems(): Flow<List<SaleWithItems>> = saleDao.getAllSalesWithItems()
     fun getSalesToday(startMs: Long): Flow<List<Sale>> = saleDao.getSalesToday(startMs)
@@ -21,30 +24,42 @@ class SaleRepository @Inject constructor(
 
     suspend fun getSaleWithItems(saleId: Long): SaleWithItems? = saleDao.getSaleWithItems(saleId)
 
-    /** Complete a sale: persist the sale, items, and decrement stock. */
-    suspend fun completeSale(sale: Sale, items: List<SaleItem>): Long {
+    /** Complete a sale: persist the sale, items, and decrement stock — all atomically.
+     *
+     * Bug fix: this used to be two separate, uncoordinated steps — insertSaleWithItems()
+     * (its own transaction), then a forEach loop calling decrementStock() per item (each
+     * its own tiny transaction). If the app crashed or was killed by the OS partway
+     * through that loop, the sale + items were already committed but only SOME products
+     * had their stock decremented — silently corrupting inventory counts and risking
+     * overselling on the next sale (the stock check would pass against a stale, too-high
+     * number). Wrapping the whole thing in db.withTransaction{} makes it all-or-nothing.
+     */
+    suspend fun completeSale(sale: Sale, items: List<SaleItem>): Long = db.withTransaction {
         val saleId = saleDao.insertSaleWithItems(sale, items)
-        // Decrement stock for each sold product
         items.forEach { item ->
             productRepository.decrementStock(item.productId, item.quantity)
         }
-        return saleId
+        saleId
     }
 
     fun searchSales(query: String) = saleDao.searchSales(query)
     fun getCompletedSales() = saleDao.getCompletedSales()
 
-    suspend fun refundSale(saleId: Long, reason: String) {
-        val saleWithItems = saleDao.getSaleWithItems(saleId) ?: return
-        // Restore stock for each item
+    /** Bug fix: same atomicity gap as completeSale — restoring stock and marking the sale
+     * refunded were two separate steps; a crash between them could restore stock for a
+     * sale that never actually got marked refunded (or vice versa). */
+    suspend fun refundSale(saleId: Long, reason: String) = db.withTransaction {
+        val saleWithItems = saleDao.getSaleWithItems(saleId) ?: return@withTransaction
         saleWithItems.items.forEach { item ->
             productRepository.incrementStock(item.productId, item.quantity)
         }
         saleDao.refundSale(saleId, reason)
     }
 
-    suspend fun voidSale(saleId: Long, reason: String) {
-        val saleWithItems = saleDao.getSaleWithItems(saleId) ?: return
+    /** Bug fix: same as refundSale — stock restoration and the void status update are now
+     * one atomic unit. */
+    suspend fun voidSale(saleId: Long, reason: String) = db.withTransaction {
+        val saleWithItems = saleDao.getSaleWithItems(saleId) ?: return@withTransaction
         saleWithItems.items.forEach { item ->
             productRepository.incrementStock(item.productId, item.quantity)
         }

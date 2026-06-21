@@ -46,7 +46,12 @@ fun CheckoutScreen(
     onSaleComplete: (Long) -> Unit,
     onBack: () -> Unit,
     vm: CartViewModel,
-    canApplyDiscounts: Boolean = true,
+    // Bug fix: defaulted to true (allow), which is a fail-open footgun — any future call
+    // site that forgets to explicitly wire this would silently grant discount access to
+    // every role, including Cashier. The current call site in NavGraph already passes
+    // RoleManager.canApplyDiscounts(...) explicitly, so flipping this to fail-closed is
+    // zero-risk today and only protects against future call sites.
+    canApplyDiscounts: Boolean = false,
     customerVm: CustomerViewModel = hiltViewModel()
 ) {
     val state       by vm.uiState.collectAsState()
