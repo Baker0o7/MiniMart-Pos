@@ -179,7 +179,7 @@ private fun LowStockCard(
 
             // Expiry warning
             if (product.expiryDate > 0L) {
-                val daysLeft = ((product.expiryDate - System.currentTimeMillis()) / (1000 * 60 * 60 * 24)).toInt()
+                val daysLeft = ((product.expiryDate - System.currentTimeMillis()) / (1000L * 60 * 60 * 24)).toInt()
                 val expiryColor = if (daysLeft < 0) DT.Red else if (daysLeft <= 7) DT.Amber else DT.SubText
                 val label = if (daysLeft < 0) "⚠ Expired! ${-daysLeft} days ago"
                     else if (daysLeft == 0) "⚠ Expires today!"

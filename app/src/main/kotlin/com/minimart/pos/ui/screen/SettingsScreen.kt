@@ -99,7 +99,12 @@ fun SettingsScreen(
                     Text("Settings", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.weight(1f))
                     // Role chip
                     currentRole?.let { role ->
-                        val color = Color(RoleManager.roleBadgeColor(role).toLong() or 0xFF000000L)
+                        // roleBadgeColor returns a fully-opaque 0xFFxxxxxx Int literal.
+                        // Shift unsigned: toUInt().toLong() avoids sign-extension that
+                        // .toLong() alone applies (which would give a negative Long for
+                        // any color with bit 31 set, crashing Color() which requires a
+                        // non-negative packed ARGB Long value).
+                        val color = Color(RoleManager.roleBadgeColor(role).toUInt().toLong())
                         Box(modifier = Modifier.clip(RoundedCornerShape(20.dp))
                             .background(Color.White.copy(0.15f)).border(1.dp, Color.White.copy(0.3f), RoundedCornerShape(20.dp))
                             .padding(horizontal = 12.dp, vertical = 5.dp)) {

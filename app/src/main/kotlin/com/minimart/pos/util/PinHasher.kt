@@ -72,10 +72,17 @@ class PinHasher @Inject constructor() {
     }
 
     private fun verifyLegacy(pin: String, sha256Hash: String): Boolean {
+        // Bug fix: `computed == sha256Hash` is a regular String comparison that returns
+        // early on the first mismatched character — a timing side-channel that a
+        // sufficiently determined attacker could use to distinguish "wrong PIN" from
+        // "almost-right PIN" character by character. On a local retail device the
+        // attack surface is limited, but it's trivially avoidable. MessageDigest.isEqual
+        // does a constant-time length + byte comparison regardless of where the first
+        // difference is, so the response time reveals nothing about the hash content.
         val digest = MessageDigest.getInstance("SHA-256")
         val computed = digest.digest(pin.toByteArray(Charsets.UTF_8))
-            .joinToString("") { "%02x".format(it) }
-        return computed == sha256Hash
+        val stored   = sha256Hash.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        return MessageDigest.isEqual(computed, stored)
     }
 
     private fun generateSalt(): ByteArray {

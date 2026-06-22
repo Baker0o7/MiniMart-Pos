@@ -99,6 +99,10 @@ class SettingsRepository @Inject constructor(
     suspend fun setMpesaTill(t: String)        = context.dataStore.edit { it[KEY_MPESA_TILL] = t }
     suspend fun setMpesaWithdraw(n: String)    = context.dataStore.edit { it[KEY_MPESA_WITHDRAW] = n }
     suspend fun setMpesaAccountName(n: String) = context.dataStore.edit { it[KEY_MPESA_NAME] = n }
+    // DataStore.edit() is itself serialized and exclusive — only one edit block can run
+    // at a time per DataStore instance, and the block runs atomically (the value is
+    // either written completely or not at all). The var/capture pattern below is the
+    // idiomatic DataStore way to read the new value back from an edit block.
     suspend fun incrementReceiptCounter(): Int {
         var newVal = 0
         context.dataStore.edit { prefs ->

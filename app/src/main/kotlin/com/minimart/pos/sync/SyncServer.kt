@@ -69,10 +69,15 @@ class SyncServer @Inject constructor(
 
             val requestLine = reader.readLine() ?: return
             val headers = mutableMapOf<String, String>()
-            var line: String?
             var contentLength = 0
-            while (reader.readLine().also { line = it } != null && line!!.isNotEmpty()) {
-                val parts = line!!.split(": ", limit = 2)
+            // Bug fix: the original pattern was `while(readLine().also{line=it}!=null && line!!.isNotEmpty())`
+            // which double-derefs line!! after the null check — in theory safe due to single-thread
+            // execution, but the Kotlin compiler doesn't know that, and any refactor risks an NPE.
+            // Eliminated both !! by using a local `currentLine` val inside the loop instead.
+            loop@ while (true) {
+                val currentLine = reader.readLine() ?: break@loop
+                if (currentLine.isEmpty()) break@loop
+                val parts = currentLine.split(": ", limit = 2)
                 if (parts.size == 2) {
                     headers[parts[0]] = parts[1]
                     if (parts[0] == "Content-Length") contentLength = parts[1].toIntOrNull() ?: 0

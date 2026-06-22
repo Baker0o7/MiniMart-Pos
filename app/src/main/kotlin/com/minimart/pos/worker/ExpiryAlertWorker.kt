@@ -89,7 +89,10 @@ class ExpiryAlertWorker @AssistedInject constructor(
                     if (expiring.isNotEmpty()) {
                         append("Expiring soon: ")
                         append(expiring.take(3).joinToString(", ") { p ->
-                            val days = ((p.expiryDate - now) / (1000 * 60 * 60 * 24)).toInt()
+                            // Bug fix: (1000 * 60 * 60 * 24) is Int multiplication that
+                            // silently wraps on dates far in the future (>24 days as Int
+                            // overflows around 248 days). Use Long literals throughout.
+                            val days = ((p.expiryDate - now) / (1000L * 60 * 60 * 24)).toInt()
                             "${p.name} (${days}d)"
                         })
                         if (expiring.size > 3) append(" +${expiring.size - 3} more")
