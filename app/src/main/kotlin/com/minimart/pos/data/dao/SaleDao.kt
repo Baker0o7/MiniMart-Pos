@@ -22,6 +22,16 @@ interface SaleDao {
     """)
     fun getSalesByDateRange(startMs: Long, endMs: Long): Flow<List<Sale>>
 
+    /** Bug fix: getSalesByDateRange returns ALL statuses, so callers had to filter
+     * COMPLETED in Kotlin — loading every voided/refunded sale into memory first.
+     * This query filters in SQL so only revenue-counted sales are loaded. */
+    @Query("""
+        SELECT * FROM sales 
+        WHERE createdAt >= :startMs AND createdAt <= :endMs AND status = 'COMPLETED'
+        ORDER BY createdAt DESC
+    """)
+    fun getCompletedSalesByDateRange(startMs: Long, endMs: Long): Flow<List<Sale>>
+
     @Query("SELECT * FROM sales WHERE createdAt >= :startMs ORDER BY createdAt DESC")
     fun getSalesToday(startMs: Long): Flow<List<Sale>>
 

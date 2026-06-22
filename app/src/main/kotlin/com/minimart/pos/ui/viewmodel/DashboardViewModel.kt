@@ -56,32 +56,28 @@ class DashboardViewModel @Inject constructor(
                 _uiState.update { it.copy(storeName = name, currency = cur) }
             }.catch { }.collect()
         }
+        // Bug fix: the original code called getTotalRevenueToday(todayStart) once in
+        // init{} — todayStart is computed correctly each time via get(), but passing
+        // it once to a Room Flow bakes that timestamp forever. If the app stays alive
+        // past midnight (auto-start on boot, left running overnight) the "today's"
+        // query stays bound to the previous day's midnight, silently including all of
+        // yesterday's sales in "today's revenue". The flows now live inside a function
+        // that is re-invoked at midnight via a ticker, re-subscribing with a fresh date.
+        startDailyFlows()
         viewModelScope.launch {
-            saleRepo.getTotalRevenueToday(todayStart)
-                .catch { emit(null) }
-                .collect { revenue ->
-                    _uiState.update { it.copy(todayRevenue = revenue ?: 0.0) }
-                }
-        }
-        viewModelScope.launch {
-            saleRepo.getSaleCountToday(todayStart)
-                .catch { emit(0) }
-                .collect { count ->
-                    _uiState.update { it.copy(todaySaleCount = count) }
-                }
+            // Tick once a minute and restart the daily flows whenever the calendar date changes.
+            var lastDate = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_YEAR)
+            while (true) {
+                kotlinx.coroutines.delay(60_000)
+                val today = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_YEAR)
+                if (today != lastDate) { lastDate = today; startDailyFlows() }
+            }
         }
         viewModelScope.launch {
             productRepo.getLowStockProducts()
                 .catch { emit(emptyList()) }
                 .collect { products ->
                     _uiState.update { it.copy(lowStockProducts = products) }
-                }
-        }
-        viewModelScope.launch {
-            saleRepo.getTopSellers(todayStart)
-                .catch { emit(emptyList()) }
-                .collect { sellers ->
-                    _uiState.update { it.copy(topSellers = sellers) }
                 }
         }
         // Expiry alerts — use combine() to avoid nested collect deadlock
@@ -102,6 +98,31 @@ class DashboardViewModel @Inject constructor(
     }
 
     /** Pull-to-refresh: re-triggers DB queries for fresh data */
+    private var dailyFlowJobs: List<kotlinx.coroutines.Job> = emptyList()
+
+    private fun startDailyFlows() {
+        // Cancel previous subscriptions before re-subscribing with today's fresh timestamp
+        dailyFlowJobs.forEach { it.cancel() }
+        val ts = todayStart
+        dailyFlowJobs = listOf(
+            viewModelScope.launch {
+                saleRepo.getTotalRevenueToday(ts)
+                    .catch { emit(null) }
+                    .collect { _uiState.update { s -> s.copy(todayRevenue = it ?: 0.0) } }
+            },
+            viewModelScope.launch {
+                saleRepo.getSaleCountToday(ts)
+                    .catch { emit(0) }
+                    .collect { _uiState.update { s -> s.copy(todaySaleCount = it) } }
+            },
+            viewModelScope.launch {
+                saleRepo.getTopSellers(ts)
+                    .catch { emit(emptyList()) }
+                    .collect { _uiState.update { s -> s.copy(topSellers = it) } }
+            }
+        )
+    }
+
     fun refresh() {
         viewModelScope.launch {
             val todayStart = todayStartMs()
