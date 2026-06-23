@@ -50,6 +50,13 @@ class DashboardViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
+    // Bug fix: dailyFlowJobs MUST be declared before init{} because startDailyFlows()
+    // (called in init) accesses it via .forEach { it.cancel() }. In Kotlin, member
+    // properties initialize in declaration order — if this var appeared after init{},
+    // it hadn't been set yet when startDailyFlows() ran, causing a NullPointerException
+    // crash on app start every time. Moved above init{} to guarantee initialization order.
+    private var dailyFlowJobs: List<kotlinx.coroutines.Job> = emptyList()
+
     init {
         viewModelScope.launch {
             settingsRepo.storeName.combine(settingsRepo.currency) { name, cur ->
@@ -96,9 +103,6 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
-
-    /** Pull-to-refresh: re-triggers DB queries for fresh data */
-    private var dailyFlowJobs: List<kotlinx.coroutines.Job> = emptyList()
 
     private fun startDailyFlows() {
         // Cancel previous subscriptions before re-subscribing with today's fresh timestamp
