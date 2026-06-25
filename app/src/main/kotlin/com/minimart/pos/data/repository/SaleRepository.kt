@@ -18,6 +18,7 @@ class SaleRepository @Inject constructor(
     fun getAllSalesWithItems(): Flow<List<SaleWithItems>> = saleDao.getAllSalesWithItems()
     fun getSalesToday(startMs: Long): Flow<List<Sale>> = saleDao.getSalesToday(startMs)
     fun getTotalRevenueToday(startMs: Long): Flow<Double?> = saleDao.getTotalRevenueToday(startMs)
+    fun getTotalRevenueBetween(start: Long, end: Long): Flow<Double?> = saleDao.getTotalRevenueBetween(start, end)
     fun getSaleCountToday(startMs: Long): Flow<Int> = saleDao.getSaleCountToday(startMs)
     fun getTopSellers(startMs: Long): Flow<List<TopSellerResult>> = saleDao.getTopSellingProducts(startMs)
     fun getSalesByDateRange(start: Long, end: Long): Flow<List<Sale>> = saleDao.getSalesByDateRange(start, end)

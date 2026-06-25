@@ -43,16 +43,21 @@ class ReportsViewModel @Inject constructor(
         .flatMapLatest { (period, currency) ->
             val (start, end) = periodRange(period)
             combine(
-                saleRepo.getSalesByDateRange(start, end),
+                // Bug fix: was getSalesByDateRange (all statuses) then .filter{COMPLETED}
+                // in Kotlin — loaded voided/refunded sales into memory unnecessarily.
+                // getCompletedSalesByDateRange filters in SQL, only useful rows fetched.
+                saleRepo.getCompletedSalesByDateRange(start, end),
                 saleRepo.getTopSellers(start)
-            ) { sales, topSellers ->
-                val completed = sales.filter { it.status == com.minimart.pos.data.entity.SaleStatus.COMPLETED }
+            ) { completed, topSellers ->
+                val totalRevenue = completed.sumOf { it.totalAmount }
                 ReportsUiState(
                     period = period,
                     sales = completed,
-                    totalRevenue = completed.sumOf { it.totalAmount },
+                    totalRevenue = totalRevenue,
                     totalTransactions = completed.size,
-                    averageBasket = if (completed.isEmpty()) 0.0 else completed.sumOf { it.totalAmount } / completed.size,
+                    // Bug fix: was sumOf { totalAmount } / size computed twice — use the
+                    // already-computed totalRevenue value instead.
+                    averageBasket = if (completed.isEmpty()) 0.0 else totalRevenue / completed.size,
                     topSellers = topSellers,
                     currency = currency
                 )
@@ -63,13 +68,26 @@ class ReportsViewModel @Inject constructor(
     fun setPeriod(period: ReportPeriod) { _period.value = period }
 
     private fun periodRange(period: ReportPeriod): Pair<Long, Long> {
-        val end = System.currentTimeMillis()
+        val now = System.currentTimeMillis()
+        val cal = Calendar.getInstance()
         val start = when (period) {
             ReportPeriod.TODAY  -> todayStartMs()
-            ReportPeriod.WEEK   -> end - 7L * 24 * 60 * 60 * 1000
-            ReportPeriod.MONTH  -> end - 30L * 24 * 60 * 60 * 1000
-            ReportPeriod.CUSTOM -> end - 90L * 24 * 60 * 60 * 1000
+            ReportPeriod.WEEK   -> {
+                // Bug fix: was `now - 7*24h` rolling window. Anchored to Mon 00:00.
+                cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0)
+                cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+                cal.timeInMillis
+            }
+            ReportPeriod.MONTH  -> {
+                // Bug fix: was `now - 30*24h` rolling window. Anchored to 1st 00:00.
+                cal.set(Calendar.DAY_OF_MONTH, 1)
+                cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0)
+                cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+                cal.timeInMillis
+            }
+            ReportPeriod.CUSTOM -> now - 90L * 24 * 60 * 60 * 1000
         }
-        return Pair(start, end)
+        return Pair(start, now)
     }
 }

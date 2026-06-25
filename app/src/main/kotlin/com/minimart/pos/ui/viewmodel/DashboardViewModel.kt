@@ -22,6 +22,7 @@ data class DashboardUiState(
     val storeName: String = "My MiniMart",
     val currency: String = "KES",
     val todayRevenue: Double = 0.0,
+    val yesterdayRevenue: Double = 0.0,   // Bug fix: was hardcoded "+8%" in the UI
     val todaySaleCount: Int = 0,
     val lowStockProducts: List<Product> = emptyList(),
     val topSellers: List<TopSellerResult> = emptyList(),
@@ -108,11 +109,20 @@ class DashboardViewModel @Inject constructor(
         // Cancel previous subscriptions before re-subscribing with today's fresh timestamp
         dailyFlowJobs.forEach { it.cancel() }
         val ts = todayStart
+        val yesterdayStart = ts - 24L * 60 * 60 * 1000
         dailyFlowJobs = listOf(
             viewModelScope.launch {
                 saleRepo.getTotalRevenueToday(ts)
                     .catch { emit(null) }
                     .collect { _uiState.update { s -> s.copy(todayRevenue = it ?: 0.0) } }
+            },
+            viewModelScope.launch {
+                // Yesterday's revenue (midnight yesterday to midnight today — not "last 24h")
+                saleRepo.getTotalRevenueBetween(yesterdayStart, ts)
+                    .catch { emit(null) }
+                    .collect { rev ->
+                        _uiState.update { s -> s.copy(yesterdayRevenue = rev ?: 0.0) }
+                    }
             },
             viewModelScope.launch {
                 saleRepo.getSaleCountToday(ts)

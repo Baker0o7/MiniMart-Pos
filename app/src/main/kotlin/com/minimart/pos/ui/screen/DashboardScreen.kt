@@ -155,8 +155,14 @@ fun DashboardScreen(
                                 Box(Modifier.clip(RoundedCornerShape(8.dp))
                                     .background(GreenGlow.copy(0.18f))
                                     .padding(horizontal = 7.dp, vertical = 3.dp)) {
-                                    Text("+${if (state.todayRevenue > 0) "8" else "0"}%",
-                                        color = GreenGlow, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    // Bug fix: was hardcoded "+8%" whenever revenue > 0 — a
+                                    // placeholder never replaced with real data.
+                                    val pct = if (state.yesterdayRevenue > 0)
+                                        ((state.todayRevenue - state.yesterdayRevenue) / state.yesterdayRevenue * 100)
+                                    else if (state.todayRevenue > 0) 100.0 else 0.0
+                                    val pctLabel = if (pct >= 0) "+${String.format("%.0f", pct)}%" else "${String.format("%.0f", pct)}%"
+                                    val pctColor = if (pct >= 0) GreenGlow else RedGlow
+                                    Text(pctLabel, color = pctColor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                             Spacer(Modifier.height(6.dp))
@@ -168,10 +174,15 @@ fun DashboardScreen(
                                 TealGlow, Modifier.fillMaxWidth().height(44.dp))
                             Spacer(Modifier.height(4.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = GreenGlow, modifier = Modifier.size(12.dp))
+                                val pct2 = if (state.yesterdayRevenue > 0)
+                                    ((state.todayRevenue - state.yesterdayRevenue) / state.yesterdayRevenue * 100)
+                                else if (state.todayRevenue > 0) 100.0 else 0.0
+                                val trending = if (pct2 >= 0) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown
+                                val trendColor = if (pct2 >= 0) GreenGlow else RedGlow
+                                val pctLabel2 = if (pct2 >= 0) "+${String.format("%.0f", pct2)}%" else "${String.format("%.0f", pct2)}%"
+                                Icon(trending, null, tint = trendColor, modifier = Modifier.size(12.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text("+${if (state.todayRevenue > 0) "8" else "0"}% from yesterday",
-                                    color = GreenGlow, fontSize = 10.sp)
+                                Text("$pctLabel2 from yesterday", color = trendColor, fontSize = 10.sp)
                             }
                         }
                     }

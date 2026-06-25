@@ -58,7 +58,10 @@ class SalesHistoryViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 
     val totalRevenue: StateFlow<Double> = sales
-        .map { list -> list.filter { it.sale.status == SaleStatus.COMPLETED }.sumOf { it.sale.totalAmount } }
+        // Bug fix: was .filter { COMPLETED }.sumOf{} but getCompletedSales() and
+        // searchSales already only return COMPLETED status rows. Removed the
+        // redundant Kotlin-level filter — just sum the list directly.
+        .map { list -> list.sumOf { it.sale.totalAmount } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), 0.0)
 
     fun setQuery(q: String) { _query.value = q }

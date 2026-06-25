@@ -38,6 +38,9 @@ interface SaleDao {
     @Query("SELECT SUM(totalAmount) FROM sales WHERE createdAt >= :startMs AND status = 'COMPLETED'")
     fun getTotalRevenueToday(startMs: Long): Flow<Double?>
 
+    @Query("SELECT SUM(totalAmount) FROM sales WHERE createdAt >= :startMs AND createdAt < :endMs AND status = 'COMPLETED'")
+    fun getTotalRevenueBetween(startMs: Long, endMs: Long): Flow<Double?>
+
     @Query("SELECT COUNT(*) FROM sales WHERE createdAt >= :startMs AND status = 'COMPLETED'")
     fun getSaleCountToday(startMs: Long): Flow<Int>
 
