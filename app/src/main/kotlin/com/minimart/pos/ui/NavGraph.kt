@@ -105,12 +105,13 @@ fun MiniMartNavGraph(
         bottomBar = {
             if (showBottomNav) {
                 BottomNavBar(
-                    currentRoute = currentRoute,
-                    onHome       = { navController.navigate(Routes.DASHBOARD) { launchSingleTop = true; restoreState = true } },
-                    onProducts   = { navController.navigate(Routes.PRODUCTS)  { launchSingleTop = true } },
-                    onScan       = { navController.navigate(Routes.SCANNER) },
-                    onExpenses   = { navController.navigate(Routes.EXPENSES)  { launchSingleTop = true } },
-                    onInventory  = { navController.navigate(Routes.INVENTORY) { launchSingleTop = true } }
+                    currentRoute  = currentRoute,
+                    cartItemCount = cartVm.uiState.collectAsState().value.itemCount,
+                    onHome        = { navController.navigate(Routes.DASHBOARD) { launchSingleTop = true; restoreState = true } },
+                    onProducts    = { navController.navigate(Routes.PRODUCTS)  { launchSingleTop = true } },
+                    onScan        = { navController.navigate(Routes.SCANNER) },
+                    onExpenses    = { navController.navigate(Routes.EXPENSES)  { launchSingleTop = true } },
+                    onInventory   = { navController.navigate(Routes.INVENTORY) { launchSingleTop = true } }
                 )
             }
         }
@@ -238,6 +239,7 @@ fun MiniMartNavGraph(
 @Composable
 private fun BottomNavBar(
     currentRoute: String?,
+    cartItemCount: Int = 0,
     onHome: () -> Unit,
     onProducts: () -> Unit,
     onScan: () -> Unit,
@@ -269,6 +271,22 @@ private fun BottomNavBar(
             .clickable(onClick = onScan),
             contentAlignment = Alignment.Center) {
             Icon(Icons.Default.QrCode, null, tint = Color.White, modifier = Modifier.size(30.dp))
+            // Cart item count badge
+            if (cartItemCount > 0) {
+                Box(modifier = androidx.compose.ui.Modifier.align(Alignment.TopEnd)
+                    .offset(x = 2.dp, y = (-2).dp)
+                    .size(18.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFEF5350)),
+                    contentAlignment = Alignment.Center) {
+                    androidx.compose.material3.Text(
+                        text = if (cartItemCount > 9) "9+" else cartItemCount.toString(),
+                        color = Color.White, fontSize = 9.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        lineHeight = 9.sp
+                    )
+                }
+            }
         }
     }
 }

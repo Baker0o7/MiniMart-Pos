@@ -139,13 +139,21 @@ class DashboardViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            val todayStart = todayStartMs()
+            val todayStart    = todayStartMs()
+            val yesterdayStart = todayStart - 24L * 60 * 60 * 1000
             try {
-                val revenue = saleRepo.getTotalRevenueToday(todayStart).first() ?: 0.0
-                val count = saleRepo.getSaleCountToday(todayStart).first()
-                val low = productRepo.getLowStockProducts().first()
-                val top = saleRepo.getTopSellers(todayStart).first()
-                _uiState.update { it.copy(todayRevenue = revenue, todaySaleCount = count, lowStockProducts = low, topSellers = top) }
+                val revenue   = saleRepo.getTotalRevenueToday(todayStart).first() ?: 0.0
+                val yesterday = saleRepo.getTotalRevenueBetween(yesterdayStart, todayStart).first() ?: 0.0
+                val count     = saleRepo.getSaleCountToday(todayStart).first()
+                val low       = productRepo.getLowStockProducts().first()
+                val top       = saleRepo.getTopSellers(todayStart).first()
+                _uiState.update { it.copy(
+                    todayRevenue     = revenue,
+                    yesterdayRevenue = yesterday,
+                    todaySaleCount   = count,
+                    lowStockProducts = low,
+                    topSellers       = top
+                ) }
             } catch (_: Exception) {}
         }
     }
