@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.minimart.pos.data.entity.PaymentMethod
 import com.minimart.pos.data.entity.SaleStatus
 import com.minimart.pos.data.entity.SaleWithItems
 import com.minimart.pos.data.repository.SaleRepository
@@ -209,11 +210,23 @@ private fun SaleHistoryRow(
                     }
                 }
             }
-            // Items summary
+            // Items summary + payment method chip
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.ShoppingCart, null, tint = DT.SubText, modifier = Modifier.size(14.dp))
-                Text("${saleWithItems.items.size} item${if (saleWithItems.items.size != 1) "s" else ""}  •  ${sale.paymentMethod.name}",
+                Text("${saleWithItems.items.size} item${if (saleWithItems.items.size != 1) "s" else ""}",
                     color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                val (pmLabel, pmColor) = when (sale.paymentMethod) {
+                    PaymentMethod.CASH   -> "💵 Cash"   to DT.Green
+                    PaymentMethod.MPESA  -> "📱 M-Pesa" to Color(0xFF00C853)
+                    PaymentMethod.CARD   -> "💳 Card"   to Color(0xFF1565C0)
+                    PaymentMethod.CREDIT -> "🤝 Credit" to DT.Amber
+                    PaymentMethod.MIXED  -> "🔀 Split"  to Color(0xFF7B1FA2)
+                }
+                Box(modifier = Modifier.clip(RoundedCornerShape(6.dp))
+                    .background(pmColor.copy(0.15f))
+                    .padding(horizontal = 6.dp, vertical = 1.dp)) {
+                    Text(pmLabel, color = pmColor, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                }
                 if (!sale.mpesaRef.isNullOrBlank()) {
                     Text("•  Ref: ${sale.mpesaRef}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                 }

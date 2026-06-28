@@ -64,9 +64,9 @@ class CartViewModel @Inject constructor(
     init {
         // Listen to keyboard/HID scanner events
         viewModelScope.launch {
-            keyboardScanner.barcodeFlow.collect { barcode ->
-                processBarcode(barcode)
-            }
+            keyboardScanner.barcodeFlow
+                .catch { /* keyboard scanner error — ignore, flow auto-resumes */ }
+                .collect { barcode -> processBarcode(barcode) }
         }
     }
 

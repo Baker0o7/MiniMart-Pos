@@ -103,6 +103,18 @@ class UserManagementViewModel @Inject constructor(
     fun deactivateUser(user: User) {
         viewModelScope.launch {
             try {
+                // Bug fix: no guard existed against removing the last active Owner.
+                // If the only Owner account got deactivated, nobody could reach
+                // User Management (Owner-only screen) to re-enable it — permanent lockout.
+                if (user.role == UserRole.OWNER) {
+                    val activeOwners = _state.value.users.count {
+                        it.role == UserRole.OWNER && it.isActive && it.id != user.id
+                    }
+                    if (activeOwners == 0) {
+                        _state.update { it.copy(error = "Cannot remove the last Owner account") }
+                        return@launch
+                    }
+                }
                 userRepo.updateUser(user.copy(isActive = false))
                 _state.update { it.copy(success = "${user.displayName} removed") }
             } catch (e: Exception) {

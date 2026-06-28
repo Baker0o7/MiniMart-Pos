@@ -49,18 +49,20 @@ class SyncViewModel @Inject constructor(
     init {
         // Watch pending count
         viewModelScope.launch {
-            syncDao.getPendingCount().collect { count ->
-                _state.update { it.copy(pendingCount = count) }
-            }
+            syncDao.getPendingCount()
+                .catch { emit(0) }
+                .collect { count -> _state.update { it.copy(pendingCount = count) } }
         }
         // Watch server state
         viewModelScope.launch {
-            server.isRunning.collect { running ->
-                _state.update { it.copy(
-                    serverRunning = running,
-                    serverIp = if (running) server.getLocalIp() else ""
-                ) }
-            }
+            server.isRunning
+                .catch { emit(false) }
+                .collect { running ->
+                    _state.update { it.copy(
+                        serverRunning = running,
+                        serverIp = if (running) server.getLocalIp() else ""
+                    ) }
+                }
         }
         // Load (or generate) this device's pairing secret up front, so it's ready to
         // display the moment the owner toggles "Act as Sync Server" on.

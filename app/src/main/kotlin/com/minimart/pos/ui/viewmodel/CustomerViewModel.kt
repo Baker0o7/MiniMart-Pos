@@ -43,7 +43,7 @@ class CustomerViewModel @Inject constructor(
         viewModelScope.launch {
             _query.debounce(200).collectLatest { q ->
                 val flow = if (q.isBlank()) repo.getAllCustomers() else repo.searchCustomers(q)
-                flow.collect { list ->
+                flow.catch { emit(emptyList()) }.collect { list ->
                     _state.update { it.copy(customers = list) }
                 }
             }
@@ -51,7 +51,7 @@ class CustomerViewModel @Inject constructor(
         viewModelScope.launch {
             _selectedCustomerId.flatMapLatest { id ->
                 if (id == null) flowOf(emptyList()) else repo.getTransactions(id)
-            }.collect { txs ->
+            }.catch { emit(emptyList()) }.collect { txs ->
                 _state.update { it.copy(transactions = txs) }
             }
         }

@@ -43,9 +43,9 @@ class ExpenseViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            settingsRepo.currency.collect { cur ->
-                _uiState.update { it.copy(currency = cur) }
-            }
+            settingsRepo.currency
+                .catch { emit("KES") }
+                .collect { cur -> _uiState.update { it.copy(currency = cur) } }
         }
         viewModelScope.launch {
             _period.collect { period ->
