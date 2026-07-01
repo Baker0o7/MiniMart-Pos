@@ -195,7 +195,8 @@ fun MiniMartNavGraph(
                     SalesHistoryScreen(
                         onBack = { navController.popBackStack() },
                         onSaleClick = { saleId -> navController.navigate(Routes.receipt(saleId)) },
-                        currency = currency
+                        currency = currency,
+                        currentRole = authState.currentUser?.role
                     )
                 }
                 composable(Routes.LOW_STOCK) {

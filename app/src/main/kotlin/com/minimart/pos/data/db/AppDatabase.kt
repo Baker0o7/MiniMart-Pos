@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 @Database(
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -64,7 +64,20 @@ object AppMigrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10)
+    /** v10 → v11: added DB indices for performance on high-query columns.
+     * SQLite CREATE INDEX is safe on existing tables — no data is affected. */
+    val MIGRATION_10_11 = object : androidx.room.migration.Migration(10, 11) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_sales_createdAt ON sales(createdAt)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_sales_status ON sales(status)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_products_pluCode ON products(pluCode)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_customers_phone ON customers(phone)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_log_status ON sync_log(status)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_sync_log_createdAt ON sync_log(createdAt)")
+        }
+    }
+
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
 }
 
 class AppTypeConverters {

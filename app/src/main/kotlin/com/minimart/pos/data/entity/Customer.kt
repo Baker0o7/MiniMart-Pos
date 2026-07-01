@@ -2,7 +2,7 @@ package com.minimart.pos.data.entity
 
 import androidx.room.*
 
-@Entity(tableName = "customers")
+@Entity(tableName = "customers", indices = [Index("phone")])
 data class Customer(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,

@@ -6,7 +6,7 @@ enum class SyncEntityType { PRODUCT, SALE, CUSTOMER, EXPENSE, CREDIT_TX }
 enum class SyncOperation  { CREATE, UPDATE, DELETE }
 enum class SyncStatus     { PENDING, SYNCED, CONFLICT }
 
-@Entity(tableName = "sync_log")
+@Entity(tableName = "sync_log", indices = [Index("status"), Index("createdAt")])
 data class SyncLog(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val entityType: SyncEntityType,

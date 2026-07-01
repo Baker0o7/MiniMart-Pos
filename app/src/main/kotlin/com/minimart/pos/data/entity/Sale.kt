@@ -13,7 +13,11 @@ import androidx.room.Relation
 enum class PaymentMethod { CASH, MPESA, CARD, MIXED, CREDIT }
 enum class SaleStatus { COMPLETED, REFUNDED, VOIDED }
 
-@Entity(tableName = "sales")
+@Entity(tableName = "sales",
+    // Bug fix: createdAt and status are queried in every revenue/report query with no
+    // index — each query did a full table scan. On a busy store with 10k+ sales,
+    // this makes the dashboard and Reports screen progressively slower.
+    indices = [Index("createdAt"), Index("status")])
 data class Sale(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val receiptNumber: String,           // e.g. "RCP-20250412-0001"

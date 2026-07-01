@@ -38,6 +38,15 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
 // ─── ViewModel ────────────────────────────────────────────────────────────────
 
@@ -66,6 +75,15 @@ class SalesHistoryViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), 0.0)
 
     fun setQuery(q: String) { _query.value = q }
+
+    /** Void a sale directly from the history list — for Manager/Owner without
+     * needing to navigate to the full receipt screen. */
+    fun voidSale(saleId: Long, reason: String) {
+        viewModelScope.launch {
+            try { saleRepo.voidSale(saleId, reason) }
+            catch (_: Exception) {}
+        }
+    }
 }
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
@@ -76,8 +94,10 @@ fun SalesHistoryScreen(
     onBack: () -> Unit,
     onSaleClick: (Long) -> Unit,
     currency: String,
+    currentRole: com.minimart.pos.data.entity.UserRole? = null,
     vm: SalesHistoryViewModel = hiltViewModel()
 ) {
+    val canVoid = com.minimart.pos.util.RoleManager.canApplyDiscounts(currentRole) // Manager+ only
     val query   by vm.query.collectAsState()
     val sales   by vm.sales.collectAsState()
     val total   by vm.totalRevenue.collectAsState()
@@ -159,6 +179,8 @@ fun SalesHistoryScreen(
                             saleWithItems = saleWithItems,
                             currency = currency,
                             df = df,
+                            canVoid = canVoid,
+                            onVoid = { vm.voidSale(saleWithItems.sale.id, "Voided by manager") },
                             onClick = { onSaleClick(saleWithItems.sale.id) }
                         )
                     }
@@ -173,14 +195,39 @@ private fun SaleHistoryRow(
     saleWithItems: SaleWithItems,
     currency: String,
     df: SimpleDateFormat,
+    canVoid: Boolean = false,
+    onVoid: () -> Unit = {},
     onClick: () -> Unit
 ) {
     val sale = saleWithItems.sale
+    var showVoidConfirm by remember { mutableStateOf(false) }
     val statusColor = when (sale.status) {
         SaleStatus.COMPLETED -> DT.Green
         SaleStatus.VOIDED    -> DT.Red
         SaleStatus.REFUNDED  -> DT.Amber
         else                 -> DT.SubText
+    }
+
+    if (showVoidConfirm) {
+        AlertDialog(
+            onDismissRequest = { showVoidConfirm = false },
+            containerColor = DT.Surface,
+            title = { Text("Void Sale?", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text("Receipt #${sale.receiptNumber}\n${currency} ${String.format("%,.2f", sale.totalAmount)}\n\nThis cannot be undone.", color = DT.SubText) },
+            confirmButton = {
+                Button(onClick = { onVoid(); showVoidConfirm = false },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DT.Red)) {
+                    Text("Void", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showVoidConfirm = false }, shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) {
+                    Text("Cancel", color = DT.SubText)
+                }
+            }
+        )
     }
 
     Box(
@@ -229,6 +276,21 @@ private fun SaleHistoryRow(
                 }
                 if (!sale.mpesaRef.isNullOrBlank()) {
                     Text("•  Ref: ${sale.mpesaRef}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            // Quick void button for Manager/Owner on COMPLETED sales only
+            if (canVoid && sale.status == SaleStatus.COMPLETED) {
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = { showVoidConfirm = true },
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DT.Red.copy(0.5f)),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier.height(28.dp)
+                ) {
+                    Icon(Icons.Default.Cancel, null, tint = DT.Red, modifier = Modifier.size(12.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Void", color = DT.Red, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
