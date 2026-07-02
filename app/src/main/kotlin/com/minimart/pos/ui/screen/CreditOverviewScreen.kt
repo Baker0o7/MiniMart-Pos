@@ -41,9 +41,17 @@ fun CreditOverviewScreen(
     vm: CustomerViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
-    val creditCustomers = state.customers.filter { it.creditBalance > 0 }
-        .sortedByDescending { it.creditBalance }
-    val totalOutstanding = creditCustomers.sumOf { it.creditBalance }
+    // Bug fix: was filter { creditBalance > 0 } — customers with NEGATIVE balances
+    // (buy-on-account, i.e. they OWE money) were completely invisible in the Credit
+    // Ledger. These are the most important ones to track. Now shows ALL customers with
+    // a non-zero balance, sorted with debtors (negative) first so unpaid accounts are
+    // always at the top of the list.
+    val creditCustomers = state.customers
+        .filter { it.creditBalance != 0.0 }
+        .sortedWith(compareBy({ it.creditBalance >= 0 }, { -kotlin.math.abs(it.creditBalance) }))
+    val totalCredit   = creditCustomers.filter { it.creditBalance > 0 }.sumOf { it.creditBalance }
+    val totalOwed     = creditCustomers.filter { it.creditBalance < 0 }.sumOf { -it.creditBalance }
+    val totalOutstanding = totalCredit  // positive wallet balances held on behalf of customers
     var expandedId by remember { mutableStateOf<Long?>(null) }
     var showAddCreditDialog by remember { mutableStateOf<Customer?>(null) }
 
@@ -80,7 +88,8 @@ fun CreditOverviewScreen(
             item {
                 Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    // Total outstanding
+                    // Total owed (buy-on-account / negative balances)
+                    val debtors = creditCustomers.count { it.creditBalance < 0 }
                     Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
                         .background(Brush.verticalGradient(listOf(Color(0xFF1F0A0A), Color(0xFF0F0505))))
                         .border(1.dp, DT.Red.copy(0.3f), RoundedCornerShape(18.dp)).padding(14.dp)) {
@@ -88,12 +97,12 @@ fun CreditOverviewScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.AccountBalanceWallet, null, tint = DT.Red, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Outstanding", color = DT.SubText, fontSize = 11.sp)
+                                Text("Owed to Shop", color = DT.SubText, fontSize = 11.sp)
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text("KES ${String.format("%,.2f", totalOutstanding)}",
+                            Text("KES ${String.format("%,.2f", totalOwed)}",
                                 color = DT.Red, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
-                            Text("${creditCustomers.size} customers", color = DT.SubText, fontSize = 10.sp)
+                            Text("$debtors customer${if (debtors != 1) "s" else ""}", color = DT.SubText, fontSize = 10.sp)
                         }
                     }
                     // All customers stats
@@ -171,13 +180,19 @@ fun CreditOverviewScreen(
                                     color = DT.SubText, fontSize = 10.sp)
                             }
                             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                // Credit balance badge
+                                // Credit balance badge — green = customer has credit wallet,
+                                // red = customer owes money (buy-on-account / negative balance)
+                                val balanceColor = if (customer.creditBalance < 0) DT.Red else DT.Green
+                                val balanceLabel = if (customer.creditBalance < 0)
+                                    "OWES KES ${String.format("%.2f", -customer.creditBalance)}"
+                                else
+                                    "KES ${String.format("%.2f", customer.creditBalance)}"
                                 Box(Modifier.clip(RoundedCornerShape(10.dp))
-                                    .background(DT.Red.copy(0.15f))
-                                    .border(1.dp, DT.Red.copy(0.4f), RoundedCornerShape(10.dp))
+                                    .background(balanceColor.copy(0.15f))
+                                    .border(1.dp, balanceColor.copy(0.4f), RoundedCornerShape(10.dp))
                                     .padding(horizontal = 10.dp, vertical = 5.dp)) {
-                                    Text("KES ${String.format("%.2f", customer.creditBalance)}",
-                                        color = DT.Red, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+                                    Text(balanceLabel,
+                                        color = balanceColor, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
                                 }
                                 // Add credit button
                                 Box(Modifier.size(28.dp).clip(CircleShape).background(DT.Teal.copy(0.15f))

@@ -34,14 +34,19 @@ class ShiftRepository @Inject constructor(
     suspend fun clockOut(shiftId: Long, closingFloat: Double, notes: String): Shift? {
         val shift = shiftDao.getShiftById(shiftId) ?: return null
 
-        // Collect sales for THIS cashier only during their shift window
-        val salesList: List<Sale> = saleRepo
-            .getSalesByDateRange(shift.clockIn, System.currentTimeMillis())
-            .first()
+        // Bug fix: no guard against closing an already-COMPLETED shift. Clocking out
+        // a closed shift a second time produced a different (wrong) summary because
+        // totalSales was recalculated against the current timestamp, potentially
+        // including sales from a later shift in the window.
+        if (shift.clockOut != null) return shift
 
-        val completed = salesList.filter { 
-            it.status == SaleStatus.COMPLETED && it.cashierId == shift.cashierId 
-        }
+        // Bug fix: was getSalesByDateRange (all statuses) filtered in Kotlin.
+        // Use getCompletedSalesByDateRange to filter in SQL and avoid loading
+        // VOIDED/REFUNDED sales into memory.
+        val completed: List<Sale> = saleRepo
+            .getCompletedSalesByDateRange(shift.clockIn, System.currentTimeMillis())
+            .first()
+            .filter { it.cashierId == shift.cashierId }
 
         var cashSales  = 0.0
         var mpesaSales = 0.0
