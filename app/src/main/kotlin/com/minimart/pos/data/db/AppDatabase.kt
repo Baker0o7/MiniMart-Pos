@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 @Database(
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -77,7 +77,15 @@ object AppMigrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+    /** v11 → v12: weightKg added to sale_items so weighed (PLU/scale) sale records
+     * can be correctly reconstructed for receipts, history, and refunds. */
+    val MIGRATION_11_12 = object : androidx.room.migration.Migration(11, 12) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE sale_items ADD COLUMN weightKg REAL NOT NULL DEFAULT 0.0")
+        }
+    }
+
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
 }
 
 class AppTypeConverters {

@@ -63,7 +63,11 @@ data class SaleItem(
     val quantity: Int,
     val discountAmount: Double = 0.0,
     val taxAmount: Double = 0.0,
-    val lineTotal: Double                // (unitPrice * quantity) - discount + tax
+    val lineTotal: Double,               // (unitPrice * quantity) - discount + tax
+    // Bug fix: weightKg was never persisted — weighed (PLU/scale) items always stored
+    // quantity=1 and lost the actual weight. Receipts showed "1 pcs" instead of "0.500 kg"
+    // and refunds couldn't reconstruct the correct line total for weighed sales.
+    @androidx.room.ColumnInfo(defaultValue = "0.0") val weightKg: Double = 0.0
 )
 
 // ─── Sale with items (Room relation) ─────────────────────────────────────────

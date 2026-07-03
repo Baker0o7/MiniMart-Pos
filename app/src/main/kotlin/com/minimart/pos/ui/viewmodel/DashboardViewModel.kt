@@ -182,7 +182,8 @@ data class AuthUiState(
 class AuthViewModel @Inject constructor(
     private val userRepo: UserRepository,
     private val settingsRepo: SettingsRepository,
-    private val pinHasher: com.minimart.pos.util.PinHasher
+    private val pinHasher: com.minimart.pos.util.PinHasher,
+    private val auditLogger: com.minimart.pos.util.AuditLogger
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -254,7 +255,8 @@ class AuthViewModel @Inject constructor(
                 if (user != null) {
                     settingsRepo.setLoggedInUser(user.id)
                     settingsRepo.clearLockout()
-                    // Silently upgrade legacy SHA-256 hash to Argon2id on successful login
+                    auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_SUCCESS,
+                        user = username, detail = "Role: ${user.role.name}")
                     if (pinHasher.needsUpgrade(user.pinHash)) {
                         try { userRepo.upgradePinHash(user.id, pinHasher.hash(pin.trim())) }
                         catch (_: Exception) {}
@@ -263,6 +265,8 @@ class AuthViewModel @Inject constructor(
                 } else {
                     val attempts = settingsRepo.recordFailedAttempt(MAX_ATTEMPTS, LOCKOUT_DURATION_MS)
                     val nowLocked = attempts >= MAX_ATTEMPTS
+                    auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_FAILED,
+                        user = username, detail = "Attempt $attempts of $MAX_ATTEMPTS${if (nowLocked) " — LOCKED OUT" else ""}")
                     _uiState.update {
                         it.copy(isLoading = false, error = "Invalid username or PIN",
                             isLockedOut = nowLocked, failedAttempts = attempts,
@@ -277,6 +281,8 @@ class AuthViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
+            val username = _uiState.value.currentUser?.username ?: ""
+            auditLogger.log(com.minimart.pos.util.AuditEvent.LOGOUT, user = username)
             try { settingsRepo.setLoggedInUser(null) } catch (_: Exception) {}
             _uiState.update { AuthUiState() }
         }

@@ -49,6 +49,7 @@ class CartViewModel @Inject constructor(
     private val settingsRepo: SettingsRepository,
     private val cashDrawer: com.minimart.pos.printer.CashDrawerManager,
     private val customerRepo: com.minimart.pos.data.repository.CustomerRepository,
+    private val auditLogger: com.minimart.pos.util.AuditLogger,
     keyboardScanner: KeyboardScanner
 ) : ViewModel() {
 
@@ -188,11 +189,16 @@ class CartViewModel @Inject constructor(
 
     fun setGlobalDiscount(discount: Double) {
         _uiState.update { state ->
-            // Bug fix: discount was only floored at 0, never capped — a global discount
-            // larger than the cart's subtotal made `total` go negative (see CartUiState.total).
-            // Cap it at what's left after per-item discounts are already accounted for.
             val remainingAfterLineDiscounts = (state.subtotal - state.items.sumOf { it.lineDiscount }).coerceAtLeast(0.0)
-            state.copy(discount = discount.coerceIn(0.0, remainingAfterLineDiscounts))
+            val clamped = discount.coerceIn(0.0, remainingAfterLineDiscounts)
+            if (clamped > 0.0) {
+                viewModelScope.launch {
+                    val user = loggedInUserId.value
+                    auditLogger.log(com.minimart.pos.util.AuditEvent.DISCOUNT_APPLIED,
+                        detail = "Global discount KES ${String.format("%.2f", clamped)} on cart of KES ${String.format("%.2f", state.subtotal)}")
+                }
+            }
+            state.copy(discount = clamped)
         }
     }
 
@@ -248,7 +254,8 @@ class CartViewModel @Inject constructor(
                         quantity = cartItem.quantity,
                         discountAmount = cartItem.lineDiscount,
                         taxAmount = cartItem.lineTax,
-                        lineTotal = cartItem.lineTotal
+                        lineTotal = cartItem.lineTotal,
+                        weightKg = cartItem.weightKg  // 0.0 for non-weighed items
                     )
                 }
 
@@ -270,6 +277,8 @@ class CartViewModel @Inject constructor(
                     } catch (_: Exception) {}
                 }
                 _uiState.update { CartUiState() } // clear cart after sale
+                auditLogger.log(com.minimart.pos.util.AuditEvent.SALE_COMPLETED,
+                    detail = "Receipt #${sale.receiptNumber} • KES ${String.format("%.2f", sale.totalAmount)} • ${sale.paymentMethod.name}")
                 _checkoutResult.emit(CheckoutResult.Success(saleId, sale.changeGiven))
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = "Checkout failed: ${e.message}") }
@@ -315,7 +324,9 @@ class CartViewModel @Inject constructor(
                     SaleItem(saleId = 0L, productId = ci.product.id, productName = ci.product.name,
                         productBarcode = ci.product.barcode, unitPrice = ci.product.price,
                         quantity = ci.quantity, discountAmount = ci.lineDiscount,
-                        taxAmount = ci.lineTax, lineTotal = ci.lineTotal)
+                        taxAmount = ci.lineTax, lineTotal = ci.lineTotal,
+                        weightKg = ci.weightKg  // 0.0 for non-weighed items
+                    )
                 }
                 val saleId = saleRepo.completeSale(sale, saleItems)
                 if (creditAmount > 0) customerRepo.useCredit(customerId, creditAmount, saleId)
@@ -324,6 +335,11 @@ class CartViewModel @Inject constructor(
                     catch (_: Exception) {}
                 }
                 _uiState.update { CartUiState() }
+                auditLogger.log(com.minimart.pos.util.AuditEvent.SALE_COMPLETED,
+                    detail = "Receipt #${sale.receiptNumber} • KES ${String.format("%.2f", sale.totalAmount)} • SPLIT (credit=${String.format("%.2f", creditAmount)} cash=${String.format("%.2f", cashAmount)})")
+                if (creditAmount > 0)
+                    auditLogger.log(com.minimart.pos.util.AuditEvent.CREDIT_USED,
+                        detail = "KES ${String.format("%.2f", creditAmount)} from customer #$customerId • Sale #$saleId")
                 _checkoutResult.emit(CheckoutResult.Success(saleId, sale.changeGiven))
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.localizedMessage) }
