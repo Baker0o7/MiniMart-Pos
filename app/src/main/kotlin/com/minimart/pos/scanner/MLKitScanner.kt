@@ -1,7 +1,6 @@
 package com.minimart.pos.scanner
 
-import android.content.Context
-import android.util.Log
+import android.content.Contextimport android.util.Log
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -33,7 +32,6 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
-import java.util.concurrent.Executors
 
 @Composable
 fun BarcodeScannerView(
@@ -81,7 +79,13 @@ private fun startCamera(
                 Barcode.FORMAT_QR_CODE, Barcode.FORMAT_DATA_MATRIX
             ).build()
         val barcodeScanner = BarcodeScanning.getClient(options)
-        val analysisExecutor = Executors.newSingleThreadExecutor()
+
+        // Bug fix: was Executors.newSingleThreadExecutor() created inside the listener
+        // with no shutdown — a new daemon thread was spun up every time the camera was
+        // bound (each scanner open/close cycle), accumulating leaked threads over the
+        // app session. ContextCompat.getMainExecutor() reuses the existing main
+        // executor owned by the app, no cleanup needed.
+        val analysisExecutor = ContextCompat.getMainExecutor(context)
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()

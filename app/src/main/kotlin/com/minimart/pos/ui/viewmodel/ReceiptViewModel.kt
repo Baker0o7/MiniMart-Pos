@@ -1,8 +1,8 @@
 package com.minimart.pos.ui.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.minimart.pos.data.entity.SaleStatus
 import com.minimart.pos.data.entity.SaleWithItems
 import com.minimart.pos.data.repository.SaleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,13 +20,26 @@ data class ReceiptUiState(
 
 @HiltViewModel
 class ReceiptViewModel @Inject constructor(
-    private val saleRepo: SaleRepository
+    private val saleRepo: SaleRepository,
+    // Bug fix: previously had no SavedStateHandle — saleId was passed via LaunchedEffect
+    // from the composable after every recomposition. On process death, the ViewModel
+    // was recreated with no saleId, showing a blank screen until LaunchedEffect ran.
+    // SavedStateHandle persists the saleId across process death/recreation automatically
+    // because Hilt wires it from the NavBackStackEntry arguments.
+    private val savedState: SavedStateHandle
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReceiptUiState())
     val state: StateFlow<ReceiptUiState> = _state.asStateFlow()
 
+    init {
+        // Auto-load if saleId is already in saved state (e.g. after process death)
+        val savedSaleId = savedState.get<Long>("saleId") ?: 0L
+        if (savedSaleId > 0L) loadSale(savedSaleId)
+    }
+
     fun loadSale(saleId: Long) {
+        savedState["saleId"] = saleId           // persist for process-death recovery
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
