@@ -1,6 +1,7 @@
 package com.minimart.pos.scanner
 
-import android.content.Contextimport android.util.Log
+import android.content.Context
+import android.util.Log
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
