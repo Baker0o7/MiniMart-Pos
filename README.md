@@ -10,8 +10,9 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 
 [![Release](https://img.shields.io/github/v/release/Baker0o7/MiniMart-Pos?color=00897B&label=Download%20APK&style=for-the-badge)](https://github.com/Baker0o7/MiniMart-Pos/releases/latest)
 [![Build](https://img.shields.io/github/actions/workflow/status/Baker0o7/MiniMart-Pos/release.yml?label=Build&color=00897B&style=for-the-badge)](https://github.com/Baker0o7/MiniMart-Pos/actions)
-[![Android](https://img.shields.io/badge/Android-7.0%2B-00897B?style=for-the-badge)](https://developer.android.com)
+[![Android](https://img.shields.io/badge/Android-8.0%2B-00897B?style=for-the-badge)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge)](https://kotlinlang.org)
+[![Room DB](https://img.shields.io/badge/Room-v12-00897B?style=for-the-badge)](https://developer.android.com/jetpack/androidx/releases/room)
 
 </div>
 
@@ -33,57 +34,63 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 
 ### 🛍️ New Sale
 - Camera barcode scanner (ML Kit — EAN-13, UPC, QR, Code-128, Code-39, Data Matrix)
-- Bluetooth / USB HID barcode scanner (pairs as keyboard)
-- **Weighing scale support (PLU)** — decodes variable-weight EAN-13 barcodes
-  from supermarket scales; auto-calculates price from weight × price/kg
-- **∞ Continuous scan mode** with animated laser overlay, corner brackets,
-  green flash on every successful scan, and live scan counter
+- Bluetooth / USB HID barcode scanner support
+- **Weighing scale support (PLU)** — decodes variable-weight EAN-13 barcodes,
+  auto-calculates price from weight × price/kg, weight persisted in sale records
+- **Continuous scan mode** with animated laser overlay, corner brackets,
+  green flash confirmation, and live scan counter badge
 - Product search by name or barcode with live dropdown
 - Cart with quantity stepper, per-item discounts
 - **Inclusive VAT** — tax extracted from price, not added on top
+- **Cart badge** on bottom nav shows pending item count when navigating away
 
 ### 💳 Checkout & Payments
-- **Cash** — quick-amount buttons, animated change display
-- **M-Pesa** — ref number field, amount-due box
+- **Cash** — quick-amount buttons, real change calculation
+- **M-Pesa** — ref number field
 - **Credit** — customer wallet or buy-on-account (negative balance allowed)
 - **Split payment** — combine credit + cash in one transaction
-- Customer selector with search + contacts import + quick-add form
-- Auto-opens cash drawer on cash payment (configurable)
+- Customer selector with search + contacts import
+- Cash drawer auto-opens on cash payment (configurable)
 - Haptic feedback confirms every completed sale
 
 ### 👤 Customer Credit System
-- Register customers: name, phone, email (with phone-contact import)
-- **Credit wallet** — add deposits, deduct on purchases
-- **Buy on account** — customers can take goods on credit even at KES 0 balance
+- Register customers with name, phone, email
+- **Credit wallet** — deposits, deductions on purchases
+- **Buy on account** — negative balance allowed
 - Full transaction history per customer
-- **Credit Ledger** screen — every outstanding balance at a glance,
-  expandable transaction history per customer
+- **Credit Ledger** — all non-zero balances at a glance
+  - 🔴 Debtors (negative, owe money) shown first with "OWES KES X" in red
+  - 🟢 Wallet balances shown in green
+  - Two summary stats: "Owed to Shop" + "Wallet Credit"
 
 ### 🌐 Multi-Device LAN Sync
-- Turn any device into a sync server (no internet, no cloud — pure local WiFi)
-- Lightweight HTTP server on port 9876 (`/ping`, `/changes`, `/apply`)
-- Push local pending changes, pull remote changes, skip own-device echoes
-- Per-entity sync log (Product, Sale, Customer, Expense, Credit Tx)
-- Pending-changes badge + one-tap "Sync Now" in Settings
+- No internet, no cloud — pure local WiFi sync
+- **Pairing code authentication** — 6-digit code shown on server device,
+  required on client device — any WiFi visitor cannot read or inject data
+- Server device: toggle "Act as Sync Server", share the displayed code
+- Client device: enter server IP + pairing code → Sync Now
+- Pending-changes amber badge + progress spinner during sync
 
 ### 🗃️ Cash Drawer
-- ESC/POS `ESC p` kick via thermal printer RJ11 port (auto-detected)
-- Direct Bluetooth cash drawer (configure MAC in Settings)
+- ESC/POS kick via thermal printer RJ11 port
+- Direct Bluetooth cash drawer support
 - Auto-opens on cash payment (toggle) · Test button in Settings
 
 ### 📦 Inventory & Products
 - Add/edit: price, cost, stock, category, SKU, unit, tax rate
-- Supplier info + reorder quantity · Batch number + expiry date tracking
-- Color-coded expiry urgency badges
-- Low-stock background alerts (WorkManager, 12h interval)
-- Expiry notifications 1–3 months ahead (configurable)
+- Supplier info + reorder quantity · Batch number + expiry date
+- Color-coded expiry urgency badges · Low-stock background alerts (WorkManager)
 - Stock adjustments with reason log
+- **PLU / Weighing scale toggle** per product (PLU code + price/kg)
 
 ### 📊 Reports & Analytics
-- Today's revenue with mini line chart + % vs yesterday
+- Revenue vs yesterday (real % comparison, flips red when down)
+- Dashboard auto-refreshes at midnight — "today" always means today
 - Transaction count, average basket, top-selling items
-- Expense tracking (11 categories) + colour-coded P&L with progress bars
-- Sales history with debounced search
+- **Reports & Expenses** use proper calendar week (Mon–Sun) and calendar month,
+  not rolling 7/30-day windows
+- Sales History: color-coded payment method chips (💵 Cash / 📱 M-Pesa / 🤝 Credit / 🔀 Split)
+- **Quick Void** on COMPLETED sales from the history list (Manager+)
 
 ### 👥 Role-Based Access Control
 
@@ -93,35 +100,43 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 | Apply discounts | ✅ | ✅ | ❌ |
 | View reports | ✅ | ✅ | ❌ |
 | Edit products | ✅ | ✅ | ❌ |
+| Void sales | ✅ | ✅ | ❌ |
 | Multi-device sync | ✅ | ✅ | ❌ |
 | User management | ✅ | ❌ | ❌ |
 
-Route-level guards bounce unauthorized users back automatically, even on
-direct navigation/deeplink attempts.
+Route-level `AccessGuard` bounces unauthorized users automatically.
+Cannot remove the last active Owner account (permanent lockout protection).
 
 ### 🔐 Security
-- **Argon2id PIN hashing** (t=3, m=64MB, p=4) — OWASP recommended,
-  auto-upgrades legacy SHA-256 hashes on first login
-- Biometric login (fingerprint/face) with safe FragmentActivity handling
-- 6-digit PIN keypad with show/hide toggle + dedicated Enter key
-- **3-strike lockout** — 30s countdown after 3 failed attempts
+- **Argon2id PIN hashing** (t=3, m=64MB, p=4), auto-upgrades legacy SHA-256 on login
+- **Biometric login** — bound to one explicitly opted-in user per device (Settings → Account).
+  Any fingerprint on the device cannot authenticate as an arbitrary username.
+- **Persisted 3-strike lockout** — survives force-close, task-kill, and device reboot
+  (stored via DataStore, not in-memory state)
 - **15-minute inactivity auto-logout**
-- **Audit log** — timestamped record of logins, sales, credit changes,
-  user management, and session expiry (auto-trimmed)
+- **Persistent audit log** at `files/audit.log`:
+  - `LOGIN_SUCCESS` / `LOGIN_FAILED` (with attempt count + lockout flag)
+  - `LOGOUT`
+  - `SALE_COMPLETED` (receipt number, amount, payment method)
+  - `DISCOUNT_APPLIED`
+  - `CREDIT_USED`
+  - `SESSION_EXPIRED`
+- **Sync pairing code** — LAN sync server requires a 6-digit code, preventing
+  unauthorized WiFi devices from reading or injecting data
 
 ### 💾 Backup & Data
-- One-tap backup to `Downloads/MiniMartPOS/backups/` · Restore from saved list
-- Share backup via USB, cloud, WhatsApp
-- 100% offline — Room SQLite, no internet required for core operation
+- One-tap backup to `Downloads/MiniMartPOS/backups/`
+- Restore **automatically closes and restarts the app** (WAL/SHM files handled correctly)
+- 100% offline — Room SQLite v12, no internet required for core operation
 
 ### 🎨 UI / UX
 - Deep dark teal theme — readable in bright retail lighting
-- Consistent gradient top bar across all 17 screens
-- Custom numeric keypad on login (✓ Enter + ⌫ Backspace)
+- Time-of-day Swahili greeting: *Habari ya asubuhi / mchana / jioni*
+- Consistent gradient top bar across all screens
+- Press-scale animation on dashboard action cards
+- Color-coded payment method chips throughout
 - Animated scanner overlay: pulsing border, sweeping laser, corner brackets
-- Dashboard stats with live line chart · pull-to-refresh
-- Customizable quick action grid (hide/restore any card)
-- Consistent green Save / red Delete / teal navigation button language
+- Pull-to-refresh on dashboard (updates today + yesterday revenue)
 
 ---
 
@@ -133,14 +148,15 @@ direct navigation/deeplink attempts.
 | UI | Jetpack Compose + Material 3 |
 | Architecture | MVVM · Clean Architecture · Repository |
 | DI | Hilt |
-| Database | Room 2.6 (SQLite, v9) |
+| Database | Room 2.6 (SQLite v12) |
 | PIN Security | Argon2id (argon2-kt 1.4.0) |
 | Camera | CameraX + ML Kit Barcode |
-| Sync | Custom HTTP server/client over local WiFi |
-| Background | WorkManager |
+| Sync | Custom HTTP server/client over LAN WiFi |
+| Background | WorkManager (low-stock + expiry alerts) |
 | Preferences | DataStore + SharedPreferences |
 | Printing | Bluetooth ESC/POS |
-| Navigation | Navigation Compose |
+| Navigation | Navigation Compose + SafeArgs |
+| State | `SavedStateHandle` for process-death recovery |
 
 ---
 
@@ -159,8 +175,6 @@ cd MiniMart-Pos
 | Username | `admin` |
 | PIN | `1234` |
 
-Seeded with 5 demo products. PIN auto-upgrades to Argon2id on first login.
-
 ---
 
 ## 📁 Project Structure
@@ -168,24 +182,26 @@ Seeded with 5 demo products. PIN auto-upgrades to Argon2id on first login.
 ```
 app/src/main/kotlin/com/minimart/pos/
 ├── data/
-│   ├── dao/         ProductDao · SaleDao · UserDao · ExpenseDao
-│   │                ShiftDao · CustomerDao · SyncDao
-│   ├── db/          AppDatabase (v9) · DatabaseCallback (seed)
+│   ├── dao/          ProductDao · SaleDao · UserDao · ExpenseDao
+│   │                 ShiftDao · CustomerDao · SyncDao
+│   ├── db/           AppDatabase (v12) · DatabaseCallback (seed)
+│   │                 AppMigrations (v8→v9→v10→v11→v12)
 │   ├── entity/       Product · Sale · SaleItem · User · Expense
-│   │                Shift · Customer · CreditTransaction · SyncLog
-│   └── repository/  (one per entity + SettingsRepository)
-├── di/              DatabaseModule
-├── printer/         ThermalPrinter · CashDrawerManager
-├── scanner/         MLKitScanner · KeyboardScanner · BluetoothScannerManager
-├── sync/            SyncServer · SyncClient
+│   │                 Shift · Customer · CreditTransaction · SyncLog
+│   └── repository/   (one per entity + SettingsRepository)
+├── di/               DatabaseModule
+├── printer/          ThermalPrinter · CashDrawerManager
+├── scanner/          MLKitScanner · KeyboardScanner · BluetoothScannerManager
+├── sync/             SyncServer · SyncClient
 ├── ui/
-│   ├── screen/      17 screens (Login → CreditOverview)
-│   ├── viewmodel/   Per-screen ViewModels + SessionViewModel · SyncViewModel
-│   ├── theme/       DT color tokens
-│   └── NavGraph.kt  Routes + BottomNavBar + AccessGuard
-├── util/            BackupManager · PdfReceiptGenerator · PinHasher
-│                    RoleManager · SessionManager · AuditLogger · PluDecoder
-└── worker/          LowStockWorker · ExpiryAlertWorker
+│   ├── screen/       16 screens (Login → CreditOverview)
+│   ├── viewmodel/    Per-screen ViewModels + SessionViewModel · SyncViewModel
+│   ├── theme/        DT color tokens
+│   └── NavGraph.kt   Routes + BottomNavBar (cart badge) + AccessGuard
+├── util/             BackupManager · PdfReceiptGenerator · PinHasher
+│                     RoleManager · SessionManager · AuditLogger · PluDecoder
+│                     UiResult
+└── worker/           LowStockWorker · ExpiryAlertWorker
 ```
 
 ---
