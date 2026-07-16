@@ -1,126 +1,102 @@
 package com.minimart.pos.util
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
-import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Manages the SQLCipher database encryption key.
+ * Generates and retrieves a 256-bit AES database encryption key, wrapped
+ * (encrypted) with a key that lives in the Android Keystore hardware module.
  *
- * Strategy:
- *  1. Generate a cryptographically-secure 32-byte random key (one time, on first launch)
- *  2. Encrypt that key using an AES-GCM key stored in the Android Keystore
- *  3. Persist the encrypted key blob in EncryptedSharedPreferences
- *  4. On every subsequent launch, decrypt the blob to retrieve the raw key bytes
+ * Flow:
+ *   1. On first launch: generate a random 32-byte DB key, encrypt it with an
+ *      AES-GCM key from the Keystore, store the ciphertext in SharedPreferences.
+ *   2. On subsequent launches: load the ciphertext, decrypt with the Keystore key,
+ *      return the plaintext DB key to SQLCipher.
  *
- * The Android Keystore key never leaves the hardware security module (on devices with
- * StrongBox / TEE), so the database key is only accessible on this device.
+ * The plaintext DB key never touches disk — only the AES-GCM-encrypted blob is
+ * stored. The Keystore key itself is hardware-backed on supported devices and cannot
+ * be extracted, so even if someone pulls the SharedPreferences file from a rooted
+ * device, they can't decrypt the DB key without the Keystore hardware.
  */
 @Singleton
 class DatabaseKeyManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     companion object {
-        private const val TAG              = "DBKeyManager"
-        private const val KEYSTORE_ALIAS   = "minimart_db_key"
-        private const val PREFS_NAME       = "minimart_db_key_prefs"
-        private const val PREFS_KEY_ENC    = "db_key_enc"
-        private const val PREFS_KEY_IV     = "db_key_iv"
-        private const val AES_TRANSFORMATION = "AES/GCM/NoPadding"
-        private const val GCM_TAG_LENGTH   = 128
-        private const val KEY_SIZE_BYTES   = 32
-    }
-
-    private val prefs: SharedPreferences by lazy {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        private const val KEYSTORE_ALIAS  = "minimart_db_key_v1"
+        private const val PREFS_FILE      = "minimart_db_enc_prefs"
+        private const val PREFS_KEY_IV    = "enc_iv"
+        private const val PREFS_KEY_BLOB  = "enc_key_blob"
+        private const val KEY_SIZE_BITS   = 256
+        private const val GCM_TAG_BITS    = 128
+        private const val ANDROID_KEYSTORE = "AndroidKeyStore"
     }
 
     /**
-     * Returns the 32-byte SQLCipher database key.
-     * Creates and persists a new key on first launch.
+     * Returns the 32-byte database passphrase as a hex string suitable for SQLCipher's
+     * `openOrCreateDatabase(path, passphrase, ...)` API.
+     * Generates and stores it on first call.
      */
-    fun getOrCreateKey(): ByteArray {
-        return try {
-            val encKeyB64 = prefs.getString(PREFS_KEY_ENC, null)
-            val ivB64     = prefs.getString(PREFS_KEY_IV, null)
+    fun getOrCreateDbKey(): String {
+        val prefs = context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+        val existingBlob = prefs.getString(PREFS_KEY_BLOB, null)
 
-            if (encKeyB64 != null && ivB64 != null) {
-                // Decrypt existing key
-                decryptKey(
-                    Base64.decode(encKeyB64, Base64.DEFAULT),
-                    Base64.decode(ivB64, Base64.DEFAULT)
-                )
-            } else {
-                // Generate new random key + encrypt + persist
-                val rawKey = ByteArray(KEY_SIZE_BYTES).also {
-                    java.security.SecureRandom().nextBytes(it)
-                }
-                val (encKey, iv) = encryptKey(rawKey)
-                prefs.edit()
-                    .putString(PREFS_KEY_ENC, Base64.encodeToString(encKey, Base64.DEFAULT))
-                    .putString(PREFS_KEY_IV,  Base64.encodeToString(iv,     Base64.DEFAULT))
-                    .apply()
-                Log.d(TAG, "New database encryption key created and stored")
-                rawKey
+        return if (existingBlob != null) {
+            // Decrypt the stored key using the Keystore-backed AES key
+            val iv   = Base64.decode(prefs.getString(PREFS_KEY_IV, "")!!, Base64.NO_WRAP)
+            val blob = Base64.decode(existingBlob, Base64.NO_WRAP)
+            val key  = getOrCreateKeystoreKey()
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(GCM_TAG_BITS, iv))
+            val rawKey = cipher.doFinal(blob)
+            rawKey.toHexString()
+        } else {
+            // First launch: generate a fresh 32-byte random key
+            val rawKey = ByteArray(KEY_SIZE_BITS / 8).also {
+                java.security.SecureRandom().nextBytes(it)
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Key operation failed — using fallback key", e)
-            // Fallback: derive a device-stable key from Android ID
-            // Not hardware-backed but prevents crash on devices where Keystore fails
-            val androidId = android.provider.Settings.Secure.getString(
-                context.contentResolver, android.provider.Settings.Secure.ANDROID_ID
-            ) ?: "minimart_fallback"
-            val digest = java.security.MessageDigest.getInstance("SHA-256")
-                .digest("minimart_db_$androidId".toByteArray(Charsets.UTF_8))
-            digest // 32 bytes
+            // Encrypt it with the Keystore-backed key and store the blob
+            val keystoreKey = getOrCreateKeystoreKey()
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            cipher.init(Cipher.ENCRYPT_MODE, keystoreKey)
+            val blob = cipher.doFinal(rawKey)
+            prefs.edit()
+                .putString(PREFS_KEY_IV, Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
+                .putString(PREFS_KEY_BLOB, Base64.encodeToString(blob, Base64.NO_WRAP))
+                .apply()
+            rawKey.toHexString()
         }
     }
-
-    // ── Private ───────────────────────────────────────────────────────────────
 
     private fun getOrCreateKeystoreKey(): SecretKey {
-        val ks = KeyStore.getInstance("AndroidKeyStore").also { it.load(null) }
-        if (ks.containsAlias(KEYSTORE_ALIAS)) {
-            return (ks.getEntry(KEYSTORE_ALIAS, null) as KeyStore.SecretKeyEntry).secretKey
-        }
-        val keyGen = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
-        keyGen.init(
-            KeyGenParameterSpec.Builder(
-                KEYSTORE_ALIAS,
-                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-            )
+        val ks = KeyStore.getInstance(ANDROID_KEYSTORE).also { it.load(null) }
+        val existing = ks.getEntry(KEYSTORE_ALIAS, null) as? KeyStore.SecretKeyEntry
+        if (existing != null) return existing.secretKey
+
+        val spec = KeyGenParameterSpec.Builder(
+            KEYSTORE_ALIAS,
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+        )
+            .setKeySize(KEY_SIZE_BITS)
             .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setKeySize(256)
-            .setUserAuthenticationRequired(false)  // no lock-screen required — POS stays unlocked
+            .setUserAuthenticationRequired(false) // no biometric gate on the DB key itself
             .build()
-        )
-        return keyGen.generateKey()
+
+        return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
+            .also { it.init(spec) }
+            .generateKey()
     }
 
-    private fun encryptKey(rawKey: ByteArray): Pair<ByteArray, ByteArray> {
-        val cipher = Cipher.getInstance(AES_TRANSFORMATION)
-        cipher.init(Cipher.ENCRYPT_MODE, getOrCreateKeystoreKey())
-        val iv = cipher.iv
-        val encKey = cipher.doFinal(rawKey)
-        return Pair(encKey, iv)
-    }
-
-    private fun decryptKey(encKey: ByteArray, iv: ByteArray): ByteArray {
-        val cipher = Cipher.getInstance(AES_TRANSFORMATION)
-        val spec   = GCMParameterSpec(GCM_TAG_LENGTH, iv)
-        cipher.init(Cipher.DECRYPT_MODE, getOrCreateKeystoreKey(), spec)
-        return cipher.doFinal(encKey)
-    }
+    private fun ByteArray.toHexString() = joinToString("") { "%02x".format(it) }
 }

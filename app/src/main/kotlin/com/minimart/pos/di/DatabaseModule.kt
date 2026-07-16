@@ -6,6 +6,7 @@ import androidx.room.Room
 import com.minimart.pos.data.dao.*
 import com.minimart.pos.data.db.AppDatabase
 import com.minimart.pos.data.db.DatabaseCallback
+import com.minimart.pos.util.DatabaseKeyManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,16 +22,31 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context,
-        callback: DatabaseCallback
-    ): AppDatabase = Room.databaseBuilder(
-        context,
-        AppDatabase::class.java,
-        AppDatabase.DATABASE_NAME
-    )
-        .addMigrations(*com.minimart.pos.data.db.AppMigrations.ALL)
-        .fallbackToDestructiveMigration() // only applies to upgrade paths NOT covered above (pre-v8)
-        .addCallback(callback)
-        .build()
+        callback: DatabaseCallback,
+        keyManager: DatabaseKeyManager,
+        migrator: com.minimart.pos.util.DbEncryptionMigrator
+    ): AppDatabase {
+        val passphrase = keyManager.getOrCreateDbKey()
+
+        // Migrate existing plaintext DB to encrypted before Room opens it.
+        // On fresh installs or already-encrypted DBs this is a fast no-op.
+        migrator.migrateIfNeeded(AppDatabase.DATABASE_NAME, passphrase)
+
+        val factory = net.sqlcipher.database.SupportFactory(
+            passphrase.toByteArray(Charsets.UTF_8)
+        )
+
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            AppDatabase.DATABASE_NAME
+        )
+            .openHelperFactory(factory)
+            .addMigrations(*com.minimart.pos.data.db.AppMigrations.ALL)
+            .fallbackToDestructiveMigration()
+            .addCallback(callback)
+            .build()
+    }
 
     @Provides fun provideProductDao(db: AppDatabase): ProductDao = db.productDao()
     @Provides fun provideSaleDao(db: AppDatabase): SaleDao = db.saleDao()
