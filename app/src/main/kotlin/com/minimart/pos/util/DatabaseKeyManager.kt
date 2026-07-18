@@ -43,29 +43,24 @@ class DatabaseKeyManager @Inject constructor(
     }
 
     /**
-     * Returns the 32-byte database passphrase as a hex string suitable for SQLCipher's
-     * `openOrCreateDatabase(path, passphrase, ...)` API.
-     * Generates and stores it on first call.
+     * Returns the 32-byte raw key for SQLCipher's SupportFactory.
+     * Generates and stores the key on first call.
      */
-    fun getOrCreateDbKey(): String {
+    fun getRawDbKey(): ByteArray {
         val prefs = context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
         val existingBlob = prefs.getString(PREFS_KEY_BLOB, null)
 
         return if (existingBlob != null) {
-            // Decrypt the stored key using the Keystore-backed AES key
             val iv   = Base64.decode(prefs.getString(PREFS_KEY_IV, "")!!, Base64.NO_WRAP)
             val blob = Base64.decode(existingBlob, Base64.NO_WRAP)
             val key  = getOrCreateKeystoreKey()
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(GCM_TAG_BITS, iv))
-            val rawKey = cipher.doFinal(blob)
-            rawKey.toHexString()
+            cipher.doFinal(blob)
         } else {
-            // First launch: generate a fresh 32-byte random key
             val rawKey = ByteArray(KEY_SIZE_BITS / 8).also {
                 java.security.SecureRandom().nextBytes(it)
             }
-            // Encrypt it with the Keystore-backed key and store the blob
             val keystoreKey = getOrCreateKeystoreKey()
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(Cipher.ENCRYPT_MODE, keystoreKey)
@@ -74,9 +69,14 @@ class DatabaseKeyManager @Inject constructor(
                 .putString(PREFS_KEY_IV, Base64.encodeToString(cipher.iv, Base64.NO_WRAP))
                 .putString(PREFS_KEY_BLOB, Base64.encodeToString(blob, Base64.NO_WRAP))
                 .apply()
-            rawKey.toHexString()
+            rawKey
         }
     }
+
+    /**
+     * Returns the key as a hex string (used by DbEncryptionMigrator's SQL ATTACH KEY).
+     */
+    fun getOrCreateDbKey(): String = getRawDbKey().toHexString()
 
     private fun getOrCreateKeystoreKey(): SecretKey {
         val ks = KeyStore.getInstance(ANDROID_KEYSTORE).also { it.load(null) }

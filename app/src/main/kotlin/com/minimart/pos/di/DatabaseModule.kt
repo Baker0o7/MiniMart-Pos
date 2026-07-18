@@ -26,15 +26,19 @@ object DatabaseModule {
         keyManager: DatabaseKeyManager,
         migrator: com.minimart.pos.util.DbEncryptionMigrator
     ): AppDatabase {
-        val passphrase = keyManager.getOrCreateDbKey()
+        // getRawKey() returns the 32 raw bytes — SQLCipher SupportFactory expects
+        // raw binary. Passing a hex-string-as-UTF8-bytes would give a 64-byte text
+        // key instead of the intended 32-byte binary key (still secure but wasteful
+        // and inconsistent with what DbEncryptionMigrator uses).
+        val passphraseBytes = keyManager.getRawDbKey()
+        val passphraseHex  = passphraseBytes.joinToString("") { "%02x".format(it) }
 
-        // Migrate existing plaintext DB to encrypted before Room opens it.
-        // On fresh installs or already-encrypted DBs this is a fast no-op.
-        migrator.migrateIfNeeded(AppDatabase.DATABASE_NAME, passphrase)
+        // Load SQLCipher native libs synchronously here
+        net.sqlcipher.database.SQLiteDatabase.loadLibs(context)
 
-        val factory = net.sqlcipher.database.SupportFactory(
-            passphrase.toByteArray(Charsets.UTF_8)
-        )
+        migrator.migrateIfNeeded(AppDatabase.DATABASE_NAME, passphraseHex)
+
+        val factory = net.sqlcipher.database.SupportFactory(passphraseBytes)
 
         return Room.databaseBuilder(
             context,
