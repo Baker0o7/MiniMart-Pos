@@ -84,11 +84,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
-    // Database encryption — net.zetetic:android-database-sqlcipher bundles its own
-    // native SQLCipher .so files (arm64-v8a, armeabi-v7a, x86, x86_64) so the ABI
-    // split above doesn't affect it. The androidx.sqlite bridge is required for Room.
-    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
-    implementation("androidx.sqlite:sqlite-ktx:2.4.0")
+
     // DataStore
     implementation(libs.datastore.preferences)
     // ML Kit + CameraX

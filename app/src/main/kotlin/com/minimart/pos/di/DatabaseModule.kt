@@ -6,7 +6,6 @@ import androidx.room.Room
 import com.minimart.pos.data.dao.*
 import com.minimart.pos.data.db.AppDatabase
 import com.minimart.pos.data.db.DatabaseCallback
-import com.minimart.pos.util.DatabaseKeyManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,35 +21,16 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context,
-        callback: DatabaseCallback,
-        keyManager: DatabaseKeyManager,
-        migrator: com.minimart.pos.util.DbEncryptionMigrator
-    ): AppDatabase {
-        // getRawKey() returns the 32 raw bytes — SQLCipher SupportFactory expects
-        // raw binary. Passing a hex-string-as-UTF8-bytes would give a 64-byte text
-        // key instead of the intended 32-byte binary key (still secure but wasteful
-        // and inconsistent with what DbEncryptionMigrator uses).
-        val passphraseBytes = keyManager.getRawDbKey()
-        val passphraseHex  = passphraseBytes.joinToString("") { "%02x".format(it) }
-
-        // Load SQLCipher native libs synchronously here
-        net.sqlcipher.database.SQLiteDatabase.loadLibs(context)
-
-        migrator.migrateIfNeeded(AppDatabase.DATABASE_NAME, passphraseHex)
-
-        val factory = net.sqlcipher.database.SupportFactory(passphraseBytes)
-
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            AppDatabase.DATABASE_NAME
-        )
-            .openHelperFactory(factory)
-            .addMigrations(*com.minimart.pos.data.db.AppMigrations.ALL)
-            .fallbackToDestructiveMigration()
-            .addCallback(callback)
-            .build()
-    }
+        callback: DatabaseCallback
+    ): AppDatabase = Room.databaseBuilder(
+        context,
+        AppDatabase::class.java,
+        AppDatabase.DATABASE_NAME
+    )
+        .addMigrations(*com.minimart.pos.data.db.AppMigrations.ALL)
+        .fallbackToDestructiveMigration()
+        .addCallback(callback)
+        .build()
 
     @Provides fun provideProductDao(db: AppDatabase): ProductDao = db.productDao()
     @Provides fun provideSaleDao(db: AppDatabase): SaleDao = db.saleDao()
