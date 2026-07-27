@@ -174,11 +174,23 @@ fun ReceiptScreen(
                                     Column(Modifier.weight(1f)) {
                                         Text(item.productName, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
                                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                                        Text("@ $currency ${String.format("%.2f", item.unitPrice)}", color = DT.SubText, fontSize = 10.sp)
+                                        // Bug fix: for weighed items, unitPrice is actually the
+                                        // calculated LINE TOTAL (weight × price/kg) — see
+                                        // CartViewModel.addWeighedItem() which overwrites
+                                        // product.price with that total, not a per-kg rate.
+                                        // Derive price/kg by dividing back for display.
+                                        Text(
+                                            if (item.weightKg > 0)
+                                                "@ $currency ${String.format("%.2f", item.unitPrice / item.weightKg)}/kg"
+                                            else "@ $currency ${String.format("%.2f", item.unitPrice)}",
+                                            color = DT.SubText, fontSize = 10.sp)
                                     }
-                                    Text("×${item.quantity}", color = DT.SubText, fontSize = 12.sp)
+                                    Text(
+                                        if (item.weightKg > 0) "${String.format("%.3f", item.weightKg)} kg"
+                                        else "×${item.quantity}",
+                                        color = DT.SubText, fontSize = 12.sp)
                                     Spacer(Modifier.width(16.dp))
-                                    Text("$currency ${String.format("%.2f", item.unitPrice * item.quantity)}",
+                                    Text("$currency ${String.format("%.2f", item.lineTotal)}",
                                         color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }

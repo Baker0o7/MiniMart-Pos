@@ -88,12 +88,19 @@ object PdfReceiptGenerator {
 
         data.items.forEach { item ->
             val name = data.productNames[item.productId] ?: "Item #${item.productId}"
-            val lineTotal = item.unitPrice * item.quantity
+            // Bug fix: was item.unitPrice * item.quantity — wrong for weighed items,
+            // where unitPrice is actually the pre-calculated line total (weight ×
+            // price/kg), not a true per-unit price. Use the persisted lineTotal
+            // instead, and show weight (not "×1") for weighed lines.
+            val qtyLabel = if (item.weightKg > 0) "${String.format("%.3f", item.weightKg)}kg" else "×${item.quantity}"
             canvas.drawText(name.take(28), MARGIN, y, normPaint)
-            canvas.drawText("×${item.quantity}", cx - 20f, y, normPaint)
-            canvas.drawText("${data.currency} ${String.format("%.2f", lineTotal)}", rw, y, rightPaint)
+            canvas.drawText(qtyLabel, cx - 20f, y, normPaint)
+            canvas.drawText("${data.currency} ${String.format("%.2f", item.lineTotal)}", rw, y, rightPaint)
             y += lineH * 0.85f
-            canvas.drawText("@ ${data.currency} ${String.format("%.2f", item.unitPrice)} each", MARGIN + 8f, y, smallPaint)
+            val unitLabel = if (item.weightKg > 0)
+                "@ ${data.currency} ${String.format("%.2f", item.unitPrice / item.weightKg)}/kg"
+            else "@ ${data.currency} ${String.format("%.2f", item.unitPrice)} each"
+            canvas.drawText(unitLabel, MARGIN + 8f, y, smallPaint)
             y += lineH * 0.75f
         }
 
