@@ -527,6 +527,7 @@ fun CheckoutScreen(
             CustomerSearchSheet(
                 query = customerQuery,
                 customers = custState.customers,
+                currency = currency,
                 onQueryChange = { customerQuery = it },
                 onSelect = { cust ->
                     selectedCustomer = cust
@@ -556,6 +557,7 @@ fun CheckoutScreen(
 private fun CustomerSearchSheet(
     query: String,
     customers: List<Customer>,
+    currency: String,
     onQueryChange: (String) -> Unit,
     onSelect: (Customer) -> Unit,
     onNewCustomer: (String, String) -> Unit,  // name, phone
@@ -757,9 +759,11 @@ private fun CustomerSearchSheet(
                                         else -> DT.Border
                                     }, RoundedCornerShape(8.dp))
                                     .padding(horizontal = 8.dp, vertical = 4.dp)) {
-                                    // Bug fix: hardcoded "KES" even though `currency` was already
-                                    // in scope, and didn't distinguish "owes money" (negative
-                                    // balance) from "zero" — both showed the same neutral style.
+                                    // Bug fix: was hardcoded "KES". currency lives in the parent
+                                    // CheckoutScreen composable, not here (CustomerSearchSheet is
+                                    // a separate private fun) — added as a parameter above.
+                                    // Also didn't distinguish "owes money" (negative balance)
+                                    // from "zero" — both showed the same neutral style.
                                     Text(
                                         if (cust.creditBalance < 0)
                                             "OWES $currency ${String.format("%.2f", -cust.creditBalance)}"
