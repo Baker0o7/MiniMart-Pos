@@ -283,10 +283,23 @@ private fun DarkUserRow(user: User, isMe: Boolean, onChangePin: () -> Unit, onRe
     }
     if (showConfirm && onRemove != null) {
         AlertDialog(onDismissRequest = { showConfirm = false }, containerColor = DT.Surface,
-            title = { Text("Remove User?", color = DT.OnSurface) },
-            text = { Text("Remove ${user.displayName} from the system?", color = DT.SubText) },
-            confirmButton = { TextButton(onClick = { onRemove(); showConfirm = false }) { Text("Remove", color = DT.Red) } },
-            dismissButton = { TextButton(onClick = { showConfirm = false }) { Text("Cancel", color = DT.SubText) } })
+            title = { Text("Remove User?", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text("\"${user.displayName}\" will lose access immediately. This cannot be undone.", color = DT.SubText) },
+            confirmButton = {
+                Button(
+                    onClick = { onRemove(); showConfirm = false },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)
+                ) {
+                    Icon(Icons.Default.PersonRemove, null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Remove", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showConfirm = false }, shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+            })
     }
 }
 

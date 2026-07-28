@@ -474,6 +474,12 @@ fun SettingsScreen(
                         var isBackingUp  by remember { mutableStateOf(false) }
                         var backupFiles  by remember { mutableStateOf<List<java.io.File>>(emptyList()) }
                         var showRestore  by remember { mutableStateOf(false) }
+                        // Bug fix: previously tapping a backup filename immediately restored
+                        // it with NO confirmation step — a single misplaced tap could wipe
+                        // today's sales with zero warning. Every other destructive action in
+                        // the app (delete product, void sale, remove user) requires an
+                        // explicit second confirmation; restore now matches that pattern.
+                        var pendingRestoreFile by remember { mutableStateOf<java.io.File?>(null) }
                         LaunchedEffect(Unit) { backupFiles = com.minimart.pos.util.BackupManager.listBackups() }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -519,28 +525,62 @@ fun SettingsScreen(
                                         if (backupFiles.isEmpty()) Text("No backups found.", color = DT.Red, style = MaterialTheme.typography.labelSmall)
                                         else backupFiles.take(5).forEach { f ->
                                             TextButton(onClick = {
+                                                // Stage the file and show a real confirmation step
+                                                // instead of restoring immediately on tap.
                                                 showRestore = false
-                                                scope.launch {
-                                                    val r = com.minimart.pos.util.BackupManager.restore(context, f)
-                                                    backupStatus = when (r) {
-                                                        is com.minimart.pos.util.BackupResult.Success -> r.message
-                                                        is com.minimart.pos.util.BackupResult.Error -> r.message
-                                                    }
-                                                    // Bug fix: previously this just showed a "please restart
-                                                    // manually" message — the live Room connection stayed
-                                                    // pointed at the now-replaced database file, risking a
-                                                    // crash or stale/corrupted reads if the user kept using
-                                                    // the app instead of remembering to close it themselves.
-                                                    if (r is com.minimart.pos.util.BackupResult.Success) {
-                                                        kotlinx.coroutines.delay(1200)
-                                                        com.minimart.pos.util.BackupManager.restartApp(context)
-                                                    }
-                                                }
+                                                pendingRestoreFile = f
                                             }, modifier = Modifier.fillMaxWidth()) { Text(f.name, color = DT.TealLight, style = MaterialTheme.typography.bodySmall) }
                                         }
                                     }
                                 },
-                                confirmButton = { TextButton(onClick = { showRestore = false }) { Text("Cancel", color = DT.SubText) } })
+                                confirmButton = {
+                                    OutlinedButton(onClick = { showRestore = false }, shape = RoundedCornerShape(12.dp),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+                                })
+                        }
+
+                        // Explicit "are you sure" step before any restore actually runs —
+                        // restoring overwrites the ENTIRE current database irreversibly.
+                        pendingRestoreFile?.let { f ->
+                            AlertDialog(
+                                onDismissRequest = { pendingRestoreFile = null },
+                                containerColor = DT.Surface,
+                                title = { Text("Restore This Backup?", color = Color.White, fontWeight = FontWeight.Bold) },
+                                text = { Text("\"${f.name}\" will replace ALL current data — every sale, product, and customer added since this backup was made will be lost. This cannot be undone. The app will restart.", color = DT.SubText) },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            pendingRestoreFile = null
+                                            scope.launch {
+                                                val r = com.minimart.pos.util.BackupManager.restore(context, f)
+                                                backupStatus = when (r) {
+                                                    is com.minimart.pos.util.BackupResult.Success -> r.message
+                                                    is com.minimart.pos.util.BackupResult.Error -> r.message
+                                                }
+                                                // Bug fix: previously this just showed a "please restart
+                                                // manually" message — the live Room connection stayed
+                                                // pointed at the now-replaced database file, risking a
+                                                // crash or stale/corrupted reads if the user kept using
+                                                // the app instead of remembering to close it themselves.
+                                                if (r is com.minimart.pos.util.BackupResult.Success) {
+                                                    kotlinx.coroutines.delay(1200)
+                                                    com.minimart.pos.util.BackupManager.restartApp(context)
+                                                }
+                                            }
+                                        },
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)
+                                    ) {
+                                        Icon(Icons.Default.Restore, null, modifier = Modifier.size(16.dp))
+                                        Spacer(Modifier.width(4.dp))
+                                        Text("Restore & Replace", fontWeight = FontWeight.Bold)
+                                    }
+                                },
+                                dismissButton = {
+                                    OutlinedButton(onClick = { pendingRestoreFile = null }, shape = RoundedCornerShape(12.dp),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+                                }
+                            )
                         }
                     }
                 }
