@@ -78,10 +78,12 @@ class CustomerViewModel @Inject constructor(
         _state.update { it.copy(message = "Customer deleted") }
     }
 
-    fun addCredit(customerId: Long, amount: Double, notes: String = "") = viewModelScope.launch {
+    fun addCredit(customerId: Long, amount: Double, notes: String = "", currency: String = "KES") = viewModelScope.launch {
         val ok = repo.addCredit(customerId, amount, notes)
         if (ok) {
-            _state.update { it.copy(message = "KES ${String.format("%.2f", amount)} credit added") }
+            // Bug fix: was hardcoded "KES" in this success message regardless of the
+            // app's configurable currency setting.
+            _state.update { it.copy(message = "$currency ${String.format("%.2f", amount)} credit added") }
             // Refresh selected customer
             val updated = repo.getById(customerId)
             _state.update { it.copy(selectedCustomer = updated) }

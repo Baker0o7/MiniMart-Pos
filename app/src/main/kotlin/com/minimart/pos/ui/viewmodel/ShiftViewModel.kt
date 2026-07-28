@@ -17,7 +17,11 @@ data class ShiftUiState(
     val isLoading: Boolean = false,
     val successMessage: String? = null,
     val error: String? = null,
-    val lastClosedShift: Shift? = null
+    val lastClosedShift: Shift? = null,
+    // Bug fix: ShiftScreen hardcoded "KES" in 8 places despite the app having a
+    // configurable currency setting — SettingsRepository was already injected here
+    // but its currency Flow was never exposed to the UI state.
+    val currency: String = "KES"
 )
 
 @HiltViewModel
@@ -31,6 +35,11 @@ class ShiftViewModel @Inject constructor(
     val uiState: StateFlow<ShiftUiState> = _uiState.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            settingsRepo.currency.catch { emit("KES") }.collect { cur ->
+                _uiState.update { it.copy(currency = cur) }
+            }
+        }
         viewModelScope.launch {
             // Load all recent shifts
             shiftRepo.getRecentShifts(System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000)

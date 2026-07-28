@@ -187,7 +187,7 @@ fun MiniMartNavGraph(
                     )
                 }
 
-                composable(Routes.PRODUCTS)  { ProductListScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role)) }
+                composable(Routes.PRODUCTS)  { ProductListScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role), currency = currency) }
                 composable(Routes.INVENTORY) { InventoryScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role)) }
                 composable(Routes.REPORTS)   { ReportsScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.EXPENSES)  { ExpenseScreen(onBack = { navController.popBackStack() }) }
@@ -203,10 +203,10 @@ fun MiniMartNavGraph(
                     LowStockScreen(onBack = { navController.popBackStack() })
                 }
                 composable(Routes.CUSTOMERS) {
-                    CustomerScreen(onBack = { navController.popBackStack() })
+                    CustomerScreen(onBack = { navController.popBackStack() }, currency = currency)
                 }
                 composable(Routes.CREDIT_OVERVIEW) {
-                    CreditOverviewScreen(onBack = { navController.popBackStack() })
+                    CreditOverviewScreen(onBack = { navController.popBackStack() }, currency = currency)
                 }
                 composable(Routes.USERS)     { UserManagementScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.SHIFTS)    { ShiftScreen(onBack = { navController.popBackStack() }) }

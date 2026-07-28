@@ -38,6 +38,7 @@ import java.util.Locale
 @Composable
 fun CreditOverviewScreen(
     onBack: () -> Unit,
+    currency: String = "KES",
     vm: CustomerViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
@@ -100,7 +101,7 @@ fun CreditOverviewScreen(
                                 Text("Owed to Shop", color = DT.SubText, fontSize = 11.sp)
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text("KES ${String.format("%,.2f", totalOwed)}",
+                            Text("$currency ${String.format("%,.2f", totalOwed)}",
                                 color = DT.Red, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                             Text("$debtors customer${if (debtors != 1) "s" else ""}", color = DT.SubText, fontSize = 10.sp)
                         }
@@ -118,7 +119,7 @@ fun CreditOverviewScreen(
                             Spacer(Modifier.height(4.dp))
                             Text(state.customers.size.toString(),
                                 color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
-                            Text("KES ${String.format("%,.0f", state.customers.sumOf { it.totalPurchases })} total spent", color = DT.SubText, fontSize = 10.sp)
+                            Text("$currency ${String.format("%,.0f", state.customers.sumOf { it.totalPurchases })} total spent", color = DT.SubText, fontSize = 10.sp)
                         }
                     }
                 }
@@ -184,9 +185,9 @@ fun CreditOverviewScreen(
                                 // red = customer owes money (buy-on-account / negative balance)
                                 val balanceColor = if (customer.creditBalance < 0) DT.Red else DT.Green
                                 val balanceLabel = if (customer.creditBalance < 0)
-                                    "OWES KES ${String.format("%.2f", -customer.creditBalance)}"
+                                    "OWES $currency ${String.format("%.2f", -customer.creditBalance)}"
                                 else
-                                    "KES ${String.format("%.2f", customer.creditBalance)}"
+                                    "$currency ${String.format("%.2f", customer.creditBalance)}"
                                 Box(Modifier.clip(RoundedCornerShape(10.dp))
                                     .background(balanceColor.copy(0.15f))
                                     .border(1.dp, balanceColor.copy(0.4f), RoundedCornerShape(10.dp))

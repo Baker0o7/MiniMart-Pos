@@ -166,7 +166,9 @@ fun DashboardScreen(
                                 }
                             }
                             Spacer(Modifier.height(6.dp))
-                            Text("KES ${String.format("%,.0f", state.todayRevenue)}",
+                            // Bug fix: hardcoded "KES" — state.currency (from the app's
+                            // configurable currency setting) was already available but unused.
+                            Text("${state.currency} ${String.format("%,.0f", state.todayRevenue)}",
                                 color = White, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
                             Text("vs yesterday", color = Sub, fontSize = 10.sp)
                             Spacer(Modifier.height(10.dp))
@@ -218,7 +220,7 @@ fun DashboardScreen(
                                     Text("Avg Basket", color = Sub, fontSize = 10.sp)
                                 }
                                 Spacer(Modifier.height(4.dp))
-                                Text("KES ${String.format("%.0f", avgBasket)}",
+                                Text("${state.currency} ${String.format("%.0f", avgBasket)}",
                                     color = White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                             }
                         }

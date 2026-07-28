@@ -41,6 +41,7 @@ import com.minimart.pos.ui.viewmodel.ProductViewModel
 fun ProductListScreen(
     onBack: () -> Unit,
     canEditPrices: Boolean = true,
+    currency: String = "KES",
     vm: ProductViewModel = hiltViewModel()
 ) {
     val products by vm.products.collectAsState()
@@ -129,7 +130,7 @@ fun ProductListScreen(
             }
 
                 items(products, key = { it.id }) { product ->
-                    DarkProductRow(product = product,
+                    DarkProductRow(product = product, currency = currency,
                         onEdit = { editProduct = it; showAddDialog = true },
                         onDelete = { vm.deleteProduct(product.id) })
                 }
@@ -175,7 +176,7 @@ private fun DarkFilterChip(label: String, selected: Boolean, onClick: () -> Unit
 }
 
 @Composable
-private fun DarkProductRow(product: Product, onEdit: (Product) -> Unit, onDelete: () -> Unit) {
+private fun DarkProductRow(product: Product, currency: String, onEdit: (Product) -> Unit, onDelete: () -> Unit) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
     val stockColor = when {
         product.stock == 0 -> DT.Red
@@ -202,7 +203,7 @@ private fun DarkProductRow(product: Product, onEdit: (Product) -> Unit, onDelete
                 }
                 Text("${product.stock} stock", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
             }
-            Text("KES ${String.format("%.0f", product.price)}", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text("$currency ${String.format("%.0f", product.price)}", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             Spacer(Modifier.width(10.dp))
             // Action icon
             if (product.stock > 0) {

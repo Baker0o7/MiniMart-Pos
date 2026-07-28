@@ -141,7 +141,7 @@ fun ShiftScreen(
             if (state.allShifts.isNotEmpty()) {
                 item { Text("Shift History", fontWeight = FontWeight.SemiBold, fontSize = 16.sp) }
                 items(state.allShifts.take(20), key = { it.id }) { shift ->
-                    ShiftHistoryRow(shift = shift, onClick = { showSummaryDialog = shift })
+                    ShiftHistoryRow(shift = shift, currency = state.currency, onClick = { showSummaryDialog = shift })
                 }
             }
         }
@@ -162,7 +162,7 @@ fun ShiftScreen(
     }
 
     showSummaryDialog?.let { shift ->
-        ShiftSummaryDialog(shift = shift, onDismiss = { showSummaryDialog = null })
+        ShiftSummaryDialog(shift = shift, currency = state.currency, onDismiss = { showSummaryDialog = null })
     }
 }
 
@@ -219,7 +219,7 @@ private fun ActiveShiftCard(shift: Shift, onClockOut: () -> Unit) {
 // ─── Shift History Row ────────────────────────────────────────────────────────
 
 @Composable
-private fun ShiftHistoryRow(shift: Shift, onClick: () -> Unit) {
+private fun ShiftHistoryRow(shift: Shift, currency: String, onClick: () -> Unit) {
     val DT = com.minimart.pos.ui.theme.DT
     val df = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
     Card(
@@ -249,7 +249,7 @@ private fun ShiftHistoryRow(shift: Shift, onClick: () -> Unit) {
                 Text(df.format(Date(shift.clockIn)), style = MaterialTheme.typography.labelSmall, color = com.minimart.pos.ui.theme.DT.SubText)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text("KES ${String.format("%.0f", shift.totalSales)}", fontWeight = FontWeight.Bold, color = com.minimart.pos.ui.theme.DT.Teal)
+                Text("$currency ${String.format("%.0f", shift.totalSales)}", fontWeight = FontWeight.Bold, color = com.minimart.pos.ui.theme.DT.Teal)
                 Text("${shift.totalTransactions} sales", style = MaterialTheme.typography.labelSmall, color = com.minimart.pos.ui.theme.DT.SubText)
             }
         }
@@ -352,7 +352,7 @@ private fun ClockOutDialog(onDismiss: () -> Unit, onClockOut: (Double, String) -
 // ─── Shift Summary Dialog ─────────────────────────────────────────────────────
 
 @Composable
-private fun ShiftSummaryDialog(shift: Shift, onDismiss: () -> Unit) {
+private fun ShiftSummaryDialog(shift: Shift, currency: String, onDismiss: () -> Unit) {
     val DT = com.minimart.pos.ui.theme.DT
     val df = SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault())
     val durationMs = (shift.clockOut ?: System.currentTimeMillis()) - shift.clockIn
@@ -375,18 +375,18 @@ private fun ShiftSummaryDialog(shift: Shift, onDismiss: () -> Unit) {
                 shift.clockOut?.let { SummaryRow("Clock Out", df.format(Date(it))) }
                 SummaryRow("Duration", "${hours}h ${mins}m")
                 HorizontalDivider(color = DT.Border)
-                SummaryRow("Cash Sales", "KES ${String.format("%.2f", shift.totalCashSales)}")
-                SummaryRow("M-Pesa Sales", "KES ${String.format("%.2f", shift.totalMpesaSales)}")
-                if (shift.totalCardSales > 0) SummaryRow("Card Sales", "KES ${String.format("%.2f", shift.totalCardSales)}")
+                SummaryRow("Cash Sales", "$currency ${String.format("%.2f", shift.totalCashSales)}")
+                SummaryRow("M-Pesa Sales", "$currency ${String.format("%.2f", shift.totalMpesaSales)}")
+                if (shift.totalCardSales > 0) SummaryRow("Card Sales", "$currency ${String.format("%.2f", shift.totalCardSales)}")
                 HorizontalDivider(color = DT.Border)
-                SummaryRow("Total Sales", "KES ${String.format("%.2f", shift.totalSales)}", bold = true, color = DT.Teal)
+                SummaryRow("Total Sales", "$currency ${String.format("%.2f", shift.totalSales)}", bold = true, color = DT.Teal)
                 SummaryRow("Transactions", shift.totalTransactions.toString())
-                if (shift.totalDiscounts > 0) SummaryRow("Discounts Given", "KES ${String.format("%.2f", shift.totalDiscounts)}", color = ErrorRed)
+                if (shift.totalDiscounts > 0) SummaryRow("Discounts Given", "$currency ${String.format("%.2f", shift.totalDiscounts)}", color = ErrorRed)
                 HorizontalDivider(color = DT.Border)
-                SummaryRow("Opening Float", "KES ${String.format("%.2f", shift.openingFloat)}")
+                SummaryRow("Opening Float", "$currency ${String.format("%.2f", shift.openingFloat)}")
                 shift.closingFloat?.let { cf ->
-                    SummaryRow("Closing Float", "KES ${String.format("%.2f", cf)}")
-                    SummaryRow("Expected Cash", "KES ${String.format("%.2f", shift.expectedCash)}")
+                    SummaryRow("Closing Float", "$currency ${String.format("%.2f", cf)}")
+                    SummaryRow("Expected Cash", "$currency ${String.format("%.2f", shift.expectedCash)}")
                     val disc = shift.cashDiscrepancy
                     SummaryRow(
                         "Discrepancy",

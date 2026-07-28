@@ -746,11 +746,29 @@ private fun CustomerSearchSheet(
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Box(Modifier.clip(RoundedCornerShape(8.dp))
-                                    .background(if (cust.creditBalance > 0) DT.Teal.copy(0.15f) else DT.Bg)
-                                    .border(1.dp, if (cust.creditBalance > 0) DT.Teal.copy(0.4f) else DT.Border, RoundedCornerShape(8.dp))
+                                    .background(when {
+                                        cust.creditBalance > 0 -> DT.Teal.copy(0.15f)
+                                        cust.creditBalance < 0 -> DT.Red.copy(0.15f)
+                                        else -> DT.Bg
+                                    })
+                                    .border(1.dp, when {
+                                        cust.creditBalance > 0 -> DT.Teal.copy(0.4f)
+                                        cust.creditBalance < 0 -> DT.Red.copy(0.4f)
+                                        else -> DT.Border
+                                    }, RoundedCornerShape(8.dp))
                                     .padding(horizontal = 8.dp, vertical = 4.dp)) {
-                                    Text("KES ${String.format("%.2f", cust.creditBalance)}",
-                                        color = if (cust.creditBalance > 0) DT.Teal else DT.SubText,
+                                    // Bug fix: hardcoded "KES" even though `currency` was already
+                                    // in scope, and didn't distinguish "owes money" (negative
+                                    // balance) from "zero" — both showed the same neutral style.
+                                    Text(
+                                        if (cust.creditBalance < 0)
+                                            "OWES $currency ${String.format("%.2f", -cust.creditBalance)}"
+                                        else "$currency ${String.format("%.2f", cust.creditBalance)}",
+                                        color = when {
+                                            cust.creditBalance > 0 -> DT.Teal
+                                            cust.creditBalance < 0 -> DT.Red
+                                            else -> DT.SubText
+                                        },
                                         fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                 }
                             }

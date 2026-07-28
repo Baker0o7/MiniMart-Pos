@@ -41,6 +41,7 @@ import java.util.Locale
 @Composable
 fun CustomerScreen(
     onBack: () -> Unit,
+    currency: String = "KES",
     vm: CustomerViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
@@ -121,6 +122,7 @@ fun CustomerScreen(
                 ) {
                     items(state.customers, key = { it.id }) { customer ->
                         CustomerCard(
+                            currency = currency,
                             customer = customer,
                             onSelect = { selectedCustomer = customer; vm.selectCustomer(customer) },
                             onAddCredit = { showCreditDialog = customer }
@@ -136,6 +138,7 @@ fun CustomerScreen(
     selectedCustomer?.let { cust ->
         CustomerDetailSheet(
             customer = cust,
+            currency = currency,
             transactions = state.transactions,
             onDismiss = { selectedCustomer = null },
             onAddCredit = { showCreditDialog = cust },
@@ -157,9 +160,10 @@ fun CustomerScreen(
     showCreditDialog?.let { cust ->
         AddCreditDialog(
             customer = cust,
+            currency = currency,
             onDismiss = { showCreditDialog = null },
             onAdd = { amount, notes ->
-                vm.addCredit(cust.id, amount, notes)
+                vm.addCredit(cust.id, amount, notes, currency)
                 showCreditDialog = null
             }
         )
@@ -169,7 +173,7 @@ fun CustomerScreen(
 // ─── Customer Card ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun CustomerCard(customer: Customer, onSelect: () -> Unit, onAddCredit: () -> Unit) {
+private fun CustomerCard(customer: Customer, currency: String, onSelect: () -> Unit, onAddCredit: () -> Unit) {
     Box(modifier = Modifier.fillMaxWidth()
         .clip(RoundedCornerShape(18.dp))
         .background(Brush.horizontalGradient(listOf(DT.Surface, DT.Surface2)))
@@ -193,13 +197,26 @@ private fun CustomerCard(customer: Customer, onSelect: () -> Unit, onAddCredit: 
                     color = DT.SubText, fontSize = 11.sp)
             }
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                // Bug fix: was hardcoded "KES" (ignoring the app's configurable currency
+                // setting) and only distinguished "has credit" vs "zero" — a customer who
+                // OWES money (negative balance, buy-on-account) showed the same neutral
+                // gray styling as a zero balance, with no visual warning at all.
+                val balColor = when {
+                    customer.creditBalance > 0 -> DT.Teal
+                    customer.creditBalance < 0 -> DT.Red
+                    else -> DT.SubText
+                }
+                val balBg = if (customer.creditBalance != 0.0) balColor.copy(0.15f) else DT.Surface2
+                val balBorder = if (customer.creditBalance != 0.0) balColor.copy(0.4f) else DT.Border
                 Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))
-                    .background(if (customer.creditBalance > 0) DT.Teal.copy(0.15f) else DT.Surface2)
-                    .border(1.dp, if (customer.creditBalance > 0) DT.Teal.copy(0.4f) else DT.Border, RoundedCornerShape(10.dp))
+                    .background(balBg)
+                    .border(1.dp, balBorder, RoundedCornerShape(10.dp))
                     .padding(horizontal = 10.dp, vertical = 5.dp)) {
-                    Text("KES ${String.format("%.2f", customer.creditBalance)}",
-                        color = if (customer.creditBalance > 0) DT.Teal else DT.SubText,
-                        fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text(
+                        if (customer.creditBalance < 0)
+                            "OWES $currency ${String.format("%.2f", -customer.creditBalance)}"
+                        else "$currency ${String.format("%.2f", customer.creditBalance)}",
+                        color = balColor, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
                 Box(modifier = Modifier.size(30.dp).clip(CircleShape)
                     .background(DT.Teal.copy(0.15f))
@@ -217,7 +234,7 @@ private fun CustomerCard(customer: Customer, onSelect: () -> Unit, onAddCredit: 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CustomerDetailSheet(
-    customer: Customer, transactions: List<CreditTransaction>,
+    customer: Customer, currency: String, transactions: List<CreditTransaction>,
     onDismiss: () -> Unit, onAddCredit: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit
 ) {
     val df = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
@@ -248,10 +265,20 @@ private fun CustomerDetailSheet(
             // Stats row
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatChip(Modifier.weight(1f), "Credit Balance",
-                        "KES ${String.format("%.2f", customer.creditBalance)}", DT.Teal)
+                    // Bug fix: was hardcoded "KES" ignoring the configurable currency
+                    // setting, and always teal even when the customer owes money.
+                    val balColor = when {
+                        customer.creditBalance > 0 -> DT.Teal
+                        customer.creditBalance < 0 -> DT.Red
+                        else -> DT.SubText
+                    }
+                    val balLabel = if (customer.creditBalance < 0) "Owed to Shop" else "Credit Balance"
+                    val balValue = if (customer.creditBalance < 0)
+                        "$currency ${String.format("%.2f", -customer.creditBalance)}"
+                    else "$currency ${String.format("%.2f", customer.creditBalance)}"
+                    StatChip(Modifier.weight(1f), balLabel, balValue, balColor)
                     StatChip(Modifier.weight(1f), "Total Spent",
-                        "KES ${String.format("%.0f", customer.totalPurchases)}", DT.Green)
+                        "$currency ${String.format("%.0f", customer.totalPurchases)}", DT.Green)
                     StatChip(Modifier.weight(1f), "Visits", customer.visitCount.toString(), DT.SubText)
                 }
             }
@@ -358,7 +385,7 @@ private fun AddCustomerDialog(customer: Customer?, onDismiss: () -> Unit, onSave
 }
 
 @Composable
-internal fun AddCreditDialog(customer: Customer, onDismiss: () -> Unit, onAdd: (Double, String) -> Unit) {
+internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDismiss: () -> Unit, onAdd: (Double, String) -> Unit) {
     var amount by remember { mutableStateOf("") }
     var notes  by remember { mutableStateOf("") }
 
@@ -366,10 +393,15 @@ internal fun AddCreditDialog(customer: Customer, onDismiss: () -> Unit, onAdd: (
         title = { Text("Add Credit — ${customer.name}", color = Color.White, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Current balance: KES ${String.format("%.2f", customer.creditBalance)}",
-                    color = DT.Teal, fontWeight = FontWeight.SemiBold)
+                // Bug fix: hardcoded "KES" + always teal even when the customer owes
+                // money. Now uses the configurable currency and red when balance < 0.
+                Text(
+                    if (customer.creditBalance < 0)
+                        "Currently owes: $currency ${String.format("%.2f", -customer.creditBalance)}"
+                    else "Current balance: $currency ${String.format("%.2f", customer.creditBalance)}",
+                    color = if (customer.creditBalance < 0) DT.Red else DT.Teal, fontWeight = FontWeight.SemiBold)
                 OutlinedTextField(value = amount, onValueChange = { amount = it },
-                    label = { Text("Amount (KES)", color = DT.SubText) },
+                    label = { Text("Amount ($currency)", color = DT.SubText) },
                     leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
