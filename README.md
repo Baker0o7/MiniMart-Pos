@@ -37,6 +37,7 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - Bluetooth / USB HID barcode scanner support
 - **Weighing scale support (PLU)** — decodes variable-weight EAN-13 barcodes,
   auto-calculates price from weight × price/kg, weight persisted in sale records
+  and correctly shown (not "×1") on both the in-app and shareable PDF receipt
 - **Continuous scan mode** with animated laser overlay, corner brackets,
   green flash confirmation, and live scan counter badge
 - Product search by name or barcode with live dropdown
@@ -49,9 +50,12 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **M-Pesa** — ref number field
 - **Credit** — customer wallet or buy-on-account (negative balance allowed)
 - **Split payment** — combine credit + cash in one transaction
-- Customer selector with search + contacts import
+- Customer selector with search + contacts import — debtors (customers who
+  owe money) are clearly flagged in red, not shown the same as a zero balance
 - Cash drawer auto-opens on cash payment (configurable)
 - Haptic feedback confirms every completed sale
+- All money displays respect the app's configurable currency setting
+  (no screen is hardcoded to "KES")
 
 ### 👤 Customer Credit System
 - Register customers with name, phone, email
@@ -59,9 +63,11 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **Buy on account** — negative balance allowed
 - Full transaction history per customer
 - **Credit Ledger** — all non-zero balances at a glance
-  - 🔴 Debtors (negative, owe money) shown first with "OWES KES X" in red
+  - 🔴 Debtors (negative, owe money) shown first with "OWES [currency] X" in red
   - 🟢 Wallet balances shown in green
   - Two summary stats: "Owed to Shop" + "Wallet Credit"
+  - Same red/green treatment applied consistently across the customer list,
+    customer detail sheet, and the checkout customer picker
 
 ### 🌐 Multi-Device LAN Sync
 - No internet, no cloud — pure local WiFi sync
@@ -82,6 +88,7 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - Color-coded expiry urgency badges · Low-stock background alerts (WorkManager)
 - Stock adjustments with reason log
 - **PLU / Weighing scale toggle** per product (PLU code + price/kg)
+- Delete confirmation clearly warns the action is permanent
 
 ### 📊 Reports & Analytics
 - Revenue vs yesterday (real % comparison, flips red when down)
@@ -106,9 +113,11 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 
 Route-level `AccessGuard` bounces unauthorized users automatically.
 Cannot remove the last active Owner account (permanent lockout protection).
+Removing a user requires an explicit two-step confirmation.
 
 ### 🔐 Security
-- **Argon2id PIN hashing** (t=3, m=64MB, p=4), auto-upgrades legacy SHA-256 on login
+- **Argon2id PIN hashing** (t=3, m=64MB, p=4), auto-upgrades legacy SHA-256 on login,
+  constant-time comparison on both paths (no timing side-channel)
 - **Biometric login** — bound to one explicitly opted-in user per device (Settings → Account).
   Any fingerprint on the device cannot authenticate as an arbitrary username.
 - **Persisted 3-strike lockout** — survives force-close, task-kill, and device reboot
@@ -123,10 +132,17 @@ Cannot remove the last active Owner account (permanent lockout protection).
   - `SESSION_EXPIRED`
 - **Sync pairing code** — LAN sync server requires a 6-digit code, preventing
   unauthorized WiFi devices from reading or injecting data
+- **At-rest protection**: the database relies on Android's File-Based Encryption
+  (FBE), hardware-backed and enabled by default since Android 7.0 — every
+  supported device (minSdk 26) has it. App-level SQLCipher encryption was
+  evaluated twice and reverted both times due to native-library crashes on
+  startup; FBE was judged the safer, zero-maintenance choice for this app.
 
 ### 💾 Backup & Data
 - One-tap backup to `Downloads/MiniMartPOS/backups/`
-- Restore **automatically closes and restarts the app** (WAL/SHM files handled correctly)
+- **Restore requires explicit two-step confirmation** — selecting a backup shows
+  exactly what will be lost before anything is overwritten, then the app
+  automatically restarts (WAL/SHM files handled correctly, no manual close needed)
 - 100% offline — Room SQLite v12, no internet required for core operation
 
 ### 🎨 UI / UX
@@ -135,6 +151,8 @@ Cannot remove the last active Owner account (permanent lockout protection).
 - Consistent gradient top bar across all screens
 - Press-scale animation on dashboard action cards
 - Color-coded payment method chips throughout
+- Consistent destructive-action dialogs app-wide (styled red confirm +
+  bordered cancel, clear "cannot be undone" copy) for delete/void/remove/restore
 - Animated scanner overlay: pulsing border, sweeping laser, corner brackets
 - Pull-to-refresh on dashboard (updates today + yesterday revenue)
 
@@ -148,15 +166,15 @@ Cannot remove the last active Owner account (permanent lockout protection).
 | UI | Jetpack Compose + Material 3 |
 | Architecture | MVVM · Clean Architecture · Repository |
 | DI | Hilt |
-| Database | Room 2.6 (SQLite v12) |
+| Database | Room 2.6 (SQLite v12), Android FBE at rest |
 | PIN Security | Argon2id (argon2-kt 1.4.0) |
 | Camera | CameraX + ML Kit Barcode |
-| Sync | Custom HTTP server/client over LAN WiFi |
+| Sync | Custom HTTP server/client over LAN WiFi, pairing-code authenticated |
 | Background | WorkManager (low-stock + expiry alerts) |
 | Preferences | DataStore + SharedPreferences |
 | Printing | Bluetooth ESC/POS |
-| Navigation | Navigation Compose + SafeArgs |
-| State | `SavedStateHandle` for process-death recovery |
+| Navigation | Navigation Compose |
+| State | `SavedStateHandle` for process-death recovery (e.g. Receipt screen) |
 
 ---
 
