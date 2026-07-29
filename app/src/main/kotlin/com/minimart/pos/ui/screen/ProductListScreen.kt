@@ -338,16 +338,27 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                         } else 0L
                     } catch (_: Exception) { 0L }
                     onSave(Product(id = product?.id ?: 0L, barcode = barcode.trim(), sku = sku.trim(),
-                        name = name.trim(), price = price.toDoubleOrNull() ?: 0.0,
-                        costPrice = costPrice.toDoubleOrNull() ?: 0.0, stock = stock.toIntOrNull() ?: 0,
+                        name = name.trim(),
+                        price = (price.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0),
+                        costPrice = (costPrice.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0),
+                        stock = (stock.toIntOrNull() ?: 0).coerceAtLeast(0),
                         category = category.ifBlank { "General" }, unit = unit.ifBlank { "pcs" },
                         supplierName = supplierName.trim(), supplierPhone = supplierPhone.trim(),
-                        reorderQuantity = reorderQty.toIntOrNull() ?: 0,
+                        reorderQuantity = (reorderQty.toIntOrNull() ?: 0).coerceAtLeast(0),
                         batchNumber = batchNumber.trim(), expiryDate = expiryMs,
                         pluCode = pluCode.trim().padStart(5, '0'), isWeighed = isWeighed,
-                        pricePerKg = pricePerKg.toDoubleOrNull() ?: 0.0))
+                        pricePerKg = (pricePerKg.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0)))
                 },
-                enabled = barcode.isNotBlank() && name.isNotBlank() && price.toDoubleOrNull() != null,
+                // Bug fix: was `price.toDoubleOrNull() != null` — only checked the text
+                // was parseable as SOME number, not that it was positive. KeyboardType
+                // .Decimal shows a minus key on many keyboards (e.g. Gboard's numeric
+                // layout), and an external/Bluetooth keyboard or clipboard paste can
+                // always type a "-" regardless of the on-screen IME. A negative price
+                // would corrupt every downstream calculation: cart totals, receipts,
+                // reports, and stock valuation. The coerceAtLeast(0.0) calls above are
+                // a second line of defense in case this button's enabled check is ever
+                // bypassed by a future code path.
+                enabled = barcode.isNotBlank() && name.isNotBlank() && (price.toDoubleOrNull() ?: -1.0) > 0.0,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = DT.Green,

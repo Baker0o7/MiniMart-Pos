@@ -21,18 +21,27 @@ class ShiftRepository @Inject constructor(
     fun getRecentShifts(startMs: Long): Flow<List<Shift>> = shiftDao.getRecentShifts(startMs)
     suspend fun getOpenShift(cashierId: Long): Shift? = shiftDao.getOpenShift(cashierId)
 
+    // Bug fix: no validation existed anywhere on openingFloat — a negative value would
+    // corrupt expectedCash = openingFloat + cashSales in ShiftRepository.clockOut(),
+    // silently masking a real till shortage or fabricating a false discrepancy. Clamped
+    // here as defense-in-depth (the UI-level fix in ShiftScreen is the primary guard)
+    // so this can't regress even if a future caller bypasses that screen.
     suspend fun clockIn(cashierId: Long, cashierName: String, openingFloat: Double): Long =
         shiftDao.insertShift(
             Shift(
                 cashierId = cashierId,
                 cashierName = cashierName,
-                openingFloat = openingFloat,
+                openingFloat = openingFloat.coerceAtLeast(0.0),
                 status = ShiftStatus.OPEN
             )
         )
 
     suspend fun clockOut(shiftId: Long, closingFloat: Double, notes: String): Shift? {
         val shift = shiftDao.getShiftById(shiftId) ?: return null
+        // Bug fix: same defense-in-depth as clockIn's openingFloat above — a negative
+        // closingFloat would corrupt discrepancy = closingFloat - expectedCash, the
+        // core shift-reconciliation number shown to the owner.
+        val safeClosingFloat = closingFloat.coerceAtLeast(0.0)
 
         // Bug fix: no guard against closing an already-COMPLETED shift. Clocking out
         // a closed shift a second time produced a different (wrong) summary because
@@ -79,11 +88,11 @@ class ShiftRepository @Inject constructor(
         // till count) is the one that correctly stays cash-method-specific.
         val totalSales = completed.sumOf { it.totalAmount }
         val expectedCash = shift.openingFloat + cashSales
-        val discrepancy = closingFloat - expectedCash
+        val discrepancy = safeClosingFloat - expectedCash
 
         val closed = shift.copy(
             clockOut        = System.currentTimeMillis(),
-            closingFloat    = closingFloat,
+            closingFloat    = safeClosingFloat,
             totalCashSales  = cashSales,
             totalMpesaSales = mpesaSales,
             totalCardSales  = cardSales,

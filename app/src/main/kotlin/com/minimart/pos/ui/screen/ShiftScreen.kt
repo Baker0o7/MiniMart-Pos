@@ -294,7 +294,7 @@ private fun ClockInDialog(onDismiss: () -> Unit, onClockIn: (Double) -> Unit) {
             }
         },
         confirmButton = {
-            Button(onClick = { onClockIn(openingFloat.toDoubleOrNull() ?: 0.0) },
+            Button(onClick = { onClockIn((openingFloat.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0)) },
                 colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
             ) {
@@ -341,7 +341,7 @@ private fun ClockOutDialog(onDismiss: () -> Unit, onClockOut: (Double, String) -
             }
         },
         confirmButton = {
-            Button(onClick = { onClockOut(closingFloat.toDoubleOrNull() ?: 0.0, notes) },
+            Button(onClick = { onClockOut((closingFloat.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0), notes) },
                 colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
             ) { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = Color.White, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("End Shift", color = Color.White, fontWeight = FontWeight.Bold) }

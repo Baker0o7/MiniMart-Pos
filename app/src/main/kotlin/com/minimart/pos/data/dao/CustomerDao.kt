@@ -45,6 +45,15 @@ interface CustomerDao {
     @Query("SELECT * FROM customers WHERE creditBalance > 0 ORDER BY creditBalance DESC")
     fun getCustomersWithCredit(): Flow<List<Customer>>
 
-    @Query("SELECT SUM(creditBalance) FROM customers")
+    // Bug fix: was `SELECT SUM(creditBalance)`, which nets negative balances (customers
+    // who OWE money) against positive balances (customers with wallet credit) into one
+    // meaningless combined figure — e.g. a customer owing 500 and another holding 300
+    // wallet credit summed to -200, which represents neither "total owed to the shop"
+    // nor "total wallet credit held". "Outstanding" means money owed TO the shop, so
+    // this now sums only the negative (debt) balances and returns it as a positive
+    // amount — matching the "Owed to Shop" terminology already used in
+    // CreditOverviewScreen. (This DAO method is currently unused by any screen, but
+    // left correct so it can't silently reintroduce the bug if wired up later.)
+    @Query("SELECT -SUM(creditBalance) FROM customers WHERE creditBalance < 0")
     fun getTotalCreditOutstanding(): Flow<Double?>
 }
