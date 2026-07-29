@@ -177,7 +177,7 @@ fun CreditOverviewScreen(
                                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 if (customer.phone.isNotBlank())
                                     Text(customer.phone, color = DT.SubText, fontSize = 12.sp)
-                                Text("${customer.visitCount} visits  •  Total spent KES ${String.format("%,.0f", customer.totalPurchases)}",
+                                Text("${customer.visitCount} visits  •  Total spent $currency ${String.format("%,.0f", customer.totalPurchases)}",
                                     color = DT.SubText, fontSize = 10.sp)
                             }
                             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -220,7 +220,7 @@ fun CreditOverviewScreen(
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Text("Recent Activity", color = DT.Teal, fontWeight = FontWeight.SemiBold,
                                         fontSize = 12.sp, modifier = Modifier.padding(bottom = 4.dp))
-                                    txs.take(5).forEach { tx -> CreditTxRow(tx) }
+                                    txs.take(5).forEach { tx -> CreditTxRow(tx, currency) }
                                     if (txs.size > 5) {
                                         Text("+ ${txs.size - 5} more transactions",
                                             color = DT.SubText, fontSize = 11.sp,
@@ -249,7 +249,7 @@ fun CreditOverviewScreen(
 }
 
 @Composable
-private fun CreditTxRow(tx: CreditTransaction) {
+private fun CreditTxRow(tx: CreditTransaction, currency: String) {
     val df = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
     Row(modifier = Modifier.fillMaxWidth()
         .clip(RoundedCornerShape(10.dp)).background(DT.Bg)
@@ -268,10 +268,10 @@ private fun CreditTxRow(tx: CreditTransaction) {
             Text(df.format(Date(tx.createdAt)), color = DT.SubText, fontSize = 10.sp)
         }
         Column(horizontalAlignment = Alignment.End) {
-            Text("${if (tx.amount > 0) "+" else ""}KES ${String.format("%.2f", tx.amount)}",
+            Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format("%.2f", tx.amount)}",
                 color = if (tx.amount > 0) DT.Green else DT.Red,
                 fontWeight = FontWeight.Bold, fontSize = 13.sp)
-            Text("Bal: KES ${String.format("%.2f", tx.balanceAfter)}", color = DT.SubText, fontSize = 10.sp)
+            Text("Bal: $currency ${String.format("%.2f", tx.balanceAfter)}", color = DT.SubText, fontSize = 10.sp)
         }
     }
 }

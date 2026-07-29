@@ -743,7 +743,7 @@ private fun CustomerSearchSheet(
                             Column(Modifier.weight(1f)) {
                                 Text(cust.name, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                 if (cust.phone.isNotBlank()) Text(cust.phone, color = DT.SubText, fontSize = 12.sp)
-                                Text("${cust.visitCount} visits  •  KES ${String.format("%.0f", cust.totalPurchases)} total",
+                                Text("${cust.visitCount} visits  •  $currency ${String.format("%.0f", cust.totalPurchases)} total",
                                     color = DT.SubText, fontSize = 10.sp)
                             }
                             Column(horizontalAlignment = Alignment.End) {

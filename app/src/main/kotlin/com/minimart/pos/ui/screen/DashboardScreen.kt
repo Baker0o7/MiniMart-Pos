@@ -113,8 +113,14 @@ fun DashboardScreen(
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(timeOfDayGreeting(), color = White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
-                            Text(state.storeName, color = Sub, fontSize = 12.sp)
+                            Text(timeOfDayGreeting(), color = White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp,
+                                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                            // Bug fix: no overflow protection on the shop name — a longer
+                            // name (common for Kenyan shop names, e.g. "Baraka Wholesalers &
+                            // General Provisions") would wrap to a second line and unbalance
+                            // this header against the fixed-height avatar and status pill.
+                            Text(state.storeName, color = Sub, fontSize = 12.sp,
+                                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         }
                         // Status pill
                         Row(modifier = Modifier.clip(RoundedCornerShape(20.dp))

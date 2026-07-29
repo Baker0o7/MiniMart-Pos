@@ -193,7 +193,7 @@ private fun CustomerCard(customer: Customer, currency: String, onSelect: () -> U
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (customer.phone.isNotBlank())
                     Text(customer.phone, color = DT.SubText, fontSize = 12.sp)
-                Text("${customer.visitCount} visits  •  KES ${String.format("%.0f", customer.totalPurchases)} total",
+                Text("${customer.visitCount} visits  •  $currency ${String.format("%.0f", customer.totalPurchases)} total",
                     color = DT.SubText, fontSize = 11.sp)
             }
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -254,7 +254,8 @@ private fun CustomerDetailSheet(
                     }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(customer.name, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        Text(customer.name, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
                         if (customer.phone.isNotBlank()) Text(customer.phone, color = DT.SubText)
                         if (customer.email.isNotBlank()) Text(customer.email, color = DT.SubText, fontSize = 12.sp)
                     }
@@ -313,9 +314,9 @@ private fun CustomerDetailSheet(
                             Text(df.format(Date(tx.createdAt)), color = DT.SubText, fontSize = 11.sp)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("${if (tx.amount > 0) "+" else ""}KES ${String.format("%.2f", tx.amount)}",
+                            Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format("%.2f", tx.amount)}",
                                 color = if (tx.amount > 0) DT.Green else DT.Red, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("Bal: KES ${String.format("%.2f", tx.balanceAfter)}",
+                            Text("Bal: $currency ${String.format("%.2f", tx.balanceAfter)}",
                                 color = DT.SubText, fontSize = 10.sp)
                         }
                     }

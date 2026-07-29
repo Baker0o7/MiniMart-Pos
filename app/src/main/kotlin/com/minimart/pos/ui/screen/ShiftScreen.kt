@@ -90,6 +90,7 @@ fun ShiftScreen(
                 state.activeShift?.let { shift ->
                     ActiveShiftCard(
                         shift = shift,
+                        currency = state.currency,
                         onClockOut = { showClockOutDialog = true }
                     )
                 } ?: run {
@@ -169,7 +170,7 @@ fun ShiftScreen(
 // ─── Active Shift Card ────────────────────────────────────────────────────────
 
 @Composable
-private fun ActiveShiftCard(shift: Shift, onClockOut: () -> Unit) {
+private fun ActiveShiftCard(shift: Shift, currency: String, onClockOut: () -> Unit) {
     val df = SimpleDateFormat("HH:mm", Locale.getDefault())
     val dfFull = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
     val durationMs = System.currentTimeMillis() - shift.clockIn
@@ -199,7 +200,7 @@ private fun ActiveShiftCard(shift: Shift, onClockOut: () -> Unit) {
             if (shift.openingFloat > 0) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Default.Money, null, tint = com.minimart.pos.ui.theme.DT.SubText, modifier = Modifier.size(18.dp))
-                    Text("Opening float: KES ${String.format("%.2f", shift.openingFloat)}", style = MaterialTheme.typography.bodySmall, color = com.minimart.pos.ui.theme.DT.SubText)
+                    Text("Opening float: $currency ${String.format("%.2f", shift.openingFloat)}", style = MaterialTheme.typography.bodySmall, color = com.minimart.pos.ui.theme.DT.SubText)
                 }
             }
             Button(
@@ -390,7 +391,7 @@ private fun ShiftSummaryDialog(shift: Shift, currency: String, onDismiss: () -> 
                     val disc = shift.cashDiscrepancy
                     SummaryRow(
                         "Discrepancy",
-                        "${if (disc >= 0) "+" else ""}KES ${String.format("%.2f", disc)}",
+                        "${if (disc >= 0) "+" else ""}$currency ${String.format("%.2f", disc)}",
                         bold = true,
                         color = when { disc > 10 -> SuccessGreen; disc < -10 -> ErrorRed; else -> Color.White }
                     )
