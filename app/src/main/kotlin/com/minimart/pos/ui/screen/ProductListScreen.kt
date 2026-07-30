@@ -10,7 +10,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -255,6 +257,23 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
     var supplierPhone by remember { mutableStateOf(product?.supplierPhone ?: "") }
     var reorderQty    by remember { mutableStateOf(product?.reorderQuantity?.toString() ?: "") }
     var batchNumber   by remember { mutableStateOf(product?.batchNumber ?: "") }
+    // Bug fix: focus chain so the keyboard's "Next" button walks through all 13 fields
+    // in this form instead of forcing a manual tap on each one. Order matches the
+    // visual layout: barcode -> name -> price -> costPrice -> stock -> unit ->
+    // category -> sku -> supplierName -> supplierPhone -> reorderQty -> batchNumber
+    // -> expiryDateStr (last field: "Done", dismisses keyboard).
+    val nameFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val priceFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val costPriceFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val stockFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val unitFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val categoryFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val skuFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val supplierNameFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val supplierPhoneFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val reorderQtyFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val batchNumberFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val expiryFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     var pluCode       by remember { mutableStateOf(product?.pluCode ?: "") }
     var isWeighed     by remember { mutableStateOf(product?.isWeighed ?: false) }
     var pricePerKg    by remember { mutableStateOf(product?.pricePerKg?.takeIf { it > 0.0 }?.toString() ?: "") }
@@ -277,7 +296,7 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    DarkField(barcode, { barcode = it }, "Barcode *", modifier = Modifier.weight(1f))
+                    DarkField(barcode, { barcode = it }, "Barcode *", modifier = Modifier.weight(1f), nextFocusRequester = nameFocus)
                     FilledIconButton(onClick = {
                         if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
                         else showScanner = !showScanner
@@ -295,33 +314,33 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                         }
                     }
                 }
-                DarkField(name, { name = it }, "Product Name *")
+                DarkField(name, { name = it }, "Product Name *", focusRequester = nameFocus, nextFocusRequester = priceFocus)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DarkField(price, { price = it }, "Price (KES)", Modifier.weight(1f), KeyboardType.Decimal)
-                    DarkField(costPrice, { costPrice = it }, "Cost Price", Modifier.weight(1f), KeyboardType.Decimal)
+                    DarkField(price, { price = it }, "Price (KES)", Modifier.weight(1f), KeyboardType.Decimal, focusRequester = priceFocus, nextFocusRequester = costPriceFocus)
+                    DarkField(costPrice, { costPrice = it }, "Cost Price", Modifier.weight(1f), KeyboardType.Decimal, focusRequester = costPriceFocus, nextFocusRequester = stockFocus)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DarkField(stock, { stock = it }, "Stock", Modifier.weight(1f), KeyboardType.Number)
-                    DarkField(unit, { unit = it }, "Unit", Modifier.weight(1f))
+                    DarkField(stock, { stock = it }, "Stock", Modifier.weight(1f), KeyboardType.Number, focusRequester = stockFocus, nextFocusRequester = unitFocus)
+                    DarkField(unit, { unit = it }, "Unit", Modifier.weight(1f), focusRequester = unitFocus, nextFocusRequester = categoryFocus)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DarkField(category, { category = it }, "Category", Modifier.weight(1f))
-                    DarkField(sku, { sku = it }, "SKU", Modifier.weight(1f))
+                    DarkField(category, { category = it }, "Category", Modifier.weight(1f), focusRequester = categoryFocus, nextFocusRequester = skuFocus)
+                    DarkField(sku, { sku = it }, "SKU", Modifier.weight(1f), focusRequester = skuFocus, nextFocusRequester = supplierNameFocus)
                 }
                 Spacer(Modifier.height(4.dp))
                 Text("Supplier Info", color = DT.SubText,
                     style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
-                DarkField(supplierName, { supplierName = it }, "Supplier Name", Modifier.fillMaxWidth())
+                DarkField(supplierName, { supplierName = it }, "Supplier Name", Modifier.fillMaxWidth(), focusRequester = supplierNameFocus, nextFocusRequester = supplierPhoneFocus)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DarkField(supplierPhone, { supplierPhone = it }, "Supplier Phone", Modifier.weight(1f))
-                    DarkField(reorderQty, { reorderQty = it }, "Reorder Qty", Modifier.weight(1f))
+                    DarkField(supplierPhone, { supplierPhone = it }, "Supplier Phone", Modifier.weight(1f), focusRequester = supplierPhoneFocus, nextFocusRequester = reorderQtyFocus)
+                    DarkField(reorderQty, { reorderQty = it }, "Reorder Qty", Modifier.weight(1f), keyboardType = KeyboardType.Number, focusRequester = reorderQtyFocus, nextFocusRequester = batchNumberFocus)
                 }
                 Spacer(Modifier.height(4.dp))
                 Text("Batch & Expiry", color = DT.SubText,
                     style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DarkField(batchNumber, { batchNumber = it }, "Batch No.", Modifier.weight(1f))
-                    DarkField(expiryDateStr, { expiryDateStr = it }, "Expiry (dd/MM/yy)", Modifier.weight(1f))
+                    DarkField(batchNumber, { batchNumber = it }, "Batch No.", Modifier.weight(1f), focusRequester = batchNumberFocus, nextFocusRequester = expiryFocus)
+                    DarkField(expiryDateStr, { expiryDateStr = it }, "Expiry (dd/MM/yy)", Modifier.weight(1f), focusRequester = expiryFocus)
                 }
             }
         },
@@ -384,14 +403,31 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
 
 @Composable
 private fun DarkField(value: String, onValueChange: (String) -> Unit, label: String,
-    modifier: Modifier = Modifier.fillMaxWidth(), keyboardType: KeyboardType = KeyboardType.Text) {
+    modifier: Modifier = Modifier.fillMaxWidth(), keyboardType: KeyboardType = KeyboardType.Text,
+    // Bug fix: no field in this 13-field form supported keyboard "Next" navigation —
+    // every single field required a manual tap to move to the next one. Added optional
+    // focus-chaining: pass focusRequester to attach this field's own anchor, and
+    // nextFocusRequester to move focus there when the user taps "Next" on the keyboard.
+    // Omitting nextFocusRequester (last field in a chain) shows "Done" and dismisses
+    // the keyboard instead.
+    focusRequester: androidx.compose.ui.focus.FocusRequester? = null,
+    nextFocusRequester: androidx.compose.ui.focus.FocusRequester? = null) {
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label, color = DT.SubText, maxLines = 1) },
         singleLine = true,
-        modifier = modifier,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        modifier = modifier.let { if (focusRequester != null) it.focusRequester(focusRequester) else it },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = keyboardType,
+            imeAction = if (nextFocusRequester != null) androidx.compose.ui.text.input.ImeAction.Next
+                        else androidx.compose.ui.text.input.ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(
+            onNext = { nextFocusRequester?.requestFocus() },
+            onDone = { keyboardController?.hide() }
+        ),
         textStyle = androidx.compose.ui.text.TextStyle(color = DT.OnSurface, fontSize = 15.sp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = DT.Teal,
