@@ -93,13 +93,26 @@ fun CheckoutScreen(
     }
 
     val checkoutContext = androidx.compose.ui.platform.LocalContext.current
+    // Bug fix: this collector only ever branched on `is CheckoutResult.Success` — a
+    // CheckoutResult.Error (emitted by the regular checkout() path, and now also by
+    // checkoutSplit() per the fix above) was silently dropped. The cashier would see
+    // isLoading flip back to false with zero indication anything went wrong.
+    var checkoutError by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(Unit) {
         vm.checkoutResult.collect { result ->
-            if (result is CheckoutResult.Success) {
-                checkoutContext.vibrateShort()
-                onSaleComplete(result.saleId)
+            when (result) {
+                is CheckoutResult.Success -> {
+                    checkoutContext.vibrateShort()
+                    onSaleComplete(result.saleId)
+                }
+                is CheckoutResult.Error -> {
+                    checkoutError = result.message
+                }
             }
         }
+    }
+    LaunchedEffect(checkoutError) {
+        if (checkoutError != null) { kotlinx.coroutines.delay(3500); checkoutError = null }
     }
 
     // Customer search side effect
@@ -546,6 +559,27 @@ fun CheckoutScreen(
                 },
                 onDismiss = { showCustomerSearch = false; customerQuery = "" }
             )
+        }
+
+        // Error banner — shows CheckoutResult.Error from either checkout() or
+        // checkoutSplit() (see the bug fix above); auto-dismisses after 3.5s.
+        androidx.compose.animation.AnimatedVisibility(
+            visible = checkoutError != null,
+            enter = androidx.compose.animation.slideInVertically { -it } + androidx.compose.animation.fadeIn(),
+            exit = androidx.compose.animation.slideOutVertically { -it } + androidx.compose.animation.fadeOut(),
+            modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 8.dp)
+        ) {
+            Box(modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(DT.Red)
+                .padding(horizontal = 16.dp, vertical = 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.ErrorOutline, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Text(checkoutError ?: "", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp,
+                        modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }

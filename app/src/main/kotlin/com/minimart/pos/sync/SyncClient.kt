@@ -82,8 +82,12 @@ class SyncClient @Inject constructor(
                         status     = SyncStatus.SYNCED,
                         createdAt  = obj.getLong("createdAt")
                     )
-                    syncDao.insertLog(log)
-                    pulled++
+                    // Bug fix: same duplicate-on-retry issue as SyncServer's /apply
+                    // handler — unconditional insertLog() re-inserted the same remote
+                    // change as a new row on every repeated sync (double-tap "Sync Now",
+                    // a dropped connection retry, etc). Only count it toward `pulled`
+                    // if it was actually new.
+                    if (syncDao.insertLogIfNew(log) != null) pulled++
                 }
                 Log.i(TAG, "Pulled $pulled changes")
             }

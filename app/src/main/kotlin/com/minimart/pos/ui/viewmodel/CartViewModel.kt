@@ -219,6 +219,16 @@ class CartViewModel @Inject constructor(
         customerId: Long? = null
     ) {
         viewModelScope.launch {
+            // Bug fix: no guard existed against calling checkout() twice in quick
+            // succession — a fast double-tap on "Complete Sale" (before Compose
+            // recomposes the button to enabled=false, which only happens on the NEXT
+            // frame after _uiState.update completes) could launch two concurrent
+            // coroutines that both read the same cart state, both insert a sale, and
+            // both decrement stock — producing two receipts for one physical
+            // transaction. This check must run synchronously as the very first line,
+            // before any suspension point, so the second call sees isLoading=true
+            // immediately rather than racing to read a stale false value.
+            if (_uiState.value.isLoading) return@launch
             val state = _uiState.value
             if (state.isEmpty) return@launch
             _uiState.update { it.copy(isLoading = true) }
@@ -295,6 +305,10 @@ class CartViewModel @Inject constructor(
     /** Split payment: credit portion + cash portion */
     fun checkoutSplit(creditAmount: Double, cashAmount: Double, customerId: Long, mpesaRef: String? = null) {
         viewModelScope.launch {
+            // Bug fix: same double-checkout race as checkout() above — checkoutSplit()
+            // had no guard at all (not even the isEmpty check checkout() has).
+            if (_uiState.value.isLoading) return@launch
+            if (_uiState.value.isEmpty) return@launch
             _uiState.update { it.copy(isLoading = true) }
             try {
                 val state = _uiState.value
@@ -342,7 +356,14 @@ class CartViewModel @Inject constructor(
                         detail = "KES ${String.format("%.2f", creditAmount)} from customer #$customerId • Sale #$saleId")
                 _checkoutResult.emit(CheckoutResult.Success(saleId, sale.changeGiven))
             } catch (e: Exception) {
+                // Bug fix: this catch block updated uiState.error but never emitted a
+                // CheckoutResult.Error to the shared flow, unlike the regular checkout()
+                // path's catch block. A failed split-payment checkout (e.g. a DB error,
+                // an invalid customer ID) would silently reset isLoading with zero
+                // feedback to the cashier — the screen just sat there looking like
+                // nothing happened.
                 _uiState.update { it.copy(isLoading = false, error = e.localizedMessage) }
+                _checkoutResult.emit(CheckoutResult.Error(e.localizedMessage ?: "Split checkout failed"))
             }
         }
     }

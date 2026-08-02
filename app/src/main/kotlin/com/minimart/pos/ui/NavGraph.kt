@@ -189,7 +189,17 @@ fun MiniMartNavGraph(
 
                 composable(Routes.PRODUCTS)  { ProductListScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role), currency = currency) }
                 composable(Routes.INVENTORY) { InventoryScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role)) }
-                composable(Routes.REPORTS)   { ReportsScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.REPORTS)   {
+                    // Bug fix: this route had NO AccessGuard at all, unlike Settings
+                    // right below it — any logged-in user, including Cashier, who
+                    // navigated here directly (deep link, back-stack manipulation)
+                    // could view full business reports and analytics with no role
+                    // check whatsoever.
+                    AccessGuard(
+                        hasAccess = com.minimart.pos.util.RoleManager.canViewReports(authState.currentUser?.role),
+                        onBack = { navController.popBackStack() }
+                    ) { ReportsScreen(onBack = { navController.popBackStack() }) }
+                }
                 composable(Routes.EXPENSES)  { ExpenseScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.SALES_HISTORY) {
                     SalesHistoryScreen(
@@ -208,7 +218,17 @@ fun MiniMartNavGraph(
                 composable(Routes.CREDIT_OVERVIEW) {
                     CreditOverviewScreen(onBack = { navController.popBackStack() }, currency = currency)
                 }
-                composable(Routes.USERS)     { UserManagementScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.USERS)     {
+                    // Bug fix: this route had NO AccessGuard at all — the most severe
+                    // instance of this bug, since User Management is Owner-only and
+                    // includes the ability to add/remove users and reset other
+                    // accounts' PINs. Any logged-in Cashier who navigated here directly
+                    // could manage every account in the system with no role check.
+                    AccessGuard(
+                        hasAccess = com.minimart.pos.util.RoleManager.canManageUsers(authState.currentUser?.role),
+                        onBack = { navController.popBackStack() }
+                    ) { UserManagementScreen(onBack = { navController.popBackStack() }) }
+                }
                 composable(Routes.SHIFTS)    { ShiftScreen(onBack = { navController.popBackStack() }) }
 
                 composable(Routes.SETTINGS) {

@@ -27,11 +27,21 @@ class SyncServer @Inject constructor(
         const val PORT       = 9876
         const val SERVICE    = "MiniMartPOS"
         private const val TAG = "SyncServer"
+        // Bug fix: there was no rate limiting on the pairing-key check at all. A
+        // 6-digit code has only 1,000,000 combinations — with unlimited attempts at
+        // LAN speed, an attacker on the same WiFi could brute-force it in minutes.
+        private const val MAX_FAILED_ATTEMPTS = 5
+        private const val LOCKOUT_DURATION_MS = 30_000L
     }
 
     private var serverSocket: ServerSocket? = null
     private var serverJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    // handleClient() runs concurrently (one coroutine per accepted connection), so
+    // these use atomics rather than plain vars to stay correct under concurrent access.
+    private val failedAuthAttempts = java.util.concurrent.atomic.AtomicInteger(0)
+    private val authLockoutUntilMs = java.util.concurrent.atomic.AtomicLong(0)
 
     private val _isRunning = MutableStateFlow(false)
     val isRunning: StateFlow<Boolean> = _isRunning
@@ -96,12 +106,40 @@ class SyncServer @Inject constructor(
             // Settings screen, which must be typed into the other device once.
             val requiresAuth = path == "/changes" || path == "/apply"
             if (requiresAuth) {
+                // Check lockout BEFORE doing any key comparison — rejects immediately
+                // during an active lockout window regardless of whether this particular
+                // guess happens to be correct.
+                val now = System.currentTimeMillis()
+                if (now < authLockoutUntilMs.get()) {
+                    respond(writer, 429, """{"error":"Too many failed attempts — try again shortly"}""")
+                    return
+                }
                 val mySecret = settingsRepo.getOrCreateSyncSecret()
                 val providedKey = headers["X-Sync-Key"]
-                if (providedKey != mySecret) {
+                // Bug fix: `providedKey != mySecret` is a plain String comparison, which
+                // (like the SHA-256 PIN comparison fixed earlier in PinHasher) returns
+                // early on the first mismatched character — a timing side-channel that
+                // an attacker on the same WiFi network could use to narrow down the
+                // 6-digit pairing code character-by-character by measuring response
+                // times across repeated guesses. MessageDigest.isEqual does a
+                // constant-time comparison regardless of where the first difference is.
+                val keysMatch = providedKey != null &&
+                    java.security.MessageDigest.isEqual(
+                        providedKey.toByteArray(Charsets.UTF_8),
+                        mySecret.toByteArray(Charsets.UTF_8)
+                    )
+                if (!keysMatch) {
+                    val attempts = failedAuthAttempts.incrementAndGet()
+                    if (attempts >= MAX_FAILED_ATTEMPTS) {
+                        authLockoutUntilMs.set(System.currentTimeMillis() + LOCKOUT_DURATION_MS)
+                        failedAuthAttempts.set(0)
+                    }
                     respond(writer, 401, """{"error":"Unauthorized — pairing key mismatch"}""")
                     return
                 }
+                // Successful auth — clear any prior failed attempts so a legitimate
+                // user's earlier typo doesn't count toward a future lockout.
+                failedAuthAttempts.set(0)
             }
 
             when {
@@ -150,8 +188,14 @@ class SyncServer @Inject constructor(
                             status     = SyncStatus.SYNCED,
                             createdAt  = obj.getLong("createdAt")
                         )
-                        val insertedId = syncDao.insertLog(log)
-                        ids.add(insertedId)
+                        // Bug fix: was unconditional syncDao.insertLog(log) — inserted
+                        // this change as a brand-new row every single time, with no check
+                        // for whether the exact same change (same origin device/entity/
+                        // operation/timestamp) had already been applied in an earlier
+                        // sync cycle. Any retry duplicated it. insertLogIfNew() skips the
+                        // insert (and correctly omits the id from the response) if a
+                        // matching row already exists.
+                        syncDao.insertLogIfNew(log)?.let { ids.add(it) }
                     }
                     respond(writer, 200, """{"applied":${ids.size}}""")
                 }
