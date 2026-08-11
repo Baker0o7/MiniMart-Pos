@@ -10,7 +10,9 @@ package com.minimart.pos.util
  *   └─ Prefix: 2x = variable weight product
  *
  * Example: "2000010005001"
- *   Prefix = 2, PLU = 00001, Weight = 00500 (500g), Check = 1
+ *   Prefix = 2, PLU = 00001, Weight = 00050 (50g), Check = 1
+ *   (substring(1,6)="00001" is the PLU; substring(6,11)="00050" is the weight —
+ *   verify by counting characters: 2-00001-00050-1, 13 digits total)
  *
  * Some scales use different sub-formats:
  *   21xxxxx = price-embedded (not weight)

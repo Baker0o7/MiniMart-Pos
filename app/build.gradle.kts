@@ -114,4 +114,16 @@ dependencies {
     implementation(libs.mpandroidchart)
 
     debugImplementation(libs.androidx.ui.tooling.preview)
+
+    // Unit tests for financial calculation logic (Money, CartUiState, PluDecoder).
+    // JUnit4 is the standard, long-stable test framework for local JVM unit tests
+    // (app/src/test) — no Android framework or emulator needed since the classes
+    // under test (Money, CartUiState's computed properties, PluDecoder) are pure
+    // Kotlin/JVM logic with no Android dependencies.
+    testImplementation("junit:junit:4.13.2")
+
+    // Encrypts sensitive DataStore/SharedPreferences values (sync pairing secrets).
+    // First-party Google Jetpack library — a thin wrapper around the system Android
+    // Keystore service, not a bundled third-party native library like SQLCipher.
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }

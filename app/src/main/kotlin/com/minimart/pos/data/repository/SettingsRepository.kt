@@ -15,7 +15,8 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "mi
 
 @Singleton
 class SettingsRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    @com.minimart.pos.di.SecurePrefs private val securePrefs: android.content.SharedPreferences
 ) {
     companion object {
         val KEY_STORE_NAME       = stringPreferencesKey("store_name")
@@ -137,14 +138,42 @@ class SettingsRepository @Inject constructor(
 
     // ── Sync pairing secret ─────────────────────────────────────────────────────
     /** Returns this device's sync secret, generating one on first use. Shown to the
-     * owner when enabling "Act as Sync Server" so it can be typed into other devices. */
+     * owner when enabling "Act as Sync Server" so it can be typed into other devices.
+     *
+     * Bug fix: this was previously stored as plaintext in Preferences DataStore —
+     * despite SyncServer's auth check being hardened with rate limiting and
+     * constant-time comparison in an earlier round, the secret itself sat in an
+     * unencrypted file readable via a rooted device, adb backup extraction, or app-data
+     * access. Preferences DataStore has no first-party encrypted variant, so this now
+     * stores the secret in a dedicated EncryptedSharedPreferences file instead (see
+     * DatabaseModule.provideSecurePreferences — Android-Keystore-backed AES-256-GCM).
+     * The one-time migration below moves any already-generated plaintext secret from
+     * the old DataStore location into the new encrypted store on first read, so a
+     * device that's already been paired with another one keeps the SAME secret rather
+     * than generating a fresh one that no longer matches what the other device
+     * remembers (which would silently break sync until manually re-paired). */
+    private val securePrefsKeySecret = "sync_pairing_secret"
+
     suspend fun getOrCreateSyncSecret(): String {
-        val existing = context.dataStore.data.map { it[KEY_SYNC_SECRET] }.first()
-        if (!existing.isNullOrBlank()) return existing
-        // 6-digit numeric code: easy to read off one screen and type on another,
-        // while still being far too large to brute-force over a handful of LAN requests.
+        // Already migrated (or freshly generated straight into the encrypted store) —
+        // fast path, no DataStore touch needed.
+        securePrefs.getString(securePrefsKeySecret, null)?.let { if (it.isNotBlank()) return it }
+
+        // Migration: an existing plaintext secret from before this fix — move it into
+        // the encrypted store, then clear the plaintext copy, preserving the exact
+        // same value so already-paired devices don't break.
+        val legacyPlaintext = context.dataStore.data.map { it[KEY_SYNC_SECRET] }.first()
+        if (!legacyPlaintext.isNullOrBlank()) {
+            securePrefs.edit().putString(securePrefsKeySecret, legacyPlaintext).apply()
+            context.dataStore.edit { it.remove(KEY_SYNC_SECRET) }
+            return legacyPlaintext
+        }
+
+        // Fresh generation. 6-digit numeric code: easy to read off one screen and type
+        // on another, while still being far too large to brute-force over a handful of
+        // LAN requests (also now rate-limited server-side regardless).
         val generated = (100000..999999).random().toString()
-        context.dataStore.edit { it[KEY_SYNC_SECRET] = generated }
+        securePrefs.edit().putString(securePrefsKeySecret, generated).apply()
         return generated
     }
 

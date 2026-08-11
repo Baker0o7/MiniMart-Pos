@@ -22,9 +22,22 @@ data class CartUiState(
     val error: String? = null,
     val completedSaleId: Long? = null
 ) {
-    val subtotal: Double get() = items.sumOf { it.lineSubtotal }
-    val totalTax: Double get() = items.sumOf { it.lineTax }          // extracted VAT (display only)
-    val totalDiscount: Double get() = items.sumOf { it.lineDiscount } + discount
+    // Bug fix: these aggregate properties used Double's sumOf{} — repeated floating-
+    // point addition across every cart line, which is exactly where IEEE-754 rounding
+    // error compounds (0.1 + 0.2 != 0.3 in binary floating point). On a cart with many
+    // lines this can produce a subtotal/total that's off by a fraction of a cent from
+    // what summing the same prices on paper would give. Rewritten to sum via Money
+    // (exact Long cents) internally, converting back to Double only at the public API
+    // boundary — so state.total (the number that decides how much cash to collect) is
+    // now cent-exact, with zero changes needed anywhere else that reads these
+    // properties (CheckoutScreen, ScannerCartScreen, ReceiptScreen all keep working
+    // exactly as before).
+    val subtotal: Double get() = items.fold(com.minimart.pos.util.Money.ZERO) { acc, item ->
+        acc + com.minimart.pos.util.Money.fromDouble(item.lineSubtotal) }.toDouble()
+    val totalTax: Double get() = items.fold(com.minimart.pos.util.Money.ZERO) { acc, item ->
+        acc + com.minimart.pos.util.Money.fromDouble(item.lineTax) }.toDouble()          // extracted VAT (display only)
+    val totalDiscount: Double get() = items.fold(com.minimart.pos.util.Money.fromDouble(discount)) { acc, item ->
+        acc + com.minimart.pos.util.Money.fromDouble(item.lineDiscount) }.toDouble()
     // Bug fix: total had no floor — if a discount (global or per-item) ever exceeded the
     // subtotal, total went negative. This broke checkout validation downstream: `cashAmount
     // >= total` became trivially true for ANY amount (even KES 0) since any number is >= a
@@ -32,7 +45,8 @@ data class CartUiState(
     // customer. The setters above now clamp discounts at the source, but this floor is kept
     // as a second line of defense in case any future code path mutates discount/lineDiscount
     // directly without going through setItemDiscount/setGlobalDiscount.
-    val total: Double get() = (subtotal - totalDiscount).coerceAtLeast(0.0)
+    val total: Double get() = (com.minimart.pos.util.Money.fromDouble(subtotal) -
+        com.minimart.pos.util.Money.fromDouble(totalDiscount)).coerceAtLeast(com.minimart.pos.util.Money.ZERO).toDouble()
     val itemCount: Int get() = items.sumOf { it.quantity }
     val isEmpty: Boolean get() = items.isEmpty()
 }
