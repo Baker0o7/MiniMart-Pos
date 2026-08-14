@@ -13,6 +13,7 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 [![Android](https://img.shields.io/badge/Android-8.0%2B-00897B?style=for-the-badge)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![Room DB](https://img.shields.io/badge/Room-v12-00897B?style=for-the-badge)](https://developer.android.com/jetpack/androidx/releases/room)
+[![Tests](https://img.shields.io/badge/Unit%20Tests-JUnit4-00897B?style=for-the-badge)](https://junit.org/junit4/)
 
 </div>
 
@@ -40,16 +41,24 @@ Built with Kotlin + Jetpack Compose 🇰🇪
   and correctly shown (not "×1") on both the in-app and shareable PDF receipt
 - **Continuous scan mode** with animated laser overlay, corner brackets,
   green flash confirmation, and live scan counter badge
+- Keyboard "Next" navigation flows through every field in the Add Product form
 - Product search by name or barcode with live dropdown
 - Cart with quantity stepper, per-item discounts
 - **Inclusive VAT** — tax extracted from price, not added on top
+- **Cent-exact totals** — the checkout subtotal/discount/total math runs on an
+  internal `Money` value class (Long cents) rather than raw `Double`, avoiding
+  the floating-point rounding drift that repeated addition across many cart
+  lines can otherwise produce
 - **Cart badge** on bottom nav shows pending item count when navigating away
+- Guarded against double-tap: rapid double-tapping "Complete Sale" can't create
+  two sales from one transaction
 
 ### 💳 Checkout & Payments
 - **Cash** — quick-amount buttons, real change calculation
 - **M-Pesa** — ref number field
 - **Credit** — customer wallet or buy-on-account (negative balance allowed)
-- **Split payment** — combine credit + cash in one transaction
+- **Split payment** — combine credit + cash in one transaction, with proper
+  error feedback if it fails (shown as an on-screen banner, not silently dropped)
 - Customer selector with search + contacts import — debtors (customers who
   owe money) are clearly flagged in red, not shown the same as a zero balance
 - Cash drawer auto-opens on cash payment (configurable)
@@ -66,16 +75,21 @@ Built with Kotlin + Jetpack Compose 🇰🇪
   - 🔴 Debtors (negative, owe money) shown first with "OWES [currency] X" in red
   - 🟢 Wallet balances shown in green
   - Two summary stats: "Owed to Shop" + "Wallet Credit"
-  - Same red/green treatment applied consistently across the customer list,
-    customer detail sheet, and the checkout customer picker
 
 ### 🌐 Multi-Device LAN Sync
 - No internet, no cloud — pure local WiFi sync
 - **Pairing code authentication** — 6-digit code shown on server device,
-  required on client device — any WiFi visitor cannot read or inject data
+  required on client device, compared in constant time (not vulnerable to a
+  timing side-channel), and **rate-limited** (5 failed attempts locks out
+  further guesses for 30s — a 1,000,000-combination code can't be brute-forced
+  at LAN speed)
+- **Pairing secrets encrypted at rest** — both this device's own code and any
+  remembered peer code are stored via Android Keystore-backed
+  EncryptedSharedPreferences, not plaintext
+- **Duplicate-safe** — retrying a sync (dropped connection, double-tapping
+  "Sync Now") can't apply the same remote change twice
 - Server device: toggle "Act as Sync Server", share the displayed code
 - Client device: enter server IP + pairing code → Sync Now
-- Pending-changes amber badge + progress spinner during sync
 
 ### 🗃️ Cash Drawer
 - ESC/POS kick via thermal printer RJ11 port
@@ -88,7 +102,7 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - Color-coded expiry urgency badges · Low-stock background alerts (WorkManager)
 - Stock adjustments with reason log
 - **PLU / Weighing scale toggle** per product (PLU code + price/kg)
-- Delete confirmation clearly warns the action is permanent
+- Negative price/stock can't be saved (validated at both the UI and repository layer)
 
 ### 📊 Reports & Analytics
 - Revenue vs yesterday (real % comparison, flips red when down)
@@ -111,38 +125,34 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 | Multi-device sync | ✅ | ✅ | ❌ |
 | User management | ✅ | ❌ | ❌ |
 
-Route-level `AccessGuard` bounces unauthorized users automatically.
-Cannot remove the last active Owner account (permanent lockout protection).
-Removing a user requires an explicit two-step confirmation.
+Every route above is enforced by a route-level `AccessGuard` that bounces
+unauthorized users, even on direct navigation. Cannot remove the last active
+Owner account (permanent lockout protection).
 
 ### 🔐 Security
-- **Argon2id PIN hashing** (t=3, m=64MB, p=4), auto-upgrades legacy SHA-256 on login,
-  constant-time comparison on both paths (no timing side-channel)
-- **Biometric login** — bound to one explicitly opted-in user per device (Settings → Account).
-  Any fingerprint on the device cannot authenticate as an arbitrary username.
-- **Persisted 3-strike lockout** — survives force-close, task-kill, and device reboot
-  (stored via DataStore, not in-memory state)
+- **Argon2id PIN hashing** (t=3, m=64MB, p=4), auto-upgrades legacy SHA-256 on
+  login, constant-time comparison on both paths
+- **Biometric login** — bound to one explicitly opted-in user per device
+  (Settings → Account). Any fingerprint on the device cannot authenticate as
+  an arbitrary username.
+- **Persisted 3-strike lockout** — survives force-close, task-kill, and device
+  reboot
 - **15-minute inactivity auto-logout**
-- **Persistent audit log** at `files/audit.log`:
-  - `LOGIN_SUCCESS` / `LOGIN_FAILED` (with attempt count + lockout flag)
-  - `LOGOUT`
-  - `SALE_COMPLETED` (receipt number, amount, payment method)
-  - `DISCOUNT_APPLIED`
-  - `CREDIT_USED`
-  - `SESSION_EXPIRED`
-- **Sync pairing code** — LAN sync server requires a 6-digit code, preventing
-  unauthorized WiFi devices from reading or injecting data
-- **At-rest protection**: the database relies on Android's File-Based Encryption
-  (FBE), hardware-backed and enabled by default since Android 7.0 — every
-  supported device (minSdk 26) has it. App-level SQLCipher encryption was
-  evaluated twice and reverted both times due to native-library crashes on
-  startup; FBE was judged the safer, zero-maintenance choice for this app.
+- **Persistent, thread-safe audit log** at `files/audit.log` covering logins,
+  logouts, completed sales, discounts, and credit usage
+- **Sync pairing secrets** — rate-limited, constant-time compared, and
+  encrypted at rest (see Multi-Device Sync above)
+- **At-rest database protection**: relies on Android's File-Based Encryption
+  (FBE), hardware-backed and enabled by default since Android 7.0. App-level
+  SQLCipher encryption was evaluated twice and reverted both times due to
+  native-library crashes on startup; FBE was judged the safer,
+  zero-maintenance choice for this app.
 
 ### 💾 Backup & Data
 - One-tap backup to `Downloads/MiniMartPOS/backups/`
-- **Restore requires explicit two-step confirmation** — selecting a backup shows
-  exactly what will be lost before anything is overwritten, then the app
-  automatically restarts (WAL/SHM files handled correctly, no manual close needed)
+- **Restore requires explicit two-step confirmation** — selecting a backup
+  shows exactly what will be lost before anything is overwritten, then the
+  app automatically restarts (WAL/SHM files handled correctly)
 - 100% offline — Room SQLite v12, no internet required for core operation
 
 ### 🎨 UI / UX
@@ -152,9 +162,26 @@ Removing a user requires an explicit two-step confirmation.
 - Press-scale animation on dashboard action cards
 - Color-coded payment method chips throughout
 - Consistent destructive-action dialogs app-wide (styled red confirm +
-  bordered cancel, clear "cannot be undone" copy) for delete/void/remove/restore
+  bordered cancel, clear "cannot be undone" copy)
 - Animated scanner overlay: pulsing border, sweeping laser, corner brackets
 - Pull-to-refresh on dashboard (updates today + yesterday revenue)
+
+---
+
+## 🧪 Testing
+
+Local JVM unit tests (`app/src/test`) cover the core financial calculation
+logic — no emulator needed:
+
+```bash
+./gradlew test
+```
+
+| Test file | Covers |
+|---|---|
+| `MoneyTest` | Cent-exact arithmetic, the classic `0.1 + 0.2 != 0.3` Double failure case, rounding, clamping |
+| `CartUiStateTest` | Checkout subtotal/discount/total math, the discount-floor regression, weighed-item pricing |
+| `PluDecoderTest` | Weighing-scale barcode decode/reject cases, price calculation |
 
 ---
 
@@ -167,14 +194,17 @@ Removing a user requires an explicit two-step confirmation.
 | Architecture | MVVM · Clean Architecture · Repository |
 | DI | Hilt |
 | Database | Room 2.6 (SQLite v12), Android FBE at rest |
+| Money | Custom `Money` value class (Long cents) for checkout-critical math |
 | PIN Security | Argon2id (argon2-kt 1.4.0) |
+| Sensitive Storage | Jetpack Security (`EncryptedSharedPreferences`, Keystore-backed) |
 | Camera | CameraX + ML Kit Barcode |
 | Sync | Custom HTTP server/client over LAN WiFi, pairing-code authenticated |
 | Background | WorkManager (low-stock + expiry alerts) |
 | Preferences | DataStore + SharedPreferences |
 | Printing | Bluetooth ESC/POS |
 | Navigation | Navigation Compose |
-| State | `SavedStateHandle` for process-death recovery (e.g. Receipt screen) |
+| State | `SavedStateHandle` for process-death recovery |
+| Testing | JUnit4 (local unit tests) |
 
 ---
 
@@ -207,7 +237,7 @@ app/src/main/kotlin/com/minimart/pos/
 │   ├── entity/       Product · Sale · SaleItem · User · Expense
 │   │                 Shift · Customer · CreditTransaction · SyncLog
 │   └── repository/   (one per entity + SettingsRepository)
-├── di/               DatabaseModule
+├── di/               DatabaseModule (incl. @SecurePrefs qualifier)
 ├── printer/          ThermalPrinter · CashDrawerManager
 ├── scanner/          MLKitScanner · KeyboardScanner · BluetoothScannerManager
 ├── sync/             SyncServer · SyncClient
@@ -216,10 +246,14 @@ app/src/main/kotlin/com/minimart/pos/
 │   ├── viewmodel/    Per-screen ViewModels + SessionViewModel · SyncViewModel
 │   ├── theme/        DT color tokens
 │   └── NavGraph.kt   Routes + BottomNavBar (cart badge) + AccessGuard
-├── util/             BackupManager · PdfReceiptGenerator · PinHasher
+├── util/             Money · BackupManager · PdfReceiptGenerator · PinHasher
 │                     RoleManager · SessionManager · AuditLogger · PluDecoder
 │                     UiResult
 └── worker/           LowStockWorker · ExpiryAlertWorker
+
+app/src/test/kotlin/com/minimart/pos/
+├── util/             MoneyTest · PluDecoderTest
+└── ui/viewmodel/     CartUiStateTest
 ```
 
 ---
