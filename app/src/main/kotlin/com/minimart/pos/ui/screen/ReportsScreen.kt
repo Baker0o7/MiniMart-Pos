@@ -89,6 +89,18 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                 }
             }
 
+            if (state.totalTransactions == 0) {
+                item {
+                    Box(Modifier.fillMaxWidth().padding(top = 60.dp), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Default.BarChart, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.3f))
+                            Text("No sales in this period", color = DT.SubText, fontWeight = FontWeight.SemiBold)
+                            Text("Reports will appear here once a sale is completed", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
+                        }
+                    }
+                }
+            } else {
             // ── Revenue card with bar chart ──
             item {
                 Spacer(Modifier.height(12.dp))
@@ -159,6 +171,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         }
                     }
                 }
+            }
             }
         }
     }
