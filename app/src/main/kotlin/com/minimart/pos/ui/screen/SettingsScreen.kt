@@ -211,6 +211,95 @@ fun SettingsScreen(
                     }
                 }
 
+                // ── M-Pesa STK Push (Daraja API) ─────────────────────────────
+                if (isAdmin) {
+                    var darajaSandbox       by remember { mutableStateOf(settingsRepo.getDarajaConfig().sandbox) }
+                    var darajaShortcode     by remember { mutableStateOf(settingsRepo.getDarajaConfig().shortcode) }
+                    var darajaConsumerKey   by remember { mutableStateOf(settingsRepo.getDarajaConfig().consumerKey) }
+                    var darajaConsumerSecret by remember { mutableStateOf(settingsRepo.getDarajaConfig().consumerSecret) }
+                    var darajaPasskey       by remember { mutableStateOf(settingsRepo.getDarajaConfig().passkey) }
+                    var showSecret          by remember { mutableStateOf(false) }
+                    var showPasskey         by remember { mutableStateOf(false) }
+                    var darajaSaved         by remember { mutableStateOf(false) }
+
+                    DSection("M-Pesa STK Push (Daraja API)", Icons.Default.Send) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Text("Environment", color = DT.OnSurface, fontSize = 14.sp)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(if (darajaSandbox) "Sandbox" else "Production",
+                                    color = if (darajaSandbox) Color(0xFFFFB300) else DT.Green,
+                                    fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Spacer(Modifier.width(6.dp))
+                                Switch(checked = !darajaSandbox, onCheckedChange = { darajaSandbox = !it },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor   = DT.Green,
+                                        checkedTrackColor   = DT.Green.copy(0.3f),
+                                        uncheckedThumbColor = Color(0xFFFFB300),
+                                        uncheckedTrackColor = Color(0xFFFFB300).copy(0.3f)
+                                    ))
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        DField(darajaShortcode, { darajaShortcode = it }, "Business Shortcode", Icons.Default.Storefront)
+                        Spacer(Modifier.height(4.dp))
+                        DField(darajaConsumerKey, { darajaConsumerKey = it }, "Consumer Key", Icons.Default.VpnKey)
+                        Spacer(Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = darajaConsumerSecret, onValueChange = { darajaConsumerSecret = it },
+                            label = { Text("Consumer Secret", color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
+                            leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
+                            trailingIcon = {
+                                IconButton(onClick = { showSecret = !showSecret }) {
+                                    Icon(if (showSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility, null, tint = DT.SubText)
+                                }
+                            },
+                            visualTransformation = if (showSecret) androidx.compose.ui.text.input.VisualTransformation.None
+                                                   else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp), colors = dColors()
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = darajaPasskey, onValueChange = { darajaPasskey = it },
+                            label = { Text("Lipa na M-Pesa Passkey", color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
+                            leadingIcon = { Icon(Icons.Default.Key, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
+                            trailingIcon = {
+                                IconButton(onClick = { showPasskey = !showPasskey }) {
+                                    Icon(if (showPasskey) Icons.Default.VisibilityOff else Icons.Default.Visibility, null, tint = DT.SubText)
+                                }
+                            },
+                            visualTransformation = if (showPasskey) androidx.compose.ui.text.input.VisualTransformation.None
+                                                   else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp), colors = dColors()
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                settingsRepo.saveDarajaConfig(
+                                    com.minimart.pos.data.repository.SettingsRepository.DarajaConfig(
+                                        consumerKey    = darajaConsumerKey.trim(),
+                                        consumerSecret = darajaConsumerSecret.trim(),
+                                        passkey        = darajaPasskey.trim(),
+                                        shortcode      = darajaShortcode.trim(),
+                                        sandbox        = darajaSandbox
+                                    )
+                                )
+                                darajaSaved = true
+                                scope.launch { kotlinx.coroutines.delay(3000); darajaSaved = false }
+                            },
+                            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
+                        ) {
+                            Icon(Icons.Default.Send, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (darajaSaved) "✓ Saved — encrypted on this device" else "Save Daraja Settings",
+                                color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
                 // ── Thermal Printer ───────────────────────────────────────────
                 if (isAdmin) {
                     DSection("Thermal Printer", Icons.Default.Print) {

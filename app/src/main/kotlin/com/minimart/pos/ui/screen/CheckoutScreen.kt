@@ -39,6 +39,8 @@ import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.CartViewModel
 import com.minimart.pos.ui.viewmodel.CheckoutResult
 import com.minimart.pos.ui.viewmodel.CustomerViewModel
+import com.minimart.pos.ui.viewmodel.DarajaViewModel
+import com.minimart.pos.ui.viewmodel.StkPushPhase
 import com.minimart.pos.util.vibrateShort
 
 @Composable
@@ -52,11 +54,13 @@ fun CheckoutScreen(
     // RoleManager.canApplyDiscounts(...) explicitly, so flipping this to fail-closed is
     // zero-risk today and only protects against future call sites.
     canApplyDiscounts: Boolean = false,
-    customerVm: CustomerViewModel = hiltViewModel()
+    customerVm: CustomerViewModel = hiltViewModel(),
+    darajaVm: DarajaViewModel = hiltViewModel()
 ) {
     val state       by vm.uiState.collectAsState()
     val currency    by vm.currency.collectAsState()
     val custState   by customerVm.uiState.collectAsState()
+    val stkState    by darajaVm.uiState.collectAsState()
 
     var selectedMethod          by remember { mutableStateOf(PaymentMethod.CASH) }
     var cashInput               by remember { mutableStateOf("") }
@@ -352,27 +356,130 @@ fun CheckoutScreen(
                             }
                         }
                         PaymentMethod.MPESA -> {
-                            OutlinedTextField(value = mpesaRef, onValueChange = { mpesaRef = it.uppercase() },
-                                label = { Text("M-Pesa Ref (optional)", color = DT.SubText) },
-                                leadingIcon = { Icon(Icons.Default.ConfirmationNumber, null, tint = DT.SubText) },
-                                singleLine = true, modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                                    focusedTextColor = Color.White, unfocusedTextColor = Color.White,
-                                    cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface))
-                            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-                                .background(DT.Teal.copy(0.1f)).border(1.dp, DT.Teal.copy(0.25f), RoundedCornerShape(14.dp))
-                                .padding(horizontal = 16.dp, vertical = 14.dp)) {
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Default.PhoneAndroid, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("Amount due", color = DT.SubText, fontSize = 14.sp)
+                            // Auto-fill mpesaRef when STK Push succeeds
+                            LaunchedEffect(stkState.phase) {
+                                if (stkState.phase == StkPushPhase.SUCCESS && stkState.mpesaReceiptNumber != null) {
+                                    mpesaRef = stkState.mpesaReceiptNumber
+                                }
+                            }
+
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                // ── STK Push section (only when Daraja is configured) ─────
+                                if (darajaVm.isConfigured) {
+                                    when (stkState.phase) {
+                                        StkPushPhase.IDLE -> {
+                                            val customerPhone = selectedCustomer?.phone?.takeIf { it.isNotBlank() }
+                                            if (customerPhone != null) {
+                                                Button(
+                                                    onClick = {
+                                                        darajaVm.sendPushAndAwaitResult(
+                                                            phone      = customerPhone,
+                                                            amountKes  = state.total.toInt(),
+                                                            accountRef = "MiniMart"
+                                                        )
+                                                    },
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    shape = RoundedCornerShape(12.dp),
+                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
+                                                ) {
+                                                    Icon(Icons.Default.PhoneAndroid, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                                    Spacer(Modifier.width(8.dp))
+                                                    Text("Send to Customer's Phone", color = Color.White, fontWeight = FontWeight.Bold)
+                                                }
+                                            } else {
+                                                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                                    .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(12.dp))
+                                                    .padding(12.dp)) {
+                                                    Text("Select a customer with a phone number to send STK push",
+                                                        color = DT.SubText, fontSize = 13.sp)
+                                                }
+                                            }
+                                        }
+                                        StkPushPhase.SENDING, StkPushPhase.AWAITING_CUSTOMER -> {
+                                            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                                .background(DT.Surface).border(1.dp, DT.Teal.copy(0.4f), RoundedCornerShape(12.dp))
+                                                .padding(12.dp)) {
+                                                Column(horizontalAlignment = Alignment.CenterHorizontally,
+                                                    modifier = Modifier.fillMaxWidth()) {
+                                                    CircularProgressIndicator(color = DT.Teal,
+                                                        modifier = Modifier.size(32.dp), strokeWidth = 3.dp)
+                                                    Spacer(Modifier.height(8.dp))
+                                                    Text(stkState.statusMessage, color = DT.OnSurface,
+                                                        fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                    if (stkState.secondsRemaining > 0) {
+                                                        Text("${stkState.secondsRemaining}s remaining",
+                                                            color = DT.SubText, fontSize = 12.sp)
+                                                    }
+                                                    Spacer(Modifier.height(8.dp))
+                                                    TextButton(onClick = { darajaVm.cancel() }) {
+                                                        Text("Cancel", color = DT.SubText)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        StkPushPhase.SUCCESS -> {
+                                            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                                .background(Color(0xFF1B5E20).copy(0.3f))
+                                                .border(1.dp, DT.Green.copy(0.5f), RoundedCornerShape(12.dp))
+                                                .padding(12.dp)) {
+                                                Column {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(Icons.Default.CheckCircle, null, tint = DT.Green, modifier = Modifier.size(20.dp))
+                                                        Spacer(Modifier.width(8.dp))
+                                                        Text("Payment confirmed", color = DT.Green, fontWeight = FontWeight.Bold)
+                                                    }
+                                                    if (stkState.mpesaReceiptNumber != null) {
+                                                        Text("Ref: ${stkState.mpesaReceiptNumber}", color = DT.OnSurface, fontSize = 13.sp)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        StkPushPhase.FAILED, StkPushPhase.TIMED_OUT -> {
+                                            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                                                .background(Color(0xFF5E1B1B).copy(0.3f))
+                                                .border(1.dp, DT.Red.copy(0.5f), RoundedCornerShape(12.dp))
+                                                .padding(12.dp)) {
+                                                Column {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Icon(Icons.Default.Error, null, tint = DT.Red, modifier = Modifier.size(20.dp))
+                                                        Spacer(Modifier.width(8.dp))
+                                                        Text(stkState.statusMessage, color = DT.Red, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                                                    }
+                                                    Spacer(Modifier.height(6.dp))
+                                                    TextButton(onClick = { darajaVm.reset() }) {
+                                                        Text("Try again", color = DT.Teal)
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
-                                    Text("$currency ${String.format("%.2f", state.total)}",
-                                        color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                                }
+
+                                // ── Manual ref field (always visible as fallback) ──────────
+                                OutlinedTextField(value = mpesaRef, onValueChange = { mpesaRef = it.uppercase() },
+                                    label = { Text("M-Pesa Ref (optional)", color = DT.SubText) },
+                                    leadingIcon = { Icon(Icons.Default.ConfirmationNumber, null, tint = DT.SubText) },
+                                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(14.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                        cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface))
+
+                                // ── Amount due ────────────────────────────────────────────
+                                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                                    .background(DT.Teal.copy(0.1f)).border(1.dp, DT.Teal.copy(0.25f), RoundedCornerShape(14.dp))
+                                    .padding(horizontal = 16.dp, vertical = 14.dp)) {
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.PhoneAndroid, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Amount due", color = DT.SubText, fontSize = 14.sp)
+                                        }
+                                        Text("$currency ${String.format("%.2f", state.total)}",
+                                            color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                                    }
                                 }
                             }
                         }

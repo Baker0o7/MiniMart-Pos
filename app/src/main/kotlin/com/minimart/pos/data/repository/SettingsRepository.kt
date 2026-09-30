@@ -192,4 +192,47 @@ class SettingsRepository @Inject constructor(
     suspend fun clearBiometricUser() {
         context.dataStore.edit { it.remove(KEY_BIOMETRIC_USER_ID) }
     }
+
+    // ── Daraja (M-Pesa STK Push) credentials ──────────────────────────────────
+    // Stored in EncryptedSharedPreferences (Keystore-backed AES-256-GCM), not
+    // DataStore, because these are live API credentials — Consumer Secret and
+    // Passkey in particular — that must never appear in a plaintext file, even
+    // one scoped to this app's private data directory.
+    private object DarajaKeys {
+        const val CONSUMER_KEY    = "daraja_consumer_key"
+        const val CONSUMER_SECRET = "daraja_consumer_secret"
+        const val PASSKEY         = "daraja_passkey"
+        const val SHORTCODE       = "daraja_shortcode"
+        const val SANDBOX         = "daraja_sandbox"
+    }
+
+    data class DarajaConfig(
+        val consumerKey: String    = "",
+        val consumerSecret: String = "",
+        val passkey: String        = "",
+        val shortcode: String      = "",
+        val sandbox: Boolean       = true
+    ) {
+        val isConfigured: Boolean get() =
+            consumerKey.isNotBlank() && consumerSecret.isNotBlank() &&
+            passkey.isNotBlank() && shortcode.isNotBlank()
+    }
+
+    fun getDarajaConfig(): DarajaConfig = DarajaConfig(
+        consumerKey    = securePrefs.getString(DarajaKeys.CONSUMER_KEY, "") ?: "",
+        consumerSecret = securePrefs.getString(DarajaKeys.CONSUMER_SECRET, "") ?: "",
+        passkey        = securePrefs.getString(DarajaKeys.PASSKEY, "") ?: "",
+        shortcode      = securePrefs.getString(DarajaKeys.SHORTCODE, "") ?: "",
+        sandbox        = securePrefs.getBoolean(DarajaKeys.SANDBOX, true)
+    )
+
+    fun saveDarajaConfig(cfg: DarajaConfig) {
+        securePrefs.edit()
+            .putString(DarajaKeys.CONSUMER_KEY,    cfg.consumerKey)
+            .putString(DarajaKeys.CONSUMER_SECRET, cfg.consumerSecret)
+            .putString(DarajaKeys.PASSKEY,         cfg.passkey)
+            .putString(DarajaKeys.SHORTCODE,       cfg.shortcode)
+            .putBoolean(DarajaKeys.SANDBOX,        cfg.sandbox)
+            .apply()
+    }
 }
