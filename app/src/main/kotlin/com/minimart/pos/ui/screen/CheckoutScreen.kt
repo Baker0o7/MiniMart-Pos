@@ -358,8 +358,8 @@ fun CheckoutScreen(
                         PaymentMethod.MPESA -> {
                             // Auto-fill mpesaRef when STK Push succeeds
                             LaunchedEffect(stkState.phase) {
-                                if (stkState.phase == StkPushPhase.SUCCESS && stkState.mpesaReceiptNumber != null) {
-                                    mpesaRef = stkState.mpesaReceiptNumber
+                                if (stkState.phase == StkPushPhase.SUCCESS) {
+                                    mpesaRef = stkState.mpesaReceiptNumber ?: ""
                                 }
                             }
 
