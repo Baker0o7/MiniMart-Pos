@@ -178,8 +178,10 @@ fun DashboardScreen(
                                 color = White, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
                             Text("vs yesterday", color = Sub, fontSize = 10.sp)
                             Spacer(Modifier.height(10.dp))
-                            MiniLineChart(listOf(0.2f, 0.4f, 0.3f, 0.6f, 0.5f, 0.8f, 0.7f, 1f),
-                                TealGlow, Modifier.fillMaxWidth().height(44.dp))
+                            // Real hourly data; fall back to a flat line when no sales yet today
+                            val spark = if (state.hourlySpark.size >= 2) state.hourlySpark
+                                        else listOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+                            MiniLineChart(spark, TealGlow, Modifier.fillMaxWidth().height(44.dp))
                             Spacer(Modifier.height(4.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 val pct2 = if (state.yesterdayRevenue > 0)

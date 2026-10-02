@@ -27,7 +27,10 @@ data class DashboardUiState(
     val lowStockProducts: List<Product> = emptyList(),
     val topSellers: List<TopSellerResult> = emptyList(),
     val expiringProducts: List<Product> = emptyList(),
-    val expiredProducts: List<Product> = emptyList()
+    val expiredProducts: List<Product> = emptyList(),
+    /** Hourly revenue buckets for today's sparkline: index 0 = midnight–2 AM,
+     *  index 11 = 22–24. Normalised 0–1 relative to the busiest hour. */
+    val hourlySpark: List<Float> = emptyList()
 )
 
 @HiltViewModel
@@ -133,6 +136,23 @@ class DashboardViewModel @Inject constructor(
                 saleRepo.getTopSellers(ts)
                     .catch { emit(emptyList()) }
                     .collect { _uiState.update { s -> s.copy(topSellers = it) } }
+            },
+            // Hourly sparkline — 12 two-hour buckets from today's completed sales
+            viewModelScope.launch {
+                saleRepo.getSalesToday(ts)
+                    .catch { emit(emptyList()) }
+                    .collect { sales ->
+                        val buckets = FloatArray(12)
+                        val cal = java.util.Calendar.getInstance()
+                        sales.forEach { sale ->
+                            cal.timeInMillis = sale.createdAt
+                            val bucket = (cal.get(java.util.Calendar.HOUR_OF_DAY) / 2).coerceIn(0, 11)
+                            buckets[bucket] += sale.totalAmount.toFloat()
+                        }
+                        val max = buckets.maxOrNull()?.coerceAtLeast(0.01f) ?: 0.01f
+                        val normalised = buckets.map { it / max }
+                        _uiState.update { s -> s.copy(hourlySpark = normalised) }
+                    }
             }
         )
     }
