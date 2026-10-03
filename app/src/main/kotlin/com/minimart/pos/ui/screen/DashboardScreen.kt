@@ -39,19 +39,6 @@ import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.DashboardViewModel
 import kotlinx.coroutines.launch
 
-/** Time-of-day aware Swahili greeting — was a static "Habari!" all day. */
-private fun timeOfDayGreeting(name: String?): String {
-    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-    val base = when (hour) {
-        in 5..10  -> "Habari ya asubuhi"   // good morning
-        in 11..15 -> "Habari ya mchana"    // good afternoon
-        in 16..19 -> "Habari ya jioni"     // good evening
-        else      -> "Habari"              // late night / very early
-    }
-    val first = name?.trim()?.substringBefore(" ")?.takeIf { it.isNotEmpty() }
-    return if (first != null) "$base, $first! 👋" else "$base! 👋"
-}
-
 private fun roleLabel(role: UserRole?): String? = when (role) {
     UserRole.OWNER   -> "Owner"
     UserRole.MANAGER -> "Manager"
@@ -123,14 +110,13 @@ fun DashboardScreen(
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(timeOfDayGreeting(currentUserName), color = White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp,
+                            Text(roleLabel(currentRole) ?: "Welcome", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp,
                                 maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                             // Bug fix: no overflow protection on the shop name — a longer
                             // name (common for Kenyan shop names, e.g. "Baraka Wholesalers &
                             // General Provisions") would wrap to a second line and unbalance
                             // this header against the fixed-height avatar and status pill.
-                            Text(listOfNotNull(roleLabel(currentRole), state.storeName).joinToString(" · "),
-                                color = Sub, fontSize = 12.sp,
+                            Text(state.storeName, color = Sub, fontSize = 12.sp,
                                 maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         }
                         // Status pill
@@ -283,8 +269,6 @@ fun DashboardScreen(
                 fun hide(id: String) { scope.launch { settingsRepo?.setHiddenActions((hidden + id).joinToString(",")) } }
 
                 val cards = buildList {
-                    if ("sale"     !in hidden) add(DashCard_("sale",    "New Sale",     "Scan & sell",        Icons.Default.QrCode,    Color(0xFF0B2822), TealGlow,   onNavigateToScanner))
-                    if ("products" !in hidden) add(DashCard_("products","Products",     "Manage items",       Icons.Default.Inventory2,Color(0xFF0B1C0A), GreenGlow,  onNavigateToProducts))
                     if (rm.canViewReports(currentRole) && "reports" !in hidden)
                         add(DashCard_("reports","Reports","Analytics",Icons.Default.BarChart,Color(0xFF160B2C),PurpleGlow,onNavigateToReports))
                     if (rm.canViewExpenses(currentRole) && "expenses" !in hidden)
