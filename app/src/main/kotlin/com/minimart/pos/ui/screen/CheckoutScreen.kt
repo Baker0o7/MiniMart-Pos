@@ -136,7 +136,7 @@ fun CheckoutScreen(
                         .background(Color.White.copy(0.18f))
                         .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onBack),
                         contentAlignment = Alignment.Center) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(12.dp))
                     Column {

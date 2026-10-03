@@ -95,7 +95,7 @@ fun ScannerCartScreen(
                                 interactionSource = remember { MutableInteractionSource() },
                                 onClick = onBack),
                             contentAlignment = Alignment.Center) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, null,
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back",
                                 tint = Color.White, modifier = Modifier.size(20.dp))
                         }
                         Spacer(Modifier.weight(1f))

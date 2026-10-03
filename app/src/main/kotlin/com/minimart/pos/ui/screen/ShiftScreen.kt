@@ -57,7 +57,7 @@ fun ShiftScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Shift Management", fontWeight = FontWeight.Bold, color = Color.White) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White) } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = com.minimart.pos.ui.theme.DT.Teal)
             )
         }

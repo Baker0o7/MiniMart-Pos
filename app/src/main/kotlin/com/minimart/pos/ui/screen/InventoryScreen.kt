@@ -61,7 +61,7 @@ fun InventoryScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = DT.OnSurface)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DT.OnSurface)
                 }
                 Spacer(Modifier.width(4.dp))
                 Column(modifier = Modifier.weight(1f)) {

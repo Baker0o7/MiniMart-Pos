@@ -59,7 +59,7 @@ fun ExpenseScreen(onBack: () -> Unit, vm: ExpenseViewModel = hiltViewModel()) {
                 .background(Brush.horizontalGradient(listOf(DT.Teal, Color(0xFF00695C))))
                 .padding(horizontal = 8.dp, vertical = 16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White) }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White) }
                     Text("Expenses & P&L", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.weight(1f))
                     Box(modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(Color.White.copy(0.2f)).padding(horizontal = 12.dp, vertical = 6.dp)) {
                         TextButton(onClick = { showAddDialog = true }, contentPadding = PaddingValues(0.dp)) {
@@ -120,6 +120,14 @@ fun ExpenseScreen(onBack: () -> Unit, vm: ExpenseViewModel = hiltViewModel()) {
     }
 }
 
+/** Horizontal bar showing this figure relative to the larger of revenue/expenses (real data, not a placeholder chart). */
+@Composable
+private fun ShareBar(fraction: Float, color: Color) {
+    Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(DT.Border)) {
+        Box(Modifier.fillMaxWidth(fraction).height(6.dp).clip(RoundedCornerShape(3.dp)).background(color))
+    }
+}
+
 @Composable
 private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
     margin: Double, byCategory: Map<ExpenseCategory, Double>, currency: String) {
@@ -143,7 +151,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                         Text("$currency ${String.format("%.2f", revenue)}",
                             color = DT.Green, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
                         Spacer(Modifier.height(10.dp))
-                        LineChart(listOf(0.3f,0.5f,0.8f,0.6f,1.0f), DT.Green, modifier = Modifier.fillMaxWidth().height(48.dp))
+                        ShareBar(((revenue / maxOf(revenue, expenses, 0.01)).toFloat()).coerceIn(0f, 1f), DT.Green)
                     }
                 }
                 // Expenses card — red tint
@@ -161,7 +169,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                         Text("$currency ${String.format("%.2f", expenses)}",
                             color = DT.Red, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
                         Spacer(Modifier.height(10.dp))
-                        LineChart(listOf(0.2f,0.6f,0.4f,0.9f,0.7f), DT.Red, modifier = Modifier.fillMaxWidth().height(48.dp))
+                        ShareBar(((expenses / maxOf(revenue, expenses, 0.01)).toFloat()).coerceIn(0f, 1f), DT.Red)
                     }
                 }
             }

@@ -63,7 +63,7 @@ fun ProductListScreen(
             // ── Top bar ──────────────────────────────────────────────────────
             Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = DT.Teal)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DT.Teal)
                 }
                 Text("Products", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 22.sp, modifier = Modifier.weight(1f))
                 if (canEditPrices) {

@@ -63,22 +63,18 @@ fun CustomerScreen(
                 .background(Brush.verticalGradient(listOf(DT.Teal, Color(0xFF004D40))))
                 .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(40.dp).clip(CircleShape)
-                        .background(Color.White.copy(0.15f))
-                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onBack),
-                        contentAlignment = Alignment.Center) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    IconButton(onClick = onBack,
+                        modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.15f))) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text("Customers", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
                         Text("${state.customers.size} registered", color = Color.White.copy(0.7f), fontSize = 12.sp)
                     }
-                    Box(modifier = Modifier.size(40.dp).clip(CircleShape)
-                        .background(Color.White.copy(0.15f))
-                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showAddDialog = true },
-                        contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.PersonAdd, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    IconButton(onClick = { showAddDialog = true },
+                        modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.15f))) {
+                        Icon(Icons.Default.PersonAdd, "Add customer", tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                 }
             }
@@ -111,8 +107,13 @@ fun CustomerScreen(
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Icon(Icons.Default.People, null, modifier = Modifier.size(64.dp), tint = DT.SubText.copy(0.25f))
-                        Text("No customers yet", color = DT.SubText, fontWeight = FontWeight.SemiBold)
-                        Text("Tap + to add your first customer", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
+                        if (state.query.isNotBlank()) {
+                            Text("No customers match \"${state.query}\"", color = DT.SubText, fontWeight = FontWeight.SemiBold)
+                            Text("Try a different name or phone number", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
+                        } else {
+                            Text("No customers yet", color = DT.SubText, fontWeight = FontWeight.SemiBold)
+                            Text("Tap the add-person button to register your first customer", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
+                        }
                     }
                 }
             } else {

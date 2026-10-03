@@ -110,7 +110,7 @@ fun SalesHistoryScreen(
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = DT.Teal)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DT.Teal)
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Sales History", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 22.sp)
@@ -157,23 +157,6 @@ fun SalesHistoryScreen(
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-            item {
-                Box(Modifier.fillMaxWidth()
-                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(
-                        listOf(DT.Teal, androidx.compose.ui.graphics.Color(0xFF004D40))))
-                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Sales History", color = androidx.compose.ui.graphics.Color.White,
-                                fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
-                            Text("Past transactions", color = androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize = 12.sp)
-                        }
-                        Icon(Icons.Default.History, null,
-                            tint = androidx.compose.ui.graphics.Color.White.copy(0.7f),
-                            modifier = Modifier.size(28.dp))
-                    }
-                }
-            }
                     items(sales, key = { it.sale.id }) { saleWithItems ->
                         SaleHistoryRow(
                             saleWithItems = saleWithItems,
