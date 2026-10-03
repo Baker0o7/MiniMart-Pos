@@ -40,14 +40,23 @@ import com.minimart.pos.ui.viewmodel.DashboardViewModel
 import kotlinx.coroutines.launch
 
 /** Time-of-day aware Swahili greeting — was a static "Habari!" all day. */
-private fun timeOfDayGreeting(): String {
+private fun timeOfDayGreeting(name: String?): String {
     val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-    return when (hour) {
-        in 5..10  -> "Habari ya asubuhi! 👋"   // good morning
-        in 11..15 -> "Habari ya mchana! 👋"    // good afternoon
-        in 16..19 -> "Habari ya jioni! 👋"     // good evening
-        else      -> "Habari! 👋"              // late night / very early
+    val base = when (hour) {
+        in 5..10  -> "Habari ya asubuhi"   // good morning
+        in 11..15 -> "Habari ya mchana"    // good afternoon
+        in 16..19 -> "Habari ya jioni"     // good evening
+        else      -> "Habari"              // late night / very early
     }
+    val first = name?.trim()?.substringBefore(" ")?.takeIf { it.isNotEmpty() }
+    return if (first != null) "$base, $first! 👋" else "$base! 👋"
+}
+
+private fun roleLabel(role: UserRole?): String? = when (role) {
+    UserRole.OWNER   -> "Owner"
+    UserRole.MANAGER -> "Manager"
+    UserRole.CASHIER -> "Cashier"
+    null             -> null
 }
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
@@ -80,6 +89,7 @@ fun DashboardScreen(
     onNavigateToCustomers:    () -> Unit = {},
     onNavigateToCreditOverview: () -> Unit = {},
     currentRole: UserRole? = null,
+    currentUserName: String? = null,
     settingsRepo: SettingsRepository? = null,
     vm: DashboardViewModel = hiltViewModel()
 ) {
@@ -113,13 +123,14 @@ fun DashboardScreen(
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(timeOfDayGreeting(), color = White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp,
+                            Text(timeOfDayGreeting(currentUserName), color = White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp,
                                 maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                             // Bug fix: no overflow protection on the shop name — a longer
                             // name (common for Kenyan shop names, e.g. "Baraka Wholesalers &
                             // General Provisions") would wrap to a second line and unbalance
                             // this header against the fixed-height avatar and status pill.
-                            Text(state.storeName, color = Sub, fontSize = 12.sp,
+                            Text(listOfNotNull(roleLabel(currentRole), state.storeName).joinToString(" · "),
+                                color = Sub, fontSize = 12.sp,
                                 maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         }
                         // Status pill

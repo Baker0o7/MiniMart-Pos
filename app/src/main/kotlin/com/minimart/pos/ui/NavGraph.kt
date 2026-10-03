@@ -150,6 +150,7 @@ fun MiniMartNavGraph(
                         onNavigateToCustomers    = { navController.navigate(Routes.CUSTOMERS) },
                         onNavigateToCreditOverview = { navController.navigate(Routes.CREDIT_OVERVIEW) },
                         currentRole              = authState.currentUser?.role,
+                        currentUserName          = authState.currentUser?.displayName,
                         settingsRepo             = settingsRepo
                     )
                 }
