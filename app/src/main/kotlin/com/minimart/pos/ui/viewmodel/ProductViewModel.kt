@@ -60,6 +60,13 @@ class ProductViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
+                // insertProduct uses REPLACE and barcode is unique, so saving a new product
+                // with an existing barcode used to silently delete the other product.
+                val clash = repo.getByBarcode(product.barcode)
+                if (clash != null && clash.id != product.id) {
+                    _uiState.update { it.copy(isLoading = false, error = "Barcode already used by \"${clash.name}\"") }
+                    return@launch
+                }
                 if (product.id == 0L) repo.insert(product) else repo.update(product)
                 _uiState.update { it.copy(isLoading = false, successMessage = "Product saved") }
             } catch (e: Exception) {
