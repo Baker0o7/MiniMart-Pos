@@ -26,8 +26,11 @@ class ShiftRepository @Inject constructor(
     // silently masking a real till shortage or fabricating a false discrepancy. Clamped
     // here as defense-in-depth (the UI-level fix in ShiftScreen is the primary guard)
     // so this can't regress even if a future caller bypasses that screen.
-    suspend fun clockIn(cashierId: Long, cashierName: String, openingFloat: Double): Long =
-        shiftDao.insertShift(
+    suspend fun clockIn(cashierId: Long, cashierName: String, openingFloat: Double): Long {
+        // A cashier can only have one open shift: a double-tap used to create two, and
+        // getOpenShift() would then return an arbitrary one while the other never closed.
+        shiftDao.getOpenShift(cashierId)?.let { return it.id }
+        return shiftDao.insertShift(
             Shift(
                 cashierId = cashierId,
                 cashierName = cashierName,
@@ -35,6 +38,7 @@ class ShiftRepository @Inject constructor(
                 status = ShiftStatus.OPEN
             )
         )
+    }
 
     suspend fun clockOut(shiftId: Long, closingFloat: Double, notes: String): Shift? {
         val shift = shiftDao.getShiftById(shiftId) ?: return null

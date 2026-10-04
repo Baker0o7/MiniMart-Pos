@@ -13,6 +13,7 @@ import javax.inject.Singleton
 class SaleRepository @Inject constructor(
     private val saleDao: SaleDao,
     private val productRepository: ProductRepository,
+    private val customerRepository: CustomerRepository,
     private val db: AppDatabase
 ) {
     fun getAllSalesWithItems(): Flow<List<SaleWithItems>> = saleDao.getAllSalesWithItems()
@@ -36,10 +37,31 @@ class SaleRepository @Inject constructor(
      * overselling on the next sale (the stock check would pass against a stale, too-high
      * number). Wrapping the whole thing in db.withTransaction{} makes it all-or-nothing.
      */
-    suspend fun completeSale(sale: Sale, items: List<SaleItem>): Long = db.withTransaction {
+    suspend fun completeSale(
+        sale: Sale,
+        items: List<SaleItem>,
+        customerId: Long? = null,
+        creditAmount: Double = 0.0,
+        purchaseAmount: Double = 0.0
+    ): Long = db.withTransaction {
         val saleId = saleDao.insertSaleWithItems(sale, items)
         items.forEach { item ->
-            productRepository.decrementStock(item.productId, item.quantity)
+            val updated = productRepository.decrementStock(item.productId, item.quantity)
+            // Weighed items are not stock-limited by the cart, so only fixed-quantity items
+            // must have had enough stock. Throwing rolls the whole sale back.
+            if (updated == 0 && item.weightKg <= 0.0) {
+                throw IllegalStateException("Not enough stock for ${item.productName}")
+            }
+        }
+        // Customer credit / purchase stats are part of the same transaction so a failure here
+        // can no longer leave a committed CREDIT sale with no recorded debt.
+        if (customerId != null) {
+            if (creditAmount > 0.0) {
+                if (!customerRepository.useCredit(customerId, creditAmount, saleId))
+                    throw IllegalStateException("Customer account not found")
+            } else if (purchaseAmount > 0.0) {
+                customerRepository.recordPurchase(customerId, purchaseAmount, saleId)
+            }
         }
         saleId
     }
@@ -47,24 +69,22 @@ class SaleRepository @Inject constructor(
     fun searchSales(query: String) = saleDao.searchSales(query)
     fun getCompletedSales() = saleDao.getCompletedSales()
 
-    /** Bug fix: same atomicity gap as completeSale — restoring stock and marking the sale
-     * refunded were two separate steps; a crash between them could restore stock for a
-     * sale that never actually got marked refunded (or vice versa). */
-    suspend fun refundSale(saleId: Long, reason: String) = db.withTransaction {
-        val saleWithItems = saleDao.getSaleWithItems(saleId) ?: return@withTransaction
-        saleWithItems.items.forEach { item ->
-            productRepository.incrementStock(item.productId, item.quantity)
-        }
-        saleDao.refundSale(saleId, reason)
-    }
+    /** Refund a COMPLETED sale: marks it refunded, restores stock and gives back any customer
+     * credit it used — all in one transaction. Does nothing if the sale was already refunded
+     * or voided (previously a second refund/void restored the stock again). */
+    suspend fun refundSale(saleId: Long, reason: String): Unit = reverseSale(saleId, reason, refund = true)
 
-    /** Bug fix: same as refundSale — stock restoration and the void status update are now
-     * one atomic unit. */
-    suspend fun voidSale(saleId: Long, reason: String) = db.withTransaction {
+    /** Void a COMPLETED sale: same guarantees as [refundSale]. */
+    suspend fun voidSale(saleId: Long, reason: String): Unit = reverseSale(saleId, reason, refund = false)
+
+    private suspend fun reverseSale(saleId: Long, reason: String, refund: Boolean): Unit = db.withTransaction<Unit> {
         val saleWithItems = saleDao.getSaleWithItems(saleId) ?: return@withTransaction
+        if (saleWithItems.sale.status != SaleStatus.COMPLETED) return@withTransaction
+        val changed = if (refund) saleDao.refundSale(saleId, reason) else saleDao.voidSale(saleId, reason)
+        if (changed == 0) return@withTransaction
         saleWithItems.items.forEach { item ->
             productRepository.incrementStock(item.productId, item.quantity)
         }
-        saleDao.voidSale(saleId, reason)
+        customerRepository.reverseCreditForSale(saleId, reason)
     }
 }

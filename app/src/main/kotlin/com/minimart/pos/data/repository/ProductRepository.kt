@@ -23,7 +23,7 @@ class ProductRepository @Inject constructor(
     suspend fun insertAll(products: List<Product>) = productDao.insertProducts(products)
     suspend fun update(product: Product) = productDao.updateProduct(product)
     suspend fun softDelete(productId: Long) = productDao.softDeleteProduct(productId)
-    suspend fun decrementStock(productId: Long, qty: Int) = productDao.decrementStock(productId, qty)
+    suspend fun decrementStock(productId: Long, qty: Int): Int = productDao.decrementStock(productId, qty)
     suspend fun incrementStock(productId: Long, qty: Int) = productDao.incrementStock(productId, qty)
     suspend fun getProductCount(): Int = productDao.getProductCount()
 }

@@ -60,6 +60,23 @@ class CustomerRepository @Inject constructor(
         true
     }
 
+    /** Give back any customer credit that was used by [saleId] (called when a sale is voided
+     * or refunded) and write a REFUND ledger entry so the balance and history stay in sync. */
+    suspend fun reverseCreditForSale(saleId: Long, reason: String): Unit = db.withTransaction<Unit> {
+        dao.getCreditUsedForSale(saleId).forEach { tx ->
+            val used = -tx.amount   // CREDIT_USED rows are stored negative
+            if (used <= 0.0) return@forEach
+            val customer = dao.getCustomerById(tx.customerId) ?: return@forEach
+            dao.updateBalance(tx.customerId, used, purchase = -used, visit = 0)
+            dao.insertCreditTx(CreditTransaction(
+                customerId = tx.customerId, amount = used,
+                type = CreditTxType.REFUND, saleId = saleId,
+                balanceAfter = customer.creditBalance + used,
+                notes = "Sale #$saleId $reason"
+            ))
+        }
+    }
+
     /** Record a purchase (non-credit payment) — updates stats */
     suspend fun recordPurchase(customerId: Long, amount: Double, saleId: Long) {
         dao.updateBalance(customerId, 0.0, purchase = amount, visit = 1)

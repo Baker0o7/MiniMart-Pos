@@ -283,21 +283,18 @@ class CartViewModel @Inject constructor(
                     )
                 }
 
-                val saleId = saleRepo.completeSale(sale, saleItems)
+                val isCredit = sale.paymentMethod == PaymentMethod.CREDIT
+                val saleId = saleRepo.completeSale(
+                    sale, saleItems,
+                    customerId = customerId,
+                    creditAmount = if (isCredit) sale.totalAmount else 0.0,
+                    purchaseAmount = if (isCredit) 0.0 else sale.totalAmount
+                )
                 // Auto-open cash drawer on cash payment if enabled
                 if (sale.paymentMethod == PaymentMethod.CASH) {
                     try {
                         val autoOpen = settingsRepo.cashDrawerOnSale.first()
                         if (autoOpen) cashDrawer.openDrawer()
-                    } catch (_: Exception) {}
-                }
-                // Deduct credit and record purchase for credit payment
-                customerId?.let { cId ->
-                    try {
-                        if (sale.paymentMethod == PaymentMethod.CREDIT)
-                            customerRepo.useCredit(cId, sale.totalAmount, saleId)
-                        else
-                            customerRepo.recordPurchase(cId, sale.totalAmount, saleId)
                     } catch (_: Exception) {}
                 }
                 _uiState.update { CartUiState() } // clear cart after sale
@@ -356,8 +353,8 @@ class CartViewModel @Inject constructor(
                         weightKg = ci.weightKg  // 0.0 for non-weighed items
                     )
                 }
-                val saleId = saleRepo.completeSale(sale, saleItems)
-                if (creditAmount > 0) customerRepo.useCredit(customerId, creditAmount, saleId)
+                val saleId = saleRepo.completeSale(sale, saleItems,
+                    customerId = customerId, creditAmount = creditAmount)
                 if (cashAmount > 0) {
                     try { val ao = settingsRepo.cashDrawerOnSale.first(); if (ao) cashDrawer.openDrawer() }
                     catch (_: Exception) {}

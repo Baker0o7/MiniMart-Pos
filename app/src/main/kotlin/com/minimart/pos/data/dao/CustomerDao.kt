@@ -36,6 +36,9 @@ interface CustomerDao {
     @Insert
     suspend fun insertCreditTx(tx: CreditTransaction): Long
 
+    @Query("SELECT * FROM credit_transactions WHERE saleId = :saleId AND type = 'CREDIT_USED'")
+    suspend fun getCreditUsedForSale(saleId: Long): List<CreditTransaction>
+
     @Query("SELECT * FROM credit_transactions WHERE customerId = :customerId ORDER BY createdAt DESC")
     fun getTransactions(customerId: Long): Flow<List<CreditTransaction>>
 

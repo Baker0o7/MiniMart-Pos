@@ -77,11 +77,13 @@ interface SaleDao {
     @Query("SELECT * FROM sales WHERE status = 'COMPLETED' ORDER BY createdAt DESC")
     fun getCompletedSales(): Flow<List<SaleWithItems>>
 
-    @Query("UPDATE sales SET status = 'REFUNDED', notes = :reason WHERE id = :saleId")
-    suspend fun refundSale(saleId: Long, reason: String)
+    /** Only a COMPLETED sale can be refunded; returns rows changed (0 = already refunded/voided).
+     *  Existing sale notes are kept and the reason is appended. */
+    @Query("UPDATE sales SET status = 'REFUNDED', notes = CASE WHEN notes = '' THEN :reason ELSE notes || ' | ' || :reason END WHERE id = :saleId AND status = 'COMPLETED'")
+    suspend fun refundSale(saleId: Long, reason: String): Int
 
-    @Query("UPDATE sales SET status = 'VOIDED', notes = :reason WHERE id = :saleId")
-    suspend fun voidSale(saleId: Long, reason: String)
+    @Query("UPDATE sales SET status = 'VOIDED', notes = CASE WHEN notes = '' THEN :reason ELSE notes || ' | ' || :reason END WHERE id = :saleId AND status = 'COMPLETED'")
+    suspend fun voidSale(saleId: Long, reason: String): Int
 
     @Transaction
     suspend fun insertSaleWithItems(sale: Sale, items: List<SaleItem>): Long {

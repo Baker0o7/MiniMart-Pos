@@ -78,7 +78,10 @@ class ProductViewModel @Inject constructor(
     fun adjustStock(productId: Long, delta: Int) {
         viewModelScope.launch {
             if (delta > 0) repo.incrementStock(productId, delta)
-            else if (delta < 0) repo.decrementStock(productId, -delta)
+            else if (delta < 0) {
+                if (repo.decrementStock(productId, -delta) == 0)
+                    _uiState.update { it.copy(error = "Cannot remove more than the current stock") }
+            }
         }
     }
 
