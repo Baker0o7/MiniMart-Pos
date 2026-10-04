@@ -83,6 +83,18 @@ object BackupManager {
 
             val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
 
+            // Refuse files that are not SQLite databases or come from a newer app version:
+            // Room's destructive-migration fallback would otherwise WIPE the data on next launch.
+            validateBackup(dbFile, backupFile)?.let { return@withContext BackupResult.Error(it) }
+
+            // Keep a safety copy of the current database so a bad restore can be undone.
+            try {
+                android.database.sqlite.SQLiteDatabase.openDatabase(
+                    dbFile.absolutePath, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
+                ).use { it.execSQL("PRAGMA wal_checkpoint(TRUNCATE)") }
+                dbFile.copyTo(File(context.filesDir, "pre_restore_backup.db"), overwrite = true)
+            } catch (_: Exception) { /* best effort */ }
+
             // Remove the CURRENT database's stale -wal/-shm files first — they describe
             // pending writes against the database we're about to replace wholesale, and
             // must never be allowed to apply against the restored file.
@@ -105,6 +117,25 @@ object BackupManager {
             BackupResult.Success(dbFile, "Restore successful. Restarting app…")
         } catch (e: Exception) {
             BackupResult.Error("Restore failed: ${e.message}")
+        }
+    }
+
+    /** Returns an error message if [backupFile] must not be restored, or null if it looks OK. */
+    private fun validateBackup(liveDb: File, backupFile: File): String? {
+        val magic = "SQLite format 3\u0000".toByteArray(Charsets.US_ASCII)
+        val header = ByteArray(magic.size)
+        val readOk = try { backupFile.inputStream().use { it.read(header) == header.size } } catch (_: Exception) { false }
+        if (!readOk || !header.contentEquals(magic)) return "This file is not a valid MiniMart backup"
+        return try {
+            val readOnly = android.database.sqlite.SQLiteDatabase.OPEN_READONLY
+            val backupVersion = android.database.sqlite.SQLiteDatabase
+                .openDatabase(backupFile.absolutePath, null, readOnly).use { it.version }
+            val liveVersion = if (liveDb.exists())
+                android.database.sqlite.SQLiteDatabase.openDatabase(liveDb.absolutePath, null, readOnly).use { it.version }
+            else Int.MAX_VALUE
+            if (backupVersion > liveVersion) "This backup was made by a newer version of the app — update the app first" else null
+        } catch (e: Exception) {
+            "Backup file is damaged: ${e.message}"
         }
     }
 

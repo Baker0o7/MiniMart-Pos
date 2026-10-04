@@ -32,7 +32,7 @@ sealed class StkStatus {
 class DarajaApiClient @Inject constructor(
     private val settingsRepo: SettingsRepository
 ) {
-    private data class CachedToken(val token: String, val expiresAtMs: Long)
+    private data class CachedToken(val token: String, val expiresAtMs: Long, val cacheKey: String)
     private val tokenRef = AtomicReference<CachedToken?>(null)
 
     // ── Phone number normalisation ─────────────────────────────────────────────
@@ -53,7 +53,10 @@ class DarajaApiClient @Inject constructor(
     suspend fun getAccessToken(): String {
         val cfg = settingsRepo.getDarajaConfig()
         val now = System.currentTimeMillis()
-        tokenRef.get()?.let { if (now < it.expiresAtMs - 60_000) return it.token }
+        // The cached token is only valid for the environment + credentials it was issued for;
+        // switching sandbox/live or changing the keys in Settings must not reuse it.
+        val cacheKey = "${cfg.sandbox}|${cfg.consumerKey}|${cfg.consumerSecret}"
+        tokenRef.get()?.let { if (it.cacheKey == cacheKey && now < it.expiresAtMs - 60_000) return it.token }
 
         val base = if (cfg.sandbox) "https://sandbox.safaricom.co.ke" else "https://api.safaricom.co.ke"
         val credentials = Base64.encodeToString(
@@ -72,7 +75,7 @@ class DarajaApiClient @Inject constructor(
             val json = JSONObject(body)
             val token   = json.getString("access_token")
             val expiresIn = json.optLong("expires_in", 3600L)
-            tokenRef.set(CachedToken(token, now + expiresIn * 1000))
+            tokenRef.set(CachedToken(token, now + expiresIn * 1000, cacheKey))
             return token
         } finally {
             conn.disconnect()

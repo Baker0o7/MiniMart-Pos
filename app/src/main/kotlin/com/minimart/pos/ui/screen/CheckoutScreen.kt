@@ -374,7 +374,7 @@ fun CheckoutScreen(
                                                     onClick = {
                                                         darajaVm.sendPushAndAwaitResult(
                                                             phone      = customerPhone,
-                                                            amountKes  = state.total.toInt(),
+                                                            amountKes  = kotlin.math.ceil(state.total).toInt(),
                                                             accountRef = "MiniMart"
                                                         )
                                                     },

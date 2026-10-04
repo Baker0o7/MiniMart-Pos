@@ -278,7 +278,12 @@ class AuthViewModel @Inject constructor(
                     auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_SUCCESS,
                         user = username, detail = "Role: ${user.role.name}")
                     if (pinHasher.needsUpgrade(user.pinHash)) {
-                        try { userRepo.upgradePinHash(user.id, pinHasher.hash(pin.trim())) }
+                        try {
+                            val upgraded = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                                pinHasher.hash(pin.trim())
+                            }
+                            userRepo.upgradePinHash(user.id, upgraded)
+                        }
                         catch (_: Exception) {}
                     }
                     _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user, isLockedOut = false, failedAttempts = 0) }

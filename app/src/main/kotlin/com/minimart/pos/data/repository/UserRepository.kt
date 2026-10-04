@@ -29,7 +29,10 @@ class UserRepository @Inject constructor(private val dao: UserDao) {
         hasher: com.minimart.pos.util.PinHasher
     ): User? {
         val user = dao.getUserByUsername(username.trim()) ?: return null
-        return if (hasher.verify(pin.trim(), user.pinHash)) user else null
+        val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            hasher.verify(pin.trim(), user.pinHash)
+        }
+        return if (ok) user else null
     }
 
     /** Upgrade a user's stored hash to Argon2id after successful login */

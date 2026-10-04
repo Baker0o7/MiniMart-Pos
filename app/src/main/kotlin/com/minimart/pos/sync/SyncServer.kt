@@ -32,6 +32,8 @@ class SyncServer @Inject constructor(
         // LAN speed, an attacker on the same WiFi could brute-force it in minutes.
         private const val MAX_FAILED_ATTEMPTS = 5
         private const val LOCKOUT_DURATION_MS = 30_000L
+        private const val SOCKET_TIMEOUT_MS = 10_000
+        private const val MAX_BODY_BYTES = 5_000_000
     }
 
     private var serverSocket: ServerSocket? = null
@@ -74,6 +76,8 @@ class SyncServer @Inject constructor(
 
     private suspend fun handleClient(socket: Socket) {
         try {
+            // A peer that connects and then stalls must not hold an IO thread forever.
+            socket.soTimeout = SOCKET_TIMEOUT_MS
             val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
             val writer = PrintWriter(socket.getOutputStream(), true)
 
@@ -167,14 +171,27 @@ class SyncServer @Inject constructor(
                     // array, which the outer catch swallows with no response sent back —
                     // leaving the sync client to see a confusing generic failure instead of
                     // the real cause. Loop until all contentLength chars are read (or EOF).
-                    val buf = CharArray(contentLength)
-                    var readTotal = 0
-                    while (readTotal < contentLength) {
-                        val n = reader.read(buf, readTotal, contentLength - readTotal)
-                        if (n == -1) break // peer closed early
-                        readTotal += n
+                    if (contentLength !in 0..MAX_BODY_BYTES) {
+                        respond(writer, 413, """{"error":"Payload too large"}""")
+                        return
                     }
-                    val body = String(buf, 0, readTotal)
+                    // Content-Length counts BYTES but the reader yields chars: product or
+                    // customer names with accents/emoji are multi-byte in UTF-8, so counting
+                    // chars made the server wait for data that never came. Count encoded bytes.
+                    val sb = StringBuilder()
+                    var bytesRead = 0
+                    while (bytesRead < contentLength) {
+                        val c = reader.read()
+                        if (c == -1) break // peer closed early
+                        sb.append(c.toChar())
+                        bytesRead += when {
+                            c < 0x80 -> 1
+                            c < 0x800 -> 2
+                            Character.isSurrogate(c.toChar()) -> 2 // surrogate pair = 4 bytes
+                            else -> 3
+                        }
+                    }
+                    val body = sb.toString()
                     val arr  = JSONArray(body)
                     val ids  = mutableListOf<Long>()
                     for (i in 0 until arr.length()) {

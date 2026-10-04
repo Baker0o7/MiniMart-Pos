@@ -50,7 +50,8 @@ data class UserMgmtState(
 @HiltViewModel
 class UserManagementViewModel @Inject constructor(
     private val userRepo: UserRepository,
-    private val settingsRepo: SettingsRepository
+    private val settingsRepo: SettingsRepository,
+    private val pinHasher: com.minimart.pos.util.PinHasher
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UserMgmtState())
@@ -77,7 +78,7 @@ class UserManagementViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 val user = userRepo.getUserById(userId) ?: return@launch
-                val hash = userRepo.sha256(newPin)
+                val hash = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { pinHasher.hash(newPin) }
                 userRepo.updateUser(user.copy(pinHash = hash))
                 _state.update { it.copy(isLoading = false, success = "Password updated successfully") }
             } catch (e: Exception) {
@@ -90,7 +91,7 @@ class UserManagementViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                val hash = userRepo.sha256(pin)
+                val hash = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { pinHasher.hash(pin) }
                 userRepo.insertUser(User(username = username.trim(), pinHash = hash,
                     displayName = displayName.trim(), role = role))
                 _state.update { it.copy(isLoading = false, success = "User '$displayName' added") }
