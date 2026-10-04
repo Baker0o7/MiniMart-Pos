@@ -38,6 +38,26 @@ fun todayStartMs(): Long {
     return cal.timeInMillis
 }
 
+/** Monday 00:00 of the current week. Works for any locale's first-day-of-week (setting
+ *  DAY_OF_WEEK=MONDAY on a Sunday in a Sunday-first locale jumps FORWARD to tomorrow). */
+fun weekStartMs(): Long {
+    val cal = Calendar.getInstance()
+    val daysSinceMonday = (cal.get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY + 7) % 7
+    cal.add(Calendar.DAY_OF_YEAR, -daysSinceMonday)
+    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+    return cal.timeInMillis
+}
+
+/** 1st of the current month, 00:00. */
+fun monthStartMs(): Long {
+    val cal = Calendar.getInstance()
+    cal.set(Calendar.DAY_OF_MONTH, 1)
+    cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
+    return cal.timeInMillis
+}
+
 // ─── Haptic feedback ──────────────────────────────────────────────────────────
 
 fun Context.vibrateShort() {

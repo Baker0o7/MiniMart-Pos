@@ -82,7 +82,7 @@ fun CheckoutScreen(
     // customers to carry a negative balance. Clamp the upper bound to 0.0 first so the
     // range is never inverted; a customer who already owes money simply can't use more credit.
     val splitCredit     = splitCreditInput.toDoubleOrNull()
-        ?.coerceIn(0.0, creditBalance.coerceAtLeast(0.0)) ?: 0.0
+        ?.coerceIn(0.0, minOf(creditBalance.coerceAtLeast(0.0), state.total)) ?: 0.0
     val splitCashNeeded = (state.total - splitCredit).coerceAtLeast(0.0)
 
     val canComplete = when {

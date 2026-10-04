@@ -36,7 +36,18 @@ data class CartUiState(
         acc + com.minimart.pos.util.Money.fromDouble(item.lineSubtotal) }.toDouble()
     val totalTax: Double get() = items.fold(com.minimart.pos.util.Money.ZERO) { acc, item ->
         acc + com.minimart.pos.util.Money.fromDouble(item.lineTax) }.toDouble()          // extracted VAT (display only)
-    val totalDiscount: Double get() = items.fold(com.minimart.pos.util.Money.fromDouble(discount)) { acc, item ->
+    // The global discount is re-capped on every read: items can be removed or reduced after it
+    // was applied, and a stale oversized discount used to floor the total at 0 (goods given
+    // away) while recording a discountAmount larger than the cart itself.
+    private val effectiveGlobalDiscount: com.minimart.pos.util.Money get() {
+        val lineDiscounts = items.fold(com.minimart.pos.util.Money.ZERO) { acc, item ->
+            acc + com.minimart.pos.util.Money.fromDouble(item.lineDiscount) }
+        val room = (com.minimart.pos.util.Money.fromDouble(subtotal) - lineDiscounts)
+            .coerceAtLeast(com.minimart.pos.util.Money.ZERO)
+        return com.minimart.pos.util.Money.fromDouble(discount)
+            .coerceIn(com.minimart.pos.util.Money.ZERO, room)
+    }
+    val totalDiscount: Double get() = items.fold(effectiveGlobalDiscount) { acc, item ->
         acc + com.minimart.pos.util.Money.fromDouble(item.lineDiscount) }.toDouble()
     // Bug fix: total had no floor — if a discount (global or per-item) ever exceeded the
     // subtotal, total went negative. This broke checkout validation downstream: `cashAmount
@@ -202,17 +213,15 @@ class CartViewModel @Inject constructor(
     }
 
     fun setGlobalDiscount(discount: Double) {
-        _uiState.update { state ->
-            val remainingAfterLineDiscounts = (state.subtotal - state.items.sumOf { it.lineDiscount }).coerceAtLeast(0.0)
-            val clamped = discount.coerceIn(0.0, remainingAfterLineDiscounts)
-            if (clamped > 0.0) {
-                viewModelScope.launch {
-                    val user = loggedInUserId.value
-                    auditLogger.log(com.minimart.pos.util.AuditEvent.DISCOUNT_APPLIED,
-                        detail = "Global discount KES ${String.format("%.2f", clamped)} on cart of KES ${String.format("%.2f", state.subtotal)}")
-                }
+        val state = _uiState.value
+        val remainingAfterLineDiscounts = (state.subtotal - state.items.sumOf { it.lineDiscount }).coerceAtLeast(0.0)
+        val clamped = discount.coerceIn(0.0, remainingAfterLineDiscounts)
+        _uiState.update { it.copy(discount = clamped) }
+        if (clamped > 0.0) {
+            viewModelScope.launch {
+                auditLogger.log(com.minimart.pos.util.AuditEvent.DISCOUNT_APPLIED,
+                    detail = "Global discount KES ${String.format("%.2f", clamped)} on cart of KES ${String.format("%.2f", state.subtotal)}")
             }
-            state.copy(discount = clamped)
         }
     }
 
@@ -323,6 +332,8 @@ class CartViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             try {
                 val state = _uiState.value
+                // Never take more customer credit than the sale is worth (UI also caps this).
+                val creditAmount = creditAmount.coerceIn(0.0, state.total)
                 val userId = settingsRepo.loggedInUserId.first()
                 // Bug fix: was using (System.currentTimeMillis() % 9999) which is NOT unique —
                 // two split-payment sales whose timestamps land on the same value mod 9999
@@ -337,12 +348,13 @@ class CartViewModel @Inject constructor(
                     discountAmount = state.totalDiscount, totalAmount = state.total,
                     amountPaid = creditAmount + cashAmount,
                     changeGiven = ((creditAmount + cashAmount) - state.total).coerceAtLeast(0.0),
+                    // (cashPortion below = cash tendered minus the change handed back)
                     // Bug fix: only the cash portion of a split payment is physical money
                     // in the till. Previously this was never recorded anywhere, so
                     // ShiftRepository's end-of-shift cash count silently dropped it
                     // entirely (its `when` had no MIXED branch) — cashiers using split
                     // payment would show a false "shortage" at shift close.
-                    cashPortion = cashAmount,
+                    cashPortion = (cashAmount - ((creditAmount + cashAmount) - state.total).coerceAtLeast(0.0)).coerceAtLeast(0.0),
                     paymentMethod = PaymentMethod.MIXED, mpesaRef = mpesaRef, cashierId = userId ?: 0L
                 )
                 val saleItems = state.items.map { ci ->

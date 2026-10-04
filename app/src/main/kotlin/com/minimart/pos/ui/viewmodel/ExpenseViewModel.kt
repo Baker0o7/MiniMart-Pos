@@ -9,6 +9,8 @@ import com.minimart.pos.data.repository.SaleRepository
 import com.minimart.pos.data.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.minimart.pos.util.todayStartMs
+import com.minimart.pos.util.weekStartMs
+import com.minimart.pos.util.monthStartMs
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -107,32 +109,15 @@ class ExpenseViewModel @Inject constructor(
 
     private fun periodRange(period: ReportPeriod): Pair<Long, Long> {
         val now = System.currentTimeMillis()
-        val cal = Calendar.getInstance()
         val start = when (period) {
-            ReportPeriod.TODAY -> {
-                // Bug fix: todayStartMs() recomputes midnight correctly (no stale cache)
-                todayStartMs()
-            }
-            ReportPeriod.WEEK -> {
-                // Bug fix: was `now - 7 * 24h` (rolling window) — if today is Thursday,
-                // that shows Wed-last-week through today, not the actual Mon–Sun week.
-                // Now anchors to Monday 00:00 of the current calendar week.
-                cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0)
-                cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
-                cal.timeInMillis
-            }
-            ReportPeriod.MONTH -> {
-                // Bug fix: was `now - 30 * 24h` — a rolling 30-day window ≠ calendar
-                // month. February would "lose" data; months with 31 days would miss a day.
-                // Now anchors to the 1st of the current calendar month at 00:00.
-                cal.set(Calendar.DAY_OF_MONTH, 1)
-                cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0)
-                cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
-                cal.timeInMillis
-            }
+            ReportPeriod.TODAY  -> todayStartMs()
+            ReportPeriod.WEEK   -> weekStartMs()    // Monday 00:00 (was wrong on Sundays)
+            ReportPeriod.MONTH  -> monthStartMs()   // 1st of month 00:00
             ReportPeriod.CUSTOM -> now - 90L * 24 * 60 * 60 * 1000
         }
-        return Pair(start, now)
+        // Open-ended: this ViewModel lives for a long time, and a frozen "now" end meant an
+        // expense added a minute later (createdAt > end) never appeared until the period was
+        // toggled.
+        return Pair(start, Long.MAX_VALUE)
     }
 }

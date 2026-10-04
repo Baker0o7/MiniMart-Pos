@@ -94,7 +94,7 @@ data class CartItem(
     val lineTax: Double get() = if (product.taxRate > 0)
         lineSubtotal - (lineSubtotal / (1.0 + product.taxRate)) else 0.0
     val lineNet: Double get() = lineSubtotal - lineTax
-    val lineDiscount: Double get() = discount
+    val lineDiscount: Double get() = discount.coerceIn(0.0, lineSubtotal)
     val lineTotal: Double get() = lineSubtotal - lineDiscount
     // Display helpers
     val displayWeight: String get() = if (product.isWeighed && weightKg > 0)

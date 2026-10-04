@@ -9,6 +9,8 @@ import com.minimart.pos.data.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.minimart.pos.util.todayStartMs
+import com.minimart.pos.util.weekStartMs
+import com.minimart.pos.util.monthStartMs
 import kotlinx.coroutines.flow.*
 import java.util.Calendar
 import javax.inject.Inject
@@ -69,25 +71,14 @@ class ReportsViewModel @Inject constructor(
 
     private fun periodRange(period: ReportPeriod): Pair<Long, Long> {
         val now = System.currentTimeMillis()
-        val cal = Calendar.getInstance()
         val start = when (period) {
             ReportPeriod.TODAY  -> todayStartMs()
-            ReportPeriod.WEEK   -> {
-                // Bug fix: was `now - 7*24h` rolling window. Anchored to Mon 00:00.
-                cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0)
-                cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
-                cal.timeInMillis
-            }
-            ReportPeriod.MONTH  -> {
-                // Bug fix: was `now - 30*24h` rolling window. Anchored to 1st 00:00.
-                cal.set(Calendar.DAY_OF_MONTH, 1)
-                cal.set(Calendar.HOUR_OF_DAY, 0); cal.set(Calendar.MINUTE, 0)
-                cal.set(Calendar.SECOND, 0); cal.set(Calendar.MILLISECOND, 0)
-                cal.timeInMillis
-            }
+            ReportPeriod.WEEK   -> weekStartMs()    // Monday 00:00 (was wrong on Sundays)
+            ReportPeriod.MONTH  -> monthStartMs()   // 1st of month 00:00
             ReportPeriod.CUSTOM -> now - 90L * 24 * 60 * 60 * 1000
         }
-        return Pair(start, now)
+        // Open-ended: the end is not frozen at "now", so sales made while this stays
+        // subscribed are included instead of being cut off at selection time.
+        return Pair(start, Long.MAX_VALUE)
     }
 }
