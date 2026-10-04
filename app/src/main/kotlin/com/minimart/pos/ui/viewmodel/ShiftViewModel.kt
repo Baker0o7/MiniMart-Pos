@@ -53,6 +53,8 @@ class ShiftViewModel @Inject constructor(
                 if (userId != null) {
                     val open = shiftRepo.getOpenShift(userId)
                     _uiState.update { it.copy(activeShift = open) }
+                } else {
+                    _uiState.update { it.copy(activeShift = null) }
                 }
             }
         }
@@ -62,8 +64,12 @@ class ShiftViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val userId = settingsRepo.loggedInUserId.first() ?: return@launch
-                val user = userRepo.getUserById(userId) ?: return@launch
+                val userId = settingsRepo.loggedInUserId.first()
+                val user = userId?.let { userRepo.getUserById(it) }
+                if (userId == null || user == null) {
+                    _uiState.update { it.copy(isLoading = false, error = "Clock-in failed: no signed-in user") }
+                    return@launch
+                }
                 val shiftId = shiftRepo.clockIn(userId, user.displayName, openingFloat)
                 val shift = shiftRepo.getOpenShift(userId)
                 _uiState.update { it.copy(isLoading = false, activeShift = shift, successMessage = "Shift started! Good luck ${user.displayName} 👋") }
@@ -77,7 +83,11 @@ class ShiftViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
-                val shift = _uiState.value.activeShift ?: return@launch
+                val shift = _uiState.value.activeShift
+                if (shift == null) {
+                    _uiState.update { it.copy(isLoading = false, error = "No open shift to close") }
+                    return@launch
+                }
                 val closed = shiftRepo.clockOut(shift.id, closingFloat, notes)
                 _uiState.update { it.copy(isLoading = false, activeShift = null, lastClosedShift = closed, successMessage = "Shift ended") }
             } catch (e: Exception) {
