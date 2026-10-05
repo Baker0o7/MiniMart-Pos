@@ -139,11 +139,14 @@ class ThermalPrinter @Inject constructor(
             // ── Items ──
             write(EscPos.ALIGN_LEFT)
             items.forEach { item ->
-                val nameCol  = item.product.name.take(18).padEnd(18)
-                val qtyCol   = "x${item.quantity}".padStart(4)
+                // Weighed items: product.price holds the line total (see CartViewModel
+                // .addWeighedItem), so print the weight and the per-kg rate instead of "x1".
+                val weighed  = item.product.isWeighed && item.weightKg > 0
+                val qtyCol   = (if (weighed) String.format("%.2fkg", item.weightKg) else "x${item.quantity}").padStart(7)
                 val totalCol = formatMoney(item.lineTotal, currency).padStart(10)
-                write(EscPos.text("$nameCol$qtyCol$totalCol"), EscPos.NEWLINE)
-                val unitPrice = "  @ ${formatMoney(item.product.price, currency)}/unit"
+                write(EscPos.text("${item.product.name.take(15).padEnd(15)}$qtyCol$totalCol"), EscPos.NEWLINE)
+                val unitPrice = if (weighed) "  @ ${formatMoney(item.product.pricePerKg, currency)}/kg"
+                                else "  @ ${formatMoney(item.product.price, currency)}/unit"
                 write(EscPos.text(unitPrice), EscPos.NEWLINE)
             }
             write(EscPos.divider())

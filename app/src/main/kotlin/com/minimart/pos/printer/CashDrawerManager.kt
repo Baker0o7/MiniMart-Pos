@@ -68,12 +68,15 @@ class CashDrawerManager @Inject constructor(
                     val device = adapter.getRemoteDevice(directAddress)
                     val sock: BluetoothSocket = device.createRfcommSocketToServiceRecord(SPP_UUID)
                     adapter.cancelDiscovery()
-                    sock.connect()
-                    sock.outputStream.apply {
-                        write(kickCommand(pin))
-                        flush()
+                    try {
+                        sock.connect()
+                        sock.outputStream.apply {
+                            write(kickCommand(pin))
+                            flush()
+                        }
+                    } finally {
+                        try { sock.close() } catch (_: Exception) {}   // don't leak the socket on failure
                     }
-                    sock.close()
                     _openCount.value++
                     Log.d(TAG, "Drawer opened via BT: $directAddress (pin=$pin)")
                     return@withContext DrawerResult.Success
