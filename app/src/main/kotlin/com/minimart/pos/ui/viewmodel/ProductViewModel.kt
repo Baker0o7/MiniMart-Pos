@@ -69,6 +69,8 @@ class ProductViewModel @Inject constructor(
                 }
                 if (product.id == 0L) repo.insert(product) else repo.update(product)
                 _uiState.update { it.copy(isLoading = false, successMessage = "Product saved") }
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                _uiState.update { it.copy(isLoading = false, error = "Barcode already exists (it may belong to a deleted product)") }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }
             }

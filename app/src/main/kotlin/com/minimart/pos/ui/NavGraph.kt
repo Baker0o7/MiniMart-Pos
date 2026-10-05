@@ -90,6 +90,27 @@ fun MiniMartNavGraph(
             authVm.logout()
         }
     }
+    if (authState.isLoggedIn && authState.mustChangePin) {
+        var newPin by remember { mutableStateOf("") }
+        var confirmPin by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Set a new PIN") },
+            text = {
+                Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                    Text("You signed in with the default PIN (1234). Choose a new PIN to protect this till.")
+                    OutlinedTextField(newPin, { newPin = it.filter(Char::isDigit).take(8) }, label = { Text("New PIN") },
+                        singleLine = true, visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword))
+                    OutlinedTextField(confirmPin, { confirmPin = it.filter(Char::isDigit).take(8) }, label = { Text("Confirm PIN") },
+                        singleLine = true, visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword))
+                    authState.pinChangeError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                }
+            },
+            confirmButton = { TextButton(onClick = { authVm.changeOwnPin(newPin, confirmPin) }) { Text("Save PIN") } }
+        )
+    }
     val cartVm: CartViewModel = hiltViewModel()
 
     val storeName by settingsRepo.storeName.collectAsState("My MiniMart")

@@ -84,7 +84,7 @@ fun ExpenseScreen(onBack: () -> Unit, vm: ExpenseViewModel = hiltViewModel()) {
                             ) { vm.setPeriod(p) }
                             .padding(horizontal = 14.dp, vertical = 8.dp)
                     ) {
-                        Text(p.name.lowercase().replaceFirstChar { it.uppercase() },
+                        Text(p.label,
                             color = if (sel) Color.White else DT.SubText,
                             fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
                             style = MaterialTheme.typography.labelMedium)

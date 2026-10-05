@@ -15,7 +15,11 @@ import kotlinx.coroutines.flow.*
 import java.util.Calendar
 import javax.inject.Inject
 
-enum class ReportPeriod { TODAY, WEEK, MONTH, CUSTOM }
+enum class ReportPeriod(val label: String) {
+    TODAY("Today"), WEEK("Week"), MONTH("Month"),
+    /** Was labelled "Custom" but is a fixed rolling 90-day window. */
+    CUSTOM("90 Days")
+}
 
 data class ReportsUiState(
     val period: ReportPeriod = ReportPeriod.TODAY,

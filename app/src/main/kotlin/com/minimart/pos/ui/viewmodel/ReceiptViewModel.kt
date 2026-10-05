@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.entity.SaleWithItems
 import com.minimart.pos.data.repository.SaleRepository
+import com.minimart.pos.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -15,12 +16,15 @@ data class ReceiptUiState(
     val isLoading: Boolean = true,
     val isProcessing: Boolean = false,
     val error: String? = null,
-    val successMessage: String? = null
+    val successMessage: String? = null,
+    /** Name of the cashier who made the sale (null if the user record is gone). */
+    val cashierName: String? = null
 )
 
 @HiltViewModel
 class ReceiptViewModel @Inject constructor(
     private val saleRepo: SaleRepository,
+    private val userRepo: UserRepository,
     // Bug fix: previously had no SavedStateHandle — saleId was passed via LaunchedEffect
     // from the composable after every recomposition. On process death, the ViewModel
     // was recreated with no saleId, showing a blank screen until LaunchedEffect ran.
@@ -44,7 +48,8 @@ class ReceiptViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 val sale = saleRepo.getSaleWithItems(saleId)
-                _state.update { it.copy(saleWithItems = sale, isLoading = false) }
+                val cashier = sale?.sale?.cashierId?.let { runCatching { userRepo.getUserById(it)?.displayName }.getOrNull() }
+                _state.update { it.copy(saleWithItems = sale, isLoading = false, cashierName = cashier) }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = e.message) }
             }

@@ -195,7 +195,10 @@ data class AuthUiState(
     // Bug fix: drives whether LoginScreen even shows the biometric prompt — only true
     // once a specific user has explicitly opted in via Settings (see SettingsRepository
     // .biometricUserId). Previously biometric login had no such gate at all.
-    val biometricEnabled: Boolean = false
+    val biometricEnabled: Boolean = false,
+    // True when the user just signed in with the factory-default PIN (1234) and must pick a new one.
+    val mustChangePin: Boolean = false,
+    val pinChangeError: String? = null
 )
 
 @HiltViewModel
@@ -211,6 +214,7 @@ class AuthViewModel @Inject constructor(
 
     companion object {
         private const val MAX_ATTEMPTS = 3
+        private const val DEFAULT_PIN = "1234"
         private const val LOCKOUT_DURATION_MS = 30_000L
     }
 
@@ -286,7 +290,7 @@ class AuthViewModel @Inject constructor(
                         }
                         catch (_: Exception) {}
                     }
-                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user, isLockedOut = false, failedAttempts = 0) }
+                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user, isLockedOut = false, failedAttempts = 0, mustChangePin = pin.trim() == DEFAULT_PIN, pinChangeError = null) }
                 } else {
                     val attempts = settingsRepo.recordFailedAttempt(MAX_ATTEMPTS, LOCKOUT_DURATION_MS)
                     val nowLocked = attempts >= MAX_ATTEMPTS
@@ -300,6 +304,29 @@ class AuthViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = "Login failed: ${e.message}") }
+            }
+        }
+    }
+
+    /** Replaces the factory-default PIN. Hashing runs off the main thread. */
+    fun changeOwnPin(newPin: String, confirm: String) {
+        val user = _uiState.value.currentUser ?: return
+        val pin = newPin.trim()
+        val error = when {
+            pin.length < 4 || !pin.all { it.isDigit() } -> "PIN must be at least 4 digits"
+            pin == DEFAULT_PIN -> "Choose a PIN other than 1234"
+            pin != confirm.trim() -> "PINs do not match"
+            else -> null
+        }
+        if (error != null) { _uiState.update { it.copy(pinChangeError = error) }; return }
+        viewModelScope.launch {
+            try {
+                val hash = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { pinHasher.hash(pin) }
+                userRepo.upgradePinHash(user.id, hash)
+                auditLogger.log(com.minimart.pos.util.AuditEvent.PIN_CHANGED, user = user.username, detail = "Default PIN replaced")
+                _uiState.update { it.copy(mustChangePin = false, pinChangeError = null) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(pinChangeError = "Could not save PIN: ${e.message}") }
             }
         }
     }

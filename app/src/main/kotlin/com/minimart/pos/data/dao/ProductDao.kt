@@ -46,7 +46,9 @@ interface ProductDao {
 
     // ── Mutations ─────────────────────────────────────────────────────────────
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // ABORT, not REPLACE: REPLACE deletes the conflicting row, so a duplicate barcode would
+    // silently wipe another product (or fail on its sale history via the RESTRICT FK).
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertProduct(product: Product): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -150,7 +150,7 @@ fun ReceiptScreen(
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 Column(Modifier.weight(1f)) {
                                     Text("Cashier", color = DT.SubText, fontSize = 10.sp)
-                                    Text(cashierName.ifBlank { "Admin" }, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                    Text((state.cashierName ?: cashierName).ifBlank { "Admin" }, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text("Date", color = DT.SubText, fontSize = 10.sp)
@@ -280,7 +280,7 @@ fun ReceiptScreen(
                                     items = items,
                                     productNames = items.associate { it.productId to it.productName },
                                     storeName = storeName, currency = currency,
-                                    cashierName = cashierName, footerMessage = footerMessage
+                                    cashierName = state.cashierName ?: cashierName, footerMessage = footerMessage
                                 )
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                                 statusMsg = "✓ PDF: ${file.name}"
@@ -297,7 +297,7 @@ fun ReceiptScreen(
                                     items = items,
                                     productNames = items.associate { it.productId to it.productName },
                                     storeName = storeName, currency = currency,
-                                    cashierName = cashierName, footerMessage = footerMessage
+                                    cashierName = state.cashierName ?: cashierName, footerMessage = footerMessage
                                 )
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                                 val uri = PdfReceiptGenerator.getShareUri(context, file)
@@ -315,7 +315,7 @@ fun ReceiptScreen(
                                     items = items,
                                     productNames = items.associate { it.productId to it.productName },
                                     storeName = storeName, currency = currency,
-                                    cashierName = cashierName, footerMessage = footerMessage
+                                    cashierName = state.cashierName ?: cashierName, footerMessage = footerMessage
                                 )
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                                 val uri = PdfReceiptGenerator.getShareUri(context, file)
