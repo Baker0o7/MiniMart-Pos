@@ -34,6 +34,7 @@ import com.minimart.pos.printer.ThermalPrinter
 import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.SyncViewModel
 import com.minimart.pos.util.RoleManager
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -149,9 +150,13 @@ fun SettingsScreen(
                         Spacer(Modifier.height(12.dp))
                         Button(
                             onClick = { scope.launch {
-                                settingsRepo.setStoreName(storeNameInput)
-                                settingsRepo.setCurrency(currencyInput)
-                                settingsRepo.setReceiptFooter(footerInput)
+                                // Blank name/currency would print as an empty header or a bare amount
+                                // on every receipt; keep the previous value instead.
+                                val name = storeNameInput.trim()
+                                val cur  = currencyInput.trim().uppercase().take(5)
+                                if (name.isNotEmpty()) settingsRepo.setStoreName(name) else storeNameInput = settingsRepo.storeName.first()
+                                if (cur.isNotEmpty()) { settingsRepo.setCurrency(cur); currencyInput = cur } else currencyInput = settingsRepo.currency.first()
+                                settingsRepo.setReceiptFooter(footerInput.trim())
                             }},
                             modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
