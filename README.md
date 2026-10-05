@@ -12,7 +12,7 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 [![Build](https://img.shields.io/github/actions/workflow/status/Baker0o7/MiniMart-Pos/release.yml?label=Build&color=00897B&style=for-the-badge)](https://github.com/Baker0o7/MiniMart-Pos/actions)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-00897B?style=for-the-badge)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge)](https://kotlinlang.org)
-[![Room DB](https://img.shields.io/badge/Room-v12-00897B?style=for-the-badge)](https://developer.android.com/jetpack/androidx/releases/room)
+[![Room DB](https://img.shields.io/badge/Room-v13-00897B?style=for-the-badge)](https://developer.android.com/jetpack/androidx/releases/room)
 [![Tests](https://img.shields.io/badge/Unit%20Tests-JUnit4-00897B?style=for-the-badge)](https://junit.org/junit4/)
 
 </div>
@@ -52,12 +52,19 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **Cart badge** on bottom nav shows pending item count when navigating away
 - Guarded against double-tap: rapid double-tapping "Complete Sale" can't create
   two sales from one transaction
+- **Atomic sales** — the sale, stock deduction and any customer credit are one
+  database transaction; a sale that can't be fully recorded (e.g. not enough
+  stock) is rolled back instead of leaving a half-written record
+- Confirmation before clearing the cart
 
 ### 💳 Checkout & Payments
 - **Cash** — quick-amount buttons, real change calculation
 - **M-Pesa** — ref number field
 - **Credit** — customer wallet or buy-on-account (negative balance allowed)
-- **Split payment** — combine credit + cash in one transaction, with proper
+- **M-Pesa STK push (Daraja)** — amounts are rounded up to whole shillings and
+  payment status is confirmed by polling
+- **Split payment** — combine credit + cash in one transaction (credit is capped
+  at the balance and sale total; change is never counted as till cash), with proper
   error feedback if it fails (shown as an on-screen banner, not silently dropped)
 - Customer selector with search + contacts import — debtors (customers who
   owe money) are clearly flagged in red, not shown the same as a zero balance
@@ -71,6 +78,8 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **Credit wallet** — deposits, deductions on purchases
 - **Buy on account** — negative balance allowed
 - Full transaction history per customer
+- Deleting a customer asks for confirmation (it also deletes their credit history)
+- Refunding or voiding a credit sale automatically returns the credit used
 - **Credit Ledger** — all non-zero balances at a glance
   - 🔴 Debtors (negative, owe money) shown first with "OWES [currency] X" in red
   - 🟢 Wallet balances shown in green
@@ -102,16 +111,23 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - Color-coded expiry urgency badges · Low-stock background alerts (WorkManager)
 - Stock adjustments with reason log
 - **PLU / Weighing scale toggle** per product (PLU code + price/kg)
+- **Weighed products are stocked in kilograms** — sales deduct the actual weight,
+  refunds/voids put it back, and the stock field is entered and shown in kg
+- Duplicate barcodes are rejected with a clear message instead of overwriting
+  another product; save/adjust errors are shown on screen
 - Negative price/stock can't be saved (validated at both the UI and repository layer)
 
 ### 📊 Reports & Analytics
 - Revenue vs yesterday (real % comparison, flips red when down)
 - Dashboard auto-refreshes at midnight — "today" always means today
 - Transaction count, average basket, top-selling items
+- **Custom date range** — the "Custom" chip in Reports and Expenses opens a date-range picker
 - **Reports & Expenses** use proper calendar week (Mon–Sun) and calendar month,
   not rolling 7/30-day windows
 - Sales History: color-coded payment method chips (💵 Cash / 📱 M-Pesa / 🤝 Credit / 🔀 Split)
 - **Quick Void** on COMPLETED sales from the history list (Manager+)
+- **Refund / Void** from the receipt screen is limited to Owner and Manager; each
+  can only be applied once, restores stock and returns any credit used
 
 ### 👥 Role-Based Access Control
 
@@ -131,7 +147,10 @@ Owner account (permanent lockout protection).
 
 ### 🔐 Security
 - **Argon2id PIN hashing** (t=3, m=64MB, p=4), auto-upgrades legacy SHA-256 on
-  login, constant-time comparison on both paths
+  login, constant-time comparison on both paths; hashing runs off the main thread
+  and new users always get Argon2id
+- **Default PIN must be changed** — signing in with the factory `1234` PIN shows a
+  non-dismissable "Set a new PIN" dialog
 - **Biometric login** — bound to one explicitly opted-in user per device
   (Settings → Account). Any fingerprint on the device cannot authenticate as
   an arbitrary username.
@@ -149,15 +168,22 @@ Owner account (permanent lockout protection).
   zero-maintenance choice for this app.
 
 ### 💾 Backup & Data
-- One-tap backup to `Downloads/MiniMartPOS/backups/`
+- One-tap backup to the app's own storage (`Android/data/com.minimart.pos/files/backups/`) —
+  no all-files permission required. Use **Share Latest Backup** to copy it off the
+  device (app storage is cleared on uninstall). Older backups in
+  `Downloads/MiniMartPOS/backups/` still appear in the restore list
+- Restores are validated first (SQLite header, schema version) and a safety copy of the
+  current data is kept
 - **Restore requires explicit two-step confirmation** — selecting a backup
   shows exactly what will be lost before anything is overwritten, then the
   app automatically restarts (WAL/SHM files handled correctly)
-- 100% offline — Room SQLite v12, no internet required for core operation
+- 100% offline — Room SQLite v13, no internet required for core operation
 
 ### 🎨 UI / UX
 - Deep dark teal theme — readable in bright retail lighting
-- Time-of-day Swahili greeting: *Habari ya asubuhi / mchana / jioni*
+- Dashboard header shows the signed-in role (Owner / Manager / Cashier) and store name
+- Emerald "glass" login screen with a 6-box PIN field, large keypad and haptic key presses
+- System-bar insets handled once, so nothing hides behind the navigation bar
 - Consistent gradient top bar across all screens
 - Press-scale animation on dashboard action cards
 - Color-coded payment method chips throughout
@@ -193,7 +219,7 @@ logic — no emulator needed:
 | UI | Jetpack Compose + Material 3 |
 | Architecture | MVVM · Clean Architecture · Repository |
 | DI | Hilt |
-| Database | Room 2.6 (SQLite v12), Android FBE at rest |
+| Database | Room 2.6 (SQLite v13), Android FBE at rest |
 | Money | Custom `Money` value class (Long cents) for checkout-critical math |
 | PIN Security | Argon2id (argon2-kt 1.4.0) |
 | Sensitive Storage | Jetpack Security (`EncryptedSharedPreferences`, Keystore-backed) |
@@ -221,7 +247,7 @@ cd MiniMart-Pos
 | Field | Value |
 |---|---|
 | Username | `admin` |
-| PIN | `1234` |
+| PIN | `1234` (you'll be asked to change it on first sign-in) |
 
 ---
 
@@ -232,8 +258,8 @@ app/src/main/kotlin/com/minimart/pos/
 ├── data/
 │   ├── dao/          ProductDao · SaleDao · UserDao · ExpenseDao
 │   │                 ShiftDao · CustomerDao · SyncDao
-│   ├── db/           AppDatabase (v12) · DatabaseCallback (seed)
-│   │                 AppMigrations (v8→v9→v10→v11→v12)
+│   ├── db/           AppDatabase (v13) · DatabaseCallback (seed)
+│   │                 AppMigrations (v8→…→v13)
 │   ├── entity/       Product · Sale · SaleItem · User · Expense
 │   │                 Shift · Customer · CreditTransaction · SyncLog
 │   └── repository/   (one per entity + SettingsRepository)
@@ -242,7 +268,7 @@ app/src/main/kotlin/com/minimart/pos/
 ├── scanner/          MLKitScanner · KeyboardScanner · BluetoothScannerManager
 ├── sync/             SyncServer · SyncClient
 ├── ui/
-│   ├── screen/       16 screens (Login → CreditOverview)
+│   ├── screen/       17 screens (Login → CreditOverview) + shared DateRangeDialog
 │   ├── viewmodel/    Per-screen ViewModels + SessionViewModel · SyncViewModel
 │   ├── theme/        DT color tokens
 │   └── NavGraph.kt   Routes + BottomNavBar (cart badge) + AccessGuard
@@ -255,6 +281,14 @@ app/src/test/kotlin/com/minimart/pos/
 ├── util/             MoneyTest · PluDecoderTest
 └── ui/viewmodel/     CartUiStateTest
 ```
+
+---
+
+## 🚢 Releases
+
+Releases are built by the **Build & Release** GitHub Actions workflow (run it from the
+Actions tab, or push a `v*` tag). The version comes from `versionName` in
+`app/build.gradle.kts`; the workflow publishes a signed APK and AAB to GitHub Releases.
 
 ---
 
