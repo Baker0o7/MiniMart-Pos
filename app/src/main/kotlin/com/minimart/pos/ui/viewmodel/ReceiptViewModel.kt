@@ -25,6 +25,8 @@ data class ReceiptUiState(
 class ReceiptViewModel @Inject constructor(
     private val saleRepo: SaleRepository,
     private val userRepo: UserRepository,
+    private val refundSaleUseCase: com.minimart.pos.domain.usecase.RefundSaleUseCase,
+    private val voidSaleUseCase: com.minimart.pos.domain.usecase.VoidSaleUseCase,
     // Bug fix: previously had no SavedStateHandle — saleId was passed via LaunchedEffect
     // from the composable after every recomposition. On process death, the ViewModel
     // was recreated with no saleId, showing a blank screen until LaunchedEffect ran.
@@ -61,7 +63,7 @@ class ReceiptViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isProcessing = true, error = null) }
             try {
-                saleRepo.refundSale(saleId, reason)
+                refundSaleUseCase(saleId, reason)
                 val updated = saleRepo.getSaleWithItems(saleId)
                 _state.update { it.copy(saleWithItems = updated, isProcessing = false,
                     successMessage = "Sale refunded. Stock restored.") }
@@ -76,7 +78,7 @@ class ReceiptViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isProcessing = true, error = null) }
             try {
-                saleRepo.voidSale(saleId, reason)
+                voidSaleUseCase(saleId, reason)
                 val updated = saleRepo.getSaleWithItems(saleId)
                 _state.update { it.copy(saleWithItems = updated, isProcessing = false,
                     successMessage = "Sale voided. Stock restored.") }

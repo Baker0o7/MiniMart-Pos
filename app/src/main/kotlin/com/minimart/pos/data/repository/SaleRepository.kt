@@ -5,6 +5,10 @@ import com.minimart.pos.data.dao.SaleDao
 import com.minimart.pos.data.dao.TopSellerResult
 import com.minimart.pos.data.db.AppDatabase
 import com.minimart.pos.data.entity.*
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import com.minimart.pos.data.dao.SaleStats
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,6 +29,14 @@ class SaleRepository @Inject constructor(
         saleDao.getTopSellingProducts(startMs, endMs)
     fun getSalesByDateRange(start: Long, end: Long): Flow<List<Sale>> = saleDao.getSalesByDateRange(start, end)
     fun getCompletedSalesByDateRange(start: Long, end: Long): Flow<List<Sale>> = saleDao.getCompletedSalesByDateRange(start, end)
+
+    /** Sales History, loaded a page at a time. */
+    fun pagedCompletedSales(query: String): Flow<PagingData<SaleWithItems>> =
+        Pager(PagingConfig(pageSize = 30, enablePlaceholders = false)) {
+            saleDao.pagedCompletedSales(query.trim())
+        }.flow
+
+    fun completedSalesStats(query: String): Flow<SaleStats> = saleDao.completedSalesStats(query.trim())
 
     suspend fun getSaleWithItems(saleId: Long): SaleWithItems? = saleDao.getSaleWithItems(saleId)
 

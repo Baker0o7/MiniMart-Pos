@@ -38,6 +38,13 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
+import com.minimart.pos.data.dao.SaleStats
+import kotlinx.coroutines.flow.Flow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
@@ -53,26 +60,24 @@ import androidx.compose.runtime.remember
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class SalesHistoryViewModel @Inject constructor(
-    private val saleRepo: SaleRepository
+    private val saleRepo: SaleRepository,
+    private val voidSaleUseCase: com.minimart.pos.domain.usecase.VoidSaleUseCase
 ) : ViewModel() {
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
 
-    val sales: StateFlow<List<SaleWithItems>> = _query
-        .debounce(250)
-        .flatMapLatest { q ->
-            if (q.isBlank()) saleRepo.getCompletedSales()
-            else saleRepo.searchSales(q)
-        }
-        .catch { emit(emptyList()) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
+    private val debouncedQuery = _query.debounce(250)
 
-    val totalRevenue: StateFlow<Double> = sales
-        // Bug fix: was .filter { COMPLETED }.sumOf{} but getCompletedSales() and
-        // searchSales already only return COMPLETED status rows. Removed the
-        // redundant Kotlin-level filter — just sum the list directly.
-        .map { list -> list.sumOf { it.sale.totalAmount } }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), 0.0)
+    /** Sales load a page at a time instead of the whole table. */
+    val sales: Flow<PagingData<SaleWithItems>> = debouncedQuery
+        .flatMapLatest { q -> saleRepo.pagedCompletedSales(q) }
+        .cachedIn(viewModelScope)
+
+    /** Record count and revenue for the current filter, computed in SQL. */
+    val stats: StateFlow<SaleStats> = debouncedQuery
+        .flatMapLatest { q -> saleRepo.completedSalesStats(q) }
+        .catch { emit(SaleStats(0, 0.0)) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), SaleStats(0, 0.0))
 
     fun setQuery(q: String) { _query.value = q }
 
@@ -80,7 +85,7 @@ class SalesHistoryViewModel @Inject constructor(
      * needing to navigate to the full receipt screen. */
     fun voidSale(saleId: Long, reason: String) {
         viewModelScope.launch {
-            try { saleRepo.voidSale(saleId, reason) }
+            try { voidSaleUseCase(saleId, reason) }
             catch (_: Exception) {}
         }
     }
@@ -99,8 +104,8 @@ fun SalesHistoryScreen(
 ) {
     val canVoid = com.minimart.pos.util.RoleManager.canApplyDiscounts(currentRole) // Manager+ only
     val query   by vm.query.collectAsState()
-    val sales   by vm.sales.collectAsState()
-    val total   by vm.totalRevenue.collectAsState()
+    val sales   = vm.sales.collectAsLazyPagingItems()
+    val stats   by vm.stats.collectAsState()
     val df      = remember { SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault()) }
 
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
@@ -114,7 +119,7 @@ fun SalesHistoryScreen(
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Sales History", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                    Text("${sales.size} records  •  $currency ${String.format("%.2f", total)}",
+                    Text("${stats.count} records  •  $currency ${String.format("%.2f", stats.total)}",
                         color = DT.SubText, style = MaterialTheme.typography.labelMedium)
                 }
             }
@@ -142,7 +147,7 @@ fun SalesHistoryScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            if (sales.isEmpty()) {
+            if (sales.itemCount == 0 && sales.loadState.refresh !is LoadState.Loading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Icon(Icons.Default.Receipt, null, modifier = Modifier.size(64.dp), tint = DT.SubText.copy(0.3f))
@@ -157,7 +162,8 @@ fun SalesHistoryScreen(
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(sales, key = { it.sale.id }) { saleWithItems ->
+                    items(count = sales.itemCount, key = sales.itemKey { it.sale.id }) { index ->
+                        val saleWithItems = sales[index] ?: return@items
                         SaleHistoryRow(
                             saleWithItems = saleWithItems,
                             currency = currency,

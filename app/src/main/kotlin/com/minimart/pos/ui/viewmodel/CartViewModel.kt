@@ -75,6 +75,7 @@ class CartViewModel @Inject constructor(
     private val cashDrawer: com.minimart.pos.printer.CashDrawerManager,
     private val customerRepo: com.minimart.pos.data.repository.CustomerRepository,
     private val auditLogger: com.minimart.pos.util.AuditLogger,
+    private val completeSale: com.minimart.pos.domain.usecase.CompleteSaleUseCase,
     keyboardScanner: KeyboardScanner
 ) : ViewModel() {
 
@@ -293,7 +294,7 @@ class CartViewModel @Inject constructor(
                 }
 
                 val isCredit = sale.paymentMethod == PaymentMethod.CREDIT
-                val saleId = saleRepo.completeSale(
+                val saleId = completeSale(
                     sale, saleItems,
                     customerId = customerId,
                     creditAmount = if (isCredit) sale.totalAmount else 0.0,
@@ -365,7 +366,7 @@ class CartViewModel @Inject constructor(
                         weightKg = ci.weightKg  // 0.0 for non-weighed items
                     )
                 }
-                val saleId = saleRepo.completeSale(sale, saleItems,
+                val saleId = completeSale(sale, saleItems,
                     customerId = customerId, creditAmount = creditAmount)
                 if (cashAmount > 0) {
                     try { val ao = settingsRepo.cashDrawerOnSale.first(); if (ao) cashDrawer.openDrawer() }

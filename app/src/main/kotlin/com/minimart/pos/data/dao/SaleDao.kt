@@ -1,5 +1,6 @@
 package com.minimart.pos.data.dao
 
+import androidx.paging.PagingSource
 import androidx.room.*
 import com.minimart.pos.data.entity.*
 import kotlinx.coroutines.flow.Flow
@@ -77,6 +78,29 @@ interface SaleDao {
     @Query("SELECT * FROM sales WHERE status = 'COMPLETED' ORDER BY createdAt DESC")
     fun getCompletedSales(): Flow<List<SaleWithItems>>
 
+    /** Paged Sales History: COMPLETED sales only; a blank [query] matches everything. */
+    @Transaction
+    @Query("""
+        SELECT * FROM sales
+        WHERE status = 'COMPLETED' AND (:query = ''
+           OR receiptNumber LIKE '%' || :query || '%'
+           OR notes LIKE '%' || :query || '%'
+           OR mpesaRef LIKE '%' || :query || '%')
+        ORDER BY createdAt DESC
+    """)
+    fun pagedCompletedSales(query: String): PagingSource<Int, SaleWithItems>
+
+    /** Record count and revenue for the same filter as [pagedCompletedSales] (computed in SQL,
+     *  so the totals stay correct even though only one page is loaded at a time). */
+    @Query("""
+        SELECT COUNT(*) AS count, COALESCE(SUM(totalAmount), 0.0) AS total FROM sales
+        WHERE status = 'COMPLETED' AND (:query = ''
+           OR receiptNumber LIKE '%' || :query || '%'
+           OR notes LIKE '%' || :query || '%'
+           OR mpesaRef LIKE '%' || :query || '%')
+    """)
+    fun completedSalesStats(query: String): Flow<SaleStats>
+
     /** Only a COMPLETED sale can be refunded; returns rows changed (0 = already refunded/voided).
      *  Existing sale notes are kept and the reason is appended. */
     @Query("UPDATE sales SET status = 'REFUNDED', notes = CASE WHEN notes = '' THEN :reason ELSE notes || ' | ' || :reason END WHERE id = :saleId AND status = 'COMPLETED'")
@@ -93,6 +117,8 @@ interface SaleDao {
         return saleId
     }
 }
+
+data class SaleStats(val count: Int, val total: Double)
 
 data class TopSellerResult(
     val productId: Long,
