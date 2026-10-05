@@ -14,12 +14,6 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
-/** Distinguishes the encrypted-at-rest SharedPreferences store (for security-sensitive
- * values like the sync pairing secret) from the regular one Hilt would otherwise
- * ambiguously match against, since both are plain SharedPreferences-typed bindings. */
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class SecurePrefs
 
 @Module
 @InstallIn(SingletonComponent::class)

@@ -17,3 +17,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "MiniMart POS"
 include(":app")
+include(":core")
+include(":data")

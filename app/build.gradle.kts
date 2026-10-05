@@ -64,6 +64,8 @@ android {
 }
 
 dependencies {
+    implementation(project(":core"))
+    implementation(project(":data"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -86,7 +88,6 @@ dependencies {
     implementation(libs.room.paging)
     implementation(libs.paging.runtime)
     implementation(libs.paging.compose)
-    ksp(libs.room.compiler)
 
     // DataStore
     implementation(libs.datastore.preferences)
