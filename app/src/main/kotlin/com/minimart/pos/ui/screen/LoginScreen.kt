@@ -113,40 +113,40 @@ fun LoginScreen(
             .border(1.5.dp, emerald.copy(0.25f), CircleShape).align(Alignment.BottomStart))
 
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-            .padding(horizontal = 22.dp, vertical = 28.dp),
+            .padding(horizontal = 22.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
 
             // Logo tile with glow
-            Box(modifier = Modifier.size(92.dp)
-                .shadow(24.dp, RoundedCornerShape(28.dp), ambientColor = emerald, spotColor = emerald)
-                .clip(RoundedCornerShape(28.dp))
+            Box(modifier = Modifier.size(76.dp)
+                .shadow(24.dp, RoundedCornerShape(24.dp), ambientColor = emerald, spotColor = emerald)
+                .clip(RoundedCornerShape(24.dp))
                 .background(Brush.linearGradient(listOf(Color(0xFF16C79A), Color(0xFF07654F))))
-                .border(1.5.dp, emerald.copy(0.6f), RoundedCornerShape(28.dp)),
+                .border(1.5.dp, emerald.copy(0.6f), RoundedCornerShape(24.dp)),
                 contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.ShoppingCart, null, tint = Color.White, modifier = Modifier.size(48.dp))
+                Icon(Icons.Default.ShoppingCart, null, tint = Color.White, modifier = Modifier.size(40.dp))
             }
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(10.dp))
             Row {
-                Text("MiniMart ", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 34.sp)
-                Text("POS", color = emerald, fontWeight = FontWeight.ExtraBold, fontSize = 34.sp)
+                Text("MiniMart ", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
+                Text("POS", color = emerald, fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
             }
-            Text("Point of Sale System", color = Color.White.copy(0.9f), fontSize = 16.sp)
-            Spacer(Modifier.height(8.dp))
+            Text("Point of Sale System", color = Color.White.copy(0.9f), fontSize = 14.sp)
+            Spacer(Modifier.height(6.dp))
             Box(Modifier.width(44.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(emerald))
-            Spacer(Modifier.height(22.dp))
+            Spacer(Modifier.height(12.dp))
 
             // Login card
             Box(modifier = Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(26.dp))
                 .background(Brush.verticalGradient(listOf(Color(0xFF0B3B31), Color(0xFF082A24))))
                 .border(1.2.dp, emerald.copy(0.45f), RoundedCornerShape(26.dp))
-                .padding(horizontal = 18.dp, vertical = 20.dp)) {
+                .padding(horizontal = 16.dp, vertical = 14.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
                     Text("Welcome Back 👋", color = Color.White,
-                        fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                        fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
 
                     // Username (pill)
                     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -181,7 +181,7 @@ fun LoginScreen(
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             repeat(6) { i ->
                                 val filled = i < pin.length
-                                Box(modifier = Modifier.weight(1f).aspectRatio(0.95f).clip(RoundedCornerShape(14.dp))
+                                Box(modifier = Modifier.weight(1f).aspectRatio(1.05f).clip(RoundedCornerShape(14.dp))
                                     .background(if (filled) emerald.copy(0.18f) else Color(0xFF082923))
                                     .border(1.5.dp, if (filled) emerald else glassBd, RoundedCornerShape(14.dp)),
                                     contentAlignment = Alignment.Center) {
@@ -227,11 +227,11 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(12.dp))
 
             // Numeric keypad — glass keys, bright ✓ and red ⌫
             val keys = listOf("1","2","3","4","5","6","7","8","9","✓","0","⌫")
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 keys.chunked(3).forEach { row ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         row.forEach { key ->
@@ -245,7 +245,7 @@ fun LoginScreen(
                                 "⌫" -> Color(0xFFE5484D)
                                 else -> glassBd
                             }
-                            Box(modifier = Modifier.weight(1f).aspectRatio(1.75f)
+                            Box(modifier = Modifier.weight(1f).aspectRatio(2.2f)
                                 .clip(RoundedCornerShape(18.dp))
                                 .background(keyBrush)
                                 .border(1.2.dp, keyBorder.copy(0.8f), RoundedCornerShape(18.dp))
@@ -261,7 +261,7 @@ fun LoginScreen(
                                 when (key) {
                                     "⌫" -> Icon(Icons.AutoMirrored.Filled.Backspace, null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(28.dp))
                                     "✓" -> Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(34.dp))
-                                    else -> Text(key, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 30.sp, textAlign = TextAlign.Center)
+                                    else -> Text(key, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 26.sp, textAlign = TextAlign.Center)
                                 }
                             }
                         }
@@ -269,7 +269,7 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(8.dp))
 
             // Biometric + loading row
             Row(horizontalArrangement = Arrangement.Center,

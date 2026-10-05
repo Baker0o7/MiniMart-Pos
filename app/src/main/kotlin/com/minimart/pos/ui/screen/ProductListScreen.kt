@@ -57,6 +57,10 @@ fun ProductListScreen(
     LaunchedEffect(uiState.successMessage) {
         if (uiState.successMessage != null) { kotlinx.coroutines.delay(2000); vm.clearMessages() }
     }
+    // Errors (duplicate barcode, "cannot remove more than stock", ...) were never shown.
+    LaunchedEffect(uiState.error) {
+        if (uiState.error != null) { kotlinx.coroutines.delay(4000); vm.clearMessages() }
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
         Column {
@@ -107,6 +111,9 @@ fun ProductListScreen(
             }
             Spacer(Modifier.height(8.dp))
 
+            uiState.error?.let {
+                Text(it, color = DT.Red, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp), style = MaterialTheme.typography.labelMedium)
+            }
             uiState.successMessage?.let {
                 Text(it, color = DT.Green, modifier = Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelSmall)
             }

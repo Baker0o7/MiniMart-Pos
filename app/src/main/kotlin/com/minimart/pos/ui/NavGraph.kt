@@ -137,7 +137,9 @@ fun MiniMartNavGraph(
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
+        // consumeWindowInsets: screens inside (Checkout, Receipt, Cart) also call
+        // navigationBarsPadding()/imePadding(); without this the nav-bar inset was applied twice.
+        Box(modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)) {
             NavHost(
         navController = navController,
         startDestination = Routes.LOGIN,
