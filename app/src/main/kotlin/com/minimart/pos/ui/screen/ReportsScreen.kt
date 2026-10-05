@@ -38,6 +38,12 @@ import com.minimart.pos.ui.viewmodel.ReportsViewModel
 fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
     val state by vm.uiState.collectAsState()
     val period by vm.period.collectAsState()
+    val customRange by vm.customRange.collectAsState()
+    var showRangePicker by remember { mutableStateOf(false) }
+    if (showRangePicker) {
+        DateRangeDialog(onDismiss = { showRangePicker = false },
+            onConfirm = { s, e -> vm.setCustomRange(s, e); showRangePicker = false })
+    }
 
     // Compute payment method split from real sale data
     val paymentTotals = remember(state.sales) {
@@ -115,10 +121,10 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                                 .clickable(
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }
-                                ) { vm.setPeriod(p) }
+                                ) { if (p == ReportPeriod.CUSTOM) showRangePicker = true else vm.setPeriod(p) }
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
-                            Text(p.label,
+                            Text(if (p == ReportPeriod.CUSTOM) customRange?.let { formatRangeLabel(it.first, it.second) } ?: p.label else p.label,
                                 color = if (sel) Color.White else DT.SubText,
                                 fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
                                 style = MaterialTheme.typography.labelMedium)

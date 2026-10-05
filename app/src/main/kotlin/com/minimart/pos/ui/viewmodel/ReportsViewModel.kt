@@ -17,8 +17,8 @@ import javax.inject.Inject
 
 enum class ReportPeriod(val label: String) {
     TODAY("Today"), WEEK("Week"), MONTH("Month"),
-    /** Was labelled "Custom" but is a fixed rolling 90-day window. */
-    CUSTOM("90 Days")
+    /** User-picked date range (falls back to the last 90 days until one is chosen). */
+    CUSTOM("Custom")
 }
 
 data class ReportsUiState(
@@ -42,12 +42,16 @@ class ReportsViewModel @Inject constructor(
     private val _period = MutableStateFlow(ReportPeriod.TODAY)
     val period: StateFlow<ReportPeriod> = _period.asStateFlow()
 
+    private val _customRange = MutableStateFlow<Pair<Long, Long>?>(null)
+    val customRange: StateFlow<Pair<Long, Long>?> = _customRange.asStateFlow()
+
     val uiState: StateFlow<ReportsUiState> = combine(
         _period,
-        settingsRepo.currency
-    ) { period, currency -> Pair(period, currency) }
-        .flatMapLatest { (period, currency) ->
-            val (start, end) = periodRange(period)
+        settingsRepo.currency,
+        _customRange
+    ) { period, currency, custom -> Triple(period, currency, custom) }
+        .flatMapLatest { (period, currency, custom) ->
+            val (start, end) = periodRange(period, custom)
             combine(
                 // Bug fix: was getSalesByDateRange (all statuses) then .filter{COMPLETED}
                 // in Kotlin — loaded voided/refunded sales into memory unnecessarily.
@@ -73,7 +77,13 @@ class ReportsViewModel @Inject constructor(
 
     fun setPeriod(period: ReportPeriod) { _period.value = period }
 
-    private fun periodRange(period: ReportPeriod): Pair<Long, Long> {
+    fun setCustomRange(startMs: Long, endMs: Long) {
+        _customRange.value = Pair(startMs, endMs)
+        _period.value = ReportPeriod.CUSTOM
+    }
+
+    private fun periodRange(period: ReportPeriod, custom: Pair<Long, Long>?): Pair<Long, Long> {
+        if (period == ReportPeriod.CUSTOM && custom != null) return custom
         val now = System.currentTimeMillis()
         val start = when (period) {
             ReportPeriod.TODAY  -> todayStartMs()

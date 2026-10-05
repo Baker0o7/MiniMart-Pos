@@ -21,7 +21,7 @@ object BackupManager {
 
     private val df = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.getDefault())
 
-    /** Back up the Room DB to Downloads/MiniMartPOS/backups/ */
+    /** Back up the Room DB to the app's external files dir (backups/). */
     suspend fun backup(context: Context): BackupResult = withContext(Dispatchers.IO) {
         try {
             val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
@@ -37,10 +37,10 @@ object BackupManager {
             } catch (_: Exception) { /* continue with backup even if checkpoint fails */ }
 
             val timestamp = df.format(Date())
-            val backupDir = File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                "MiniMartPOS/backups"
-            ).apply { mkdirs() }
+            // App-specific external storage: needs no storage permission (so the app no longer
+            // requests all-files access) and is not world-readable. Use "Share Latest Backup"
+            // to copy a backup off the device — app-specific files are removed on uninstall.
+            val backupDir = backupDir(context).apply { mkdirs() }
 
             val dest = File(backupDir, "minimart_backup_$timestamp.db")
             dbFile.copyTo(dest, overwrite = true)
@@ -51,7 +51,7 @@ object BackupManager {
                 if (extra.exists()) extra.copyTo(File(backupDir, dest.name + suffix), overwrite = true)
             }
 
-            BackupResult.Success(dest, "Backup saved to Downloads/MiniMartPOS/backups/\n${dest.name}")
+            BackupResult.Success(dest, "Backup saved: ${dest.name}\nUse \"Share Latest Backup\" to copy it off this device.")
         } catch (e: Exception) {
             BackupResult.Error("Backup failed: ${e.message}")
         }
@@ -153,16 +153,18 @@ object BackupManager {
         Runtime.getRuntime().exit(0)
     }
 
-    /** List all available backups from Downloads */
-    fun listBackups(): List<File> {
-        val backupDir = File(
+    private fun backupDir(context: Context): File =
+        File(context.getExternalFilesDir(null) ?: context.filesDir, "backups")
+
+    /** List available backups: the app's backup folder plus any older ones left in Downloads. */
+    fun listBackups(context: Context): List<File> {
+        val legacyDir = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
             "MiniMartPOS/backups"
         )
-        return if (backupDir.exists()) {
-            backupDir.listFiles { f -> f.name.endsWith(".db") }
-                ?.sortedByDescending { it.lastModified() } ?: emptyList()
-        } else emptyList()
+        return listOf(backupDir(context), legacyDir)
+            .flatMap { dir -> dir.listFiles { f -> f.name.endsWith(".db") }?.toList() ?: emptyList() }
+            .sortedByDescending { it.lastModified() }
     }
 
     /** Share the backup file via intent (USB OTG, cloud, etc.) */

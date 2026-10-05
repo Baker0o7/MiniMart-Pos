@@ -574,7 +574,7 @@ fun SettingsScreen(
                         // the app (delete product, void sale, remove user) requires an
                         // explicit second confirmation; restore now matches that pattern.
                         var pendingRestoreFile by remember { mutableStateOf<java.io.File?>(null) }
-                        LaunchedEffect(Unit) { backupFiles = com.minimart.pos.util.BackupManager.listBackups() }
+                        LaunchedEffect(Unit) { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context) }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Button(onClick = {
@@ -582,7 +582,7 @@ fun SettingsScreen(
                                 scope.launch {
                                     val r = com.minimart.pos.util.BackupManager.backup(context)
                                     backupStatus = when (r) {
-                                        is com.minimart.pos.util.BackupResult.Success -> { backupFiles = com.minimart.pos.util.BackupManager.listBackups(); r.message }
+                                        is com.minimart.pos.util.BackupResult.Success -> { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context); r.message }
                                         is com.minimart.pos.util.BackupResult.Error -> r.message
                                     }
                                     isBackingUp = false
@@ -593,7 +593,7 @@ fun SettingsScreen(
                                 else Icon(Icons.Default.Backup, null, tint = Color.White, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp)); Text("Backup", color = Color.White)
                             }
-                            OutlinedButton(onClick = { backupFiles = com.minimart.pos.util.BackupManager.listBackups(); showRestore = true },
+                            OutlinedButton(onClick = { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context); showRestore = true },
                                 modifier = Modifier.weight(1f), shape = RoundedCornerShape(10.dp),
                                 border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) {
                                 Icon(Icons.Default.Restore, null, tint = DT.OnSurface, modifier = Modifier.size(16.dp))

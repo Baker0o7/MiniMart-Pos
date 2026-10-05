@@ -40,6 +40,9 @@ class ExpenseViewModel @Inject constructor(
     private val _period = MutableStateFlow(ReportPeriod.MONTH)
     val period: StateFlow<ReportPeriod> = _period.asStateFlow()
 
+    private val _customRange = MutableStateFlow<Pair<Long, Long>?>(null)
+    val customRange: StateFlow<Pair<Long, Long>?> = _customRange.asStateFlow()
+
     private val _uiState = MutableStateFlow(ProfitLossState())
     val uiState: StateFlow<ProfitLossState> = _uiState.asStateFlow()
 
@@ -50,8 +53,10 @@ class ExpenseViewModel @Inject constructor(
                 .collect { cur -> _uiState.update { it.copy(currency = cur) } }
         }
         viewModelScope.launch {
-            _period.collect { period ->
-                val (start, end) = periodRange(period)
+            // collectLatest: the inner Room flow never completes, so a plain collect {} meant
+            // later period changes were never processed and the tabs appeared to do nothing.
+            combine(_period, _customRange) { p, c -> Pair(p, c) }.collectLatest { (period, custom) ->
+                val (start, end) = periodRange(period, custom)
                 combine(
                     expenseRepo.getExpensesByDateRange(start, end),
                     // Bug fix: was getSalesByDateRange().filter{COMPLETED} — loaded ALL
@@ -83,6 +88,11 @@ class ExpenseViewModel @Inject constructor(
 
     fun setPeriod(p: ReportPeriod) { _period.value = p }
 
+    fun setCustomRange(startMs: Long, endMs: Long) {
+        _customRange.value = Pair(startMs, endMs)
+        _period.value = ReportPeriod.CUSTOM
+    }
+
     fun addExpense(expense: Expense) {
         viewModelScope.launch {
             try {
@@ -107,7 +117,8 @@ class ExpenseViewModel @Inject constructor(
 
     fun clearMessages() { _uiState.update { it.copy(successMessage = null, error = null) } }
 
-    private fun periodRange(period: ReportPeriod): Pair<Long, Long> {
+    private fun periodRange(period: ReportPeriod, custom: Pair<Long, Long>?): Pair<Long, Long> {
+        if (period == ReportPeriod.CUSTOM && custom != null) return custom
         val now = System.currentTimeMillis()
         val start = when (period) {
             ReportPeriod.TODAY  -> todayStartMs()
