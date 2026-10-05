@@ -145,7 +145,7 @@ private fun LowStockCard(
                     trackColor = DT.Border
                 )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Current: ${product.stock} ${product.unit}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                    Text("Current: ${if (product.isWeighed) product.stockLabel else "${product.stock} ${product.unit}"}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                     Text("Threshold: ${product.lowStockThreshold}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                 }
             }

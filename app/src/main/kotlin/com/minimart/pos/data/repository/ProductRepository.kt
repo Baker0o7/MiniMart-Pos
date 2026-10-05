@@ -25,5 +25,7 @@ class ProductRepository @Inject constructor(
     suspend fun softDelete(productId: Long) = productDao.softDeleteProduct(productId)
     suspend fun decrementStock(productId: Long, qty: Int): Int = productDao.decrementStock(productId, qty)
     suspend fun incrementStock(productId: Long, qty: Int) = productDao.incrementStock(productId, qty)
+    suspend fun decrementStockKg(productId: Long, kg: Double): Int = productDao.decrementStockKg(productId, kg)
+    suspend fun incrementStockKg(productId: Long, kg: Double): Int = productDao.incrementStockKg(productId, kg)
     suspend fun getProductCount(): Int = productDao.getProductCount()
 }

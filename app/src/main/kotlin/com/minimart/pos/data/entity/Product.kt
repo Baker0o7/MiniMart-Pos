@@ -31,7 +31,13 @@ data class Product(
     @androidx.room.ColumnInfo(defaultValue = "") val pluCode: String = "",
     @androidx.room.ColumnInfo(defaultValue = "0") val isWeighed: Boolean = false,
     @androidx.room.ColumnInfo(defaultValue = "0.0") val pricePerKg: Double = 0.0,
+    // Exact stock in kilograms for weighed products. [stock] is kept equal to its whole-kg
+    // floor (by the DAO updates) so existing integer-based screens keep working.
+    @androidx.room.ColumnInfo(defaultValue = "0.0") val stockKg: Double = 0.0,
     val isActive: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
-)
+) {
+    /** Human-readable stock: exact kg for weighed products, whole units otherwise. */
+    val stockLabel: String get() = if (isWeighed) String.format("%.2f kg", stockKg) else stock.toString()
+}

@@ -47,11 +47,16 @@ class SaleRepository @Inject constructor(
     ): Long = db.withTransaction {
         val saleId = saleDao.insertSaleWithItems(sale, items)
         items.forEach { item ->
-            val updated = productRepository.decrementStock(item.productId, item.quantity)
-            // Weighed items are not stock-limited by the cart, so only fixed-quantity items
-            // must have had enough stock. Throwing rolls the whole sale back.
-            if (updated == 0 && item.weightKg <= 0.0) {
-                throw IllegalStateException("Not enough stock for ${item.productName}")
+            if (item.weightKg > 0.0) {
+                // Weighed item: deduct the actual kilograms sold (floored at 0 — weighed stock is
+                // never allowed to block a sale, since the scale ticket already exists).
+                productRepository.decrementStockKg(item.productId, item.weightKg)
+            } else {
+                val updated = productRepository.decrementStock(item.productId, item.quantity)
+                // Throwing rolls the whole sale back.
+                if (updated == 0) {
+                    throw IllegalStateException("Not enough stock for ${item.productName}")
+                }
             }
         }
         // Customer credit / purchase stats are part of the same transaction so a failure here
@@ -84,7 +89,8 @@ class SaleRepository @Inject constructor(
         val changed = if (refund) saleDao.refundSale(saleId, reason) else saleDao.voidSale(saleId, reason)
         if (changed == 0) return@withTransaction
         saleWithItems.items.forEach { item ->
-            productRepository.incrementStock(item.productId, item.quantity)
+            if (item.weightKg > 0.0) productRepository.incrementStockKg(item.productId, item.weightKg)
+            else productRepository.incrementStock(item.productId, item.quantity)
         }
         customerRepository.reverseCreditForSale(saleId, reason)
     }

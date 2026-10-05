@@ -86,6 +86,16 @@ class ProductViewModel @Inject constructor(
 
     fun adjustStock(productId: Long, delta: Int) {
         viewModelScope.launch {
+            val product = repo.getById(productId)
+            if (product?.isWeighed == true) {
+                // Weighed products keep exact kg stock; the integer figure is a mirror of it.
+                if (delta > 0) repo.incrementStockKg(productId, delta.toDouble())
+                else if (delta < 0) {
+                    if (product.stockKg < -delta) _uiState.update { it.copy(error = "Cannot remove more than the current stock") }
+                    else repo.decrementStockKg(productId, -delta.toDouble())
+                }
+                return@launch
+            }
             if (delta > 0) repo.incrementStock(productId, delta)
             else if (delta < 0) {
                 if (repo.decrementStock(productId, -delta) == 0)

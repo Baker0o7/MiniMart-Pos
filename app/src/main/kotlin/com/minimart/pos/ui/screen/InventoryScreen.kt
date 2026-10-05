@@ -245,7 +245,7 @@ private fun DarkInventoryRow(
                     modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(DT.TealDim).padding(horizontal = 12.dp, vertical = 5.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(product.stock.toString(), color = stockColor, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        Text(product.stockLabel, color = stockColor, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                         Text("  KES${String.format("%.0f", product.price)}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                     }
                 }
@@ -323,7 +323,7 @@ private fun StockAdjustDialog(product: Product, onDismiss: () -> Unit, onAdjust:
         title = { Text("Adjust Stock", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("${product.name} — Current: ${product.stock}", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                Text("${product.name} — Current: ${product.stockLabel}", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = isAddition, onClick = { isAddition = true }, label = { Text("Add") })
                     FilterChip(selected = !isAddition, onClick = { isAddition = false }, label = { Text("Remove") })

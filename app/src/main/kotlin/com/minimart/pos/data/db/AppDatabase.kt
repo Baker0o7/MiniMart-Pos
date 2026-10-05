@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 @Database(
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -85,7 +85,16 @@ object AppMigrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+    /** v12 → v13: exact kg stock for weighed products. Existing weighed stock figures are
+     * carried over as kilograms (they were previously a meaningless unit count). */
+    val MIGRATION_12_13 = object : androidx.room.migration.Migration(12, 13) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE products ADD COLUMN stockKg REAL NOT NULL DEFAULT 0.0")
+            db.execSQL("UPDATE products SET stockKg = stock WHERE isWeighed = 1")
+        }
+    }
+
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
 }
 
 class AppTypeConverters {

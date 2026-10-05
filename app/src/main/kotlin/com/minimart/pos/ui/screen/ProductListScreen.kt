@@ -203,7 +203,7 @@ private fun DarkProductRow(product: Product, currency: String, onEdit: (Product)
                         Text(" ${product.name.substringAfterLast(" ")}", color = DT.SubText, fontSize = 15.sp)
                     }
                 }
-                Text("${product.stock} stock", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                Text("${product.stockLabel} stock", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
             }
             Text("$currency ${String.format("%.0f", product.price)}", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             Spacer(Modifier.width(10.dp))
@@ -249,7 +249,7 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
     var name       by remember { mutableStateOf(product?.name ?: "") }
     var price      by remember { mutableStateOf(product?.price?.toString() ?: "") }
     var costPrice  by remember { mutableStateOf(product?.costPrice?.toString() ?: "") }
-    var stock      by remember { mutableStateOf(product?.stock?.toString() ?: "") }
+    var stock      by remember { mutableStateOf(product?.let { if (it.isWeighed) it.stockKg.toString().removeSuffix(".0") else it.stock.toString() } ?: "") }
     var category   by remember { mutableStateOf(product?.category ?: "") }
     var unit       by remember { mutableStateOf(product?.unit ?: "pcs") }
     var sku        by remember { mutableStateOf(product?.sku ?: "") }
@@ -320,7 +320,7 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                     DarkField(costPrice, { costPrice = it }, "Cost Price", Modifier.weight(1f), KeyboardType.Decimal, focusRequester = costPriceFocus, nextFocusRequester = stockFocus)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DarkField(stock, { stock = it }, "Stock", Modifier.weight(1f), KeyboardType.Number, focusRequester = stockFocus, nextFocusRequester = unitFocus)
+                    DarkField(stock, { stock = it }, if (isWeighed) "Stock (kg)" else "Stock", Modifier.weight(1f), if (isWeighed) KeyboardType.Decimal else KeyboardType.Number, focusRequester = stockFocus, nextFocusRequester = unitFocus)
                     DarkField(unit, { unit = it }, "Unit", Modifier.weight(1f), focusRequester = unitFocus, nextFocusRequester = categoryFocus)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -360,7 +360,9 @@ fun AddEditProductDialog(product: Product?, onDismiss: () -> Unit, onSave: (Prod
                         name = name.trim(),
                         price = (price.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0),
                         costPrice = (costPrice.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0),
-                        stock = (stock.toIntOrNull() ?: 0).coerceAtLeast(0),
+                        stock = if (isWeighed) (stock.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0).toInt()
+                                else (stock.toIntOrNull() ?: 0).coerceAtLeast(0),
+                        stockKg = if (isWeighed) (stock.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0) else 0.0,
                         category = category.ifBlank { "General" }, unit = unit.ifBlank { "pcs" },
                         supplierName = supplierName.trim(), supplierPhone = supplierPhone.trim(),
                         reorderQuantity = (reorderQty.toIntOrNull() ?: 0).coerceAtLeast(0),

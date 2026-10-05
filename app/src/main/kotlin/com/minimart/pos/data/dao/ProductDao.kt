@@ -64,6 +64,14 @@ interface ProductDao {
     @Query("UPDATE products SET stock = stock + :quantity, updatedAt = :now WHERE id = :productId")
     suspend fun incrementStock(productId: Long, quantity: Int, now: Long = System.currentTimeMillis())
 
+    /** Weighed products: take [kg] off exact stock (never below 0) and keep the integer
+     *  [stock] mirror in sync. SQLite evaluates every right-hand side against the old row. */
+    @Query("UPDATE products SET stockKg = MAX(stockKg - :kg, 0.0), stock = CAST(MAX(stockKg - :kg, 0.0) AS INTEGER), updatedAt = :now WHERE id = :productId")
+    suspend fun decrementStockKg(productId: Long, kg: Double, now: Long = System.currentTimeMillis()): Int
+
+    @Query("UPDATE products SET stockKg = stockKg + :kg, stock = CAST(stockKg + :kg AS INTEGER), updatedAt = :now WHERE id = :productId")
+    suspend fun incrementStockKg(productId: Long, kg: Double, now: Long = System.currentTimeMillis()): Int
+
     @Query("UPDATE products SET isActive = 0, updatedAt = :now WHERE id = :productId")
     suspend fun softDeleteProduct(productId: Long, now: Long = System.currentTimeMillis())
 }

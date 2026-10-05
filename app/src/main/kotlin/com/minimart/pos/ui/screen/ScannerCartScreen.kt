@@ -174,7 +174,7 @@ fun ScannerCartScreen(
                                 Column(Modifier.weight(1f)) {
                                     Text(product.name, color = DT.OnSurface, fontWeight = FontWeight.SemiBold,
                                         style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    Text("$currency ${String.format("%.2f", product.price)}  •  ${product.stock} in stock",
+                                    Text("$currency ${String.format("%.2f", product.price)}  •  ${product.stockLabel} in stock",
                                         color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                                 }
                                 Icon(Icons.Default.Add, null, tint = DT.Teal, modifier = Modifier.size(20.dp))
