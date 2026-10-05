@@ -207,6 +207,7 @@ logic — no emulator needed:
 |---|---|
 | `MoneyTest` | Cent-exact arithmetic, the classic `0.1 + 0.2 != 0.3` Double failure case, rounding, clamping |
 | `CartUiStateTest` | Checkout subtotal/discount/total math, the discount-floor regression, weighed-item pricing |
+| `CartDiscountTest` | Discount capping: oversized/stale/negative global and line discounts never give goods away |
 | `PluDecoderTest` | Weighing-scale barcode decode/reject cases, price calculation |
 
 ---
@@ -230,7 +231,9 @@ logic — no emulator needed:
 | Printing | Bluetooth ESC/POS |
 | Navigation | Navigation Compose |
 | State | `SavedStateHandle` for process-death recovery |
-| Testing | JUnit4 (local unit tests) |
+| Paging | Paging 3 (Sales History loads 30 rows at a time, totals computed in SQL) |
+| Architecture layers | ViewModel → use case (`domain/usecase`) → repository → DAO |
+| Testing | JUnit4 (local unit tests) · GitHub Actions runs them on every push/PR and gates releases |
 
 ---
 
@@ -253,8 +256,11 @@ cd MiniMart-Pos
 
 ## 📁 Project Structure
 
+Gradle modules: **`:app`** (UI, DI wiring, sync, printer, M-Pesa) · **`:data`** (Room database,
+DAOs, entities, repositories) · **`:core`** (Money, PluDecoder, PinHasher, UiResult).
+
 ```
-app/src/main/kotlin/com/minimart/pos/
+data/src/main/kotlin/com/minimart/pos/                 ← :data module
 ├── data/
 │   ├── dao/          ProductDao · SaleDao · UserDao · ExpenseDao
 │   │                 ShiftDao · CustomerDao · SyncDao
@@ -263,7 +269,14 @@ app/src/main/kotlin/com/minimart/pos/
 │   ├── entity/       Product · Sale · SaleItem · User · Expense
 │   │                 Shift · Customer · CreditTransaction · SyncLog
 │   └── repository/   (one per entity + SettingsRepository)
-├── di/               DatabaseModule (incl. @SecurePrefs qualifier)
+
+core/src/main/kotlin/com/minimart/pos/                 ← :core module
+├── util/             Money · PluDecoder · PinHasher · UiResult
+└── di/               SecurePrefs qualifier
+
+app/src/main/kotlin/com/minimart/pos/                  ← :app module
+├── di/               DatabaseModule
+├── domain/usecase/   CompleteSaleUseCase · RefundSaleUseCase · VoidSaleUseCase
 ├── printer/          ThermalPrinter · CashDrawerManager
 ├── scanner/          MLKitScanner · KeyboardScanner · BluetoothScannerManager
 ├── sync/             SyncServer · SyncClient
@@ -272,9 +285,8 @@ app/src/main/kotlin/com/minimart/pos/
 │   ├── viewmodel/    Per-screen ViewModels + SessionViewModel · SyncViewModel
 │   ├── theme/        DT color tokens
 │   └── NavGraph.kt   Routes + BottomNavBar (cart badge) + AccessGuard
-├── util/             Money · BackupManager · PdfReceiptGenerator · PinHasher
-│                     RoleManager · SessionManager · AuditLogger · PluDecoder
-│                     UiResult
+├── util/             BackupManager · PdfReceiptGenerator · RoleManager
+│                     SessionManager · AuditLogger · Extensions
 └── worker/           LowStockWorker · ExpiryAlertWorker
 
 app/src/test/kotlin/com/minimart/pos/
