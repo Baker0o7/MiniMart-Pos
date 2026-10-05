@@ -168,8 +168,9 @@ class ThermalPrinter @Inject constructor(
             // ── Payment ──
             write(EscPos.ALIGN_LEFT)
             write(EscPos.text(padLR("Payment:", sale.paymentMethod.name)), EscPos.NEWLINE)
-            if (sale.paymentMethod == PaymentMethod.MPESA && sale.mpesaRef != null) {
-                write(EscPos.text(padLR("M-Pesa Ref:", sale.mpesaRef)), EscPos.NEWLINE)
+            val mpesaRef = sale.mpesaRef   // local copy: smart cast isn't allowed on a property from another module
+            if (sale.paymentMethod == PaymentMethod.MPESA && mpesaRef != null) {
+                write(EscPos.text(padLR("M-Pesa Ref:", mpesaRef)), EscPos.NEWLINE)
             }
             if (sale.paymentMethod == PaymentMethod.CASH) {
                 write(EscPos.text(padLR("Cash Paid:", formatMoney(sale.amountPaid, currency))), EscPos.NEWLINE)
