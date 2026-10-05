@@ -34,6 +34,9 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x gradlew
 
+      - name: Run unit tests (gate the release)
+        run: gradle testDebugUnitTest --no-daemon
+
       - name: Generate keystore
         run: |
           keytool -genkey -v \
