@@ -19,6 +19,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -86,80 +89,106 @@ fun LoginScreen(
     }
     LaunchedEffect(state.biometricEnabled) { if (state.biometricEnabled) launchBiometric() }
 
+
+    // Emerald "glass" palette for this screen
+    val bgTop   = Color(0xFF04201A)
+    val bgMid   = Color(0xFF031612)
+    val bgBot   = Color(0xFF020E0B)
+    val emerald = Color(0xFF1DE9A6)
+    val emDeep  = Color(0xFF0A7F63)
+    val glassHi = Color(0xFF0F4338)
+    val glassLo = Color(0xFF0A2E27)
+    val glassBd = Color(0xFF1E7A63)
+
     Box(modifier = Modifier.fillMaxSize()
-        .background(Brush.verticalGradient(listOf(Color(0xFF061510), Color(0xFF030A07), Color(0xFF020805))))) {
+        .background(Brush.verticalGradient(listOf(bgTop, bgMid, bgBot)))) {
 
-        // Background glow
-        Box(modifier = Modifier.size(300.dp).offset(x = (-50).dp, y = (-50).dp)
-            .clip(CircleShape).background(DT.Teal.copy(0.04f)).align(Alignment.TopStart))
-        Box(modifier = Modifier.size(200.dp).offset(x = 50.dp, y = 80.dp)
-            .clip(CircleShape).background(DT.Teal.copy(0.03f)).align(Alignment.BottomEnd))
+        // Decorative arcs: top-left and bottom
+        Box(modifier = Modifier.size(280.dp).offset(x = (-150).dp, y = (-170).dp)
+            .clip(CircleShape).background(emerald.copy(0.05f))
+            .border(1.5.dp, emerald.copy(0.35f), CircleShape).align(Alignment.TopStart))
+        Box(modifier = Modifier.size(520.dp).offset(x = (-60).dp, y = 380.dp)
+            .clip(CircleShape).background(emerald.copy(0.04f))
+            .border(1.5.dp, emerald.copy(0.25f), CircleShape).align(Alignment.BottomStart))
 
-        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 28.dp),
+        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 22.dp, vertical = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
 
-            // Logo area
-            Box(modifier = Modifier.size(90.dp).clip(RoundedCornerShape(26.dp))
-                .background(Brush.linearGradient(listOf(DT.Teal, Color(0xFF004D40)))),
+            // Logo tile with glow
+            Box(modifier = Modifier.size(92.dp)
+                .shadow(24.dp, RoundedCornerShape(28.dp), ambientColor = emerald, spotColor = emerald)
+                .clip(RoundedCornerShape(28.dp))
+                .background(Brush.linearGradient(listOf(Color(0xFF16C79A), Color(0xFF07654F))))
+                .border(1.5.dp, emerald.copy(0.6f), RoundedCornerShape(28.dp)),
                 contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.ShoppingCart, null, tint = Color.White, modifier = Modifier.size(46.dp))
+                Icon(Icons.Default.ShoppingCart, null, tint = Color.White, modifier = Modifier.size(48.dp))
             }
-            Spacer(Modifier.height(20.dp))
-            Text("MiniMart POS", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
-            Text("Point of Sale System", color = DT.SubText, fontSize = 14.sp, letterSpacing = 0.5.sp)
-            Spacer(Modifier.height(36.dp))
+            Spacer(Modifier.height(18.dp))
+            Row {
+                Text("MiniMart ", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 34.sp)
+                Text("POS", color = emerald, fontWeight = FontWeight.ExtraBold, fontSize = 34.sp)
+            }
+            Text("Point of Sale System", color = Color.White.copy(0.9f), fontSize = 16.sp)
+            Spacer(Modifier.height(8.dp))
+            Box(Modifier.width(44.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(emerald))
+            Spacer(Modifier.height(22.dp))
 
             // Login card
             Box(modifier = Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(Brush.verticalGradient(listOf(Color(0xFF0D2420), Color(0xFF091A16))))
-                .border(1.dp, DT.Teal.copy(0.2f), RoundedCornerShape(24.dp))
-                .padding(24.dp)) {
+                .clip(RoundedCornerShape(26.dp))
+                .background(Brush.verticalGradient(listOf(Color(0xFF0B3B31), Color(0xFF082A24))))
+                .border(1.2.dp, emerald.copy(0.45f), RoundedCornerShape(26.dp))
+                .padding(horizontal = 18.dp, vertical = 20.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
                     Text("Welcome Back 👋", color = Color.White,
-                        fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
 
-                    // Username
-                    OutlinedTextField(value = username, onValueChange = { username = it },
-                        label = { Text("Username", color = DT.SubText) },
-                        leadingIcon = { Icon(Icons.Default.Person, null, tint = DT.SubText) },
-                        singleLine = true, modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                            focusedTextColor = Color.White, unfocusedTextColor = Color.White,
-                            cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
+                    // Username (pill)
+                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Username", color = emerald, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(start = 6.dp))
+                        OutlinedTextField(value = username, onValueChange = { username = it },
+                            leadingIcon = { Icon(Icons.Default.Person, null, tint = emerald) },
+                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(50),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = emerald, unfocusedBorderColor = glassBd,
+                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                cursorColor = emerald,
+                                focusedContainerColor = Color(0xFF051C17), unfocusedContainerColor = Color(0xFF051C17)))
+                    }
 
-                    // PIN label + dots
-                    Column(horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // PIN label + boxes
+                    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically) {
-                            Text("PIN", color = DT.SubText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text("PIN", color = Color.White.copy(0.85f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(start = 6.dp))
                             TextButton(onClick = { showPin = !showPin },
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
                                 Icon(if (showPin) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    null, tint = DT.SubText, modifier = Modifier.size(16.dp))
+                                    null, tint = emerald, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text(if (showPin) "Hide" else "Show", color = DT.SubText, fontSize = 12.sp)
+                                Text(if (showPin) "Hide" else "Show", color = emerald, fontSize = 13.sp)
                             }
                         }
-                        // PIN dots
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             repeat(6) { i ->
                                 val filled = i < pin.length
-                                Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(12.dp))
-                                    .background(if (filled) DT.Teal.copy(0.2f) else DT.Surface)
-                                    .border(1.5.dp, if (filled) DT.Teal else DT.Border, RoundedCornerShape(12.dp)),
+                                Box(modifier = Modifier.weight(1f).aspectRatio(0.95f).clip(RoundedCornerShape(14.dp))
+                                    .background(if (filled) emerald.copy(0.18f) else Color(0xFF082923))
+                                    .border(1.5.dp, if (filled) emerald else glassBd, RoundedCornerShape(14.dp)),
                                     contentAlignment = Alignment.Center) {
                                     if (showPin && filled) {
-                                        Text(pin[i].toString(), color = DT.Teal,
-                                            fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                                        Text(pin[i].toString(), color = emerald,
+                                            fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
                                     } else if (filled) {
-                                        Box(Modifier.size(10.dp).clip(CircleShape).background(DT.Teal))
+                                        Box(Modifier.size(11.dp).clip(CircleShape).background(emerald))
                                     }
                                 }
                             }
@@ -197,45 +226,40 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(18.dp))
 
-            // Numeric keypad
+            // Numeric keypad — glass keys, bright ✓ and red ⌫
             val keys = listOf("1","2","3","4","5","6","7","8","9","✓","0","⌫")
-            Box(modifier = Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFF0D1F1C).copy(0.6f))
-                .border(1.dp, DT.Border.copy(0.5f), RoundedCornerShape(20.dp))
-                .padding(16.dp)) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    keys.chunked(3).forEach { row ->
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            row.forEach { key ->
-                                Box(modifier = Modifier.weight(1f).aspectRatio(1.6f)
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(when (key) {
-                                        "✓"  -> DT.Green.copy(0.2f)
-                                        "⌫" -> DT.Red.copy(0.12f)
-                                        else -> DT.Surface
-                                    })
-                                    .border(if (key.isEmpty()) 0.dp else 1.dp,
-                                        when (key) {
-                                            "✓"  -> DT.Green.copy(0.5f)
-                                            "⌫" -> DT.Red.copy(0.3f)
-                                            else -> DT.Border
-                                        }, RoundedCornerShape(14.dp))
-                                    .clickable(enabled = key.isNotEmpty() && !lockedOut,
-                                        indication = null, interactionSource = remember { MutableInteractionSource() }) {
-                                        when (key) {
-                                            "⌫" -> { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
-                                            "✓" -> { if (pin.isNotEmpty()) { vm.login(username, pin); pin = "" } }
-                                            else -> { if (pin.length < 6) pin += key }
-                                        }
-                                    }, contentAlignment = Alignment.Center) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                keys.chunked(3).forEach { row ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        row.forEach { key ->
+                            val keyBrush = when (key) {
+                                "✓"  -> Brush.verticalGradient(listOf(Color(0xFF2BE08A), Color(0xFF0E8A4E)))
+                                "⌫" -> Brush.verticalGradient(listOf(Color(0xFF5A1414), Color(0xFF330A0A)))
+                                else -> Brush.verticalGradient(listOf(glassHi, glassLo))
+                            }
+                            val keyBorder = when (key) {
+                                "✓"  -> Color(0xFF6BF5B0)
+                                "⌫" -> Color(0xFFE5484D)
+                                else -> glassBd
+                            }
+                            Box(modifier = Modifier.weight(1f).aspectRatio(1.75f)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(keyBrush)
+                                .border(1.2.dp, keyBorder.copy(0.8f), RoundedCornerShape(18.dp))
+                                .clickable(enabled = !lockedOut,
+                                    indication = null, interactionSource = remember { MutableInteractionSource() }) {
                                     when (key) {
-                                        "⌫" -> Icon(Icons.AutoMirrored.Filled.Backspace, null, tint = DT.Red, modifier = Modifier.size(20.dp))
-                                        "✓" -> Icon(Icons.Default.Check, null, tint = DT.Green, modifier = Modifier.size(24.dp))
-                                        else -> if (key.isNotEmpty()) Text(key, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, textAlign = TextAlign.Center)
+                                        "⌫" -> { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
+                                        "✓" -> { if (pin.isNotEmpty()) { vm.login(username, pin); pin = "" } }
+                                        else -> { if (pin.length < 6) pin += key }
                                     }
+                                }, contentAlignment = Alignment.Center) {
+                                when (key) {
+                                    "⌫" -> Icon(Icons.AutoMirrored.Filled.Backspace, null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(28.dp))
+                                    "✓" -> Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(34.dp))
+                                    else -> Text(key, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 30.sp, textAlign = TextAlign.Center)
                                 }
                             }
                         }
@@ -243,25 +267,25 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(14.dp))
 
             // Biometric + loading row
             Row(horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically) {
                 if (state.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = DT.Teal, strokeWidth = 2.dp)
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), color = emerald, strokeWidth = 2.dp)
                     Spacer(Modifier.width(10.dp))
-                    Text("Signing in…", color = DT.SubText, fontSize = 13.sp)
-                } else {
+                    Text("Signing in…", color = Color.White.copy(0.7f), fontSize = 13.sp)
+                } else if (state.biometricEnabled) {
                     Box(modifier = Modifier.size(48.dp).clip(CircleShape)
-                        .background(DT.Surface)
-                        .border(1.dp, DT.Border, CircleShape)
+                        .background(glassLo)
+                        .border(1.dp, glassBd, CircleShape)
                         .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { launchBiometric() },
                         contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Fingerprint, null, tint = DT.Teal, modifier = Modifier.size(26.dp))
+                        Icon(Icons.Default.Fingerprint, null, tint = emerald, modifier = Modifier.size(26.dp))
                     }
                     Spacer(Modifier.width(12.dp))
-                    Text("Use biometric", color = DT.SubText, fontSize = 13.sp)
+                    Text("Use biometric", color = Color.White.copy(0.7f), fontSize = 13.sp)
                 }
             }
         }
