@@ -184,7 +184,8 @@ fun MiniMartNavGraph(
                         storeName     = storeName,
                         currency      = currency,
                         footerMessage = footer,
-                        cashierName   = authState.currentUser?.displayName ?: "Cashier"
+                        cashierName   = authState.currentUser?.displayName ?: "Cashier",
+                        canManageSales = RoleManager.canVoidSales(authState.currentUser?.role)
                     )
                 }
 

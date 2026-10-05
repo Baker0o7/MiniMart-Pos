@@ -52,6 +52,7 @@ fun ReceiptScreen(
     currency: String,
     footerMessage: String,
     cashierName: String,
+    canManageSales: Boolean = false,
     vm: ReceiptViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -284,7 +285,7 @@ fun ReceiptScreen(
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                                 statusMsg = "✓ PDF: ${file.name}"
                             } catch (e: Exception) { statusMsg = "PDF error: ${e.message}" }
-                            isGeneratingPdf = false
+                            finally { isGeneratingPdf = false }
                         }
                     }
 
@@ -325,7 +326,7 @@ fun ReceiptScreen(
                 }
 
                 // ── Refund / Void (only for completed sales) ──────────────────
-                if (sale?.status == SaleStatus.COMPLETED) {
+                if (canManageSales && sale?.status == SaleStatus.COMPLETED) {
                     HorizontalDivider(color = DT.Border)
                     Text("Manage Sale", color = DT.OnSurface, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.fillMaxWidth())
