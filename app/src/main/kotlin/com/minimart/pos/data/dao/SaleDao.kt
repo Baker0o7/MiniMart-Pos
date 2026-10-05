@@ -48,12 +48,12 @@ interface SaleDao {
         SELECT si.productId, si.productName, SUM(si.quantity) as totalQty, SUM(si.lineTotal) as totalRevenue
         FROM sale_items si 
         INNER JOIN sales s ON si.saleId = s.id
-        WHERE s.createdAt >= :startMs AND s.status = 'COMPLETED'
+        WHERE s.createdAt >= :startMs AND s.createdAt <= :endMs AND s.status = 'COMPLETED'
         GROUP BY si.productId
         ORDER BY totalQty DESC
         LIMIT :limit
     """)
-    fun getTopSellingProducts(startMs: Long, limit: Int = 10): Flow<List<TopSellerResult>>
+    fun getTopSellingProducts(startMs: Long, endMs: Long = Long.MAX_VALUE, limit: Int = 10): Flow<List<TopSellerResult>>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSale(sale: Sale): Long

@@ -57,7 +57,7 @@ class ReportsViewModel @Inject constructor(
                 // in Kotlin — loaded voided/refunded sales into memory unnecessarily.
                 // getCompletedSalesByDateRange filters in SQL, only useful rows fetched.
                 saleRepo.getCompletedSalesByDateRange(start, end),
-                saleRepo.getTopSellers(start)
+                saleRepo.getTopSellers(start, end)
             ) { completed, topSellers ->
                 val totalRevenue = completed.sumOf { it.totalAmount }
                 ReportsUiState(
