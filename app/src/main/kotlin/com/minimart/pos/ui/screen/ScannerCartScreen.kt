@@ -61,6 +61,20 @@ fun ScannerCartScreen(
     searchVm: ProductSearchViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsState()
+    var showClearConfirm by remember { mutableStateOf(false) }
+    if (showClearConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirm = false },
+            containerColor = DT.Surface,
+            title = { Text("Clear the cart?", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text("All ${state.items.size} item(s) will be removed.", color = DT.SubText) },
+            confirmButton = {
+                Button(onClick = { showClearConfirm = false; vm.clearCart() },
+                    colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)) { Text("Clear") }
+            },
+            dismissButton = { TextButton(onClick = { showClearConfirm = false }) { Text("Keep items", color = DT.SubText) } }
+        )
+    }
     val currency by vm.currency.collectAsState()
     val context = LocalContext.current
     val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
@@ -122,7 +136,7 @@ fun ScannerCartScreen(
                                 enabled = state.items.isNotEmpty(),
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
-                            ) { vm.clearCart() },
+                            ) { showClearConfirm = true },
                             contentAlignment = Alignment.Center) {
                             if (state.items.isNotEmpty())
                                 Icon(Icons.Default.Delete, null,

@@ -45,6 +45,7 @@ fun LoginScreen(
 ) {
     val state   = vm.uiState.collectAsState().value
     val context = LocalContext.current
+    val haptic  = androidx.compose.ui.platform.LocalHapticFeedback.current
 
     var username       by remember { mutableStateOf("admin") }
     var pin            by remember { mutableStateOf("") }
@@ -250,6 +251,7 @@ fun LoginScreen(
                                 .border(1.2.dp, keyBorder.copy(0.8f), RoundedCornerShape(18.dp))
                                 .clickable(enabled = !lockedOut,
                                     indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                                     when (key) {
                                         "⌫" -> { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
                                         "✓" -> { if (pin.isNotEmpty()) { vm.login(username, pin); pin = "" } }

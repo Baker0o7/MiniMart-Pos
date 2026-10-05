@@ -239,6 +239,20 @@ private fun CustomerDetailSheet(
     onDismiss: () -> Unit, onAddCredit: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit
 ) {
     val df = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            containerColor = DT.Surface,
+            title = { Text("Delete ${customer.name}?", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = { Text("This also deletes their credit history. This cannot be undone.", color = DT.SubText) },
+            confirmButton = {
+                Button(onClick = { showDeleteConfirm = false; onDelete() },
+                    colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)) { Text("Delete") }
+            },
+            dismissButton = { TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel", color = DT.SubText) } }
+        )
+    }
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = DT.Surface,
         dragHandle = { Box(Modifier.padding(vertical = 10.dp).size(36.dp, 4.dp)
             .clip(RoundedCornerShape(2.dp)).background(DT.Border)) }) {
@@ -261,7 +275,7 @@ private fun CustomerDetailSheet(
                         if (customer.email.isNotBlank()) Text(customer.email, color = DT.SubText, fontSize = 12.sp)
                     }
                     IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, null, tint = DT.Teal) }
-                    IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, null, tint = DT.Red) }
+                    IconButton(onClick = { showDeleteConfirm = true }) { Icon(Icons.Default.Delete, "Delete customer", tint = DT.Red) }
                 }
             }
             // Stats row
