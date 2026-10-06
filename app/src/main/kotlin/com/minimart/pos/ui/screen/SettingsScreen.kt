@@ -574,20 +574,62 @@ fun SettingsScreen(
                         // the app (delete product, void sale, remove user) requires an
                         // explicit second confirmation; restore now matches that pattern.
                         var pendingRestoreFile by remember { mutableStateOf<java.io.File?>(null) }
+                        var showBackupDialog by remember { mutableStateOf(false) }
+
+                        // Optional passphrase: an encrypted (.mmbak) backup is unreadable without it,
+                        // so it is safe to share or store in the cloud, and restores on any phone.
+                        if (showBackupDialog) {
+                            var pass by remember { mutableStateOf("") }
+                            var pass2 by remember { mutableStateOf("") }
+                            val passError = when {
+                                pass.isNotEmpty() && pass.length < 6 -> "Use at least 6 characters"
+                                pass != pass2 -> "Passphrases do not match"
+                                else -> null
+                            }
+                            AlertDialog(
+                                onDismissRequest = { showBackupDialog = false },
+                                containerColor = DT.Surface,
+                                title = { Text("Create Backup", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+                                text = {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Text("Add a passphrase to encrypt the backup (recommended if you share or upload it). " +
+                                            "Leave blank for an unencrypted backup. An encrypted backup cannot be opened without its passphrase.",
+                                            color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                                        OutlinedTextField(pass, { pass = it }, label = { Text("Passphrase (optional)") }, singleLine = true,
+                                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                            colors = dColors(), modifier = Modifier.fillMaxWidth())
+                                        if (pass.isNotEmpty()) OutlinedTextField(pass2, { pass2 = it }, label = { Text("Repeat passphrase") }, singleLine = true,
+                                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                            colors = dColors(), modifier = Modifier.fillMaxWidth())
+                                        if (pass.isNotEmpty()) passError?.let { Text(it, color = DT.Red, style = MaterialTheme.typography.labelSmall) }
+                                    }
+                                },
+                                confirmButton = {
+                                    Button(
+                                        enabled = pass.isEmpty() || passError == null,
+                                        onClick = {
+                                            val chosen = pass.ifEmpty { null }
+                                            showBackupDialog = false
+                                            isBackingUp = true
+                                            scope.launch {
+                                                val r = com.minimart.pos.util.BackupManager.backup(context, chosen)
+                                                backupStatus = when (r) {
+                                                    is com.minimart.pos.util.BackupResult.Success -> { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context); r.message }
+                                                    is com.minimart.pos.util.BackupResult.Error -> r.message
+                                                }
+                                                isBackingUp = false
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
+                                    ) { Text("Back up", color = Color.White) }
+                                },
+                                dismissButton = { TextButton(onClick = { showBackupDialog = false }) { Text("Cancel", color = DT.SubText) } }
+                            )
+                        }
                         LaunchedEffect(Unit) { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context) }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Button(onClick = {
-                                isBackingUp = true
-                                scope.launch {
-                                    val r = com.minimart.pos.util.BackupManager.backup(context)
-                                    backupStatus = when (r) {
-                                        is com.minimart.pos.util.BackupResult.Success -> { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context); r.message }
-                                        is com.minimart.pos.util.BackupResult.Error -> r.message
-                                    }
-                                    isBackingUp = false
-                                }
-                            }, modifier = Modifier.weight(1f), enabled = !isBackingUp,
+                            Button(onClick = { showBackupDialog = true }, modifier = Modifier.weight(1f), enabled = !isBackingUp,
                                 shape = RoundedCornerShape(10.dp), colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
                                 if (isBackingUp) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                                 else Icon(Icons.Default.Backup, null, tint = Color.White, modifier = Modifier.size(16.dp))
@@ -636,17 +678,28 @@ fun SettingsScreen(
                         // Explicit "are you sure" step before any restore actually runs —
                         // restoring overwrites the ENTIRE current database irreversibly.
                         pendingRestoreFile?.let { f ->
+                            val encrypted = f.name.endsWith(".mmbak")
+                            var restorePass by remember(f) { mutableStateOf("") }
                             AlertDialog(
                                 onDismissRequest = { pendingRestoreFile = null },
                                 containerColor = DT.Surface,
                                 title = { Text("Restore This Backup?", color = Color.White, fontWeight = FontWeight.Bold) },
-                                text = { Text("\"${f.name}\" will replace ALL current data — every sale, product, and customer added since this backup was made will be lost. This cannot be undone. The app will restart.", color = DT.SubText) },
+                                text = {
+                                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        Text("\"${f.name}\" will replace ALL current data — every sale, product, and customer added since this backup was made will be lost. This cannot be undone. The app will restart.", color = DT.SubText)
+                                        if (encrypted) OutlinedTextField(restorePass, { restorePass = it }, label = { Text("Backup passphrase") }, singleLine = true,
+                                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                            colors = dColors(), modifier = Modifier.fillMaxWidth())
+                                    }
+                                },
                                 confirmButton = {
                                     Button(
+                                        enabled = !encrypted || restorePass.isNotEmpty(),
                                         onClick = {
+                                            val pw = restorePass.ifEmpty { null }
                                             pendingRestoreFile = null
                                             scope.launch {
-                                                val r = com.minimart.pos.util.BackupManager.restore(context, f)
+                                                val r = com.minimart.pos.util.BackupManager.restore(context, f, pw)
                                                 backupStatus = when (r) {
                                                     is com.minimart.pos.util.BackupResult.Success -> r.message
                                                     is com.minimart.pos.util.BackupResult.Error -> r.message

@@ -172,6 +172,9 @@ Owner account (permanent lockout protection).
   no all-files permission required. Use **Share Latest Backup** to copy it off the
   device (app storage is cleared on uninstall). Older backups in
   `Downloads/MiniMartPOS/backups/` still appear in the restore list
+- **Optional passphrase encryption** — set a passphrase when backing up and the file is saved as an
+  encrypted `.mmbak` (AES-256-GCM, PBKDF2 key), unreadable without it, so it's safe to share or upload;
+  it restores on any phone. Wrong passphrases and tampered files are rejected. (A lost passphrase can't be recovered.)
 - Restores are validated first (SQLite header, schema version) and a safety copy of the
   current data is kept
 - **Restore requires explicit two-step confirmation** — selecting a backup

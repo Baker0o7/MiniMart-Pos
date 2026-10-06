@@ -22,7 +22,7 @@ object BackupManager {
     private val df = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.getDefault())
 
     /** Back up the Room DB to the app's external files dir (backups/). */
-    suspend fun backup(context: Context): BackupResult = withContext(Dispatchers.IO) {
+    suspend fun backup(context: Context, passphrase: String? = null): BackupResult = withContext(Dispatchers.IO) {
         try {
             val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
             if (!dbFile.exists()) return@withContext BackupResult.Error("Database file not found")
@@ -41,6 +41,16 @@ object BackupManager {
             // requests all-files access) and is not world-readable. Use "Share Latest Backup"
             // to copy a backup off the device — app-specific files are removed on uninstall.
             val backupDir = backupDir(context).apply { mkdirs() }
+
+            // Optional passphrase: the backup is written as an encrypted .mmbak file (portable to
+            // any device, unreadable without the passphrase). The -wal/-shm copies are skipped for
+            // encrypted backups — the checkpoint above already flushed everything into the main
+            // file, and the companions would otherwise sit next to it in plaintext.
+            if (!passphrase.isNullOrEmpty()) {
+                val enc = File(backupDir, "minimart_backup_$timestamp.mmbak")
+                dbFile.inputStream().use { ins -> enc.outputStream().use { outs -> BackupCrypto.encrypt(ins, outs, passphrase) } }
+                return@withContext BackupResult.Success(enc, "Encrypted backup saved: ${enc.name}\nKeep the passphrase — it cannot be recovered.")
+            }
 
             val dest = File(backupDir, "minimart_backup_$timestamp.db")
             dbFile.copyTo(dest, overwrite = true)
@@ -77,15 +87,34 @@ object BackupManager {
      * a database file that just got swapped out from under it. See restartApp() below,
      * which the UI now calls immediately after a successful restore.
      */
-    suspend fun restore(context: Context, backupFile: File): BackupResult = withContext(Dispatchers.IO) {
+    suspend fun restore(context: Context, backupFile: File, passphrase: String? = null): BackupResult = withContext(Dispatchers.IO) {
+        if (!backupFile.exists()) return@withContext BackupResult.Error("Backup file not found")
+        if (!BackupCrypto.isEncrypted(backupFile)) return@withContext restorePlain(context, backupFile)
+        if (passphrase.isNullOrEmpty()) return@withContext BackupResult.Error("This backup is encrypted — enter its passphrase")
+        val tmp = File(context.cacheDir, "restore_tmp.db")
         try {
-            if (!backupFile.exists()) return@withContext BackupResult.Error("Backup file not found")
+            try {
+                backupFile.inputStream().use { ins -> tmp.outputStream().use { outs -> BackupCrypto.decrypt(ins, outs, passphrase) } }
+            } catch (_: BackupCrypto.WrongPassphraseException) {
+                return@withContext BackupResult.Error("Wrong passphrase, or the backup is damaged")
+            }
+            restorePlain(context, tmp)
+        } catch (e: Exception) {
+            BackupResult.Error("Restore failed: ${e.message}")
+        } finally {
+            tmp.delete()
+        }
+    }
+
+    private fun restorePlain(context: Context, backupFile: File): BackupResult {
+        return try {
+            if (!backupFile.exists()) return BackupResult.Error("Backup file not found")
 
             val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
 
             // Refuse files that are not SQLite databases or come from a newer app version:
             // Room's destructive-migration fallback would otherwise WIPE the data on next launch.
-            validateBackup(dbFile, backupFile)?.let { return@withContext BackupResult.Error(it) }
+            validateBackup(dbFile, backupFile)?.let { return BackupResult.Error(it) }
 
             // Keep a safety copy of the current database so a bad restore can be undone.
             try {
@@ -163,7 +192,7 @@ object BackupManager {
             "MiniMartPOS/backups"
         )
         return listOf(backupDir(context), legacyDir)
-            .flatMap { dir -> dir.listFiles { f -> f.name.endsWith(".db") }?.toList() ?: emptyList() }
+            .flatMap { dir -> dir.listFiles { f -> f.name.endsWith(".db") || f.name.endsWith(".mmbak") }?.toList() ?: emptyList() }
             .sortedByDescending { it.lastModified() }
     }
 
