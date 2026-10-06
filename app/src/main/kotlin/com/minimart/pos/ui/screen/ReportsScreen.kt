@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
@@ -40,6 +41,9 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
     val period by vm.period.collectAsState()
     val customRange by vm.customRange.collectAsState()
     var showRangePicker by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val shareScope = rememberCoroutineScope()
+    var isSharing by remember { mutableStateOf(false) }
     if (showRangePicker) {
         DateRangeDialog(onDismiss = { showRangePicker = false },
             onConfirm = { s, e -> vm.setCustomRange(s, e); showRangePicker = false })
@@ -103,8 +107,32 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         Text("Reports", color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
                         Text("Analytics overview", color = DT.SubText, fontSize = 12.sp)
                     }
-                    Icon(Icons.Default.BarChart, null, tint = DT.SubText, modifier = Modifier.size(22.dp))
-                    Spacer(Modifier.width(12.dp))
+                    // Share the business report as a PDF — straight to WhatsApp (EOD report for
+                    // an accountant or partner).
+                    IconButton(
+                        enabled = !isSharing,
+                        onClick = {
+                            isSharing = true
+                            shareScope.launch {
+                                try {
+                                    val data = vm.buildReport()
+                                    val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                        com.minimart.pos.util.BusinessReportPdf.generate(context, data)
+                                    }
+                                    com.minimart.pos.util.BusinessReportPdf.shareViaWhatsApp(
+                                        context, com.minimart.pos.util.BusinessReportPdf.getShareUri(context, file), data)
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, "Could not create the report: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                                } finally {
+                                    isSharing = false
+                                }
+                            }
+                        }
+                    ) {
+                        if (isSharing) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color(0xFF25D366))
+                        else Icon(Icons.Default.Share, "Share report via WhatsApp", tint = Color(0xFF25D366), modifier = Modifier.size(24.dp))
+                    }
+                    Spacer(Modifier.width(4.dp))
                 }
             }
 

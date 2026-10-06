@@ -125,6 +125,11 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **Reports & Expenses** use proper calendar week (Mon–Sun) and calendar month,
   not rolling 7/30-day windows
 - Sales History: color-coded payment method chips (💵 Cash / 📱 M-Pesa / 🤝 Credit / 🔀 Split)
+- **Share a business report as a PDF via WhatsApp** — the green share button on Reports builds an A4 report
+  for the selected period (today / week / month / custom range): revenue, sales count, average basket,
+  discounts, VAT, refunds/voids, sales by payment method, top sellers, expenses by category and net (sales − expenses),
+  and opens WhatsApp with the PDF attached (falls back to the share sheet if WhatsApp isn't installed) — ideal for
+  end-of-day reports to an accountant or partner
 - **Quick Void** on COMPLETED sales from the history list (Manager+)
 - **Refund / Void** from the receipt screen is limited to Owner and Manager; each
   can only be applied once, restores stock and returns any credit used

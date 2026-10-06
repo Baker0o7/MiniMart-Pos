@@ -36,7 +36,8 @@ data class ReportsUiState(
 @HiltViewModel
 class ReportsViewModel @Inject constructor(
     private val saleRepo: SaleRepository,
-    settingsRepo: SettingsRepository
+    private val expenseRepo: com.minimart.pos.data.repository.ExpenseRepository,
+    private val settingsRepo: SettingsRepository
 ) : ViewModel() {
 
     private val _period = MutableStateFlow(ReportPeriod.TODAY)
@@ -76,6 +77,30 @@ class ReportsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReportsUiState())
 
     fun setPeriod(period: ReportPeriod) { _period.value = period }
+
+    /** Gathers everything for the PDF business report for the period currently selected. */
+    suspend fun buildReport(): com.minimart.pos.util.BusinessReportData {
+        val period = _period.value
+        val (start, rawEnd) = periodRange(period, _customRange.value)
+        val now = System.currentTimeMillis()
+        val end = minOf(rawEnd, now)
+        val day = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault())
+        val label = when (period) {
+            ReportPeriod.TODAY -> "Today, ${day.format(java.util.Date(now))}"
+            ReportPeriod.WEEK -> "This week: ${day.format(java.util.Date(start))} – ${day.format(java.util.Date(end))}"
+            ReportPeriod.MONTH -> java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(start))
+            ReportPeriod.CUSTOM -> "${day.format(java.util.Date(start))} – ${day.format(java.util.Date(end))}"
+        }
+        return com.minimart.pos.util.BusinessReportBuilder.build(
+            storeName = settingsRepo.storeName.first(),
+            currency = settingsRepo.currency.first(),
+            periodLabel = label,
+            generatedAt = now,
+            allSales = saleRepo.getSalesByDateRange(start, rawEnd).first(),
+            topSellers = saleRepo.getTopSellers(start, rawEnd).first(),
+            expenses = expenseRepo.getExpensesByDateRange(start, rawEnd).first()
+        )
+    }
 
     fun setCustomRange(startMs: Long, endMs: Long) {
         _customRange.value = Pair(startMs, endMs)
