@@ -52,7 +52,7 @@ class BackupCryptoTest {
 
     @Test
     fun `isEncrypted recognises the header`() {
-        val f = java.io.File.createTempFile("bk", ".mmbak")
+        val f = java.io.File.createTempFile("backup_test", ".mmbak")
         try {
             f.writeBytes(enc("abcdef"))
             assertTrue(BackupCrypto.isEncrypted(f))
