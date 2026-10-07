@@ -42,8 +42,11 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **Continuous scan mode** with animated laser overlay, corner brackets,
   green flash confirmation, and live scan counter badge
 - Keyboard "Next" navigation flows through every field in the Add Product form
-- Product search by name or barcode with live dropdown
-- Cart with quantity stepper, per-item discounts
+- Product search by name or barcode with live dropdown — results show stock, and out-of-stock items are flagged
+- Cart with quantity stepper, **tap the quantity to type it** (e.g. 24 bottles), per-item discounts
+- **Weighed items always ask for the weight** — scanning or tapping a PLU product opens a weight dialog
+  with a live price, instead of silently adding one unit
+- Inline success / error banner for scans and cart actions
 - **Inclusive VAT** — tax extracted from price, not added on top
 - **Cent-exact totals** — the checkout subtotal/discount/total math runs on an
   internal `Money` value class (Long cents) rather than raw `Double`, avoiding
@@ -109,14 +112,16 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - Auto-opens on cash payment (toggle) · Test button in Settings
 
 ### 📦 Inventory & Products
-- Add/edit: price, cost, stock, category, SKU, unit, tax rate
+- Filter chips by category plus **Low stock**; colour-coded stock pills (in stock / low / out)
+- Tap a product to edit it (cashiers get a read-only view); the add/edit form covers price, cost, stock,
+  category chips, SKU, unit, VAT %, low-stock threshold, PLU, expiry date picker and a live margin hint
 - Supplier info + reorder quantity · Batch number + expiry date
 - Color-coded expiry urgency badges · Low-stock background alerts (WorkManager)
 - Stock adjustments with reason log
 - **PLU / Weighing scale toggle** per product (PLU code + price/kg)
 - **Weighed products are stocked in kilograms** — sales deduct the actual weight,
   refunds/voids put it back, and the stock field is entered and shown in kg
-- Duplicate barcodes are rejected with a clear message instead of overwriting
+- Duplicate barcodes **and duplicate PLU codes** are rejected with a clear message instead of overwriting
   another product; save/adjust errors are shown on screen
 - Negative price/stock can't be saved (validated at both the UI and repository layer)
 
@@ -127,6 +132,8 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **Custom date range** — the "Custom" chip in Reports and Expenses opens a date-range picker
 - **Reports & Expenses** use proper calendar week (Mon–Sun) and calendar month,
   not rolling 7/30-day windows
+- **Expenses** are grouped by day (Today / Yesterday / date) with daily totals, show each category's share
+  of spend on the P&L tab, and can be logged for today or yesterday; the signed-in user is recorded on each one
 - Sales History: color-coded payment method chips (💵 Cash / 📱 M-Pesa / 🤝 Credit / 🔀 Split)
 - **Share a business report as a PDF via WhatsApp** — the green share button on Reports builds an A4 report
   for the selected period (today / week / month / custom range): revenue, sales count, average basket,
