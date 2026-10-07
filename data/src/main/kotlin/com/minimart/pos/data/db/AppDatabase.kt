@@ -10,8 +10,8 @@ import com.minimart.pos.data.entity.*
 import javax.inject.Inject
 
 @Database(
-    entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class],
-    version = 13,
+    entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class, MpesaPayment::class],
+    version = 14,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -23,6 +23,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun shiftDao(): ShiftDao
     abstract fun customerDao(): com.minimart.pos.data.dao.CustomerDao
     abstract fun syncDao(): com.minimart.pos.data.dao.SyncDao
+    abstract fun mpesaPaymentDao(): MpesaPaymentDao
     companion object { const val DATABASE_NAME = "minimart_pos.db" }
 }
 
@@ -94,7 +95,16 @@ object AppMigrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+    /** v13 → v14: incoming M-Pesa payments read from SMS. */
+    val MIGRATION_13_14 = object : androidx.room.migration.Migration(13, 14) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS `mpesa_payments` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `code` TEXT NOT NULL, `amount` REAL NOT NULL, `senderName` TEXT NOT NULL, `senderPhone` TEXT NOT NULL, `receivedAt` INTEGER NOT NULL, `rawMessage` TEXT NOT NULL, `createdAt` INTEGER NOT NULL)")
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_mpesa_payments_code` ON `mpesa_payments` (`code`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_mpesa_payments_receivedAt` ON `mpesa_payments` (`receivedAt`)")
+        }
+    }
+
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
 }
 
 class AppTypeConverters {

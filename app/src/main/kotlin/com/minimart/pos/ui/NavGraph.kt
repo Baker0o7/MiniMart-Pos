@@ -58,6 +58,7 @@ object Routes {
     const val USERS     = "users"
     const val SHIFTS    = "shifts"
     const val SETTINGS  = "settings"
+    const val MPESA     = "mpesa_payments"
     fun receipt(saleId: Long) = "receipt/$saleId"
 }
 
@@ -196,6 +197,7 @@ fun MiniMartNavGraph(
                         onNavigateToLowStock     = { navController.navigate(Routes.LOW_STOCK) { launchSingleTop = true } },
                         onNavigateToCustomers    = { navController.navigate(Routes.CUSTOMERS) { launchSingleTop = true } },
                         onNavigateToCreditOverview = { navController.navigate(Routes.CREDIT_OVERVIEW) { launchSingleTop = true } },
+                        onNavigateToMpesa        = { navController.navigate(Routes.MPESA) { launchSingleTop = true } },
                         currentRole              = authState.currentUser?.role,
                         currentUserName          = authState.currentUser?.displayName,
                         settingsRepo             = settingsRepo
@@ -248,6 +250,12 @@ fun MiniMartNavGraph(
                         hasAccess = com.minimart.pos.util.RoleManager.canViewReports(authState.currentUser?.role),
                         onBack = { navController.popBackStack() }
                     ) { ReportsScreen(onBack = { navController.popBackStack() }) }
+                }
+                composable(Routes.MPESA) {
+                    MpesaPaymentsScreen(
+                        onBack = { navController.popBackStack() },
+                        canManage = com.minimart.pos.util.RoleManager.canViewReports(authState.currentUser?.role)
+                    )
                 }
                 composable(Routes.EXPENSES)  { ExpenseScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.SALES_HISTORY) {

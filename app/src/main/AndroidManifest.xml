@@ -20,6 +20,8 @@
     <!-- Storage for exports -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <!-- Read incoming M-Pesa confirmation SMS (only when the owner turns tracking on) -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <!-- Vibrate for scan feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Biometric -->
@@ -50,6 +52,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Only the system may deliver SMS broadcasts (BROADCAST_SMS), so apps cannot fake one. -->
+        <receiver
+            android:name=".mpesa.MpesaSmsReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
 
         <!-- FileProvider for sharing receipts/exports -->
         <provider

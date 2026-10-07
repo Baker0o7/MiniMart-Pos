@@ -26,6 +26,7 @@ class SettingsRepository @Inject constructor(
         val KEY_EXPIRY_ALERT_MONTHS = intPreferencesKey("expiry_alert_months")
         val KEY_CASH_DRAWER_ADDRESS = stringPreferencesKey("cash_drawer_address")
         val KEY_CASH_DRAWER_ON_SALE = booleanPreferencesKey("cash_drawer_on_sale")
+        val KEY_MPESA_SMS_TRACKING = booleanPreferencesKey("mpesa_sms_tracking")
         val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
         val KEY_PRINTER_NAME     = stringPreferencesKey("printer_name")
         val KEY_RECEIPT_FOOTER   = stringPreferencesKey("receipt_footer")
@@ -89,6 +90,8 @@ class SettingsRepository @Inject constructor(
 
     val cashDrawerAddress: Flow<String> = context.dataStore.data.map { it[KEY_CASH_DRAWER_ADDRESS] ?: "" }
     val cashDrawerOnSale:  Flow<Boolean> = context.dataStore.data.map { it[KEY_CASH_DRAWER_ON_SALE] ?: true }
+    val mpesaSmsTracking: Flow<Boolean> = context.dataStore.data.map { it[KEY_MPESA_SMS_TRACKING] ?: false }
+    suspend fun setMpesaSmsTracking(v: Boolean) = context.dataStore.edit { it[KEY_MPESA_SMS_TRACKING] = v }
     suspend fun setCashDrawerAddress(addr: String) = context.dataStore.edit { it[KEY_CASH_DRAWER_ADDRESS] = addr }
     suspend fun setCashDrawerOnSale(v: Boolean) = context.dataStore.edit { it[KEY_CASH_DRAWER_ON_SALE] = v }
     suspend fun setReceiptFooter(f: String) = context.dataStore.edit { it[KEY_RECEIPT_FOOTER] = f }
