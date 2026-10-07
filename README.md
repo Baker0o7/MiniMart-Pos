@@ -47,6 +47,8 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **Weighed items always ask for the weight** — scanning or tapping a PLU product opens a weight dialog
   with a live price, instead of silently adding one unit
 - Inline success / error banner for scans and cart actions
+- **Unknown barcode?** Owners and managers are offered "Add product" with the barcode pre-filled; saving puts it straight into the sale
+- **Flash toggle** on the camera scanner for dim shops (shown only when the phone has a flash)
 - **Inclusive VAT** — tax extracted from price, not added on top
 - **Cent-exact totals** — the checkout subtotal/discount/total math runs on an
   internal `Money` value class (Long cents) rather than raw `Double`, avoiding
