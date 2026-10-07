@@ -30,7 +30,9 @@ object DatabaseModule {
         AppDatabase.DATABASE_NAME
     )
         .addMigrations(*com.minimart.pos.data.db.AppMigrations.ALL)
-        .fallbackToDestructiveMigration()
+        // Only the pre-release schemas (v1–v7) have no migration path. A missing migration for any
+        // later version must fail loudly, not silently wipe the shop's sales and stock.
+        .fallbackToDestructiveMigrationFrom(1, 2, 3, 4, 5, 6, 7)
         .addCallback(callback)
         .build()
 

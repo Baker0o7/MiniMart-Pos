@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  LAN sync talks plain HTTP to another phone's IP address (e.g. 192.168.1.20). Android 9+ blocks
+  cleartext by default, and the policy cannot name an IP range, so it is allowed here. Every
+  internet call (M-Pesa Daraja) is an explicit https:// URL, and sync requests are authenticated
+  with the server's pairing code.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
