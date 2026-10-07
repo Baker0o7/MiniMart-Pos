@@ -263,7 +263,7 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text("Quick Actions", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
-                        Text("Tap to navigate", color = Sub, fontSize = 11.sp)
+                        Text("Everything else is in the bottom bar", color = Sub, fontSize = 11.sp)
                     }
                     Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))
                         .background(if (showManageActions) DT.Teal else DT.Surface)
@@ -293,8 +293,6 @@ fun DashboardScreen(
                 val cards = buildList {
                     if (rm.canViewReports(currentRole) && "reports" !in hidden)
                         add(DashCard_("reports","Reports","Analytics",Icons.Default.BarChart,Color(0xFF160B2C),PurpleGlow,onNavigateToReports))
-                    if (rm.canViewExpenses(currentRole) && "expenses" !in hidden)
-                        add(DashCard_("expenses","Expenses","Track costs",Icons.Default.Receipt,Color(0xFF1E1005),AmberGlow,onNavigateToExpenses))
                     if ("history"  !in hidden) add(DashCard_("history",  "Sales History","Past sales",        Icons.Default.History,   Color(0xFF081525), BlueGlow,   onNavigateToSalesHistory))
                     if ("lowstock" !in hidden) add(DashCard_("lowstock", "Low Stock",    "Items running low", Icons.Default.Warning,   Color(0xFF1E0808), RedGlow,    onNavigateToLowStock))
                     if ("mpesa" !in hidden) add(DashCard_("mpesa", "M-Pesa", "Payments & verify", Icons.Default.PhoneAndroid, Color(0xFF0B2210), GreenGlow, onNavigateToMpesa))
@@ -393,7 +391,7 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector,
     val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "cardPress")
 
     Box(modifier = Modifier.fillMaxWidth()
-        .aspectRatio(0.8f)
+        .aspectRatio(0.95f)
         .graphicsLayer { scaleX = scale; scaleY = scale }
         .clip(RoundedCornerShape(20.dp))
         .background(Brush.verticalGradient(listOf(bg, Bg)))
@@ -411,12 +409,6 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(3.dp))
             Text(sub, color = Sub, fontSize = 10.sp, lineHeight = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(8.dp))
-            // Arrow chip
-            Box(modifier = Modifier.size(22.dp).clip(CircleShape)
-                .background(glow.copy(0.15f)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.ChevronRight, null, tint = glow, modifier = Modifier.size(14.dp))
-            }
         }
     }
 }
