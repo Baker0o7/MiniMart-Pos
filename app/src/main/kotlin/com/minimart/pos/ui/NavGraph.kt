@@ -208,6 +208,7 @@ fun MiniMartNavGraph(
                     ScannerCartScreen(
                         onNavigateToCheckout = { navController.navigate(Routes.CHECKOUT) { launchSingleTop = true } },
                         onBack = { navController.popBackStack() },
+                        canAddProducts = RoleManager.canEditPrices(authState.currentUser?.role),
                         vm = cartVm
                     )
                 }

@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 /** The use cases this view bound, so disposing it never unbinds a newer screen's camera. */
-private class CameraHandle(val provider: ProcessCameraProvider, val useCases: Array<UseCase>)
+private class CameraHandle(val provider: ProcessCameraProvider, val useCases: Array<UseCase>, val camera: Camera)
 
 private val scannerOptions: BarcodeScannerOptions by lazy {
     BarcodeScannerOptions.Builder()
@@ -55,11 +55,22 @@ private val scannerOptions: BarcodeScannerOptions by lazy {
 fun BarcodeScannerView(
     modifier: Modifier = Modifier,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
+    torchOn: Boolean = false,
+    onTorchAvailable: (Boolean) -> Unit = {},
     onBarcodeDetected: (String) -> Unit
 ) {
     // The AndroidView factory runs once, so without this it kept calling the very first
     // onBarcodeDetected lambda (stale captures) for the whole life of the camera.
     val currentOnDetected by rememberUpdatedState(onBarcodeDetected)
+    val currentOnTorchAvailable by rememberUpdatedState(onTorchAvailable)
+    // Set once CameraX has bound; the torch can only be switched after that.
+    var camera by remember { mutableStateOf<Camera?>(null) }
+    LaunchedEffect(camera, torchOn) {
+        val cam = camera ?: return@LaunchedEffect
+        val hasFlash = cam.cameraInfo.hasFlashUnit()
+        currentOnTorchAvailable(hasFlash)
+        if (hasFlash) try { cam.cameraControl.enableTorch(torchOn) } catch (e: Exception) { Log.w("BarcodeScanner", "torch failed", e) }
+    }
     var lastScanned by remember { mutableStateOf("") }
     var lastScannedTime by remember { mutableLongStateOf(0L) }
 
@@ -86,7 +97,7 @@ fun BarcodeScannerView(
     AndroidView(
         factory = { ctx ->
             PreviewView(ctx).also { pv ->
-                startCamera(ctx, pv, lifecycleOwner, scanner, analysisExecutor, providerRef, disposed) { barcode ->
+                startCamera(ctx, pv, lifecycleOwner, scanner, analysisExecutor, providerRef, disposed, { camera = it }) { barcode ->
                     val now = System.currentTimeMillis()
                     if (barcode != lastScanned || now - lastScannedTime > 1500) {
                         lastScanned = barcode; lastScannedTime = now
@@ -107,6 +118,7 @@ private fun startCamera(
     analysisExecutor: Executor,
     providerRef: AtomicReference<CameraHandle?>,
     disposed: AtomicBoolean,
+    onCameraReady: (Camera) -> Unit,
     onBarcodeDetected: (String) -> Unit
 ) {
     val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
@@ -130,12 +142,13 @@ private fun startCamera(
             }
         try {
             cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
+            val bound = cameraProvider.bindToLifecycle(
                 lifecycleOwner,
                 CameraSelector.DEFAULT_BACK_CAMERA,
                 preview, imageAnalysis
             )
-            providerRef.set(CameraHandle(cameraProvider, arrayOf(preview, imageAnalysis)))
+            providerRef.set(CameraHandle(cameraProvider, arrayOf(preview, imageAnalysis), bound))
+            onCameraReady(bound)
         } catch (e: Exception) {
             Log.e("BarcodeScanner", "Camera bind failed", e)
         }

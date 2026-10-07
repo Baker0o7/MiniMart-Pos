@@ -64,6 +64,7 @@ private val TopGrad3  = Color(0xFF004D40)
 fun ScannerCartScreen(
     onNavigateToCheckout: () -> Unit,
     onBack: () -> Unit,
+    canAddProducts: Boolean = false,
     vm: CartViewModel = hiltViewModel(),
     searchVm: ProductSearchViewModel = hiltViewModel()
 ) {
@@ -87,6 +88,9 @@ fun ScannerCartScreen(
     val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
     var showScanner by remember { mutableStateOf(false) }
     var continuousScan by remember { mutableStateOf(false) }
+    var torchOn by remember { mutableStateOf(false) }
+    var hasTorch by remember { mutableStateOf(false) }
+    LaunchedEffect(showScanner) { if (!showScanner) torchOn = false }
     var searchText by remember { mutableStateOf("") }
     var scanCount by remember { mutableIntStateOf(0) }
     var showScanFlash by remember { mutableStateOf(false) }
@@ -261,6 +265,7 @@ fun ScannerCartScreen(
                 Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp)
                     .height(200.dp).clip(RoundedCornerShape(20.dp))) {
                     BarcodeScannerView(modifier = Modifier.fillMaxSize(),
+                        torchOn = torchOn, onTorchAvailable = { hasTorch = it },
                         onBarcodeDetected = {
                             context.vibrateShort(); vm.processBarcode(it)
                             searchText = ""; searchVm.clear()
@@ -281,11 +286,24 @@ fun ScannerCartScreen(
                             Text("$scanCount scanned", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     // Close button
-                    IconButton(onClick = { showScanner = false },
-                        modifier = Modifier.align(Alignment.TopEnd).padding(6.dp)) {
-                        Box(Modifier.size(26.dp).clip(CircleShape).background(Color.Black.copy(0.6f)),
-                            contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Close, null, tint = Color.White, modifier = Modifier.size(14.dp))
+                    Row(Modifier.align(Alignment.TopEnd).padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        // Flash: only offered when the camera has a torch.
+                        if (hasTorch) {
+                            IconButton(onClick = { torchOn = !torchOn }) {
+                                Box(Modifier.size(32.dp).clip(CircleShape)
+                                    .background(if (torchOn) Color(0xFFFFC107) else Color.Black.copy(0.6f)),
+                                    contentAlignment = Alignment.Center) {
+                                    Icon(if (torchOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                                        if (torchOn) "Turn flash off" else "Turn flash on",
+                                        tint = if (torchOn) Color.Black else Color.White, modifier = Modifier.size(18.dp))
+                                }
+                            }
+                        }
+                        IconButton(onClick = { showScanner = false }) {
+                            Box(Modifier.size(32.dp).clip(CircleShape).background(Color.Black.copy(0.6f)),
+                                contentAlignment = Alignment.Center) {
+                                Icon(Icons.Default.Close, "Close scanner", tint = Color.White, modifier = Modifier.size(16.dp))
+                            }
                         }
                     }
                 }
@@ -407,6 +425,34 @@ fun ScannerCartScreen(
                     }
                 }
             }
+        }
+    }
+
+    // Unknown barcode: offer to add the product (managers/owners only), then add it to the cart.
+    val unknown = state.unknownBarcode
+    var addingUnknown by remember { mutableStateOf(false) }
+    if (unknown != null && canAddProducts) {
+        LaunchedEffect(unknown) { showScanner = false }
+        if (!addingUnknown) {
+            AlertDialog(
+                onDismissRequest = { vm.clearUnknownBarcode() },
+                containerColor = DT.Surface,
+                title = { Text("Product not found", color = Color.White, fontWeight = FontWeight.Bold) },
+                text = { Text("No product has the barcode $unknown. Add it now and put it in this sale?", color = DT.SubText) },
+                confirmButton = {
+                    Button(onClick = { addingUnknown = true }, shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White)) {
+                        Text("Add product", fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = { TextButton(onClick = { vm.clearUnknownBarcode() }) { Text("Not now", color = DT.SubText) } }
+            )
+        } else {
+            AddEditProductDialog(
+                product = null, currency = currency, initialBarcode = unknown,
+                onDismiss = { addingUnknown = false; vm.clearUnknownBarcode() },
+                onSave = { addingUnknown = false; vm.createAndAdd(it) }
+            )
         }
     }
 

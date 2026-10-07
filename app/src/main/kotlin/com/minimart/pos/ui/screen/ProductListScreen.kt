@@ -319,9 +319,10 @@ fun AddEditProductDialog(
     onDismiss: () -> Unit,
     onSave: (Product) -> Unit,
     currency: String = "KES",
-    categories: List<String> = emptyList()
+    categories: List<String> = emptyList(),
+    initialBarcode: String = ""
 ) {
-    var barcode    by remember { mutableStateOf(product?.barcode ?: "") }
+    var barcode    by remember { mutableStateOf(product?.barcode ?: initialBarcode) }
     var name       by remember { mutableStateOf(product?.name ?: "") }
     var price      by remember { mutableStateOf(product?.takeIf { !it.isWeighed }?.price?.let { plainNumber(it) } ?: "") }
     var costPrice  by remember { mutableStateOf(product?.costPrice?.takeIf { it > 0.0 }?.let { plainNumber(it) } ?: "") }

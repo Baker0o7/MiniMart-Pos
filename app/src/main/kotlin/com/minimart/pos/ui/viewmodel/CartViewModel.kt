@@ -23,7 +23,9 @@ data class CartUiState(
     val completedSaleId: Long? = null,
     // A weighed product was added by plain barcode / search (no scale ticket): the screen asks the
     // cashier for the weight instead of adding it as "1 unit" at a meaningless price.
-    val pendingWeighProduct: Product? = null
+    val pendingWeighProduct: Product? = null,
+    // A scanned barcode matched no product: the screen offers to add it.
+    val unknownBarcode: String? = null
 ) {
     // Bug fix: these aggregate properties used Double's sumOf{} — repeated floating-
     // point addition across every cart line, which is exactly where IEEE-754 rounding
@@ -124,7 +126,7 @@ class CartViewModel @Inject constructor(
             // ── Regular fixed-price barcode ──────────────────────────────────
             val product = productRepo.getByBarcode(clean)
             if (product == null) {
-                _uiState.update { it.copy(isLoading = false, error = "Product not found: $clean") }
+                _uiState.update { it.copy(isLoading = false, error = "Product not found: $clean", unknownBarcode = clean) }
                 return@launch
             }
             if (product.isWeighed) {
@@ -138,6 +140,29 @@ class CartViewModel @Inject constructor(
             }
             addToCart(product)
             _uiState.update { it.copy(isLoading = false, lastScannedProduct = product, error = null) }
+        }
+    }
+
+    fun clearUnknownBarcode() { _uiState.update { it.copy(unknownBarcode = null) } }
+
+    /** Saves a product created from an unknown scan and puts it straight into the cart. */
+    fun createAndAdd(product: Product) {
+        viewModelScope.launch {
+            try {
+                if (productRepo.getByBarcode(product.barcode) != null) {
+                    _uiState.update { it.copy(unknownBarcode = null, error = "Barcode already used by another product") }
+                    return@launch
+                }
+                productRepo.insert(product)
+                val saved = productRepo.getByBarcode(product.barcode)
+                _uiState.update { it.copy(unknownBarcode = null, error = null) }
+                if (saved != null) {
+                    if (saved.isWeighed) _uiState.update { it.copy(pendingWeighProduct = saved) }
+                    else if (saved.stock > 0) { addToCart(saved); _uiState.update { it.copy(lastScannedProduct = saved) } }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(unknownBarcode = null, error = "Could not save product: ${e.message}") }
+            }
         }
     }
 
