@@ -28,7 +28,6 @@ class MpesaSmsReceiver : BroadcastReceiver() {
     @Inject lateinit var settings: SettingsRepository
 
     override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
         val parts = Telephony.Sms.Intents.getMessagesFromIntent(intent) ?: return
         // A long message arrives as several parts from the same sender; join them.
