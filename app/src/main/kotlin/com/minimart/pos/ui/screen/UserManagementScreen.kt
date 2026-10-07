@@ -51,7 +51,8 @@ data class UserMgmtState(
 class UserManagementViewModel @Inject constructor(
     private val userRepo: UserRepository,
     private val settingsRepo: SettingsRepository,
-    private val pinHasher: com.minimart.pos.util.PinHasher
+    private val pinHasher: com.minimart.pos.util.PinHasher,
+    private val auditLogger: com.minimart.pos.util.AuditLogger
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UserMgmtState())
@@ -77,10 +78,19 @@ class UserManagementViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                val user = userRepo.getUserById(userId) ?: return@launch
+                val user = userRepo.getUserById(userId)
+                if (user == null) {
+                    // This early return used to leave isLoading stuck on true.
+                    _state.update { it.copy(isLoading = false, error = "That user no longer exists") }
+                    return@launch
+                }
                 val hash = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { pinHasher.hash(newPin) }
                 userRepo.updateUser(user.copy(pinHash = hash))
-                _state.update { it.copy(isLoading = false, success = "Password updated successfully") }
+                // Resetting someone's PIN is a sensitive action — it belongs in the audit trail.
+                auditLogger.log(com.minimart.pos.util.AuditEvent.PIN_CHANGED,
+                    user = _state.value.currentUser?.username ?: "",
+                    detail = "PIN changed for ${user.username}")
+                _state.update { it.copy(isLoading = false, success = "PIN updated successfully") }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = "Failed: ${e.message}") }
             }
@@ -91,10 +101,20 @@ class UserManagementViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
+                val cleanName = username.trim()
+                if (userRepo.getUserByUsername(cleanName) != null) {
+                    _state.update { it.copy(isLoading = false, error = "Username \"$cleanName\" is already taken") }
+                    return@launch
+                }
                 val hash = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { pinHasher.hash(pin) }
-                userRepo.insertUser(User(username = username.trim(), pinHash = hash,
+                userRepo.insertUser(User(username = cleanName, pinHash = hash,
                     displayName = displayName.trim(), role = role))
-                _state.update { it.copy(isLoading = false, success = "User '$displayName' added") }
+                auditLogger.log(com.minimart.pos.util.AuditEvent.USER_CREATED,
+                    user = _state.value.currentUser?.username ?: "", detail = "$cleanName (${role.name})")
+                _state.update { it.copy(isLoading = false, success = "User '${displayName.trim()}' added") }
+            } catch (e: android.database.sqlite.SQLiteConstraintException) {
+                // Removed users keep their row (and username), so the active-only check above can miss it.
+                _state.update { it.copy(isLoading = false, error = "Username is already used by a removed account — pick another") }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = "Failed: ${e.message}") }
             }
@@ -117,6 +137,8 @@ class UserManagementViewModel @Inject constructor(
                     }
                 }
                 userRepo.updateUser(user.copy(isActive = false))
+                auditLogger.log(com.minimart.pos.util.AuditEvent.USER_DELETED,
+                    user = _state.value.currentUser?.username ?: "", detail = "Removed ${user.username}")
                 _state.update { it.copy(success = "${user.displayName} removed") }
             } catch (e: Exception) {
                 _state.update { it.copy(error = "Failed: ${e.message}") }

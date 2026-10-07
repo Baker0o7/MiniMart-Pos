@@ -85,12 +85,17 @@ fun CheckoutScreen(
         ?.coerceIn(0.0, minOf(creditBalance.coerceAtLeast(0.0), state.total)) ?: 0.0
     val splitCashNeeded = (state.total - splitCredit).coerceAtLeast(0.0)
 
+    // While an STK push is out, completing the sale would let the customer's prompt still go
+    // through afterwards (double charge) — wait for it to resolve or be cancelled.
+    val stkInFlight = selectedMethod == PaymentMethod.MPESA &&
+        (stkState.phase == StkPushPhase.SENDING || stkState.phase == StkPushPhase.AWAITING_CUSTOMER)
+
     val canComplete = when {
         state.total <= 0 -> false
         useSplitPayment  -> selectedCustomer != null && splitCredit > 0 && cashAmount >= splitCashNeeded
         else -> when (selectedMethod) {
             PaymentMethod.CASH   -> cashAmount >= state.total
-            PaymentMethod.MPESA  -> true
+            PaymentMethod.MPESA  -> !stkInFlight
             PaymentMethod.CREDIT -> selectedCustomer != null && state.total > 0
             else                 -> true
         }
@@ -193,7 +198,7 @@ fun CheckoutScreen(
                     // Discount
                     if (canApplyDiscounts) {
                         OutlinedTextField(value = globalDiscount,
-                            onValueChange = { globalDiscount = it; vm.setGlobalDiscount(it.toDoubleOrNull() ?: 0.0) },
+                            onValueChange = { globalDiscount = sanitizeMoneyInput(it); vm.setGlobalDiscount(globalDiscount.toDoubleOrNull() ?: 0.0) },
                             label = { Text("Discount ($currency)", color = DT.SubText) },
                             leadingIcon = { Icon(Icons.Default.Discount, null, tint = DT.SubText) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -330,7 +335,7 @@ fun CheckoutScreen(
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     when (method) {
                         PaymentMethod.CASH -> {
-                            OutlinedTextField(value = cashInput, onValueChange = { cashInput = it },
+                            OutlinedTextField(value = cashInput, onValueChange = { cashInput = sanitizeMoneyInput(it) },
                                 label = { Text("Cash Received ($currency)", color = DT.SubText) },
                                 leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -341,15 +346,23 @@ fun CheckoutScreen(
                                     focusedTextColor = Color.White, unfocusedTextColor = Color.White,
                                     cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                                listOf(50, 100, 200, 500, 1000).forEach { amt ->
+                                // "Exact" is by far the most common tender — one tap instead of typing the total.
+                                val exactCash = if (state.total % 1.0 == 0.0) state.total.toLong().toString()
+                                                else String.format(java.util.Locale.US, "%.2f", state.total)
+                                val quickCash = buildList {
+                                    if (state.total > 0) add("Exact" to exactCash)
+                                    listOf(100, 200, 500, 1000).forEach { add(it.toString() to it.toString()) }
+                                }
+                                quickCash.forEach { (label, value) ->
+                                    val picked = cashInput == value
                                     Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
-                                        .background(if (cashInput == amt.toString()) DT.Teal else DT.Surface)
-                                        .border(1.dp, if (cashInput == amt.toString()) DT.Teal else DT.Border, RoundedCornerShape(12.dp))
-                                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { cashInput = amt.toString() }
+                                        .background(if (picked) DT.Teal else DT.Surface)
+                                        .border(1.dp, if (picked) DT.Teal else DT.Border, RoundedCornerShape(12.dp))
+                                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { cashInput = value }
                                         .padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-                                        Text(amt.toString(),
-                                            color = if (cashInput == amt.toString()) Color.White else DT.SubText,
-                                            fontWeight = if (cashInput == amt.toString()) FontWeight.Bold else FontWeight.Normal,
+                                        Text(label,
+                                            color = if (picked) Color.White else DT.SubText,
+                                            fontWeight = if (picked) FontWeight.Bold else FontWeight.Normal,
                                             fontSize = 12.sp)
                                     }
                                 }
@@ -430,6 +443,10 @@ fun CheckoutScreen(
                                                     }
                                                     if (stkState.mpesaReceiptNumber != null) {
                                                         Text("Ref: ${stkState.mpesaReceiptNumber}", color = DT.OnSurface, fontSize = 13.sp)
+                                                    } else {
+                                                        // Safaricom's status query doesn't return the receipt code.
+                                                        Text("Type the code from the customer's M-Pesa SMS below so the sale can be reconciled.",
+                                                            color = DT.SubText, fontSize = 12.sp)
                                                     }
                                                 }
                                             }
@@ -548,7 +565,7 @@ fun CheckoutScreen(
                                 // Split inputs
                                 AnimatedVisibility(visible = useSplitPayment) {
                                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        OutlinedTextField(value = splitCreditInput, onValueChange = { splitCreditInput = it },
+                                        OutlinedTextField(value = splitCreditInput, onValueChange = { splitCreditInput = sanitizeMoneyInput(it) },
                                             label = { Text("Credit Amount (max $currency ${String.format("%.2f", creditBalance)})", color = DT.SubText) },
                                             leadingIcon = { Icon(Icons.Default.AccountBalanceWallet, null, tint = DT.Teal) },
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -571,7 +588,7 @@ fun CheckoutScreen(
                                             }
                                         }
                                         // Cash input for split
-                                        OutlinedTextField(value = cashInput, onValueChange = { cashInput = it },
+                                        OutlinedTextField(value = cashInput, onValueChange = { cashInput = sanitizeMoneyInput(it) },
                                             label = { Text("Cash for remaining $currency ${String.format("%.2f", splitCashNeeded)}", color = DT.SubText) },
                                             leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -627,6 +644,7 @@ fun CheckoutScreen(
                         tint = if (canComplete) Color.White else DT.SubText, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(10.dp))
                     Text(when {
+                        stkInFlight && !useSplitPayment -> "WAITING FOR CUSTOMER…"
                         !canComplete && useSplitPayment && splitCredit <= 0 -> "ENTER CREDIT AMOUNT"
                         !canComplete && useSplitPayment -> "ENTER CASH AMOUNT"
                         !canComplete && selectedMethod == PaymentMethod.CASH && state.total > 0 -> "ENTER CASH AMOUNT"
@@ -657,10 +675,12 @@ fun CheckoutScreen(
                         selectedMethod = PaymentMethod.CREDIT
                 },
                 onNewCustomer = { name, phone ->
-                    val newCust = Customer(name = name, phone = phone)
-                    customerVm.saveCustomer(newCust)
-                    // Refresh list and auto-select the new customer
-                    customerVm.setQuery("")
+                    // Save, then select — the button is labelled "Save & Select".
+                    customerVm.createCustomer(name, phone) { cust ->
+                        selectedCustomer = cust
+                        if (cust.creditBalance >= state.total && state.total > 0)
+                            selectedMethod = PaymentMethod.CREDIT
+                    }
                     showCustomerSearch = false
                     customerQuery = ""
                 },
@@ -926,6 +946,19 @@ private fun CustomerSearchSheet(
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Keeps a money field to digits and a single decimal point with at most two decimals. A comma
+ * (some keypads) becomes a point. Pasted text such as "NaN" or "1e9" used to parse as a number.
+ */
+private fun sanitizeMoneyInput(raw: String): String {
+    val cleaned = raw.replace(',', '.').filter { it.isDigit() || it == '.' }
+    val dot = cleaned.indexOf('.')
+    if (dot < 0) return cleaned.take(9)
+    val whole = cleaned.substring(0, dot).take(9)
+    val fraction = cleaned.substring(dot + 1).replace(".", "").take(2)
+    return "$whole.$fraction"
+}
 
 @Composable
 private fun SummaryLine(label: String, value: String, color: Color, bold: Boolean = false) {

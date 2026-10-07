@@ -58,16 +58,19 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - Confirmation before clearing the cart
 
 ### 💳 Checkout & Payments
-- **Cash** — quick-amount buttons, real change calculation
+- **Cash** — one-tap "Exact" plus quick-amount buttons, real change calculation; money fields only accept digits and one decimal point
 - **M-Pesa** — ref number field
 - **Credit** — customer wallet or buy-on-account (negative balance allowed)
 - **M-Pesa STK push (Daraja)** — amounts are rounded up to whole shillings and
-  payment status is confirmed by polling
+  payment status is confirmed by polling; network calls run off the main thread, and the
+  sale can't be completed while a prompt is still pending (no double charge)
 - **Split payment** — combine credit + cash in one transaction (credit is capped
   at the balance and sale total; change is never counted as till cash), with proper
   error feedback if it fails (shown as an on-screen banner, not silently dropped)
 - Customer selector with search + contacts import — debtors (customers who
-  owe money) are clearly flagged in red, not shown the same as a zero balance
+  owe money) are clearly flagged in red, not shown the same as a zero balance;
+  "Save & Select" adds a new customer and selects them in one step (an existing
+  phone number reuses that customer instead of creating a duplicate)
 - Cash drawer auto-opens on cash payment (configurable)
 - Haptic feedback confirms every completed sale
 - All money displays respect the app's configurable currency setting
@@ -161,9 +164,11 @@ Owner account (permanent lockout protection).
   an arbitrary username.
 - **Persisted 3-strike lockout** — survives force-close, task-kill, and device
   reboot
-- **15-minute inactivity auto-logout**
+- **15-minute inactivity auto-logout** — any touch or scanner key resets the timer, and the
+  timeout returns to the PIN screen (it used to sign out in state only)
 - **Persistent, thread-safe audit log** at `files/audit.log` covering logins,
-  logouts, completed sales, discounts, and credit usage
+  logouts, biometric sign-ins, completed sales, discounts, credit usage, and user
+  creation / removal / PIN resets
 - **Sync pairing secrets** — rate-limited, constant-time compared, and
   encrypted at rest (see Multi-Device Sync above)
 - **At-rest database protection**: relies on Android's File-Based Encryption
@@ -188,7 +193,10 @@ Owner account (permanent lockout protection).
 - 100% offline — Room SQLite v13, no internet required for core operation
 
 ### 🎨 UI / UX
-- Deep dark teal theme — readable in bright retail lighting
+- Deep dark teal theme — readable in bright retail lighting; status-bar and navigation icons
+  stay light whichever Dark-mode setting is chosen
+- Low-stock and expiry alerts ask for notification permission (Android 13+) and open Inventory when tapped,
+  after sign-in, without discarding an open cart
 - Dashboard header shows the signed-in role (Owner / Manager / Cashier) and store name
 - Emerald "glass" login screen with a 6-box PIN field, large keypad and haptic key presses
 - System-bar insets handled once, so nothing hides behind the navigation bar

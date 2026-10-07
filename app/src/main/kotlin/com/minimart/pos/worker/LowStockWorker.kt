@@ -54,12 +54,14 @@ class LowStockWorker @AssistedInject constructor(
             val lowStockProducts = productRepo.getLowStockProducts().first()
             if (lowStockProducts.isNotEmpty()) {
                 createNotificationChannel()
-                val names = lowStockProducts.take(5).joinToString(", ") { "${it.name} (${it.stock})" }
+                val names = lowStockProducts.take(5).joinToString(", ") { "${it.name} (${it.stockLabel})" }
                 val more = if (lowStockProducts.size > 5) " +${lowStockProducts.size - 5} more" else ""
 
                 val intent = Intent(applicationContext, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    putExtra("navigate_to", "inventory")
+                    // Bring the running app forward (MainActivity.onNewIntent) instead of CLEAR_TASK,
+                    // which destroyed the activity and threw away an open cart.
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra(MainActivity.EXTRA_NAVIGATE_TO, "inventory")
                 }
                 val pendingIntent = PendingIntent.getActivity(
                     applicationContext, 0, intent,

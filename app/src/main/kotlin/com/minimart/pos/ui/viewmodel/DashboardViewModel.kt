@@ -336,7 +336,9 @@ class AuthViewModel @Inject constructor(
             val username = _uiState.value.currentUser?.username ?: ""
             auditLogger.log(com.minimart.pos.util.AuditEvent.LOGOUT, user = username)
             try { settingsRepo.setLoggedInUser(null) } catch (_: Exception) {}
-            _uiState.update { AuthUiState() }
+            // Keep biometricEnabled: its DataStore flow only emits on change, so resetting it here
+            // hid the fingerprint button after every logout / idle lock until the app restarted.
+            _uiState.update { AuthUiState(biometricEnabled = it.biometricEnabled) }
         }
     }
 
@@ -364,6 +366,8 @@ class AuthViewModel @Inject constructor(
                 if (user != null && user.isActive) {
                     settingsRepo.setLoggedInUser(user.id)
                     settingsRepo.clearLockout()
+                    auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_SUCCESS,
+                        user = user.username, detail = "Role: ${user.role.name} (biometric)")
                     _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user) }
                 } else {
                     _uiState.update { it.copy(isLoading = false, error = "Biometric account no longer available") }

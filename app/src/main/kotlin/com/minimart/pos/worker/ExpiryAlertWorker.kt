@@ -53,7 +53,8 @@ class ExpiryAlertWorker @AssistedInject constructor(
             val now = System.currentTimeMillis()
             val cutoff = now + thresholdMs
 
-            val allProducts = productRepo.getAllProducts().first()
+            // Items already sold out can't be pulled from the shelf, so they're not worth an alert.
+            val allProducts = productRepo.getAllProducts().first().filter { it.stock > 0 || it.stockKg > 0.0 }
             val expiring = allProducts.filter { p ->
                 p.expiryDate > 0L && p.expiryDate in now..cutoff
             }
@@ -65,8 +66,10 @@ class ExpiryAlertWorker @AssistedInject constructor(
                 createChannel()
 
                 val intent = Intent(applicationContext, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    putExtra("navigate_to", "inventory")
+                    // Bring the running app forward (MainActivity.onNewIntent) instead of CLEAR_TASK,
+                    // which destroyed the activity and threw away an open cart.
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra(MainActivity.EXTRA_NAVIGATE_TO, "inventory")
                 }
                 val pending = PendingIntent.getActivity(
                     applicationContext, 1, intent,

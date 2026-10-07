@@ -33,6 +33,23 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
+
+/** The use cases this view bound, so disposing it never unbinds a newer screen's camera. */
+private class CameraHandle(val provider: ProcessCameraProvider, val useCases: Array<UseCase>)
+
+private val scannerOptions: BarcodeScannerOptions by lazy {
+    BarcodeScannerOptions.Builder()
+        .setBarcodeFormats(
+            Barcode.FORMAT_EAN_13, Barcode.FORMAT_EAN_8,
+            Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E,
+            Barcode.FORMAT_CODE_128, Barcode.FORMAT_CODE_39,
+            Barcode.FORMAT_QR_CODE, Barcode.FORMAT_DATA_MATRIX
+        ).build()
+}
 
 @Composable
 fun BarcodeScannerView(
@@ -40,18 +57,40 @@ fun BarcodeScannerView(
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     onBarcodeDetected: (String) -> Unit
 ) {
-    val context = LocalContext.current
+    // The AndroidView factory runs once, so without this it kept calling the very first
+    // onBarcodeDetected lambda (stale captures) for the whole life of the camera.
+    val currentOnDetected by rememberUpdatedState(onBarcodeDetected)
     var lastScanned by remember { mutableStateOf("") }
     var lastScannedTime by remember { mutableLongStateOf(0L) }
+
+    // The scanner client and analysis thread used to be created per camera start and never
+    // released, and the camera stayed bound after the view left composition (e.g. a scanner
+    // dialog closing on a screen that stays open) — leaking native resources and keeping the
+    // camera light on. Everything is now torn down together in onDispose.
+    val scanner = remember { BarcodeScanning.getClient(scannerOptions) }
+    val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
+    val providerRef = remember { AtomicReference<CameraHandle?>(null) }
+    val disposed = remember { AtomicBoolean(false) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            disposed.set(true)
+            try {
+                providerRef.get()?.let { it.provider.unbind(*it.useCases) }
+            } catch (e: Exception) { Log.w("BarcodeScanner", "unbind failed", e) }
+            analysisExecutor.shutdown()
+            try { scanner.close() } catch (_: Exception) {}
+        }
+    }
 
     AndroidView(
         factory = { ctx ->
             PreviewView(ctx).also { pv ->
-                startCamera(ctx, pv, lifecycleOwner) { barcode ->
+                startCamera(ctx, pv, lifecycleOwner, scanner, analysisExecutor, providerRef, disposed) { barcode ->
                     val now = System.currentTimeMillis()
                     if (barcode != lastScanned || now - lastScannedTime > 1500) {
                         lastScanned = barcode; lastScannedTime = now
-                        onBarcodeDetected(barcode)
+                        currentOnDetected(barcode)
                     }
                 }
             }
@@ -64,35 +103,29 @@ private fun startCamera(
     context: Context,
     previewView: PreviewView,
     lifecycleOwner: LifecycleOwner,
+    scanner: com.google.mlkit.vision.barcode.BarcodeScanner,
+    analysisExecutor: Executor,
+    providerRef: AtomicReference<CameraHandle?>,
+    disposed: AtomicBoolean,
     onBarcodeDetected: (String) -> Unit
 ) {
     val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
     cameraProviderFuture.addListener({
-        val cameraProvider = cameraProviderFuture.get()
+        // The composable can be gone before CameraX finishes starting up.
+        if (disposed.get()) return@addListener
+        val cameraProvider = try { cameraProviderFuture.get() } catch (e: Exception) {
+            Log.e("BarcodeScanner", "Camera provider unavailable", e)
+            return@addListener
+        }
         val preview = Preview.Builder().build().also {
             it.surfaceProvider = previewView.surfaceProvider
         }
-        val options = BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(
-                Barcode.FORMAT_EAN_13, Barcode.FORMAT_EAN_8,
-                Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E,
-                Barcode.FORMAT_CODE_128, Barcode.FORMAT_CODE_39,
-                Barcode.FORMAT_QR_CODE, Barcode.FORMAT_DATA_MATRIX
-            ).build()
-        val barcodeScanner = BarcodeScanning.getClient(options)
-
-        // Bug fix: was Executors.newSingleThreadExecutor() created inside the listener
-        // with no shutdown — a new daemon thread was spun up every time the camera was
-        // bound (each scanner open/close cycle), accumulating leaked threads over the
-        // app session. ContextCompat.getMainExecutor() reuses the existing main
-        // executor owned by the app, no cleanup needed.
-        val analysisExecutor = ContextCompat.getMainExecutor(context)
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
             .also { analysis ->
                 analysis.setAnalyzer(analysisExecutor) { imageProxy ->
-                    processImageProxy(barcodeScanner, imageProxy, onBarcodeDetected)
+                    processImageProxy(scanner, imageProxy, disposed, onBarcodeDetected)
                 }
             }
         try {
@@ -102,6 +135,7 @@ private fun startCamera(
                 CameraSelector.DEFAULT_BACK_CAMERA,
                 preview, imageAnalysis
             )
+            providerRef.set(CameraHandle(cameraProvider, arrayOf(preview, imageAnalysis)))
         } catch (e: Exception) {
             Log.e("BarcodeScanner", "Camera bind failed", e)
         }
@@ -112,15 +146,22 @@ private fun startCamera(
 private fun processImageProxy(
     scanner: com.google.mlkit.vision.barcode.BarcodeScanner,
     imageProxy: ImageProxy,
+    disposed: AtomicBoolean,
     onBarcodeDetected: (String) -> Unit
 ) {
-    val mediaImage = imageProxy.image ?: run { imageProxy.close(); return }
-    val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-    scanner.process(image)
-        .addOnSuccessListener { barcodes ->
-            barcodes.firstOrNull()?.rawValue?.let { onBarcodeDetected(it) }
-        }
-        .addOnCompleteListener { imageProxy.close() }
+    val mediaImage = imageProxy.image
+    if (mediaImage == null || disposed.get()) { imageProxy.close(); return }
+    try {
+        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+        scanner.process(image)
+            .addOnSuccessListener { barcodes ->
+                if (!disposed.get()) barcodes.firstOrNull()?.rawValue?.let { onBarcodeDetected(it) }
+            }
+            .addOnCompleteListener { imageProxy.close() }
+    } catch (e: Exception) {
+        // Scanner already closed because the screen was leaving — just release the frame.
+        imageProxy.close()
+    }
 }
 
 // ─── Animated scanner overlay ──────────────────────────────────────────────────

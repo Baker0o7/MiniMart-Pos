@@ -67,24 +67,6 @@ fun ShiftScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                Box(Modifier.fillMaxWidth()
-                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(
-                        listOf(DT.Teal, androidx.compose.ui.graphics.Color(0xFF004D40))))
-                    .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Shift Management", color = androidx.compose.ui.graphics.Color.White,
-                                fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
-                            Text("Clock in & track cash", color = androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize = 12.sp)
-                        }
-                        Icon(Icons.Default.Schedule, null,
-                            tint = androidx.compose.ui.graphics.Color.White.copy(0.7f),
-                            modifier = Modifier.size(28.dp))
-                    }
-                }
-            }
-
             // ── Active shift card ──
             item {
                 state.activeShift?.let { shift ->
@@ -140,7 +122,7 @@ fun ShiftScreen(
 
             // ── Shift history ──
             if (state.allShifts.isNotEmpty()) {
-                item { Text("Shift History", fontWeight = FontWeight.SemiBold, fontSize = 16.sp) }
+                item { Text("Shift History", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp) }
                 items(state.allShifts.take(20), key = { it.id }) { shift ->
                     ShiftHistoryRow(shift = shift, currency = state.currency, onClick = { showSummaryDialog = shift })
                 }
@@ -150,6 +132,7 @@ fun ShiftScreen(
 
     if (showClockInDialog) {
         ClockInDialog(
+            currency = state.currency,
             onDismiss = { showClockInDialog = false },
             onClockIn = { float -> vm.clockIn(float); showClockInDialog = false }
         )
@@ -157,6 +140,7 @@ fun ShiftScreen(
 
     if (showClockOutDialog) {
         ClockOutDialog(
+            currency = state.currency,
             onDismiss = { showClockOutDialog = false },
             onClockOut = { float, notes -> vm.clockOut(float, notes); showClockOutDialog = false }
         )
@@ -173,7 +157,12 @@ fun ShiftScreen(
 private fun ActiveShiftCard(shift: Shift, currency: String, onClockOut: () -> Unit) {
     val df = SimpleDateFormat("HH:mm", Locale.getDefault())
     val dfFull = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
-    val durationMs = System.currentTimeMillis() - shift.clockIn
+    // Re-read the clock every 30s so the elapsed time doesn't freeze while the screen is open.
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) { kotlinx.coroutines.delay(30_000); now = System.currentTimeMillis() }
+    }
+    val durationMs = (now - shift.clockIn).coerceAtLeast(0L)
     val hours = durationMs / 3600000
     val mins = (durationMs % 3600000) / 60000
 
@@ -260,7 +249,7 @@ private fun ShiftHistoryRow(shift: Shift, currency: String, onClick: () -> Unit)
 // ─── Clock In Dialog ──────────────────────────────────────────────────────────
 
 @Composable
-private fun ClockInDialog(onDismiss: () -> Unit, onClockIn: (Double) -> Unit) {
+private fun ClockInDialog(currency: String, onDismiss: () -> Unit, onClockIn: (Double) -> Unit) {
     var openingFloat by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -272,8 +261,8 @@ private fun ClockInDialog(onDismiss: () -> Unit, onClockIn: (Double) -> Unit) {
                     style = MaterialTheme.typography.bodyMedium, color = Color.White)
                 OutlinedTextField(
                     value = openingFloat,
-                    onValueChange = { openingFloat = it },
-                    label = { Text("Opening Float (KES)", color = com.minimart.pos.ui.theme.DT.SubText) },
+                    onValueChange = { openingFloat = it.replace(',', '.').filter { c -> c.isDigit() || c == '.' }.take(12) },
+                    label = { Text("Opening Float ($currency)", color = com.minimart.pos.ui.theme.DT.SubText) },
                     leadingIcon = { Icon(Icons.Default.Money, null, tint = com.minimart.pos.ui.theme.DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
@@ -314,7 +303,7 @@ private fun ClockInDialog(onDismiss: () -> Unit, onClockIn: (Double) -> Unit) {
 // ─── Clock Out Dialog ─────────────────────────────────────────────────────────
 
 @Composable
-private fun ClockOutDialog(onDismiss: () -> Unit, onClockOut: (Double, String) -> Unit) {
+private fun ClockOutDialog(currency: String, onDismiss: () -> Unit, onClockOut: (Double, String) -> Unit) {
     val DT = com.minimart.pos.ui.theme.DT
     var closingFloat by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
@@ -324,8 +313,8 @@ private fun ClockOutDialog(onDismiss: () -> Unit, onClockOut: (Double, String) -
         title = { Text("End Shift", fontWeight = FontWeight.Bold, color = Color.White) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(value = closingFloat, onValueChange = { closingFloat = it },
-                    label = { Text("Closing Cash Float (KES)", color = DT.SubText) },
+                OutlinedTextField(value = closingFloat, onValueChange = { closingFloat = it.replace(',', '.').filter { c -> c.isDigit() || c == '.' }.take(12) },
+                    label = { Text("Closing Cash Counted ($currency)", color = DT.SubText) },
                     leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
@@ -341,8 +330,13 @@ private fun ClockOutDialog(onDismiss: () -> Unit, onClockOut: (Double, String) -
             }
         },
         confirmButton = {
-            Button(onClick = { onClockOut((closingFloat.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0), notes) },
-                colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+            // A blank field used to count as 0, silently booking the whole drawer as missing cash.
+            // Enter 0 explicitly if the drawer really is empty.
+            val closingValue = closingFloat.toDoubleOrNull()
+            Button(onClick = { onClockOut((closingValue ?: 0.0).coerceAtLeast(0.0), notes) },
+                enabled = closingValue != null && closingValue >= 0.0,
+                colors = ButtonDefaults.buttonColors(containerColor = ErrorRed,
+                    disabledContainerColor = ErrorRed.copy(0.4f), disabledContentColor = Color.White.copy(0.7f)),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
             ) { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = Color.White, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("End Shift", color = Color.White, fontWeight = FontWeight.Bold) }
         },

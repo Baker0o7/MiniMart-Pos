@@ -56,6 +56,12 @@ class BluetoothScannerManager @Inject constructor(
 
     private val connectionReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context, intent: Intent) {
+            // device.name / bluetoothClass throw SecurityException on Android 12+ when BLUETOOTH_CONNECT
+            // was revoked; an uncaught throw inside a receiver crashes the whole app.
+            try { handle(intent) } catch (e: Exception) { Log.w(TAG, "Ignoring BT event", e) }
+        }
+
+        private fun handle(intent: Intent) {
             val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                 ?: return
             when (intent.action) {
@@ -99,7 +105,12 @@ class BluetoothScannerManager @Inject constructor(
             val bonded = adapter?.bondedDevices ?: return
             val scanners = bonded
                 .filter { isScanner(it) }
-                .map { BtScannerInfo(it.name ?: it.address, it.address, BtScannerState.DISCONNECTED) }
+                .map { dev ->
+                    // Paired scanners all used to be listed as DISCONNECTED, even the live one.
+                    val live = _scannerInfo.value?.takeIf { it.address == dev.address && it.state == BtScannerState.CONNECTED }
+                    BtScannerInfo(dev.name ?: dev.address, dev.address,
+                        if (live != null) BtScannerState.CONNECTED else BtScannerState.DISCONNECTED)
+                }
             _pairedScanners.value = scanners
             // Keep current connected state if still paired
             val current = _scannerInfo.value
@@ -117,11 +128,13 @@ class BluetoothScannerManager @Inject constructor(
         } catch (_: Exception) { emptyList() }
     }
 
-    private fun isScanner(device: BluetoothDevice): Boolean {
+    private fun isScanner(device: BluetoothDevice): Boolean = try {
         val name = (device.name ?: "").lowercase()
         // HID device class = 0x0500 (Peripheral), major = 5
         val isHid = device.bluetoothClass?.majorDeviceClass == 0x0500
         val nameMatch = SCANNER_PREFIXES.any { name.contains(it) }
-        return isHid || nameMatch
+        isHid || nameMatch
+    } catch (_: SecurityException) {
+        false   // BLUETOOTH_CONNECT not granted — treat as "not a scanner" rather than crash
     }
 }

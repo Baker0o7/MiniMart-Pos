@@ -75,7 +75,10 @@ private val mainRoutes = setOf(
 fun MiniMartNavGraph(
     settingsRepo: SettingsRepository,
     printer: ThermalPrinter,
-    darkMode: Boolean
+    darkMode: Boolean,
+    // Set when the cashier taps a low-stock / expiry notification (see MainActivity).
+    pendingRoute: String? = null,
+    onPendingRouteConsumed: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val authVm: AuthViewModel = hiltViewModel()
@@ -88,8 +91,13 @@ fun MiniMartNavGraph(
         if (sessionExpired && authState.isLoggedIn) {
             sessionVm.onSessionExpired(authState.currentUser?.username ?: "")
             authVm.logout()
+            // The timeout used to sign the user out in state only — the screen stayed open and
+            // usable. Send them back to the PIN screen like a manual logout does.
+            navController.navigate(Routes.LOGIN) { popUpTo(0) { inclusive = true } }
         }
     }
+    // A fresh sign-in starts a fresh idle window.
+    LaunchedEffect(authState.isLoggedIn) { if (authState.isLoggedIn) sessionVm.onUserActivity() }
     if (authState.isLoggedIn && authState.mustChangePin) {
         var newPin by remember { mutableStateOf("") }
         var confirmPin by remember { mutableStateOf("") }
@@ -121,6 +129,18 @@ fun MiniMartNavGraph(
     val currentRoute = navBackStack?.destination?.route
     val showBottomNav = currentRoute in mainRoutes
 
+    // Notification deep link. Waits until the cashier is signed in and past the login screen,
+    // so a tap can never bypass the PIN; the cart and back stack of an open sale stay intact.
+    LaunchedEffect(pendingRoute, authState.isLoggedIn, authState.mustChangePin, currentRoute) {
+        if (pendingRoute != null && authState.isLoggedIn && !authState.mustChangePin &&
+            currentRoute != null && currentRoute != Routes.LOGIN) {
+            when (pendingRoute) {
+                "inventory" -> navController.navigate(Routes.INVENTORY) { launchSingleTop = true }
+            }
+            onPendingRouteConsumed()
+        }
+    }
+
     Scaffold(
         containerColor = NavBg,
         bottomBar = {
@@ -139,6 +159,10 @@ fun MiniMartNavGraph(
     ) { innerPadding ->
         // consumeWindowInsets: screens inside (Checkout, Receipt, Cart) also call
         // navigationBarsPadding()/imePadding(); without this the nav-bar inset was applied twice.
+        // Every screen paints its own dark DT background regardless of the theme's light/dark
+        // mode, so text that doesn't name a colour must default to a light one (otherwise it was
+        // near-black on near-black whenever Dark mode was off in Settings).
+        CompositionLocalProvider(LocalContentColor provides com.minimart.pos.ui.theme.DT.OnSurface) {
         Box(modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)) {
             NavHost(
         navController = navController,
@@ -277,6 +301,7 @@ fun MiniMartNavGraph(
                 }
             }
         }
+        }   // CompositionLocalProvider
     }
 }
 

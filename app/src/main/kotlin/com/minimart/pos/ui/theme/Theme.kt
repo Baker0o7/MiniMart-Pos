@@ -66,7 +66,12 @@ fun MiniMartTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? android.app.Activity)?.window ?: return@SideEffect
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            // Every screen paints a dark teal background whatever the Dark-mode switch says, so the
+            // system bar icons must always be light. They used to follow !darkTheme, which made
+            // the clock/battery and the back/home buttons near-invisible with Dark mode off.
+            val controller = WindowCompat.getInsetsController(window, view)
+            controller.isAppearanceLightStatusBars = false
+            controller.isAppearanceLightNavigationBars = false
         }
     }
 

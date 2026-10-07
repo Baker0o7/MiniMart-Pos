@@ -37,7 +37,7 @@ class KeyboardScanner @Inject constructor() {
         lastKeyTime = now
 
         return when {
-            keyCode == KeyEvent.KEYCODE_ENTER && buffer.isNotEmpty() -> {
+            (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER) && buffer.isNotEmpty() -> {
                 val barcode = buffer.toString().trim()
                 buffer.clear()
                 if (barcode.length >= 3) _barcodeFlow.tryEmit(barcode)

@@ -3,6 +3,8 @@ package com.minimart.pos.mpesa
 import android.util.Base64
 import android.util.Log
 import com.minimart.pos.data.repository.SettingsRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
@@ -50,13 +52,13 @@ class DarajaApiClient @Inject constructor(
     }
 
     // ── OAuth token (thread-safe, refresh 60s early) ───────────────────────────
-    suspend fun getAccessToken(): String {
+    suspend fun getAccessToken(): String = withContext(Dispatchers.IO) {
         val cfg = settingsRepo.getDarajaConfig()
         val now = System.currentTimeMillis()
         // The cached token is only valid for the environment + credentials it was issued for;
         // switching sandbox/live or changing the keys in Settings must not reuse it.
         val cacheKey = "${cfg.sandbox}|${cfg.consumerKey}|${cfg.consumerSecret}"
-        tokenRef.get()?.let { if (it.cacheKey == cacheKey && now < it.expiresAtMs - 60_000) return it.token }
+        tokenRef.get()?.let { if (it.cacheKey == cacheKey && now < it.expiresAtMs - 60_000) return@withContext it.token }
 
         val base = if (cfg.sandbox) "https://sandbox.safaricom.co.ke" else "https://api.safaricom.co.ke"
         val credentials = Base64.encodeToString(
@@ -76,7 +78,7 @@ class DarajaApiClient @Inject constructor(
             val token   = json.getString("access_token")
             val expiresIn = json.optLong("expires_in", 3600L)
             tokenRef.set(CachedToken(token, now + expiresIn * 1000, cacheKey))
-            return token
+            token
         } finally {
             conn.disconnect()
         }
@@ -96,8 +98,8 @@ class DarajaApiClient @Inject constructor(
         amountKes: Int,
         accountRef: String = "MiniMart",
         description: String = "Purchase"
-    ): StkPushResult {
-        return try {
+    ): StkPushResult = withContext(Dispatchers.IO) {
+        try {
             val cfg   = settingsRepo.getDarajaConfig()
             val token = getAccessToken()
             val base  = if (cfg.sandbox) "https://sandbox.safaricom.co.ke" else "https://api.safaricom.co.ke"
@@ -149,6 +151,8 @@ class DarajaApiClient @Inject constructor(
             } finally {
                 conn.disconnect()
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e   // cashier pressed Cancel — don't turn it into an error result
         } catch (e: Exception) {
             Log.e(TAG, "initiateStkPush error", e)
             StkPushResult.Error(e.message ?: "Network error")
@@ -156,8 +160,8 @@ class DarajaApiClient @Inject constructor(
     }
 
     // ── Query STK status ──────────────────────────────────────────────────────
-    suspend fun queryStkStatus(checkoutRequestId: String): StkStatus {
-        return try {
+    suspend fun queryStkStatus(checkoutRequestId: String): StkStatus = withContext(Dispatchers.IO) {
+        try {
             val cfg   = settingsRepo.getDarajaConfig()
             val token = getAccessToken()
             val base  = if (cfg.sandbox) "https://sandbox.safaricom.co.ke" else "https://api.safaricom.co.ke"
@@ -205,6 +209,8 @@ class DarajaApiClient @Inject constructor(
             } finally {
                 conn.disconnect()
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "queryStkStatus error", e)
             StkStatus.Error(e.message ?: "Network error")

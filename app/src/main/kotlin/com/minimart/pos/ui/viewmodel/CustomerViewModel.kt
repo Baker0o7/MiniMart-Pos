@@ -73,6 +73,28 @@ class CustomerViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Creates a customer from the checkout quick-add form and hands it back so the sale can use it
+     * straight away ("Save & Select" used to save but select nothing). A phone number that already
+     * belongs to someone reuses that customer instead of creating a duplicate.
+     */
+    fun createCustomer(name: String, phone: String, onReady: (Customer) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val existing = if (phone.isNotBlank()) repo.getByPhone(phone) else null
+                if (existing != null) {
+                    _state.update { it.copy(message = "Already saved as ${existing.name}") }
+                    onReady(existing)
+                    return@launch
+                }
+                val draft = Customer(name = name, phone = phone)
+                onReady(draft.copy(id = repo.saveCustomer(draft)))
+            } catch (e: Exception) {
+                _state.update { it.copy(message = "Error: ${e.localizedMessage}") }
+            }
+        }
+    }
+
     fun deleteCustomer(customer: Customer) = viewModelScope.launch {
         repo.deleteCustomer(customer)
         _state.update { it.copy(message = "Customer deleted") }

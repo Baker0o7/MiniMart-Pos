@@ -245,7 +245,16 @@ private fun CustomerDetailSheet(
             onDismissRequest = { showDeleteConfirm = false },
             containerColor = DT.Surface,
             title = { Text("Delete ${customer.name}?", color = Color.White, fontWeight = FontWeight.Bold) },
-            text = { Text("This also deletes their credit history. This cannot be undone.", color = DT.SubText) },
+            text = {
+                // Deleting wipes the credit ledger too — make the cashier look at what is being lost.
+                val balanceNote = when {
+                    customer.creditBalance < 0 -> "They still OWE $currency ${String.format("%.2f", -customer.creditBalance)}, which will be lost. "
+                    customer.creditBalance > 0 -> "They hold $currency ${String.format("%.2f", customer.creditBalance)} of credit, which will be lost. "
+                    else -> ""
+                }
+                Text(balanceNote + "This also deletes their credit history. This cannot be undone.",
+                    color = if (customer.creditBalance != 0.0) DT.Amber else DT.SubText)
+            },
             confirmButton = {
                 Button(onClick = { showDeleteConfirm = false; onDelete() },
                     colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)) { Text("Delete") }
@@ -416,7 +425,7 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
                         "Currently owes: $currency ${String.format("%.2f", -customer.creditBalance)}"
                     else "Current balance: $currency ${String.format("%.2f", customer.creditBalance)}",
                     color = if (customer.creditBalance < 0) DT.Red else DT.Teal, fontWeight = FontWeight.SemiBold)
-                OutlinedTextField(value = amount, onValueChange = { amount = it },
+                OutlinedTextField(value = amount, onValueChange = { amount = it.replace(',', '.').filter { c -> c.isDigit() || c == '.' }.take(12) },
                     label = { Text("Amount ($currency)", color = DT.SubText) },
                     leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
