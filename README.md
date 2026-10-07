@@ -112,6 +112,9 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - Auto-opens on cash payment (toggle) · Test button in Settings
 
 ### 📦 Inventory & Products
+- **Inventory screen**: summary tiles (items listed, low stock, stock value at cost), a Low stock filter,
+  stock pills, and a stock-adjust dialog that previews the new level, accepts kg for weighed products and
+  blocks removing more than you have
 - Filter chips by category plus **Low stock**; colour-coded stock pills (in stock / low / out)
 - Tap a product to edit it (cashiers get a read-only view); the add/edit form covers price, cost, stock,
   category chips, SKU, unit, VAT %, low-stock threshold, PLU, expiry date picker and a live margin hint
@@ -124,6 +127,12 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - Duplicate barcodes **and duplicate PLU codes** are rejected with a clear message instead of overwriting
   another product; save/adjust errors are shown on screen
 - Negative price/stock can't be saved (validated at both the UI and repository layer)
+
+### 🏠 Home & Settings
+- Home shows the signed-in user's initial and today's date, a real vs-yesterday trend (hidden when there was
+  no sale yesterday), and low-stock / expiry alerts right under the stats
+- Settings sections collapse (with a one-line status when closed), save buttons confirm with "✓ Saved" and only
+  enable when something changed, M-Pesa numbers accept digits only, and backups list their date and size
 
 ### 📊 Reports & Analytics
 - Revenue vs yesterday (real % comparison, flips red when down)
