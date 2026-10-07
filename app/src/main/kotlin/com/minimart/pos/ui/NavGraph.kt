@@ -149,9 +149,9 @@ fun MiniMartNavGraph(
                     currentRoute  = currentRoute,
                     cartItemCount = cartVm.uiState.collectAsState().value.itemCount,
                     onHome        = { navController.navigate(Routes.DASHBOARD) { launchSingleTop = true; restoreState = true } },
-                    onProducts    = { navController.navigate(Routes.PRODUCTS)  { launchSingleTop = true } },
-                    onScan        = { navController.navigate(Routes.SCANNER) },
-                    onExpenses    = { navController.navigate(Routes.EXPENSES)  { launchSingleTop = true } },
+                    onProducts    = { navController.navigate(Routes.PRODUCTS) { launchSingleTop = true } },
+                    onScan        = { navController.navigate(Routes.SCANNER) { launchSingleTop = true } },
+                    onExpenses    = { navController.navigate(Routes.EXPENSES) { launchSingleTop = true } },
                     onInventory   = { navController.navigate(Routes.INVENTORY) { launchSingleTop = true } }
                 )
             }
@@ -186,16 +186,16 @@ fun MiniMartNavGraph(
 
                 composable(Routes.DASHBOARD) {
                     DashboardScreen(
-                        onNavigateToScanner      = { navController.navigate(Routes.SCANNER) },
-                        onNavigateToProducts     = { navController.navigate(Routes.PRODUCTS) },
-                        onNavigateToInventory    = { navController.navigate(Routes.INVENTORY) },
-                        onNavigateToReports      = { navController.navigate(Routes.REPORTS) },
-                        onNavigateToExpenses     = { navController.navigate(Routes.EXPENSES) },
-                        onNavigateToSettings     = { navController.navigate(Routes.SETTINGS) },
-                        onNavigateToSalesHistory = { navController.navigate(Routes.SALES_HISTORY) },
-                        onNavigateToLowStock     = { navController.navigate(Routes.LOW_STOCK) },
-                        onNavigateToCustomers    = { navController.navigate(Routes.CUSTOMERS) },
-                        onNavigateToCreditOverview = { navController.navigate(Routes.CREDIT_OVERVIEW) },
+                        onNavigateToScanner      = { navController.navigate(Routes.SCANNER) { launchSingleTop = true } },
+                        onNavigateToProducts     = { navController.navigate(Routes.PRODUCTS) { launchSingleTop = true } },
+                        onNavigateToInventory    = { navController.navigate(Routes.INVENTORY) { launchSingleTop = true } },
+                        onNavigateToReports      = { navController.navigate(Routes.REPORTS) { launchSingleTop = true } },
+                        onNavigateToExpenses     = { navController.navigate(Routes.EXPENSES) { launchSingleTop = true } },
+                        onNavigateToSettings     = { navController.navigate(Routes.SETTINGS) { launchSingleTop = true } },
+                        onNavigateToSalesHistory = { navController.navigate(Routes.SALES_HISTORY) { launchSingleTop = true } },
+                        onNavigateToLowStock     = { navController.navigate(Routes.LOW_STOCK) { launchSingleTop = true } },
+                        onNavigateToCustomers    = { navController.navigate(Routes.CUSTOMERS) { launchSingleTop = true } },
+                        onNavigateToCreditOverview = { navController.navigate(Routes.CREDIT_OVERVIEW) { launchSingleTop = true } },
                         currentRole              = authState.currentUser?.role,
                         currentUserName          = authState.currentUser?.displayName,
                         settingsRepo             = settingsRepo
@@ -204,7 +204,7 @@ fun MiniMartNavGraph(
 
                 composable(Routes.SCANNER) {
                     ScannerCartScreen(
-                        onNavigateToCheckout = { navController.navigate(Routes.CHECKOUT) },
+                        onNavigateToCheckout = { navController.navigate(Routes.CHECKOUT) { launchSingleTop = true } },
                         onBack = { navController.popBackStack() },
                         vm = cartVm
                     )
@@ -287,8 +287,8 @@ fun MiniMartNavGraph(
                     ) {
                         SettingsScreen(
                             onBack       = { navController.popBackStack() },
-                            onShifts     = { navController.navigate(Routes.SHIFTS) },
-                            onUsers      = { navController.navigate(Routes.USERS) },
+                            onShifts     = { navController.navigate(Routes.SHIFTS) { launchSingleTop = true } },
+                            onUsers      = { navController.navigate(Routes.USERS) { launchSingleTop = true } },
                             onLogout     = {
                                 authVm.logout()
                                 navController.navigate(Routes.LOGIN) { popUpTo(0) { inclusive = true } }
@@ -330,8 +330,8 @@ private fun BottomNavBar(
                 NavItem(Icons.Default.Home,      "Home",      currentRoute == Routes.DASHBOARD, onHome)
                 NavItem(Icons.Default.Inventory2,"Products",  currentRoute == Routes.PRODUCTS,  onProducts)
                 Spacer(Modifier.width(68.dp))
-                NavItem(Icons.Default.Receipt,   "Expenses",  currentRoute == Routes.EXPENSES,  onExpenses)
                 NavItem(Icons.Default.Store,     "Inventory", currentRoute == Routes.INVENTORY, onInventory)
+                NavItem(Icons.Default.Receipt,   "Expenses",  currentRoute == Routes.EXPENSES,  onExpenses)
             }
         }
         // Raised center QR scan button
@@ -378,7 +378,7 @@ private fun RowScope.NavItem(icon: ImageVector, label: String, selected: Boolean
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
             if (selected) {
                 Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))
                     .background(NavSel.copy(alpha = 0.15f)))
