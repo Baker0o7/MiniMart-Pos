@@ -134,6 +134,15 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - Settings sections collapse (with a one-line status when closed), save buttons confirm with "✓ Saved" and only
   enable when something changed, M-Pesa numbers accept digits only, and backups list their date and size
 
+### 📲 M-Pesa Payment Tracking (SMS)
+- Optional, off by default: a manager turns it on in the **M-Pesa** tile on Home and grants SMS permission
+- Reads incoming M-Pesa confirmations (personal, Till and Paybill wording) and logs sender name, phone, amount,
+  transaction code and time; a repeated text is stored once (unique code)
+- Today / week / month / year totals and a payment list per period
+- **Verify a payment**: type the code from a customer's message — it is confirmed only if this phone received it
+  from the MPESA sender ID. Texts from ordinary numbers (forwarded or typed fakes) are ignored
+- This is a separate payments ledger; it does not create sales, so it never double-counts a sale rung up at the till
+
 ### 📊 Reports & Analytics
 - Revenue vs yesterday (real % comparison, flips red when down)
 - Dashboard auto-refreshes at midnight — "today" always means today
