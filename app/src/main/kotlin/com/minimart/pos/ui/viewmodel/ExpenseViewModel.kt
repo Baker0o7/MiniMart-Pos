@@ -96,8 +96,17 @@ class ExpenseViewModel @Inject constructor(
     fun addExpense(expense: Expense) {
         viewModelScope.launch {
             try {
-                expenseRepo.insert(expense)
-                _uiState.update { it.copy(successMessage = "Expense recorded") }
+                // Every expense used to be stored against cashier #1 whoever was signed in.
+                val userId = settingsRepo.loggedInUserId.first() ?: expense.cashierId
+                expenseRepo.insert(expense.copy(cashierId = userId))
+                // A back-dated expense is outside the open-ended "Today" window, so say so
+                // instead of letting it look like the save did nothing.
+                val hiddenByPeriod = expense.createdAt < todayStartMs() && _period.value == ReportPeriod.TODAY
+                _uiState.update {
+                    it.copy(successMessage = if (hiddenByPeriod)
+                        "Saved as an earlier day's expense. Switch to Week or Month to see it."
+                    else "Expense recorded")
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = "Failed: ${e.message}") }
             }

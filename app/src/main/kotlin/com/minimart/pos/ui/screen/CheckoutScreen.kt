@@ -947,19 +947,6 @@ private fun CustomerSearchSheet(
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Keeps a money field to digits and a single decimal point with at most two decimals. A comma
- * (some keypads) becomes a point. Pasted text such as "NaN" or "1e9" used to parse as a number.
- */
-private fun sanitizeMoneyInput(raw: String): String {
-    val cleaned = raw.replace(',', '.').filter { it.isDigit() || it == '.' }
-    val dot = cleaned.indexOf('.')
-    if (dot < 0) return cleaned.take(9)
-    val whole = cleaned.substring(0, dot).take(9)
-    val fraction = cleaned.substring(dot + 1).replace(".", "").take(2)
-    return "$whole.$fraction"
-}
-
 @Composable
 private fun SummaryLine(label: String, value: String, color: Color, bold: Boolean = false) {
     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.SpaceBetween) {

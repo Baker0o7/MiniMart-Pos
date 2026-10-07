@@ -20,7 +20,10 @@ data class CartUiState(
     val isLoading: Boolean = false,
     val lastScannedProduct: Product? = null,
     val error: String? = null,
-    val completedSaleId: Long? = null
+    val completedSaleId: Long? = null,
+    // A weighed product was added by plain barcode / search (no scale ticket): the screen asks the
+    // cashier for the weight instead of adding it as "1 unit" at a meaningless price.
+    val pendingWeighProduct: Product? = null
 ) {
     // Bug fix: these aggregate properties used Double's sumOf{} — repeated floating-
     // point addition across every cart line, which is exactly where IEEE-754 rounding
@@ -124,6 +127,11 @@ class CartViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false, error = "Product not found: $clean") }
                 return@launch
             }
+            if (product.isWeighed) {
+                // Also avoids the integer-stock check below, which wrongly blocked e.g. 0.5 kg in stock.
+                _uiState.update { it.copy(isLoading = false, pendingWeighProduct = product, error = null) }
+                return@launch
+            }
             if (product.stock <= 0) {
                 _uiState.update { it.copy(isLoading = false, error = "${product.name} is out of stock") }
                 return@launch
@@ -146,13 +154,19 @@ class CartViewModel @Inject constructor(
             } else {
                 state.items + CartItem(product = product.copy(price = price), quantity = 1, weightKg = weightKg)
             }
-            state.copy(items = newItems, error = null)
+            state.copy(items = newItems, error = null, pendingWeighProduct = null)
         }
     }
+
+    fun clearWeightRequest() { _uiState.update { it.copy(pendingWeighProduct = null) } }
 
     // ── Cart mutations ────────────────────────────────────────────────────────
 
     fun addToCart(product: Product) {
+        if (product.isWeighed) {
+            _uiState.update { it.copy(pendingWeighProduct = product, error = null) }
+            return
+        }
         val state = _uiState.value
         val existing = state.items.indexOfFirst { it.product.id == product.id }
         if (existing >= 0) {

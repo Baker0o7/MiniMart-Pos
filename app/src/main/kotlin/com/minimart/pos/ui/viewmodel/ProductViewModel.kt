@@ -67,6 +67,14 @@ class ProductViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false, error = "Barcode already used by \"${clash.name}\"") }
                     return@launch
                 }
+                // The scale label identifies a weighed product by its PLU, so two products must not share one.
+                if (product.isWeighed && product.pluCode.isNotBlank()) {
+                    val pluClash = repo.getProductByPlu(product.pluCode)
+                    if (pluClash != null && pluClash.id != product.id) {
+                        _uiState.update { it.copy(isLoading = false, error = "PLU ${product.pluCode} is already used by \"${pluClash.name}\"") }
+                        return@launch
+                    }
+                }
                 if (product.id == 0L) repo.insert(product) else repo.update(product)
                 _uiState.update { it.copy(isLoading = false, successMessage = "Product saved") }
             } catch (e: android.database.sqlite.SQLiteConstraintException) {
