@@ -47,9 +47,9 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-private enum class StockLevel { OUT, LOW, OK }
+internal enum class StockLevel { OUT, LOW, OK }
 
-private fun stockLevel(p: Product): StockLevel = when {
+internal fun stockLevel(p: Product): StockLevel = when {
     (if (p.isWeighed) p.stockKg <= 0.0 else p.stock <= 0) -> StockLevel.OUT
     p.stock <= p.lowStockThreshold -> StockLevel.LOW
     else -> StockLevel.OK
@@ -206,7 +206,7 @@ private fun DarkFilterChip(label: String, selected: Boolean, accent: Color = DT.
 }
 
 @Composable
-private fun StockPill(product: Product) {
+internal fun StockPill(product: Product) {
     val level = stockLevel(product)
     val color = when (level) { StockLevel.OUT -> DT.Red; StockLevel.LOW -> DT.Amber; StockLevel.OK -> DT.Green }
     val text = when (level) {

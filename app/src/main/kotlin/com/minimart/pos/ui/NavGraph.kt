@@ -237,7 +237,7 @@ fun MiniMartNavGraph(
                 }
 
                 composable(Routes.PRODUCTS)  { ProductListScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role), currency = currency) }
-                composable(Routes.INVENTORY) { InventoryScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role)) }
+                composable(Routes.INVENTORY) { InventoryScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role), currency = currency) }
                 composable(Routes.REPORTS)   {
                     // Bug fix: this route had NO AccessGuard at all, unlike Settings
                     // right below it — any logged-in user, including Cashier, who
@@ -295,7 +295,8 @@ fun MiniMartNavGraph(
                             },
                             settingsRepo  = settingsRepo,
                             printer       = printer,
-                            currentRole   = authState.currentUser?.role
+                            currentRole   = authState.currentUser?.role,
+                            currentUserName = authState.currentUser?.displayName
                         )
                     }
                 }

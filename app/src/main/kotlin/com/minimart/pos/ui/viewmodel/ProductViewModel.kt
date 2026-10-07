@@ -112,6 +112,18 @@ class ProductViewModel @Inject constructor(
         }
     }
 
+    /** Signed kg change for a weighed product (e.g. +12.5 when a sack is received). */
+    fun adjustWeighedStock(productId: Long, deltaKg: Double) {
+        viewModelScope.launch {
+            val product = repo.getById(productId) ?: return@launch
+            if (deltaKg > 0) repo.incrementStockKg(productId, deltaKg)
+            else if (deltaKg < 0) {
+                if (product.stockKg < -deltaKg) _uiState.update { it.copy(error = "Cannot remove more than the current stock") }
+                else repo.decrementStockKg(productId, -deltaKg)
+            }
+        }
+    }
+
     fun clearMessages() {
         _uiState.update { it.copy(error = null, successMessage = null) }
     }

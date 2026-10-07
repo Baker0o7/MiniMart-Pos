@@ -9,6 +9,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -47,7 +52,8 @@ fun SettingsScreen(
     onLogout: () -> Unit,
     settingsRepo: SettingsRepository,
     printer: ThermalPrinter,
-    currentRole: UserRole? = null   // passed from NavGraph
+    currentRole: UserRole? = null,   // passed from NavGraph
+    currentUserName: String? = null
 ) {
     val scope   = rememberCoroutineScope()
     val context = LocalContext.current
@@ -78,8 +84,11 @@ fun SettingsScreen(
     var pairedDevices     by remember { mutableStateOf<List<BluetoothDevice>>(emptyList()) }
     var printerStatus     by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(storeName, currency, receiptFooter, mpesaPaybill, mpesaTill, mpesaWithdraw, mpesaName) {
+    // Separate effects: saving the store block used to reset half-typed M-Pesa fields (and vice versa).
+    LaunchedEffect(storeName, currency, receiptFooter) {
         storeNameInput = storeName; currencyInput = currency; footerInput = receiptFooter
+    }
+    LaunchedEffect(mpesaPaybill, mpesaTill, mpesaWithdraw, mpesaName) {
         paybillInput = mpesaPaybill; tillInput = mpesaTill; withdrawInput = mpesaWithdraw; nameInput = mpesaName
     }
 
@@ -88,37 +97,41 @@ fun SettingsScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // ── Teal top bar ──────────────────────────────────────────────────
-            Box(
-                modifier = Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
-                    .background(Brush.horizontalGradient(listOf(DT.Teal, Color(0xFF00695C))))
-                    .padding(horizontal = 8.dp, vertical = 16.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White) }
-                    Text("Settings", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.weight(1f))
-                    // Role chip
-                    currentRole?.let { role ->
-                        // roleBadgeColor returns a fully-opaque 0xFFxxxxxx Int literal.
-                        // Shift unsigned: toUInt().toLong() avoids sign-extension that
-                        // .toLong() alone applies (which would give a negative Long for
-                        // any color with bit 31 set, crashing Color() which requires a
-                        // non-negative packed ARGB Long value).
-                        val color = Color(RoleManager.roleBadgeColor(role).toUInt().toLong())
-                        Box(modifier = Modifier.clip(RoundedCornerShape(20.dp))
-                            .background(Color.White.copy(0.15f)).border(1.dp, Color.White.copy(0.3f), RoundedCornerShape(20.dp))
-                            .padding(horizontal = 12.dp, vertical = 5.dp)) {
-                            Text(RoleManager.roleLabel(role), color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
+            GradientHeader(title = "Settings", subtitle = storeName.takeIf { it.isNotBlank() }, onBack = onBack)
 
             Column(
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
+
+                // Who is signed in
+                Row(
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(DT.Surface)
+                        .border(1.dp, DT.Border, RoundedCornerShape(18.dp)).padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(Modifier.size(46.dp).clip(RoundedCornerShape(14.dp)).background(DT.TealDim), contentAlignment = Alignment.Center) {
+                        Text(currentUserName?.trim()?.firstOrNull()?.uppercase() ?: "?",
+                            color = DT.TealLight, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(currentUserName ?: "Signed in", color = DT.OnSurface, fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(storeName.ifBlank { "MiniMart POS" }, color = DT.SubText, fontSize = 12.sp,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    currentRole?.let { role ->
+                        // roleBadgeColor is a Long literal with the alpha bit set; unsigned conversion
+                        // keeps Color() from receiving a negative packed value.
+                        val badge = Color(RoleManager.roleBadgeColor(role).toUInt().toLong())
+                        Box(Modifier.clip(RoundedCornerShape(20.dp)).background(badge.copy(0.22f))
+                            .border(1.dp, badge.copy(0.6f), RoundedCornerShape(20.dp))
+                            .padding(horizontal = 12.dp, vertical = 5.dp)) {
+                            Text(RoleManager.roleLabel(role), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
 
                 // Cashier restriction notice
                 if (!isAdmin) {
@@ -148,19 +161,18 @@ fun SettingsScreen(
                         Spacer(Modifier.height(8.dp))
                         DField(footerInput, { footerInput = it }, "Receipt Footer Message")
                         Spacer(Modifier.height(12.dp))
-                        Button(
-                            onClick = { scope.launch {
-                                // Blank name/currency would print as an empty header or a bare amount
-                                // on every receipt; keep the previous value instead.
-                                val name = storeNameInput.trim()
-                                val cur  = currencyInput.trim().uppercase().take(5)
-                                if (name.isNotEmpty()) settingsRepo.setStoreName(name) else storeNameInput = settingsRepo.storeName.first()
-                                if (cur.isNotEmpty()) { settingsRepo.setCurrency(cur); currencyInput = cur } else currencyInput = settingsRepo.currency.first()
+                        val cleanCurrency = currencyInput.trim().uppercase().take(5)
+                        val storeDirty = storeNameInput.trim() != storeName || cleanCurrency != currency || footerInput.trim() != receiptFooter
+                        val storeValid = storeNameInput.isNotBlank() && cleanCurrency.isNotEmpty()
+                        if (!storeValid) Text("Store name and currency can't be empty.", color = DT.Red,
+                            style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(bottom = 6.dp))
+                        SaveButton("Save Store Settings", enabled = storeDirty && storeValid, color = DT.Teal) {
+                            scope.launch {
+                                settingsRepo.setStoreName(storeNameInput.trim())
+                                settingsRepo.setCurrency(cleanCurrency); currencyInput = cleanCurrency
                                 settingsRepo.setReceiptFooter(footerInput.trim())
-                            }},
-                            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
-                        ) { Text("Save Store Settings", color = Color.White, fontWeight = FontWeight.Bold) }
+                            }
+                        }
                     }
                 }
 
@@ -184,50 +196,49 @@ fun SettingsScreen(
 
                         // Paybill
                         SSubTitle("Paybill (for business payments)")
-                        DField(paybillInput, { paybillInput = it }, "Paybill Number", Icons.Default.Business)
+                        DField(paybillInput, { paybillInput = it.filter(Char::isDigit).take(10) }, "Paybill Number", Icons.Default.Business, numeric = true)
                         Spacer(Modifier.height(8.dp))
 
                         // Till
                         SSubTitle("Buy Goods / Till Number")
-                        DField(tillInput, { tillInput = it }, "Till Number", Icons.Default.PointOfSale)
+                        DField(tillInput, { tillInput = it.filter(Char::isDigit).take(10) }, "Till Number", Icons.Default.PointOfSale, numeric = true)
                         Spacer(Modifier.height(8.dp))
 
                         // Withdraw
                         SSubTitle("Withdrawal / Agent Number")
-                        DField(withdrawInput, { withdrawInput = it }, "Agent / Withdraw Number", Icons.Default.Money)
+                        DField(withdrawInput, { withdrawInput = it.filter(Char::isDigit).take(10) }, "Agent / Withdraw Number", Icons.Default.Money, numeric = true)
                         Spacer(Modifier.height(4.dp))
                         Text("Used for end-of-day withdrawal reminders.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                         Spacer(Modifier.height(12.dp))
 
-                        Button(
-                            onClick = { scope.launch {
+                        val mpesaDirty = paybillInput != mpesaPaybill || tillInput != mpesaTill ||
+                            withdrawInput != mpesaWithdraw || nameInput != mpesaName
+                        SaveButton("Save M-Pesa Settings", enabled = mpesaDirty, color = Color(0xFF1B5E20), icon = Icons.Default.PhoneAndroid) {
+                            scope.launch {
                                 settingsRepo.setMpesaPaybill(paybillInput)
                                 settingsRepo.setMpesaTill(tillInput)
                                 settingsRepo.setMpesaWithdraw(withdrawInput)
                                 settingsRepo.setMpesaAccountName(nameInput)
-                            }},
-                            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
-                        ) {
-                            Icon(Icons.Default.PhoneAndroid, null, tint = Color.White, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Save M-Pesa Settings", color = Color.White, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
 
                 // ── M-Pesa STK Push (Daraja API) ─────────────────────────────
                 if (isAdmin) {
-                    var darajaSandbox       by remember { mutableStateOf(settingsRepo.getDarajaConfig().sandbox) }
-                    var darajaShortcode     by remember { mutableStateOf(settingsRepo.getDarajaConfig().shortcode) }
-                    var darajaConsumerKey   by remember { mutableStateOf(settingsRepo.getDarajaConfig().consumerKey) }
-                    var darajaConsumerSecret by remember { mutableStateOf(settingsRepo.getDarajaConfig().consumerSecret) }
-                    var darajaPasskey       by remember { mutableStateOf(settingsRepo.getDarajaConfig().passkey) }
+                    val initialDaraja = remember { settingsRepo.getDarajaConfig() }
+                    var darajaSandbox       by remember { mutableStateOf(initialDaraja.sandbox) }
+                    var darajaShortcode     by remember { mutableStateOf(initialDaraja.shortcode) }
+                    var darajaConsumerKey   by remember { mutableStateOf(initialDaraja.consumerKey) }
+                    var darajaConsumerSecret by remember { mutableStateOf(initialDaraja.consumerSecret) }
+                    var darajaPasskey       by remember { mutableStateOf(initialDaraja.passkey) }
                     var showSecret          by remember { mutableStateOf(false) }
                     var showPasskey         by remember { mutableStateOf(false) }
                     var darajaSaved         by remember { mutableStateOf(false) }
 
-                    DSection("M-Pesa STK Push (Daraja API)", Icons.Default.Send) {
+                    DSection("M-Pesa STK Push (Daraja API)", Icons.Default.Send,
+                        summary = if (initialDaraja.consumerKey.isBlank()) "Not set up" else if (darajaSandbox) "Sandbox" else "Production",
+                        initiallyExpanded = false) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically) {
                             Text("Environment", color = DT.OnSurface, fontSize = 14.sp)
@@ -245,7 +256,10 @@ fun SettingsScreen(
                                     ))
                             }
                         }
-                        Spacer(Modifier.height(4.dp))
+                        Text(if (darajaSandbox) "Sandbox uses test credentials — no real money moves."
+                             else "Production — customers are charged for real.",
+                            color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                        Spacer(Modifier.height(8.dp))
                         DField(darajaShortcode, { darajaShortcode = it }, "Business Shortcode", Icons.Default.Storefront)
                         Spacer(Modifier.height(4.dp))
                         DField(darajaConsumerKey, { darajaConsumerKey = it }, "Consumer Key", Icons.Default.VpnKey)
@@ -307,7 +321,9 @@ fun SettingsScreen(
 
                 // ── Thermal Printer ───────────────────────────────────────────
                 if (isAdmin) {
-                    DSection("Thermal Printer", Icons.Default.Print) {
+                    DSection("Thermal Printer", Icons.Default.Print,
+                        summary = if (printer.isConnected) (printerName ?: "Connected") else (printerName ?: "Not paired"),
+                        initiallyExpanded = false) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(printerName ?: "No printer paired",
@@ -322,7 +338,7 @@ fun SettingsScreen(
                                 shape = RoundedCornerShape(20.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal),
                                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
-                            ) { Text("Pair", color = Color.White, fontWeight = FontWeight.Bold) }
+                            ) { Text(if (printerName.isNullOrBlank()) "Pair" else "Change", color = Color.White, fontWeight = FontWeight.Bold) }
                         }
                         printerStatus?.let { Text(it, color = if (it.startsWith("✓")) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall) }
                     }
@@ -333,8 +349,15 @@ fun SettingsScreen(
                     val cashDrawerAddress by settingsRepo.cashDrawerAddress.collectAsState("")
                     val cashDrawerOnSale  by settingsRepo.cashDrawerOnSale.collectAsState(true)
                     var testStatus by remember { mutableStateOf<String?>(null) }
+                    // Local text, saved when the field loses focus: writing DataStore on every keystroke
+                    // and echoing it back made typing laggy and could drop characters.
+                    var drawerInput by remember { mutableStateOf("") }
+                    var drawerTouched by remember { mutableStateOf(false) }
+                    LaunchedEffect(cashDrawerAddress) { drawerInput = cashDrawerAddress }
 
-                    DSection("Cash Drawer", Icons.Default.LocalAtm) {
+                    DSection("Cash Drawer", Icons.Default.LocalAtm,
+                        summary = if (cashDrawerOnSale) "Opens on cash sale" else "Manual only",
+                        initiallyExpanded = false) {
                         Text("Cash drawer connected to thermal printer via RJ11 is auto-detected.",
                             color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                         Spacer(Modifier.height(10.dp))
@@ -349,10 +372,16 @@ fun SettingsScreen(
                         }
                         Spacer(Modifier.height(10.dp))
                         // Direct BT drawer address (optional)
-                        OutlinedTextField(value = cashDrawerAddress, onValueChange = { scope.launch { settingsRepo.setCashDrawerAddress(it) } },
+                        OutlinedTextField(value = drawerInput, onValueChange = { drawerInput = it },
                             label = { Text("Direct BT Drawer Address (optional)", color = DT.SubText) },
                             placeholder = { Text("00:11:22:33:44:55", color = DT.SubText.copy(0.5f)) },
-                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().onFocusChanged { f ->
+                                if (f.isFocused) drawerTouched = true
+                                else if (drawerTouched && drawerInput.trim() != cashDrawerAddress) {
+                                    scope.launch { settingsRepo.setCashDrawerAddress(drawerInput.trim()) }
+                                }
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
                                 focusedTextColor = Color.White, unfocusedTextColor = Color.White,
@@ -380,7 +409,7 @@ fun SettingsScreen(
                 }
 
                 // ── Bluetooth Scanner ─────────────────────────────────────────
-                DSection("Bluetooth Barcode Scanner", Icons.Default.QrCodeScanner) {
+                DSection("Bluetooth Barcode Scanner", Icons.Default.QrCodeScanner, initiallyExpanded = false) {
                     Text("HID scanners pair as keyboards — connect via Android Bluetooth settings. Once paired, scan works automatically in the New Sale screen.",
                         color = DT.SubText, style = MaterialTheme.typography.labelSmall, lineHeight = 18.sp)
                     Spacer(Modifier.height(10.dp))
@@ -418,7 +447,8 @@ fun SettingsScreen(
                 }
 
                 // ── Expiry Alerts ─────────────────────────────────────────────
-                DSection("Expiry Alerts", Icons.Default.CalendarToday) {
+                DSection("Expiry Alerts", Icons.Default.CalendarToday,
+                    summary = "$expiryAlertMonths ${if (expiryAlertMonths == 1) "month" else "months"} ahead") {
                     Text("Alert me when products expire within:", color = DT.SubText,
                         style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(8.dp))
@@ -430,7 +460,8 @@ fun SettingsScreen(
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(if (selected) DT.Teal else DT.Bg)
                                     .border(1.dp, if (selected) DT.Teal else DT.Border, RoundedCornerShape(12.dp))
-                                    .clickable { scope.launch { settingsRepo.setExpiryAlertMonths(months) } }
+                                    // Shop-wide setting: the cashier notice says settings are the manager's to change.
+                                    .clickable(enabled = isAdmin) { scope.launch { settingsRepo.setExpiryAlertMonths(months) } }
                                     .padding(vertical = 12.dp),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -460,7 +491,9 @@ fun SettingsScreen(
                 // ── Multi-Device Sync (LAN) ───────────────────────────────────
                 if (isAdmin) {
                     val syncState by syncVm.state.collectAsState()
-                    DSection("Multi-Device Sync (LAN)", Icons.Default.Sync) {
+                    DSection("Multi-Device Sync (LAN)", Icons.Default.Sync,
+                        summary = if (syncState.serverRunning) "Server running" else "Off",
+                        initiallyExpanded = false) {
                         Text("Device ID: ${syncState.deviceId.take(8)}…", color = DT.SubText, fontSize = 11.sp)
                         Spacer(Modifier.height(10.dp))
 
@@ -563,7 +596,7 @@ fun SettingsScreen(
 
                 // ── Data & Backup ─────────────────────────────────────────────
                 if (isAdmin) {
-                    DSection("Data & Backup", Icons.Default.Storage) {
+                    DSection("Data & Backup", Icons.Default.Storage, summary = "Backup · Restore · Share", initiallyExpanded = false) {
                         var backupStatus by remember { mutableStateOf<String?>(null) }
                         var isBackingUp  by remember { mutableStateOf(false) }
                         var backupFiles  by remember { mutableStateOf<List<java.io.File>>(emptyList()) }
@@ -665,7 +698,14 @@ fun SettingsScreen(
                                                 // instead of restoring immediately on tap.
                                                 showRestore = false
                                                 pendingRestoreFile = f
-                                            }, modifier = Modifier.fillMaxWidth()) { Text(f.name, color = DT.TealLight, style = MaterialTheme.typography.bodySmall) }
+                                            }, modifier = Modifier.fillMaxWidth()) {
+                                                Column(Modifier.fillMaxWidth()) {
+                                                    Text(f.name, color = DT.TealLight, style = MaterialTheme.typography.bodySmall,
+                                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                                    Text("${java.text.SimpleDateFormat("d MMM yyyy, HH:mm", java.util.Locale.getDefault()).format(java.util.Date(f.lastModified()))} · ${f.length() / 1024} KB",
+                                                        color = DT.SubText, fontSize = 11.sp)
+                                                }
+                                            }
                                         }
                                     }
                                 },
@@ -770,6 +810,16 @@ fun SettingsScreen(
                     HDivider()
                     DMenuRow("Logout", Icons.AutoMirrored.Filled.Logout, DT.Red) { onLogout() }
                 }
+
+                val versionName = remember {
+                    try {
+                        @Suppress("DEPRECATION")
+                        context.packageManager.getPackageInfo(context.packageName, 0).versionName
+                    } catch (_: Exception) { null }
+                }
+                Text("MiniMart POS" + (versionName?.let { " · v$it" } ?: ""), color = DT.SubText.copy(0.7f),
+                    fontSize = 11.sp, modifier = Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 12.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
             }
         }
     }
@@ -805,28 +855,75 @@ fun SettingsScreen(
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 @Composable
-private fun DSection(title: String, icon: ImageVector, content: @Composable ColumnScope.() -> Unit) {
+private fun DSection(
+    title: String,
+    icon: ImageVector,
+    summary: String? = null,
+    initiallyExpanded: Boolean = true,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    // Remembered per title so a rotation doesn't snap every section back to its default.
+    var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
     Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(DT.Surface)
         .border(1.dp, DT.Border, RoundedCornerShape(18.dp))) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                    ) { expanded = !expanded },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(icon, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(title, color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Column(Modifier.weight(1f)) {
+                    Text(title, color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    if (!expanded && summary != null) {
+                        Text(summary, color = DT.SubText, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+                Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    if (expanded) "Collapse" else "Expand", tint = DT.SubText, modifier = Modifier.size(22.dp))
             }
-            Spacer(Modifier.height(12.dp))
-            content()
+            AnimatedVisibility(visible = expanded) {
+                Column(modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)) { content() }
+            }
         }
     }
 }
 
 @Composable
-private fun DField(value: String, onValueChange: (String) -> Unit, label: String, icon: ImageVector? = null) {
+private fun DField(value: String, onValueChange: (String) -> Unit, label: String, icon: ImageVector? = null, numeric: Boolean = false) {
     OutlinedTextField(value = value, onValueChange = onValueChange,
         label = { Text(label, color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
         leadingIcon = icon?.let { { Icon(it, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) } },
+        keyboardOptions = if (numeric) KeyboardOptions(keyboardType = KeyboardType.Number) else KeyboardOptions.Default,
         singleLine = true, modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp), colors = dColors())
+}
+
+/** Full-width save button that is only live when something changed and confirms with "✓ Saved". */
+@Composable
+private fun SaveButton(label: String, enabled: Boolean, color: Color, icon: ImageVector? = null, onSave: () -> Unit) {
+    var saved by remember { mutableStateOf(false) }
+    LaunchedEffect(saved) { if (saved) { kotlinx.coroutines.delay(2500); saved = false } }
+    Button(
+        onClick = { onSave(); saved = true },
+        enabled = enabled || saved,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = color, contentColor = Color.White,
+            disabledContainerColor = color.copy(0.35f), disabledContentColor = Color.White.copy(0.7f)
+        )
+    ) {
+        if (!saved && icon != null) {
+            Icon(icon, null, tint = Color.White, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(if (saved) "✓ Saved" else label, fontWeight = FontWeight.Bold)
+    }
 }
 
 @Composable private fun SSubTitle(text: String) {

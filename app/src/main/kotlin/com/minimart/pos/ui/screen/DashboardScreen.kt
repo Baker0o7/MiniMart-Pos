@@ -94,7 +94,7 @@ fun DashboardScreen(
         isRefreshing = isRefreshing, onRefresh = { isRefreshing = true },
         modifier = Modifier.fillMaxSize().background(Bg)
     ) {
-        LazyColumn(contentPadding = PaddingValues(bottom = 100.dp)) {
+        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
 
             // ── Greeting header ───────────────────────────────────────────────
             item {
@@ -106,7 +106,9 @@ fun DashboardScreen(
                         Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(14.dp))
                             .background(Brush.linearGradient(listOf(DT.Teal, Color(0xFF004D40)))),
                             contentAlignment = Alignment.Center) {
-                            Text("🇰🇪", fontSize = 22.sp)
+                            val initial = currentUserName?.trim()?.firstOrNull()?.uppercase()
+                            if (initial != null) Text(initial, color = White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                            else Text("🇰🇪", fontSize = 22.sp)
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
@@ -116,7 +118,8 @@ fun DashboardScreen(
                             // name (common for Kenyan shop names, e.g. "Baraka Wholesalers &
                             // General Provisions") would wrap to a second line and unbalance
                             // this header against the fixed-height avatar and status pill.
-                            Text(state.storeName, color = Sub, fontSize = 12.sp,
+                            val today = remember { java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale.getDefault()).format(java.util.Date()) }
+                            Text("${state.storeName} · $today", color = Sub, fontSize = 12.sp,
                                 maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         }
                         // Status pill
@@ -132,12 +135,12 @@ fun DashboardScreen(
                         }
                         Spacer(Modifier.width(10.dp))
                         // Settings button
-                        Box(modifier = Modifier.size(40.dp).clip(CircleShape)
+                        Box(modifier = Modifier.size(44.dp).clip(CircleShape)
                             .background(Color(0xFF0D2420))
                             .border(1.dp, Color(0xFF1A4038), CircleShape)
                             .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onNavigateToSettings() },
                             contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Settings, null, tint = Sub, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Settings, "Settings", tint = Sub, modifier = Modifier.size(20.dp))
                         }
                     }
                 }
@@ -148,49 +151,43 @@ fun DashboardScreen(
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     // Revenue card
+                    val hasYesterday = state.yesterdayRevenue > 0
+                    val pct = if (hasYesterday) (state.todayRevenue - state.yesterdayRevenue) / state.yesterdayRevenue * 100 else 0.0
+                    val up = pct >= 0
                     Box(modifier = Modifier.weight(1.5f).clip(RoundedCornerShape(22.dp))
                         .background(Brush.verticalGradient(listOf(Color(0xFF0E2E28), Color(0xFF071815))))
                         .border(1.dp, TealGlow.copy(0.18f), RoundedCornerShape(22.dp))
-                        .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 10.dp)) {
+                        .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 12.dp)) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Today's Sales", color = Sub, fontSize = 11.sp, modifier = Modifier.weight(1f))
-                                Box(Modifier.clip(RoundedCornerShape(8.dp))
-                                    .background(GreenGlow.copy(0.18f))
-                                    .padding(horizontal = 7.dp, vertical = 3.dp)) {
-                                    // Bug fix: was hardcoded "+8%" whenever revenue > 0 — a
-                                    // placeholder never replaced with real data.
-                                    val pct = if (state.yesterdayRevenue > 0)
-                                        ((state.todayRevenue - state.yesterdayRevenue) / state.yesterdayRevenue * 100)
-                                    else if (state.todayRevenue > 0) 100.0 else 0.0
-                                    val pctLabel = if (pct >= 0) "+${String.format("%.0f", pct)}%" else "${String.format("%.0f", pct)}%"
-                                    val pctColor = if (pct >= 0) GreenGlow else RedGlow
-                                    Text(pctLabel, color = pctColor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                // Only a real comparison: with no sales yesterday there is nothing to compare to.
+                                if (hasYesterday) {
+                                    val tint = if (up) GreenGlow else RedGlow
+                                    Row(Modifier.clip(RoundedCornerShape(8.dp)).background(tint.copy(0.18f))
+                                        .padding(horizontal = 7.dp, vertical = 3.dp),
+                                        verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(if (up) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
+                                            null, tint = tint, modifier = Modifier.size(12.dp))
+                                        Spacer(Modifier.width(3.dp))
+                                        Text("${if (up) "+" else ""}${String.format(java.util.Locale.US, "%.0f", pct)}%",
+                                            color = tint, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                             Spacer(Modifier.height(6.dp))
-                            // Bug fix: hardcoded "KES" — state.currency (from the app's
-                            // configurable currency setting) was already available but unused.
-                            Text("${state.currency} ${String.format("%,.0f", state.todayRevenue)}",
-                                color = White, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
-                            Text("vs yesterday", color = Sub, fontSize = 10.sp)
+                            Text("${state.currency} ${String.format(java.util.Locale.US, "%,.0f", state.todayRevenue)}",
+                                color = White, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Spacer(Modifier.height(10.dp))
                             // Real hourly data; fall back to a flat line when no sales yet today
                             val spark = if (state.hourlySpark.size >= 2) state.hourlySpark
                                         else listOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
                             MiniLineChart(spark, TealGlow, Modifier.fillMaxWidth().height(44.dp))
-                            Spacer(Modifier.height(4.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                val pct2 = if (state.yesterdayRevenue > 0)
-                                    ((state.todayRevenue - state.yesterdayRevenue) / state.yesterdayRevenue * 100)
-                                else if (state.todayRevenue > 0) 100.0 else 0.0
-                                val trending = if (pct2 >= 0) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown
-                                val trendColor = if (pct2 >= 0) GreenGlow else RedGlow
-                                val pctLabel2 = if (pct2 >= 0) "+${String.format("%.0f", pct2)}%" else "${String.format("%.0f", pct2)}%"
-                                Icon(trending, null, tint = trendColor, modifier = Modifier.size(12.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text("$pctLabel2 from yesterday", color = trendColor, fontSize = 10.sp)
-                            }
+                            Spacer(Modifier.height(6.dp))
+                            Text(if (hasYesterday) "Yesterday: ${state.currency} ${String.format(java.util.Locale.US, "%,.0f", state.yesterdayRevenue)}"
+                                 else "No sales yesterday to compare",
+                                color = Sub, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                     // Right column: transactions + top product
@@ -225,11 +222,35 @@ fun DashboardScreen(
                                     Text("Avg Basket", color = Sub, fontSize = 10.sp)
                                 }
                                 Spacer(Modifier.height(4.dp))
-                                Text("${state.currency} ${String.format("%.0f", avgBasket)}",
+                                Text("${state.currency} ${String.format(java.util.Locale.US, "%,.0f", avgBasket)}",
                                     color = White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                             }
                         }
                     }
+                }
+            }
+
+            // ── Needs attention (first, so it is never below the fold) ────────
+            if (state.lowStockProducts.isNotEmpty()) {
+                item { Spacer(Modifier.height(16.dp)) }
+                item {
+                    val n = state.lowStockProducts.size
+                    DashAlert(Icons.Default.Warning, RedGlow, Color(0xFF1E0808),
+                        "$n ${if (n == 1) "item is" else "items are"} low on stock", "Needs restocking", onNavigateToLowStock)
+                }
+            }
+            if (state.expiredProducts.isNotEmpty() || state.expiringProducts.isNotEmpty()) {
+                item { Spacer(Modifier.height(if (state.lowStockProducts.isEmpty()) 16.dp else 6.dp)) }
+                item {
+                    val parts = listOfNotNull(
+                        state.expiredProducts.size.takeIf { it > 0 }?.let { "$it expired" },
+                        state.expiringProducts.size.takeIf { it > 0 }?.let { "$it expiring soon" }
+                    )
+                    DashAlert(
+                        Icons.Default.CalendarToday,
+                        if (state.expiredProducts.isNotEmpty()) RedGlow else AmberGlow,
+                        if (state.expiredProducts.isNotEmpty()) Color(0xFF1E0808) else Color(0xFF1E1005),
+                        parts.joinToString(" · "), "Review in Inventory", onNavigateToInventory)
                 }
             }
 
@@ -303,23 +324,6 @@ fun DashboardScreen(
                         }
                     }
                 }
-            }
-
-            // ── Alert banners ─────────────────────────────────────────────────
-            if (state.lowStockProducts.isNotEmpty()) {
-                item { Spacer(Modifier.height(8.dp)) }
-                item { DashAlert(Icons.Default.Warning, RedGlow, Color(0xFF1E0808),
-                    "${state.lowStockProducts.size} items low on stock", "Needs restocking", onNavigateToLowStock) }
-            }
-            if (state.expiredProducts.isNotEmpty() || state.expiringProducts.isNotEmpty()) {
-                item { Spacer(Modifier.height(6.dp)) }
-                item { DashAlert(
-                    Icons.Default.CalendarToday,
-                    if (state.expiredProducts.isNotEmpty()) RedGlow else AmberGlow,
-                    if (state.expiredProducts.isNotEmpty()) Color(0xFF1E0808) else Color(0xFF1E1005),
-                    "${state.expiredProducts.size + state.expiringProducts.size} expiry alert(s)",
-                    if (state.expiredProducts.isNotEmpty()) "Check expired items" else "Expiring soon",
-                    onNavigateToInventory) }
             }
 
             // ── Top sellers ───────────────────────────────────────────────────
@@ -404,7 +408,7 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector,
             Text(title, color = White, fontWeight = FontWeight.Bold, fontSize = 12.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(3.dp))
-            Text(sub, color = Sub, fontSize = 10.sp, lineHeight = 13.sp)
+            Text(sub, color = Sub, fontSize = 10.sp, lineHeight = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(8.dp))
             // Arrow chip
             Box(modifier = Modifier.size(22.dp).clip(CircleShape)
@@ -442,9 +446,11 @@ private fun DashAlert(icon: ImageVector, glow: Color, bg: Color,
 
 @Composable
 private fun BoxScope.DashBadge(onRemove: () -> Unit) {
-    Box(Modifier.align(Alignment.TopEnd).padding(4.dp).size(20.dp).clip(CircleShape)
-        .background(RedGlow).clickable(onClick = onRemove), contentAlignment = Alignment.Center) {
-        Icon(Icons.Default.Close, null, tint = White, modifier = Modifier.size(12.dp))
+    // 32dp touch target around a 20dp visual badge.
+    Box(Modifier.align(Alignment.TopEnd).size(32.dp).clickable(onClick = onRemove), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(20.dp).clip(CircleShape).background(RedGlow), contentAlignment = Alignment.Center) {
+            Icon(Icons.Default.Close, "Hide card", tint = White, modifier = Modifier.size(12.dp))
+        }
     }
 }
 
