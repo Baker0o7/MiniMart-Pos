@@ -56,6 +56,34 @@ interface SaleDao {
     """)
     fun getTopSellingProducts(startMs: Long, endMs: Long = Long.MAX_VALUE, limit: Int = 10): Flow<List<TopSellerResult>>
 
+    /** Per-product sales over a range (completed sales only) — units/kg, revenue, cost of goods and the
+     *  revenue that has a known cost price, for analytics and stock insights. Weighed lines count kg. */
+    @Query("""
+        SELECT si.productId AS productId,
+               si.productName AS productName,
+               COALESCE(p.category, 'General') AS category,
+               COALESCE(SUM(CASE WHEN si.weightKg > 0 THEN si.weightKg ELSE si.quantity END), 0.0) AS qty,
+               COALESCE(SUM(si.lineTotal), 0.0) AS revenue,
+               COALESCE(SUM((CASE WHEN si.weightKg > 0 THEN si.weightKg ELSE si.quantity END) * COALESCE(p.costPrice, 0.0)), 0.0) AS cost,
+               COALESCE(SUM(CASE WHEN COALESCE(p.costPrice, 0.0) > 0 THEN si.lineTotal ELSE 0.0 END), 0.0) AS costedRevenue
+        FROM sale_items si
+        INNER JOIN sales s ON si.saleId = s.id
+        LEFT JOIN products p ON p.id = si.productId
+        WHERE s.createdAt >= :startMs AND s.createdAt <= :endMs AND s.status = 'COMPLETED'
+        GROUP BY si.productId
+    """)
+    fun getProductSalesStats(startMs: Long, endMs: Long = Long.MAX_VALUE): Flow<List<ProductSalesStat>>
+
+    /** When each product last sold (completed sales), for spotting dead stock. */
+    @Query("""
+        SELECT si.productId AS productId, MAX(s.createdAt) AS lastSoldAt
+        FROM sale_items si
+        INNER JOIN sales s ON si.saleId = s.id
+        WHERE s.status = 'COMPLETED'
+        GROUP BY si.productId
+    """)
+    fun getLastSoldTimes(): Flow<List<LastSold>>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSale(sale: Sale): Long
 
@@ -117,6 +145,18 @@ interface SaleDao {
         return saleId
     }
 }
+
+data class ProductSalesStat(
+    val productId: Long,
+    val productName: String,
+    val category: String,
+    val qty: Double,
+    val revenue: Double,
+    val cost: Double,
+    val costedRevenue: Double
+)
+
+data class LastSold(val productId: Long, val lastSoldAt: Long)
 
 data class SaleStats(val count: Int, val total: Double)
 

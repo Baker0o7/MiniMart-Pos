@@ -59,6 +59,8 @@ object Routes {
     const val SHIFTS    = "shifts"
     const val SETTINGS  = "settings"
     const val MPESA     = "mpesa_payments"
+    const val ANALYTICS = "analytics"
+    const val STOCK_INSIGHTS = "stock_insights"
     fun receipt(saleId: Long) = "receipt/$saleId"
 }
 
@@ -198,6 +200,8 @@ fun MiniMartNavGraph(
                         onNavigateToCustomers    = { navController.navigate(Routes.CUSTOMERS) { launchSingleTop = true } },
                         onNavigateToCreditOverview = { navController.navigate(Routes.CREDIT_OVERVIEW) { launchSingleTop = true } },
                         onNavigateToMpesa        = { navController.navigate(Routes.MPESA) { launchSingleTop = true } },
+                        onNavigateToAnalytics    = { navController.navigate(Routes.ANALYTICS) { launchSingleTop = true } },
+                        onNavigateToStockInsights = { navController.navigate(Routes.STOCK_INSIGHTS) { launchSingleTop = true } },
                         currentRole              = authState.currentUser?.role,
                         currentUserName          = authState.currentUser?.displayName,
                         settingsRepo             = settingsRepo
@@ -240,7 +244,20 @@ fun MiniMartNavGraph(
                 }
 
                 composable(Routes.PRODUCTS)  { ProductListScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role), currency = currency) }
-                composable(Routes.INVENTORY) { InventoryScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role), currency = currency) }
+                composable(Routes.INVENTORY) { InventoryScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role), currency = currency,
+                    onInsights = { navController.navigate(Routes.STOCK_INSIGHTS) { launchSingleTop = true } }) }
+                composable(Routes.ANALYTICS) {
+                    AccessGuard(
+                        hasAccess = RoleManager.canViewReports(authState.currentUser?.role),
+                        onBack = { navController.popBackStack() }
+                    ) { AnalyticsScreen(onBack = { navController.popBackStack() }) }
+                }
+                composable(Routes.STOCK_INSIGHTS) {
+                    AccessGuard(
+                        hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
+                        onBack = { navController.popBackStack() }
+                    ) { InventoryInsightsScreen(onBack = { navController.popBackStack() }) }
+                }
                 composable(Routes.REPORTS)   {
                     // Bug fix: this route had NO AccessGuard at all, unlike Settings
                     // right below it — any logged-in user, including Cashier, who

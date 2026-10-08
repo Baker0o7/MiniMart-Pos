@@ -38,6 +38,7 @@ fun InventoryScreen(
     onBack: () -> Unit,
     canEditPrices: Boolean = true,
     currency: String = "KES",
+    onInsights: (() -> Unit)? = null,
     vm: ProductViewModel = hiltViewModel()
 ) {
     val products by vm.products.collectAsState()
@@ -75,6 +76,10 @@ fun InventoryScreen(
                 subtitle = "${products.size} products • ${lowStock.size} low stock",
                 onBack = onBack,
                 actions = {
+                    if (canEditPrices && onInsights != null) {
+                        HeaderPillButton("Insights", Icons.Default.Insights, onInsights)
+                        Spacer(Modifier.width(8.dp))
+                    }
                     if (canEditPrices) HeaderPillButton("Add", Icons.Default.Add) { editProduct = null; showAddDialog = true }
                 }
             )

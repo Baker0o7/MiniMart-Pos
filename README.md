@@ -114,6 +114,10 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - Auto-opens on cash payment (toggle) · Test button in Settings
 
 ### 📦 Inventory & Products
+- **Stock Insights** (Home tile, or **Insights** on the Inventory screen; managers/owners only):
+  stock value at cost and retail with potential profit, a **Reorder** list (low or running out within a week,
+  with a suggested quantity for ~2 weeks of cover, shareable by supplier as text), **Dead stock** (in stock but
+  unsold for 30+ days, with the money tied up), **Fast movers** and stock value by category
 - **Inventory screen**: summary tiles (items listed, low stock, stock value at cost), a Low stock filter,
   stock pills, and a stock-adjust dialog that previews the new level, accepts kg for weighed products and
   blocks removing more than you have
@@ -146,6 +150,10 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - This is a separate payments ledger; it does not create sales, so it never double-counts a sale rung up at the till
 
 ### 📊 Reports & Analytics
+- **Analytics dashboard** (Home tile; managers/owners): 7 / 30 / 90-day view with revenue (and change vs the
+  previous period), sales count, average basket, gross and net profit (it warns when too few products have a
+  cost price for profit to be trusted), daily/weekly revenue chart, payment-method mix, busiest hours,
+  best weekdays, top products and sales by category
 - Revenue vs yesterday (real % comparison, flips red when down)
 - Dashboard auto-refreshes at midnight — "today" always means today
 - Transaction count, average basket, top-selling items
