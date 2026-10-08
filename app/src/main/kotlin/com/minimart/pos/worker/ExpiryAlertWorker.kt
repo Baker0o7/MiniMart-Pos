@@ -54,7 +54,7 @@ class ExpiryAlertWorker @AssistedInject constructor(
             val cutoff = now + thresholdMs
 
             // Items already sold out can't be pulled from the shelf, so they're not worth an alert.
-            val allProducts = productRepo.getAllProducts().first().filter { it.stock > 0 || it.stockKg > 0.0 }
+            val allProducts = productRepo.getExpiryCandidates().first()
             val expiring = allProducts.filter { p ->
                 p.expiryDate > 0L && p.expiryDate in now..cutoff
             }

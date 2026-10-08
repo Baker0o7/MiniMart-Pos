@@ -8,6 +8,7 @@ import com.minimart.pos.data.entity.SyncLog
 import com.minimart.pos.data.entity.SyncStatus
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.json.JSONArray
@@ -38,6 +39,7 @@ class SyncServer @Inject constructor(
 
     private var serverSocket: ServerSocket? = null
     private var serverJob: Job? = null
+    private val connectionLimit = kotlinx.coroutines.sync.Semaphore(8)
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     // handleClient() runs concurrently (one coroutine per accepted connection), so
@@ -52,12 +54,18 @@ class SyncServer @Inject constructor(
         if (_isRunning.value) return
         serverJob = scope.launch {
             try {
-                serverSocket = ServerSocket(PORT)
+                // reuseAddress lets the server restart straight after a stop() instead of failing
+                // with "address already in use" while the old socket lingers.
+                serverSocket = ServerSocket().apply {
+                    reuseAddress = true
+                    bind(InetSocketAddress(PORT))
+                }
                 _isRunning.value = true
                 Log.i(TAG, "Sync server started on port $PORT (${getLocalIp()})")
                 while (isActive) {
                     val client = serverSocket?.accept() ?: break
-                    launch { handleClient(client) }
+                    // Bounded: a flood of connections can't spawn unlimited handler coroutines.
+                    launch { connectionLimit.withPermit { handleClient(client) } }
                 }
             } catch (e: Exception) {
                 if (_isRunning.value) Log.e(TAG, "Server error", e)

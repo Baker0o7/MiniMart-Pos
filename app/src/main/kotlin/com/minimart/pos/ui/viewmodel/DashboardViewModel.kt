@@ -244,21 +244,25 @@ class AuthViewModel @Inject constructor(
                 _uiState.update { it.copy(biometricEnabled = id != null && id != 0L) }
             }
         }
-        // Bug fix: resume any in-progress lockout from the persisted deadline, so a
-        // force-close mid-lockout doesn't reset it. Ticks once a second while locked.
+        // Resume any in-progress lockout from the persisted deadline, so a force-close mid-lockout
+        // doesn't reset it. This used to poll DataStore twice a second-by-second for the whole life
+        // of the app; it now reacts to the stored deadline and only ticks while actually locked.
         viewModelScope.launch {
-            while (true) {
-                val until = settingsRepo.lockoutUntilMs.first()
-                val remainingMs = until - System.currentTimeMillis()
+            settingsRepo.lockoutUntilMs.catch { emit(0L) }.collectLatest { until ->
+                var remainingMs = until - System.currentTimeMillis()
                 if (remainingMs > 0) {
                     val attempts = settingsRepo.failedAttempts.first()
-                    _uiState.update { it.copy(isLockedOut = true, lockoutRemainingSeconds = ((remainingMs + 999) / 1000).toInt(), failedAttempts = attempts) }
-                } else if (_uiState.value.isLockedOut) {
-                    // Lockout just expired — clear the persisted counters too
+                    while (remainingMs > 0) {
+                        _uiState.update { it.copy(isLockedOut = true, lockoutRemainingSeconds = ((remainingMs + 999) / 1000).toInt(), failedAttempts = attempts) }
+                        kotlinx.coroutines.delay(1000)
+                        remainingMs = until - System.currentTimeMillis()
+                    }
+                    // Update the UI first: clearing the lockout re-emits this flow and cancels us.
+                    _uiState.update { it.copy(isLockedOut = false, lockoutRemainingSeconds = 0, failedAttempts = 0) }
                     settingsRepo.clearLockout()
+                } else if (_uiState.value.isLockedOut) {
                     _uiState.update { it.copy(isLockedOut = false, lockoutRemainingSeconds = 0, failedAttempts = 0) }
                 }
-                kotlinx.coroutines.delay(1000)
             }
         }
     }
