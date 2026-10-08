@@ -257,59 +257,6 @@ fun CheckoutScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // ── Customer (optional) ───────────────────────────────────────────
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Person, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Customer", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
-                Text("Optional", color = DT.SubText, fontSize = 11.sp)
-            }
-            Spacer(Modifier.height(8.dp))
-            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(DT.Surface).border(1.dp, if (selectedCustomer != null) DT.Teal.copy(0.4f) else DT.Border, RoundedCornerShape(16.dp))
-                .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showCustomerSearch = true }
-                .padding(14.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(38.dp).clip(CircleShape)
-                        .background(if (selectedCustomer != null) DT.Teal else DT.Surface2),
-                        contentAlignment = Alignment.Center) {
-                        if (selectedCustomer != null) {
-                            Text(selectedCustomer?.name?.firstOrNull()?.uppercase() ?: "?",
-                                color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-                        } else {
-                            Icon(Icons.Default.PersonSearch, null, tint = DT.SubText, modifier = Modifier.size(20.dp))
-                        }
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(selectedCustomer?.name ?: "Select customer (optional)",
-                            color = if (selectedCustomer != null) Color.White else DT.SubText,
-                            fontWeight = if (selectedCustomer != null) FontWeight.SemiBold else FontWeight.Normal)
-                        if (selectedCustomer != null) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                if (selectedCustomer?.phone?.isNotBlank() == true)
-                                    Text(selectedCustomer?.phone ?: "", color = DT.SubText, fontSize = 12.sp)
-                                Box(Modifier.clip(RoundedCornerShape(6.dp)).background(DT.Teal.copy(0.15f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                                    Text("Credit: $currency ${String.format("%.2f", creditBalance)}",
-                                        color = DT.Teal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-                    }
-                    if (selectedCustomer != null) {
-                        IconButton(onClick = { selectedCustomer = null; if (selectedMethod == PaymentMethod.CREDIT) selectedMethod = PaymentMethod.CASH }) {
-                            Icon(Icons.Default.Close, null, tint = DT.SubText, modifier = Modifier.size(18.dp))
-                        }
-                    } else {
-                        Icon(Icons.Default.ChevronRight, null, tint = DT.SubText, modifier = Modifier.size(18.dp))
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-
             // ── Payment Method ────────────────────────────────────────────────
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically) {
@@ -319,7 +266,7 @@ fun CheckoutScreen(
             }
             Spacer(Modifier.height(10.dp))
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 PaymentCard(Modifier.weight(1f), "Cash", Icons.Default.Money, PaymentMethod.CASH, selectedMethod) {
                     selectedMethod = it; if (it != PaymentMethod.CASH) cashInput = ""
                 }
@@ -327,16 +274,35 @@ fun CheckoutScreen(
                 if (canApplyDiscounts) {
                     val disc = state.discount
                     val has = disc > 0
-                    Box(modifier = Modifier.weight(1f).height(60.dp).clip(RoundedCornerShape(14.dp))
+                    Box(modifier = Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(12.dp))
                         .background(if (has) DT.Amber.copy(0.15f) else DT.Surface)
-                        .border(1.5.dp, if (has) DT.Amber else DT.Border, RoundedCornerShape(14.dp))
+                        .border(1.5.dp, if (has) DT.Amber else DT.Border, RoundedCornerShape(12.dp))
                         .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showDiscountDialog = true },
                         contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Icon(Icons.Default.Discount, null, tint = if (has) DT.Amber else DT.SubText, modifier = Modifier.size(20.dp))
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Icon(Icons.Default.Discount, null, tint = if (has) DT.Amber else DT.SubText, modifier = Modifier.size(18.dp))
                             Text(if (has) "-${plainNumber(disc)}" else "Discount",
-                                color = if (has) DT.Amber else DT.SubText, fontSize = 11.sp,
+                                color = if (has) DT.Amber else DT.SubText, fontSize = 10.sp,
                                 fontWeight = if (has) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
+                        }
+                    }
+                }
+                // Customer (optional) — picks / changes the customer; clear it from the strip below.
+                run {
+                    val has = selectedCustomer != null
+                    Box(modifier = Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(12.dp))
+                        .background(if (has) DT.Teal.copy(0.15f) else DT.Surface)
+                        .border(1.5.dp, if (has) DT.Teal else DT.Border, RoundedCornerShape(12.dp))
+                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showCustomerSearch = true },
+                        contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Icon(if (has) Icons.Default.Person else Icons.Default.PersonSearch, null,
+                                tint = if (has) DT.Teal else DT.SubText, modifier = Modifier.size(18.dp))
+                            Text(selectedCustomer?.name?.trim()?.substringBefore(' ')?.ifBlank { null } ?: "Customer",
+                                color = if (has) DT.Teal else DT.SubText, fontSize = 10.sp,
+                                fontWeight = if (has) FontWeight.Bold else FontWeight.Normal,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 3.dp))
                         }
                     }
                 }
@@ -345,6 +311,29 @@ fun CheckoutScreen(
                     PaymentCard(Modifier.fillMaxWidth(), "Credit", Icons.Default.AccountBalanceWallet,
                         PaymentMethod.CREDIT, selectedMethod,
                         enabled = true) { selectedMethod = it }
+                }
+            }
+
+            // Selected customer: compact strip with credit balance and a clear button.
+            AnimatedVisibility(visible = selectedCustomer != null) {
+                Row(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp)
+                    .clip(RoundedCornerShape(12.dp)).background(DT.Surface)
+                    .border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(12.dp))
+                    .padding(start = 12.dp, top = 2.dp, bottom = 2.dp, end = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(selectedCustomer?.name ?: "", color = Color.White, fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(listOfNotNull(selectedCustomer?.phone?.takeIf { it.isNotBlank() },
+                            "Credit: $currency ${String.format("%.2f", creditBalance)}").joinToString("  •  "),
+                            color = DT.SubText, fontSize = 11.sp)
+                    }
+                    IconButton(onClick = {
+                        selectedCustomer = null
+                        if (selectedMethod == PaymentMethod.CREDIT) selectedMethod = PaymentMethod.CASH
+                    }) {
+                        Icon(Icons.Default.Close, "Remove customer", tint = DT.SubText, modifier = Modifier.size(18.dp))
+                    }
                 }
             }
 
@@ -1004,15 +993,15 @@ private fun PaymentCard(modifier: Modifier, label: String, icon: ImageVector,
     method: PaymentMethod, selected: PaymentMethod, enabled: Boolean = true,
     onSelect: (PaymentMethod) -> Unit) {
     val isSelected = method == selected
-    Box(modifier = modifier.height(60.dp).clip(RoundedCornerShape(14.dp))
+    Box(modifier = modifier.height(52.dp).clip(RoundedCornerShape(12.dp))
         .background(if (isSelected) DT.Teal else DT.Surface)
-        .border(1.5.dp, if (isSelected) DT.Teal else if (!enabled) DT.Border.copy(0.4f) else DT.Border, RoundedCornerShape(14.dp))
+        .border(1.5.dp, if (isSelected) DT.Teal else if (!enabled) DT.Border.copy(0.4f) else DT.Border, RoundedCornerShape(12.dp))
         .clickable(enabled = enabled, indication = null, interactionSource = remember { MutableInteractionSource() }) { onSelect(method) },
         contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Icon(icon, null, tint = if (isSelected) Color.White else if (!enabled) DT.SubText.copy(0.4f) else DT.SubText, modifier = Modifier.size(20.dp))
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Icon(icon, null, tint = if (isSelected) Color.White else if (!enabled) DT.SubText.copy(0.4f) else DT.SubText, modifier = Modifier.size(18.dp))
             Text(label, color = if (isSelected) Color.White else if (!enabled) DT.SubText.copy(0.4f) else DT.SubText,
-                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Normal, fontSize = 11.sp)
+                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Normal, fontSize = 10.sp, maxLines = 1)
         }
     }
 }
