@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -103,46 +104,58 @@ fun DashboardScreen(
             item {
                 Box(modifier = Modifier.fillMaxWidth()
                     .background(Brush.verticalGradient(listOf(Color(0xFF0D2420), Bg)))
-                    .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 24.dp)) {
+                    .padding(start = 18.dp, end = 18.dp, top = 18.dp, bottom = 20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Avatar / greeting
-                        Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(14.dp))
-                            .background(Brush.linearGradient(listOf(DT.Teal, Color(0xFF004D40)))),
-                            contentAlignment = Alignment.Center) {
-                            Text("🇰🇪", fontSize = 22.sp)
+                        // Avatar: glowing rounded tile with the flag and an "online" dot
+                        Box(modifier = Modifier.size(62.dp)) {
+                            Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp))
+                                .background(Brush.linearGradient(listOf(Color(0xFF0E3A33), Color(0xFF06201C))))
+                                .border(2.dp, TealGlow.copy(0.55f), RoundedCornerShape(20.dp)),
+                                contentAlignment = Alignment.Center) {
+                                Box(Modifier.size(46.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF0A1A18)),
+                                    contentAlignment = Alignment.Center) {
+                                    Text("🇰🇪", fontSize = 26.sp)
+                                }
+                            }
+                            Box(Modifier.align(Alignment.BottomEnd).size(16.dp).clip(CircleShape)
+                                .background(Bg).padding(2.dp).clip(CircleShape).background(GreenGlow))
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(roleLabel(currentRole) ?: "Welcome", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp,
-                                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                            // Bug fix: no overflow protection on the shop name — a longer
-                            // name (common for Kenyan shop names, e.g. "Baraka Wholesalers &
-                            // General Provisions") would wrap to a second line and unbalance
-                            // this header against the fixed-height avatar and status pill.
+                            Text(roleLabel(currentRole) ?: "Welcome", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            // A long shop name must not wrap and unbalance the header.
+                            Text(state.storeName, color = Sub, fontSize = 14.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis)
                             val today = remember { java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale.getDefault()).format(java.util.Date()) }
-                            Text(state.storeName, color = Sub, fontSize = 12.sp,
-                                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                            Text(today, color = Sub.copy(0.8f), fontSize = 11.sp, maxLines = 1)
+                            Spacer(Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CalendarToday, null, tint = Sub, modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.width(5.dp))
+                                Text(today, color = Sub, fontSize = 13.sp, maxLines = 1)
+                            }
                         }
+                        Spacer(Modifier.width(8.dp))
                         // Status pill
-                        Row(modifier = Modifier.clip(RoundedCornerShape(20.dp))
-                            .background(Color(0xFF0D2420))
-                            .border(1.dp, Color(0xFF1A4038), RoundedCornerShape(20.dp))
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        Row(modifier = Modifier.clip(RoundedCornerShape(24.dp))
+                            .background(Color(0xFF0A1F1C))
+                            .border(1.dp, TealGlow.copy(0.45f), RoundedCornerShape(24.dp))
+                            .padding(horizontal = 11.dp, vertical = 9.dp),
                             verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(6.dp).clip(CircleShape).background(TealGlow))
-                            Text(" Offline ", color = TealGlow, fontSize = 10.sp)
-                            Box(Modifier.size(6.dp).clip(CircleShape).background(GreenGlow))
-                            Text(" Ready", color = GreenGlow, fontSize = 10.sp)
+                            Box(Modifier.size(8.dp).clip(CircleShape).background(TealGlow))
+                            Text(" Offline", color = TealGlow, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                            Spacer(Modifier.width(8.dp))
+                            Box(Modifier.size(8.dp).clip(CircleShape).background(GreenGlow))
+                            Text(" Ready", color = GreenGlow, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                         }
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(8.dp))
                         // Settings button
-                        Box(modifier = Modifier.size(44.dp).clip(CircleShape)
-                            .background(Color(0xFF0D2420))
-                            .border(1.dp, Color(0xFF1A4038), CircleShape)
+                        Box(modifier = Modifier.size(48.dp).clip(CircleShape)
+                            .background(Color(0xFF0A1F1C))
+                            .border(1.5.dp, TealGlow.copy(0.45f), CircleShape)
                             .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onNavigateToSettings() },
                             contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Settings, "Settings", tint = Sub, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Settings, "Settings", tint = TealGlow, modifier = Modifier.size(22.dp))
                         }
                     }
                 }
@@ -150,84 +163,61 @@ fun DashboardScreen(
 
             // ── Stats row ─────────────────────────────────────────────────────
             item {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                val hasYesterday = state.yesterdayRevenue > 0
+                val pct = if (hasYesterday) (state.todayRevenue - state.yesterdayRevenue) / state.yesterdayRevenue * 100 else 0.0
+                val up = pct >= 0
+                val avgBasket = if (state.todaySaleCount > 0) state.todayRevenue / state.todaySaleCount else 0.0
+                val spark = if (state.hourlySpark.size >= 2) state.hourlySpark else List(12) { 0f }
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(148.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     // Revenue card
-                    val hasYesterday = state.yesterdayRevenue > 0
-                    val pct = if (hasYesterday) (state.todayRevenue - state.yesterdayRevenue) / state.yesterdayRevenue * 100 else 0.0
-                    val up = pct >= 0
-                    Box(modifier = Modifier.weight(1.5f).clip(RoundedCornerShape(22.dp))
+                    Box(modifier = Modifier.weight(1.3f).fillMaxHeight().clip(RoundedCornerShape(22.dp))
                         .background(Brush.verticalGradient(listOf(Color(0xFF0E2E28), Color(0xFF071815))))
-                        .border(1.dp, TealGlow.copy(0.18f), RoundedCornerShape(22.dp))
-                        .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 12.dp)) {
-                        Column {
+                        .border(1.dp, TealGlow.copy(0.3f), RoundedCornerShape(22.dp))) {
+                        // Faint hourly curve in the corner
+                        MiniLineChart(spark, TealGlow.copy(0.55f),
+                            Modifier.align(Alignment.BottomEnd).fillMaxWidth(0.6f).height(64.dp).padding(bottom = 30.dp))
+                        Column(Modifier.fillMaxSize().padding(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 12.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Today's Sales", color = Sub, fontSize = 11.sp, modifier = Modifier.weight(1f))
-                                // Only a real comparison: with no sales yesterday there is nothing to compare to.
+                                Box(Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
+                                    .background(Brush.linearGradient(listOf(Color(0xFF00A58B), Color(0xFF00695C)))),
+                                    contentAlignment = Alignment.Center) {
+                                    Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = White, modifier = Modifier.size(22.dp))
+                                }
+                                Spacer(Modifier.width(10.dp))
+                                Text("Today's Sales", color = White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text("${state.currency} ${String.format(java.util.Locale.US, "%,.0f", state.todayRevenue)}",
+                                color = White, fontWeight = FontWeight.ExtraBold, fontSize = 32.sp,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Spacer(Modifier.weight(1f))
+                            HorizontalDivider(color = TealGlow.copy(0.22f), thickness = 1.dp)
+                            Spacer(Modifier.height(8.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CalendarMonth, null, tint = Sub, modifier = Modifier.size(15.dp))
+                                Spacer(Modifier.width(6.dp))
                                 if (hasYesterday) {
+                                    // Only a real comparison: with no sales yesterday there is nothing to compare to.
                                     val tint = if (up) GreenGlow else RedGlow
-                                    Row(Modifier.clip(RoundedCornerShape(8.dp)).background(tint.copy(0.18f))
-                                        .padding(horizontal = 7.dp, vertical = 3.dp),
-                                        verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(if (up) Icons.AutoMirrored.Filled.TrendingUp else Icons.AutoMirrored.Filled.TrendingDown,
-                                            null, tint = tint, modifier = Modifier.size(12.dp))
-                                        Spacer(Modifier.width(3.dp))
-                                        Text("${if (up) "+" else ""}${String.format(java.util.Locale.US, "%.0f", pct)}%",
-                                            color = tint, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                    }
+                                    Text("${if (up) "▲ +" else "▼ "}${String.format(java.util.Locale.US, "%.0f", pct)}% vs yesterday",
+                                        color = tint, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                } else {
+                                    Text("No sales yesterday to compare", color = Sub, fontSize = 11.sp,
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                             }
-                            Spacer(Modifier.height(6.dp))
-                            Text("${state.currency} ${String.format(java.util.Locale.US, "%,.0f", state.todayRevenue)}",
-                                color = White, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp,
-                                maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Spacer(Modifier.height(10.dp))
-                            // Real hourly data; fall back to a flat line when no sales yet today
-                            val spark = if (state.hourlySpark.size >= 2) state.hourlySpark
-                                        else listOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
-                            MiniLineChart(spark, TealGlow, Modifier.fillMaxWidth().height(44.dp))
-                            Spacer(Modifier.height(6.dp))
-                            Text(if (hasYesterday) "Yesterday: ${state.currency} ${String.format(java.util.Locale.US, "%,.0f", state.yesterdayRevenue)}"
-                                 else "No sales yesterday to compare",
-                                color = Sub, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    // Right column: transactions + top product
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        // Transactions card
-                        Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
-                            .background(Brush.verticalGradient(listOf(Color(0xFF12121F), Color(0xFF0A0A18))))
-                            .border(1.dp, PurpleGlow.copy(0.18f), RoundedCornerShape(18.dp))
-                            .padding(14.dp)) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                                Box(Modifier.size(38.dp).clip(CircleShape)
-                                    .background(PurpleGlow.copy(0.12f)),
-                                    contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Default.ShoppingBag, null, tint = PurpleGlow, modifier = Modifier.size(18.dp))
-                                }
-                                Spacer(Modifier.height(8.dp))
-                                Text(state.todaySaleCount.toString(), color = White,
-                                    fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
-                                Text("Sales", color = Sub, fontSize = 10.sp)
-                            }
-                        }
-                        // Avg basket card
-                        val avgBasket = if (state.todaySaleCount > 0) state.todayRevenue / state.todaySaleCount else 0.0
-                        Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
-                            .background(Brush.verticalGradient(listOf(Color(0xFF0F1A0A), Color(0xFF080E05))))
-                            .border(1.dp, GreenGlow.copy(0.18f), RoundedCornerShape(18.dp))
-                            .padding(14.dp)) {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.ShoppingCart, null, tint = GreenGlow, modifier = Modifier.size(14.dp))
-                                    Spacer(Modifier.width(4.dp))
-                                    Text("Avg Basket", color = Sub, fontSize = 10.sp)
-                                }
-                                Spacer(Modifier.height(4.dp))
-                                Text("${state.currency} ${String.format(java.util.Locale.US, "%,.0f", avgBasket)}",
-                                    color = White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-                            }
-                        }
+                    // Right column: sales count + average basket (tap through to detail)
+                    Column(modifier = Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        StatTile(Modifier.weight(1f), Icons.Default.ShoppingBag, PurpleGlow, Color(0xFF14102A),
+                            "Sales", state.todaySaleCount.toString(), onNavigateToSalesHistory)
+                        StatTile(Modifier.weight(1f), Icons.Default.ShoppingCart, GreenGlow, Color(0xFF0C1F10),
+                            "Avg Basket", "${state.currency} ${String.format(java.util.Locale.US, "%,.0f", avgBasket)}",
+                            if (rm.canViewReports(currentRole)) onNavigateToAnalytics else onNavigateToSalesHistory)
                     }
                 }
             }
@@ -260,24 +250,26 @@ fun DashboardScreen(
 
             // ── Quick Actions ─────────────────────────────────────────────────
             item {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp),
                     verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.GridView, null, tint = TealGlow, modifier = Modifier.size(30.dp))
+                    Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Quick Actions", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
-                        Text("Everything else is in the bottom bar", color = Sub, fontSize = 11.sp)
+                        Text("Quick Actions", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                        Text("Everything else is in the bottom bar", color = Sub, fontSize = 12.sp)
                     }
-                    Box(modifier = Modifier.clip(RoundedCornerShape(10.dp))
-                        .background(if (showManageActions) DT.Teal else DT.Surface)
-                        .border(1.dp, if (showManageActions) DT.Teal else DT.Border, RoundedCornerShape(10.dp))
+                    Box(modifier = Modifier.clip(RoundedCornerShape(16.dp))
+                        .background(if (showManageActions) DT.Teal else Color(0xFF0A1F1C))
+                        .border(1.dp, if (showManageActions) DT.Teal else TealGlow.copy(0.5f), RoundedCornerShape(16.dp))
                         .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showManageActions = !showManageActions }
-                        .padding(horizontal = 12.dp, vertical = 7.dp)) {
+                        .padding(horizontal = 16.dp, vertical = 11.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(if (showManageActions) Icons.Default.Check else Icons.Default.Tune,
-                                null, tint = if (showManageActions) Color.White else DT.Teal, modifier = Modifier.size(14.dp))
-                            Spacer(Modifier.width(4.dp))
+                                null, tint = if (showManageActions) Color.White else TealGlow, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(7.dp))
                             Text(if (showManageActions) "Done" else "Edit",
-                                color = if (showManageActions) Color.White else DT.Teal,
-                                fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                color = if (showManageActions) Color.White else TealGlow,
+                                fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -305,7 +297,7 @@ fun DashboardScreen(
                     if ("creditoverview" !in hidden) add(DashCard_("creditoverview", "Credit Ledger", "Outstanding balances", Icons.Default.AccountBalanceWallet, Color(0xFF1A0808), RedGlow, onNavigateToCreditOverview))
                 }
 
-                Column(Modifier.padding(horizontal = 12.dp).animateContentSize(),
+                Column(Modifier.padding(horizontal = 16.dp).animateContentSize(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     cards.chunked(3).forEach { row ->
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -388,33 +380,58 @@ fun DashboardScreen(
 @Composable
 private fun DashActionCard(title: String, sub: String, icon: ImageVector,
     bg: Color, glow: Color, onClick: () -> Unit) {
-    // Bug fix: indication = null gave zero visual feedback on tap — during the ~280ms
-    // screen-transition delay, a tap could feel like it didn't register. Added a subtle
-    // press-scale animation instead of a plain ripple, for a more deliberate, tactile feel.
+    // A press-scale animation gives the tap visible feedback during the screen transition.
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "cardPress")
 
     Box(modifier = Modifier.fillMaxWidth()
-        .aspectRatio(0.95f)
+        .aspectRatio(1.08f)
         .graphicsLayer { scaleX = scale; scaleY = scale }
         .clip(RoundedCornerShape(20.dp))
         .background(Brush.verticalGradient(listOf(bg, Bg)))
-        .border(1.dp, glow.copy(0.2f), RoundedCornerShape(20.dp))
+        .border(1.5.dp, glow.copy(0.5f), RoundedCornerShape(20.dp))
         .clickable(indication = null, interactionSource = interactionSource, onClick = onClick)
         .padding(12.dp)) {
         Column(Modifier.fillMaxSize()) {
-            // Icon with glow bg
-            Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(13.dp))
-                .background(glow.copy(0.15f)), contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = glow, modifier = Modifier.size(22.dp))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                Box(modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
+                    .background(glow.copy(0.22f)), contentAlignment = Alignment.Center) {
+                    Icon(icon, null, tint = glow, modifier = Modifier.size(24.dp))
+                }
+                Spacer(Modifier.weight(1f))
+                Icon(Icons.Default.ChevronRight, null, tint = White.copy(0.75f), modifier = Modifier.size(20.dp).padding(top = 2.dp))
             }
             Spacer(Modifier.weight(1f))
-            Text(title, color = White, fontWeight = FontWeight.Bold, fontSize = 12.sp,
+            Text(title, color = White, fontWeight = FontWeight.Bold, fontSize = 14.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(3.dp))
-            Text(sub, color = Sub, fontSize = 10.sp, lineHeight = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(2.dp))
+            Text(sub, color = Sub, fontSize = 11.sp, lineHeight = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
+    }
+}
+
+/** Compact stat card (icon tile, label, value, chevron) used in the Home stats row. */
+@Composable
+private fun StatTile(modifier: Modifier, icon: ImageVector, glow: Color, bg: Color,
+    label: String, value: String, onClick: () -> Unit) {
+    Row(modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+        .background(Brush.verticalGradient(listOf(bg, Bg)))
+        .border(1.dp, glow.copy(0.4f), RoundedCornerShape(18.dp))
+        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
+        .padding(horizontal = 10.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(36.dp).clip(RoundedCornerShape(11.dp)).background(glow.copy(0.28f)),
+            contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = glow, modifier = Modifier.size(20.dp))
+        }
+        Spacer(Modifier.width(9.dp))
+        Column(Modifier.weight(1f)) {
+            Text(label, color = White, fontSize = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+            Text(value, color = White, fontWeight = FontWeight.ExtraBold, fontSize = 19.sp,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        Icon(Icons.Default.ChevronRight, null, tint = White.copy(0.75f), modifier = Modifier.size(18.dp))
     }
 }
 
@@ -457,7 +474,7 @@ private fun BoxScope.DashBadge(onRemove: () -> Unit) {
 private fun MiniLineChart(data: List<Float>, color: Color, modifier: Modifier = Modifier) {
     Canvas(modifier) {
         if (data.size < 2 || data.isEmpty()) return@Canvas
-        val w = size.width; val h = size.height; val max = data.maxOrNull() ?: 1f
+        val w = size.width; val h = size.height; val max = (data.maxOrNull() ?: 1f).coerceAtLeast(0.0001f)
         val pts = data.mapIndexed { i, v -> Offset(i * w / (data.size - 1), h - (v / max) * h * 0.85f) }
         val fill = Path().apply { moveTo(pts.first().x, h); pts.forEach { lineTo(it.x, it.y) }; lineTo(pts.last().x, h); close() }
         drawPath(fill, Brush.verticalGradient(listOf(color.copy(0.4f), Color.Transparent)))

@@ -344,31 +344,34 @@ private fun BottomNavBar(
     onExpenses: () -> Unit,
     onInventory: () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding()) {
-        // Background surface
+    Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 8.dp, vertical = 6.dp)) {
+        // Floating rounded bar
         Box(modifier = Modifier.fillMaxWidth().height(68.dp).align(Alignment.BottomCenter)
-            .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
+            .clip(RoundedCornerShape(30.dp))
             .background(NavSurface)
-            .border(1.dp, Color(0xFF1A3530), RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))) {
+            .border(1.dp, Color(0xFF1F4A42), RoundedCornerShape(30.dp))) {
             Row(modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically) {
                 NavItem(Icons.Default.Home,      "Home",      currentRoute == Routes.DASHBOARD, onHome)
                 NavItem(Icons.Default.Inventory2,"Products",  currentRoute == Routes.PRODUCTS,  onProducts)
-                Spacer(Modifier.width(68.dp))
+                Spacer(Modifier.width(76.dp))
                 NavItem(Icons.Default.Store,     "Inventory", currentRoute == Routes.INVENTORY, onInventory)
                 NavItem(Icons.Default.Receipt,   "Expenses",  currentRoute == Routes.EXPENSES,  onExpenses)
             }
         }
-        // Raised center QR scan button
-        Box(modifier = Modifier.size(68.dp).align(Alignment.TopCenter).offset(y = (-14).dp)
-            .shadow(12.dp, CircleShape)
+        // Raised center scan button: teal ring around a filled disc
+        Box(modifier = Modifier.size(78.dp).align(Alignment.TopCenter).offset(y = (-18).dp)
+            .shadow(14.dp, CircleShape, ambientColor = NavSel, spotColor = NavSel)
+            .clip(CircleShape)
+            .background(Color(0xFF071815))
+            .border(2.dp, NavSel.copy(0.7f), CircleShape)
+            .padding(7.dp)
             .clip(CircleShape)
             .background(Brush.linearGradient(listOf(NavSel, Color(0xFF00897B))))
-            .border(3.dp, Color(0xFF0D2420), CircleShape)
             .clickable(onClick = onScan),
             contentAlignment = Alignment.Center) {
-            Icon(Icons.Default.QrCode, null, tint = Color.White, modifier = Modifier.size(30.dp))
+            Icon(Icons.Default.QrCode2, "Scan", tint = Color.White, modifier = Modifier.size(32.dp))
             // Cart item count badge
             if (cartItemCount > 0) {
                 Box(modifier = androidx.compose.ui.Modifier.align(Alignment.TopEnd)
@@ -404,17 +407,14 @@ private fun RowScope.NavItem(icon: ImageVector, label: String, selected: Boolean
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(modifier = Modifier.size(36.dp), contentAlignment = Alignment.Center) {
-            if (selected) {
-                Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))
-                    .background(NavSel.copy(alpha = 0.15f)))
-            }
-            Icon(icon, null, tint = iconTint,
-                modifier = Modifier.size(22.dp).graphicsLayer { scaleX = iconScale; scaleY = iconScale })
-        }
-        Spacer(Modifier.height(2.dp))
-        Text(label, color = iconTint, fontSize = 10.sp,
+        Icon(icon, null, tint = iconTint,
+            modifier = Modifier.size(26.dp).graphicsLayer { scaleX = iconScale; scaleY = iconScale })
+        Spacer(Modifier.height(3.dp))
+        Text(label, color = iconTint, fontSize = 11.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
+        // Active-tab underline
+        Box(Modifier.padding(top = 3.dp).width(if (selected) 30.dp else 0.dp).height(3.dp)
+            .clip(RoundedCornerShape(2.dp)).background(NavSel))
     }
 }
 
