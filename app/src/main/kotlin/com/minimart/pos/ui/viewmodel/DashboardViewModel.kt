@@ -95,7 +95,8 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             kotlinx.coroutines.flow.combine(
                 settingsRepo.expiryAlertMonths.catch { emit(1) },
-                productRepo.getAllProducts().catch { emit(emptyList()) }
+                // Every sale changes stock and re-emits this flow; it used to carry the whole catalogue.
+                productRepo.getExpiryCandidates().catch { emit(emptyList()) }
             ) { months, all ->
                 val now    = System.currentTimeMillis()
                 val cutoff = now + months * 30L * 24 * 60 * 60 * 1000

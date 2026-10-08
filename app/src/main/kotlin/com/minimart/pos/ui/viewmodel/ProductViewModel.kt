@@ -19,7 +19,7 @@ data class ProductUiState(
     val successMessage: String? = null
 )
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
 @HiltViewModel
 class ProductViewModel @Inject constructor(
     private val repo: ProductRepository
@@ -36,7 +36,7 @@ class ProductViewModel @Inject constructor(
 
     // Products: reactive to search + category filter
     val products: StateFlow<List<Product>> = combine(
-        _searchQuery, _selectedCategory
+        _searchQuery.debounce(150), _selectedCategory
     ) { query, category -> Pair(query, category) }
         .flatMapLatest { (query, category) ->
             when {

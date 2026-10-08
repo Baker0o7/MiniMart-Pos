@@ -38,6 +38,10 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE isActive = 1 AND stock <= lowStockThreshold ORDER BY stock ASC")
     fun getLowStockProducts(): Flow<List<Product>>
 
+    /** Only products that can expire and still have stock — a small set, unlike every product. */
+    @Query("SELECT * FROM products WHERE isActive = 1 AND expiryDate > 0 AND (stock > 0 OR stockKg > 0) ORDER BY expiryDate ASC")
+    fun getExpiryCandidates(): Flow<List<Product>>
+
     @Query("SELECT DISTINCT category FROM products WHERE isActive = 1 ORDER BY category ASC")
     fun getCategories(): Flow<List<String>>
 

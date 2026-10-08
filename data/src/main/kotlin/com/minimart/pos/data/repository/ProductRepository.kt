@@ -13,6 +13,7 @@ class ProductRepository @Inject constructor(
     fun getAllProducts(): Flow<List<Product>> = productDao.getAllProducts()
     fun getProductsByCategory(category: String): Flow<List<Product>> = productDao.getProductsByCategory(category)
     fun searchProducts(query: String): Flow<List<Product>> = productDao.searchProducts(query)
+    fun getExpiryCandidates(): Flow<List<Product>> = productDao.getExpiryCandidates()
     fun getLowStockProducts(): Flow<List<Product>> = productDao.getLowStockProducts()
     fun getCategories(): Flow<List<String>> = productDao.getCategories()
 
