@@ -233,11 +233,15 @@ class ThermalPrinter @Inject constructor(
         else left.take(total - right.length - 1) + " " + right
     }
 
-    fun getPairedPrinters(context: Context): List<BluetoothDevice> {
+    /** Paired printers. Without the BLUETOOTH_CONNECT permission (Android 12+) Android throws
+     *  SecurityException from bondedDevices and from device.name, which used to crash the app. */
+    fun getPairedPrinters(context: Context): List<BluetoothDevice> = try {
         val bm = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
-        return bm?.adapter?.bondedDevices?.filter { device ->
+        bm?.adapter?.bondedDevices?.filter { device ->
             device.name?.contains("printer", ignoreCase = true) == true ||
             device.bluetoothClass?.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.IMAGING
         } ?: emptyList()
+    } catch (_: SecurityException) {
+        emptyList()
     }
 }

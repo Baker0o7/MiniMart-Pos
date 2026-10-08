@@ -75,6 +75,8 @@ class ProductViewModel @Inject constructor(
                         return@launch
                     }
                 }
+                // Free the barcode if only a deleted product still holds it.
+                repo.releaseDeletedBarcode(product.barcode)
                 if (product.id == 0L) repo.insert(product) else repo.update(product)
                 _uiState.update { it.copy(isLoading = false, successMessage = "Product saved") }
             } catch (e: android.database.sqlite.SQLiteConstraintException) {

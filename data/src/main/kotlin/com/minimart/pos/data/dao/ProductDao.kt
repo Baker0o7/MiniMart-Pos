@@ -84,6 +84,11 @@ interface ProductDao {
     @Query("UPDATE products SET stockKg = stockKg + :kg, stock = CAST(stockKg + :kg AS INTEGER), updatedAt = :now WHERE id = :productId")
     suspend fun incrementStockKg(productId: Long, kg: Double, now: Long = System.currentTimeMillis()): Int
 
+    /** A deleted product keeps its row (sale history points at it) and so kept its UNIQUE barcode too,
+     *  which made that barcode impossible to add again. Renaming the deleted row frees it. */
+    @Query("UPDATE products SET barcode = barcode || '~del' || id WHERE barcode = :barcode AND isActive = 0")
+    suspend fun releaseDeletedBarcode(barcode: String): Int
+
     @Query("UPDATE products SET isActive = 0, updatedAt = :now WHERE id = :productId")
     suspend fun softDeleteProduct(productId: Long, now: Long = System.currentTimeMillis())
 }

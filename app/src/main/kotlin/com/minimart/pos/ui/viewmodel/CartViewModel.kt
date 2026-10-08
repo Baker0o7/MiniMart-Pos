@@ -162,6 +162,7 @@ class CartViewModel @Inject constructor(
                     _uiState.update { it.copy(unknownBarcode = null, error = "Barcode already used by another product") }
                     return@launch
                 }
+                productRepo.releaseDeletedBarcode(product.barcode)
                 productRepo.insert(product)
                 val saved = productRepo.getByBarcode(product.barcode)
                 _uiState.update { it.copy(unknownBarcode = null, error = null) }
@@ -325,7 +326,8 @@ class CartViewModel @Inject constructor(
                     changeGiven = (amountPaid - state.total).coerceAtLeast(0.0),
                     // Only CASH payments put physical cash in the till; everything else
                     // (MPESA, CARD, CREDIT) is 0 for till-reconciliation purposes.
-                    cashPortion = if (paymentMethod == PaymentMethod.CASH) amountPaid else 0.0,
+                    // Cash kept in the till = the bill, not the (larger) note handed over — change goes back out.
+                    cashPortion = if (paymentMethod == PaymentMethod.CASH) minOf(amountPaid, state.total) else 0.0,
                     paymentMethod = paymentMethod,
                     mpesaRef = mpesaRef,
                     cashierId = userId

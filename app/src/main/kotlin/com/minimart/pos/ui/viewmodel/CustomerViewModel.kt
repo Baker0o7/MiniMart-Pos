@@ -96,6 +96,13 @@ class CustomerViewModel @Inject constructor(
     }
 
     fun deleteCustomer(customer: Customer) = viewModelScope.launch {
+        // Deleting also deletes the credit ledger, so a customer who owes (or is owed) money
+        // would erase that record. Make the balance be settled first.
+        val current = repo.getById(customer.id)
+        if (current != null && kotlin.math.abs(current.creditBalance) > 0.005) {
+            _state.update { it.copy(message = "${current.name} has a credit balance of ${String.format("%.2f", current.creditBalance)} — settle it before deleting") }
+            return@launch
+        }
         repo.deleteCustomer(customer)
         _state.update { it.copy(message = "Customer deleted") }
     }
@@ -110,7 +117,7 @@ class CustomerViewModel @Inject constructor(
             val updated = repo.getById(customerId)
             _state.update { it.copy(selectedCustomer = updated) }
         } else {
-            _state.update { it.copy(message = "Customer not found") }
+            _state.update { it.copy(message = "Could not add credit — check the amount") }
         }
     }
 

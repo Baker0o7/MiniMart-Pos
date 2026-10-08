@@ -83,6 +83,13 @@ fun SettingsScreen(
     var showPrinterDialog by remember { mutableStateOf(false) }
     var pairedDevices     by remember { mutableStateOf<List<BluetoothDevice>>(emptyList()) }
     var printerStatus     by remember { mutableStateOf<String?>(null) }
+    // Android 12+ needs BLUETOOTH_CONNECT granted at runtime before paired devices can be listed.
+    val btPermission = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) { pairedDevices = printer.getPairedPrinters(context); showPrinterDialog = true }
+        else printerStatus = "Allow Bluetooth access to find your printer"
+    }
 
     // Separate effects: saving the store block used to reset half-typed M-Pesa fields (and vice versa).
     LaunchedEffect(storeName, currency, receiptFooter) {
@@ -334,7 +341,13 @@ fun SettingsScreen(
                                     style = MaterialTheme.typography.labelSmall)
                             }
                             Button(
-                                onClick = { pairedDevices = printer.getPairedPrinters(context); showPrinterDialog = true },
+                                onClick = {
+                                    val needsPermission = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S &&
+                                        androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_CONNECT) !=
+                                        android.content.pm.PackageManager.PERMISSION_GRANTED
+                                    if (needsPermission) btPermission.launch(android.Manifest.permission.BLUETOOTH_CONNECT)
+                                    else { pairedDevices = printer.getPairedPrinters(context); showPrinterDialog = true }
+                                },
                                 shape = RoundedCornerShape(20.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal),
                                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)

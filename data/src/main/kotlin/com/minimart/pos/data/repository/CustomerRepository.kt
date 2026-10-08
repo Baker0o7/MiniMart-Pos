@@ -26,9 +26,20 @@ class CustomerRepository @Inject constructor(
     suspend fun getById(id: Long): Customer? = dao.getCustomerById(id)
     suspend fun getByPhone(phone: String): Customer? = dao.getCustomerByPhone(phone)
 
-    suspend fun saveCustomer(customer: Customer): Long =
+    suspend fun saveCustomer(customer: Customer): Long = db.withTransaction {
         if (customer.id == 0L) dao.insertCustomer(customer)
-        else { dao.updateCustomer(customer); customer.id }
+        else {
+            // The edit form holds a snapshot: writing it back whole used to roll the credit balance and
+            // purchase stats back to what they were when the form opened (wiping any sale since).
+            val current = dao.getCustomerById(customer.id)
+            dao.updateCustomer(
+                if (current == null) customer
+                else customer.copy(creditBalance = current.creditBalance,
+                    totalPurchases = current.totalPurchases, visitCount = current.visitCount)
+            )
+            customer.id
+        }
+    }
 
     suspend fun deleteCustomer(customer: Customer) = dao.deleteCustomer(customer)
 
@@ -36,6 +47,7 @@ class CustomerRepository @Inject constructor(
      * Bug fix: balance update and the audit-log insert are now one atomic unit — a crash
      * between them used to risk a balance change with no matching ledger entry. */
     suspend fun addCredit(customerId: Long, amount: Double, notes: String = ""): Boolean = db.withTransaction {
+        if (!amount.isFinite() || amount <= 0.0) return@withTransaction false
         val customer = dao.getCustomerById(customerId) ?: return@withTransaction false
         dao.updateBalance(customerId, amount)
         dao.insertCreditTx(CreditTransaction(
