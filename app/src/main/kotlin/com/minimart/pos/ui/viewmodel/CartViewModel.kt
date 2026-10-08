@@ -106,6 +106,15 @@ class CartViewModel @Inject constructor(
 
     fun processBarcode(barcode: String) {
         viewModelScope.launch {
+            // A lookup that threw used to leave isLoading stuck at true, and checkout() refuses to
+            // run while isLoading is set — the till then looked frozen until the app was restarted.
+            try { lookupBarcode(barcode) } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _uiState.update { it.copy(isLoading = false, error = "Scan failed: ${e.message}") } }
+        }
+    }
+
+    private suspend fun lookupBarcode(barcode: String) {
+        run {
             _uiState.update { it.copy(isLoading = true, error = null) }
             val clean = barcode.trim()
 
@@ -118,7 +127,7 @@ class CartViewModel @Inject constructor(
                         weighedProduct.pricePerKg, pluResult.weightKg)
                     addWeighedItem(weighedProduct, pluResult.weightKg, price)
                     _uiState.update { it.copy(isLoading = false, lastScannedProduct = weighedProduct, error = null) }
-                    return@launch
+                    return@run
                 }
                 // Not a recognized PLU product — fall through and try as a regular barcode
             }
@@ -127,16 +136,16 @@ class CartViewModel @Inject constructor(
             val product = productRepo.getByBarcode(clean)
             if (product == null) {
                 _uiState.update { it.copy(isLoading = false, error = "Product not found: $clean", unknownBarcode = clean) }
-                return@launch
+                return@run
             }
             if (product.isWeighed) {
                 // Also avoids the integer-stock check below, which wrongly blocked e.g. 0.5 kg in stock.
                 _uiState.update { it.copy(isLoading = false, pendingWeighProduct = product, error = null) }
-                return@launch
+                return@run
             }
             if (product.stock <= 0) {
                 _uiState.update { it.copy(isLoading = false, error = "${product.name} is out of stock") }
-                return@launch
+                return@run
             }
             addToCart(product)
             _uiState.update { it.copy(isLoading = false, lastScannedProduct = product, error = null) }
@@ -252,13 +261,18 @@ class CartViewModel @Inject constructor(
         }
     }
 
+    private var discountAuditJob: kotlinx.coroutines.Job? = null
+
     fun setGlobalDiscount(discount: Double) {
         val state = _uiState.value
         val remainingAfterLineDiscounts = (state.subtotal - state.items.sumOf { it.lineDiscount }).coerceAtLeast(0.0)
         val clamped = discount.coerceIn(0.0, remainingAfterLineDiscounts)
         _uiState.update { it.copy(discount = clamped) }
+        // The amount is typed digit by digit; log the settled value once, not every keystroke.
+        discountAuditJob?.cancel()
         if (clamped > 0.0) {
-            viewModelScope.launch {
+            discountAuditJob = viewModelScope.launch {
+                kotlinx.coroutines.delay(1500)
                 auditLogger.log(com.minimart.pos.util.AuditEvent.DISCOUNT_APPLIED,
                     detail = "Global discount KES ${String.format("%.2f", clamped)} on cart of KES ${String.format("%.2f", state.subtotal)}")
             }
@@ -347,8 +361,9 @@ class CartViewModel @Inject constructor(
                     } catch (_: Exception) {}
                 }
                 _uiState.update { CartUiState() } // clear cart after sale
-                auditLogger.log(com.minimart.pos.util.AuditEvent.SALE_COMPLETED,
-                    detail = "Receipt #${sale.receiptNumber} • KES ${String.format("%.2f", sale.totalAmount)} • ${sale.paymentMethod.name}")
+                // The sale is already saved: a failing audit write must not report "Checkout failed".
+                runCatching { auditLogger.log(com.minimart.pos.util.AuditEvent.SALE_COMPLETED,
+                    detail = "Receipt #${sale.receiptNumber} • KES ${String.format("%.2f", sale.totalAmount)} • ${sale.paymentMethod.name}") }
                 _checkoutResult.emit(CheckoutResult.Success(saleId, sale.changeGiven))
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = "Checkout failed: ${e.message}") }
@@ -395,7 +410,7 @@ class CartViewModel @Inject constructor(
                     // entirely (its `when` had no MIXED branch) — cashiers using split
                     // payment would show a false "shortage" at shift close.
                     cashPortion = (cashAmount - ((creditAmount + cashAmount) - state.total).coerceAtLeast(0.0)).coerceAtLeast(0.0),
-                    paymentMethod = PaymentMethod.MIXED, mpesaRef = mpesaRef, cashierId = userId ?: 0L
+                    paymentMethod = PaymentMethod.MIXED, mpesaRef = mpesaRef, cashierId = userId ?: 1L
                 )
                 val saleItems = state.items.map { ci ->
                     SaleItem(saleId = 0L, productId = ci.product.id, productName = ci.product.name,
@@ -412,11 +427,13 @@ class CartViewModel @Inject constructor(
                     catch (_: Exception) {}
                 }
                 _uiState.update { CartUiState() }
-                auditLogger.log(com.minimart.pos.util.AuditEvent.SALE_COMPLETED,
-                    detail = "Receipt #${sale.receiptNumber} • KES ${String.format("%.2f", sale.totalAmount)} • SPLIT (credit=${String.format("%.2f", creditAmount)} cash=${String.format("%.2f", cashAmount)})")
-                if (creditAmount > 0)
-                    auditLogger.log(com.minimart.pos.util.AuditEvent.CREDIT_USED,
-                        detail = "KES ${String.format("%.2f", creditAmount)} from customer #$customerId • Sale #$saleId")
+                runCatching {
+                    auditLogger.log(com.minimart.pos.util.AuditEvent.SALE_COMPLETED,
+                        detail = "Receipt #${sale.receiptNumber} • KES ${String.format("%.2f", sale.totalAmount)} • SPLIT (credit=${String.format("%.2f", creditAmount)} cash=${String.format("%.2f", cashAmount)})")
+                    if (creditAmount > 0)
+                        auditLogger.log(com.minimart.pos.util.AuditEvent.CREDIT_USED,
+                            detail = "KES ${String.format("%.2f", creditAmount)} from customer #$customerId • Sale #$saleId")
+                }
                 _checkoutResult.emit(CheckoutResult.Success(saleId, sale.changeGiven))
             } catch (e: Exception) {
                 // Bug fix: this catch block updated uiState.error but never emitted a

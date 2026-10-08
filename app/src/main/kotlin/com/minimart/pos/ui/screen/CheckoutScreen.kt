@@ -65,7 +65,7 @@ fun CheckoutScreen(
     var selectedMethod          by remember { mutableStateOf(PaymentMethod.CASH) }
     var cashInput               by remember { mutableStateOf("") }
     var mpesaRef                by remember { mutableStateOf("") }
-    var globalDiscount          by remember { mutableStateOf("") }
+    var globalDiscount          by remember { mutableStateOf(if (state.discount > 0) plainNumber(state.discount) else "") }
     var showDiscountDialog      by remember { mutableStateOf(false) }
     var selectedCustomer        by remember { mutableStateOf<Customer?>(null) }
     var showCustomerSearch      by remember { mutableStateOf(false) }
@@ -90,6 +90,15 @@ fun CheckoutScreen(
     // through afterwards (double charge) — wait for it to resolve or be cancelled.
     val stkInFlight = selectedMethod == PaymentMethod.MPESA &&
         (stkState.phase == StkPushPhase.SENDING || stkState.phase == StkPushPhase.AWAITING_CUSTOMER)
+
+    // The split-payment controls only exist under Credit. Switching to Cash/M-Pesa (or clearing the
+    // customer) used to leave split mode silently active: the button then demanded a credit amount
+    // that could not be entered, or paid via the hidden split path.
+    LaunchedEffect(selectedMethod, selectedCustomer) {
+        if (useSplitPayment && (selectedMethod != PaymentMethod.CREDIT || selectedCustomer == null)) {
+            useSplitPayment = false; splitCreditInput = ""
+        }
+    }
 
     val canComplete = when {
         state.total <= 0 -> false
@@ -316,7 +325,7 @@ fun CheckoutScreen(
                 }
                 PaymentCard(Modifier.weight(1f), "M-Pesa", Icons.Default.PhoneAndroid, PaymentMethod.MPESA, selectedMethod) { selectedMethod = it }
                 if (canApplyDiscounts) {
-                    val disc = globalDiscount.toDoubleOrNull() ?: 0.0
+                    val disc = state.discount
                     val has = disc > 0
                     Box(modifier = Modifier.weight(1f).height(60.dp).clip(RoundedCornerShape(14.dp))
                         .background(if (has) DT.Amber.copy(0.15f) else DT.Surface)
