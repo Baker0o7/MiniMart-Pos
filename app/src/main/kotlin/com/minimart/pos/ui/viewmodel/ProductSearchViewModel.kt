@@ -20,7 +20,9 @@ class ProductSearchViewModel @Inject constructor(
     val query: StateFlow<String> = _query.asStateFlow()
 
     val results: StateFlow<List<Product>> = _query
-        .debounce(200)
+        .map { it.trim() }
+        .distinctUntilChanged()
+        .debounce(120)
         .flatMapLatest { q ->
             if (q.isBlank()) flowOf(emptyList())
             else repo.searchProducts(q)

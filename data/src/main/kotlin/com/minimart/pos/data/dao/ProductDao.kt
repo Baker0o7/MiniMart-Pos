@@ -31,7 +31,15 @@ interface ProductDao {
             barcode LIKE '%' || :query || '%' OR
             category LIKE '%' || :query || '%' OR
             sku LIKE '%' || :query || '%'
-        ) ORDER BY name ASC
+        ) ORDER BY
+            CASE
+                WHEN barcode = :query OR sku = :query THEN 0
+                WHEN name LIKE :query || '%' THEN 1
+                WHEN name LIKE '% ' || :query || '%' THEN 2
+                WHEN name LIKE '%' || :query || '%' THEN 3
+                ELSE 4
+            END, name ASC
+        LIMIT 40
     """)
     fun searchProducts(query: String): Flow<List<Product>>
 
