@@ -66,6 +66,7 @@ fun CheckoutScreen(
     var cashInput               by remember { mutableStateOf("") }
     var mpesaRef                by remember { mutableStateOf("") }
     var globalDiscount          by remember { mutableStateOf("") }
+    var showDiscountDialog      by remember { mutableStateOf(false) }
     var selectedCustomer        by remember { mutableStateOf<Customer?>(null) }
     var showCustomerSearch      by remember { mutableStateOf(false) }
     var customerQuery           by remember { mutableStateOf("") }
@@ -127,6 +128,31 @@ fun CheckoutScreen(
     // Customer search side effect
     LaunchedEffect(customerQuery) { customerVm.setQuery(customerQuery) }
 
+    if (showDiscountDialog) {
+        AlertDialog(
+            onDismissRequest = { showDiscountDialog = false },
+            containerColor = DT.Surface,
+            title = { Text("Discount", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(value = globalDiscount,
+                    onValueChange = { globalDiscount = sanitizeMoneyInput(it); vm.setGlobalDiscount(globalDiscount.toDoubleOrNull() ?: 0.0) },
+                    label = { Text("Amount ($currency)", color = DT.SubText) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true, shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                        cursorColor = DT.Teal))
+            },
+            confirmButton = { TextButton(onClick = { showDiscountDialog = false }) { Text("Done", color = DT.Teal) } },
+            dismissButton = {
+                if (globalDiscount.isNotEmpty()) TextButton(onClick = {
+                    globalDiscount = ""; vm.setGlobalDiscount(0.0); showDiscountDialog = false
+                }) { Text("Clear", color = DT.Red) }
+            }
+        )
+    }
+
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
         Column(modifier = Modifier.fillMaxSize().navigationBarsPadding().imePadding()
             .verticalScroll(rememberScrollState())) {
@@ -181,21 +207,6 @@ fun CheckoutScreen(
                     Spacer(Modifier.height(8.dp))
                     HorizontalDivider(color = DT.Border)
                     Spacer(Modifier.height(10.dp))
-                    // Discount
-                    if (canApplyDiscounts) {
-                        OutlinedTextField(value = globalDiscount,
-                            onValueChange = { globalDiscount = sanitizeMoneyInput(it); vm.setGlobalDiscount(globalDiscount.toDoubleOrNull() ?: 0.0) },
-                            label = { Text("Discount ($currency)", color = DT.SubText) },
-                            leadingIcon = { Icon(Icons.Default.Discount, null, tint = DT.SubText) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            singleLine = true, modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
-                                cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
-                        Spacer(Modifier.height(8.dp))
-                    }
                     if (state.totalTax > 0) {
                         SummaryLine("VAT (incl.)", "$currency ${String.format("%.2f", state.totalTax)}", DT.SubText)
                     }
@@ -304,6 +315,22 @@ fun CheckoutScreen(
                     selectedMethod = it; if (it != PaymentMethod.CASH) cashInput = ""
                 }
                 PaymentCard(Modifier.weight(1f), "M-Pesa", Icons.Default.PhoneAndroid, PaymentMethod.MPESA, selectedMethod) { selectedMethod = it }
+                if (canApplyDiscounts) {
+                    val disc = globalDiscount.toDoubleOrNull() ?: 0.0
+                    val has = disc > 0
+                    Box(modifier = Modifier.weight(1f).height(60.dp).clip(RoundedCornerShape(14.dp))
+                        .background(if (has) DT.Amber.copy(0.15f) else DT.Surface)
+                        .border(1.5.dp, if (has) DT.Amber else DT.Border, RoundedCornerShape(14.dp))
+                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showDiscountDialog = true },
+                        contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Icon(Icons.Default.Discount, null, tint = if (has) DT.Amber else DT.SubText, modifier = Modifier.size(20.dp))
+                            Text(if (has) "-${plainNumber(disc)}" else "Discount",
+                                color = if (has) DT.Amber else DT.SubText, fontSize = 11.sp,
+                                fontWeight = if (has) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
+                        }
+                    }
+                }
                 // Credit only shown when customer selected
                 AnimatedVisibility(visible = selectedCustomer != null, modifier = Modifier.weight(1f)) {
                     PaymentCard(Modifier.fillMaxWidth(), "Credit", Icons.Default.AccountBalanceWallet,
@@ -968,15 +995,15 @@ private fun PaymentCard(modifier: Modifier, label: String, icon: ImageVector,
     method: PaymentMethod, selected: PaymentMethod, enabled: Boolean = true,
     onSelect: (PaymentMethod) -> Unit) {
     val isSelected = method == selected
-    Box(modifier = modifier.height(80.dp).clip(RoundedCornerShape(18.dp))
+    Box(modifier = modifier.height(60.dp).clip(RoundedCornerShape(14.dp))
         .background(if (isSelected) DT.Teal else DT.Surface)
-        .border(2.dp, if (isSelected) DT.Teal else if (!enabled) DT.Border.copy(0.4f) else DT.Border, RoundedCornerShape(18.dp))
+        .border(1.5.dp, if (isSelected) DT.Teal else if (!enabled) DT.Border.copy(0.4f) else DT.Border, RoundedCornerShape(14.dp))
         .clickable(enabled = enabled, indication = null, interactionSource = remember { MutableInteractionSource() }) { onSelect(method) },
         contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Icon(icon, null, tint = if (isSelected) Color.White else if (!enabled) DT.SubText.copy(0.4f) else DT.SubText, modifier = Modifier.size(26.dp))
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Icon(icon, null, tint = if (isSelected) Color.White else if (!enabled) DT.SubText.copy(0.4f) else DT.SubText, modifier = Modifier.size(20.dp))
             Text(label, color = if (isSelected) Color.White else if (!enabled) DT.SubText.copy(0.4f) else DT.SubText,
-                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Normal, fontSize = 13.sp)
+                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Normal, fontSize = 11.sp)
         }
     }
 }
