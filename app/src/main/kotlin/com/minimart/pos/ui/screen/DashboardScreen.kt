@@ -107,9 +107,7 @@ fun DashboardScreen(
                         Box(modifier = Modifier.size(46.dp).clip(RoundedCornerShape(14.dp))
                             .background(Brush.linearGradient(listOf(DT.Teal, Color(0xFF004D40)))),
                             contentAlignment = Alignment.Center) {
-                            val initial = currentUserName?.trim()?.firstOrNull()?.uppercase()
-                            if (initial != null) Text(initial, color = White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
-                            else Text("🇰🇪", fontSize = 22.sp)
+                            Text("🇰🇪", fontSize = 22.sp)
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
@@ -120,8 +118,9 @@ fun DashboardScreen(
                             // General Provisions") would wrap to a second line and unbalance
                             // this header against the fixed-height avatar and status pill.
                             val today = remember { java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale.getDefault()).format(java.util.Date()) }
-                            Text("${state.storeName} · $today", color = Sub, fontSize = 12.sp,
+                            Text(state.storeName, color = Sub, fontSize = 12.sp,
                                 maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                            Text(today, color = Sub.copy(0.8f), fontSize = 11.sp, maxLines = 1)
                         }
                         // Status pill
                         Row(modifier = Modifier.clip(RoundedCornerShape(20.dp))
