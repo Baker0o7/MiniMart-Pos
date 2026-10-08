@@ -170,15 +170,12 @@ fun UserManagementScreen(
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Top bar
-            Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DT.Teal)
-                }
-                Text("User Management", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.weight(1f))
-                IconButton(onClick = { showAddDialog = true }) {
-                    Icon(Icons.Default.PersonAdd, null, tint = DT.Teal)
-                }
-            }
+            GradientHeader(
+                title = "User Management",
+                onBack = onBack,
+                actions = { HeaderPillButton("Add", Icons.Default.PersonAdd) { showAddDialog = true } }
+            )
+            Spacer(Modifier.height(8.dp))
 
             // Feedback
             state.success?.let { msg ->

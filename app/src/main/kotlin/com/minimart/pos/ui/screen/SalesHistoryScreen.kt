@@ -112,17 +112,12 @@ fun SalesHistoryScreen(
         Column(modifier = Modifier.fillMaxSize()) {
 
             // ── Top bar ───────────────────────────────────────────────────────
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DT.Teal)
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Sales History", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                    Text("${stats.count} records  •  $currency ${String.format("%.2f", stats.total)}",
-                        color = DT.SubText, style = MaterialTheme.typography.labelMedium)
-                }
-            }
+            GradientHeader(
+                title = "Sales History",
+                subtitle = "${stats.count} records  •  $currency ${String.format(java.util.Locale.US, "%,.2f", stats.total)}",
+                onBack = onBack
+            )
+            Spacer(Modifier.height(12.dp))
 
             // ── Search bar ────────────────────────────────────────────────────
             OutlinedTextField(

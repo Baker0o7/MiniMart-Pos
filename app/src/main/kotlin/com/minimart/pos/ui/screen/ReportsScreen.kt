@@ -99,14 +99,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
             // ── Header ──
             item {
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DT.OnSurface) }
-                    Spacer(Modifier.width(4.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Reports", color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
-                        Text("Analytics overview", color = DT.SubText, fontSize = 12.sp)
-                    }
+                GradientHeader(title = "Reports", subtitle = "Analytics overview", onBack = onBack, actions = {
                     // Share the business report as a PDF — straight to WhatsApp (EOD report for
                     // an accountant or partner).
                     IconButton(
@@ -129,11 +122,11 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             }
                         }
                     ) {
-                        if (isSharing) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color(0xFF25D366))
-                        else Icon(Icons.Default.Share, "Share report via WhatsApp", tint = Color(0xFF25D366), modifier = Modifier.size(24.dp))
+                        if (isSharing) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
+                        else Icon(Icons.Default.Share, "Share report via WhatsApp", tint = Color.White, modifier = Modifier.size(24.dp))
                     }
-                    Spacer(Modifier.width(4.dp))
-                }
+                })
+                Spacer(Modifier.height(10.dp))
             }
 
             // ── Period chips ──

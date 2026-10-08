@@ -41,16 +41,12 @@ fun LowStockScreen(
         Column(modifier = Modifier.fillMaxSize()) {
 
             // ── Top bar ───────────────────────────────────────────────────────
-            Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = DT.Teal)
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Reorder Reminders", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                    Text("${lowStock.size} item${if (lowStock.size != 1) "s" else ""} need restocking",
-                        color = DT.SubText, style = MaterialTheme.typography.labelMedium)
-                }
-            }
+            GradientHeader(
+                title = "Reorder Reminders",
+                subtitle = "${lowStock.size} item${if (lowStock.size != 1) "s" else ""} need restocking",
+                onBack = onBack
+            )
+            Spacer(Modifier.height(8.dp))
 
             if (lowStock.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
