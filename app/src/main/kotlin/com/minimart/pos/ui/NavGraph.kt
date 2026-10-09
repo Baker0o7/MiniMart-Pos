@@ -361,7 +361,7 @@ private fun BottomNavBar(
             }
         }
         // Raised center scan button: teal ring around a filled disc
-        Box(modifier = Modifier.size(78.dp).align(Alignment.TopCenter).offset(y = (-18).dp)
+        Box(modifier = Modifier.size(78.dp).align(Alignment.TopCenter).offset(y = (-6).dp)
             .shadow(14.dp, CircleShape, ambientColor = NavSel, spotColor = NavSel)
             .clip(CircleShape)
             .background(Color(0xFF071815))

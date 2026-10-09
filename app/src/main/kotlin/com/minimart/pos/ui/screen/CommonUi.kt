@@ -97,19 +97,16 @@ internal fun GradientHeader(
     }
 }
 
-/** Compact pill-shaped action for a [GradientHeader] (e.g. "Add"). */
+/** Round icon-only action for a [GradientHeader] (e.g. "+"); [label] is the accessibility description. */
 @Composable
 internal fun HeaderPillButton(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier.height(42.dp).clip(RoundedCornerShape(21.dp))
+    Box(
+        modifier = Modifier.size(42.dp).clip(CircleShape)
             .background(Color.White.copy(0.2f))
-            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
-            .padding(horizontal = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
-        Icon(icon, null, tint = Color.White, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(6.dp))
-        Text(label, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Icon(icon, label, tint = Color.White, modifier = Modifier.size(22.dp))
     }
 }
 

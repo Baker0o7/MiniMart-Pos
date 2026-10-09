@@ -289,12 +289,12 @@ fun DashboardScreen(
                     if (rm.canViewReports(currentRole) && "analytics" !in hidden)
                         add(DashCard_("analytics","Analytics","Trends & profit",Icons.Default.Insights,Color(0xFF0B1F2C),BlueGlow,onNavigateToAnalytics))
                     if (rm.canEditPrices(currentRole) && "stockinsights" !in hidden)
-                        add(DashCard_("stockinsights","Stock Insights","Reorder & value",Icons.Default.Inventory2,Color(0xFF1E1708),AmberGlow,onNavigateToStockInsights))
-                    if ("history"  !in hidden) add(DashCard_("history",  "Sales History","Past sales",        Icons.Default.History,   Color(0xFF081525), BlueGlow,   onNavigateToSalesHistory))
-                    if ("lowstock" !in hidden) add(DashCard_("lowstock", "Low Stock",    "Items running low", Icons.Default.Warning,   Color(0xFF1E0808), RedGlow,    onNavigateToLowStock))
-                    if ("mpesa" !in hidden) add(DashCard_("mpesa", "M-Pesa", "Payments & verify", Icons.Default.PhoneAndroid, Color(0xFF0B2210), GreenGlow, onNavigateToMpesa))
+                        add(DashCard_("stockinsights","Insights","Reorder & value",Icons.Default.Inventory2,Color(0xFF1E1708),AmberGlow,onNavigateToStockInsights))
+                    if ("history"  !in hidden) add(DashCard_("history",  "History","Past sales",        Icons.Default.History,   Color(0xFF081525), BlueGlow,   onNavigateToSalesHistory))
+                    if ("lowstock" !in hidden) add(DashCard_("lowstock", "Low Stock",    "Running low", Icons.Default.Warning,   Color(0xFF1E0808), RedGlow,    onNavigateToLowStock))
+                    if ("mpesa" !in hidden) add(DashCard_("mpesa", "M-Pesa", "Payments", Icons.Default.PhoneAndroid, Color(0xFF0B2210), GreenGlow, onNavigateToMpesa))
                     if ("customers" !in hidden) add(DashCard_("customers", "Customers", "Credit & loyalty",  Icons.Default.People,    Color(0xFF0B1525), BlueGlow,   onNavigateToCustomers))
-                    if ("creditoverview" !in hidden) add(DashCard_("creditoverview", "Credit Ledger", "Outstanding balances", Icons.Default.AccountBalanceWallet, Color(0xFF1A0808), RedGlow, onNavigateToCreditOverview))
+                    if ("creditoverview" !in hidden) add(DashCard_("creditoverview", "Ledger", "Balances owed", Icons.Default.AccountBalanceWallet, Color(0xFF1A0808), RedGlow, onNavigateToCreditOverview))
                 }
 
                 Column(Modifier.padding(horizontal = 16.dp).animateContentSize(),
@@ -385,28 +385,29 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector,
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "cardPress")
 
+    // Height follows the content (with a floor) instead of a fixed aspect ratio: on phones with a
+    // large font setting the fixed ratio clipped the subtitle at the bottom of the card.
     Box(modifier = Modifier.fillMaxWidth()
-        .aspectRatio(1.08f)
+        .defaultMinSize(minHeight = 104.dp)
         .graphicsLayer { scaleX = scale; scaleY = scale }
         .clip(RoundedCornerShape(20.dp))
         .background(Brush.verticalGradient(listOf(bg, Bg)))
         .border(1.5.dp, glow.copy(0.5f), RoundedCornerShape(20.dp))
         .clickable(indication = null, interactionSource = interactionSource, onClick = onClick)
-        .padding(12.dp)) {
-        Column(Modifier.fillMaxSize()) {
+        .padding(start = 11.dp, end = 8.dp, top = 11.dp, bottom = 11.dp)) {
+        Column(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                Box(modifier = Modifier.size(44.dp).clip(RoundedCornerShape(14.dp))
+                Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(13.dp))
                     .background(glow.copy(0.22f)), contentAlignment = Alignment.Center) {
-                    Icon(icon, null, tint = glow, modifier = Modifier.size(24.dp))
+                    Icon(icon, null, tint = glow, modifier = Modifier.size(23.dp))
                 }
                 Spacer(Modifier.weight(1f))
                 Icon(Icons.Default.ChevronRight, null, tint = White.copy(0.75f), modifier = Modifier.size(20.dp).padding(top = 2.dp))
             }
-            Spacer(Modifier.weight(1f))
-            Text(title, color = White, fontWeight = FontWeight.Bold, fontSize = 14.sp,
+            Spacer(Modifier.height(10.dp))
+            Text(title, color = White, fontWeight = FontWeight.Bold, fontSize = 12.5.sp, lineHeight = 16.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(2.dp))
-            Text(sub, color = Sub, fontSize = 11.sp, lineHeight = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(sub, color = Sub, fontSize = 10.sp, lineHeight = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
