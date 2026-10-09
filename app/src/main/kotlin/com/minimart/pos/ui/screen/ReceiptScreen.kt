@@ -88,238 +88,162 @@ fun ReceiptScreen(
     val isVoided   = sale?.status == SaleStatus.VOIDED
     val isRefunded = sale?.status == SaleStatus.REFUNDED
 
-    Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
+    fun receiptData(): ReceiptData? {
+        val sl = sale ?: return null
+        return ReceiptData(
+            sale = sl, items = items,
+            productNames = items.associate { it.productId to it.productName },
+            storeName = storeName, currency = currency,
+            cashierName = state.cashierName ?: cashierName, footerMessage = footerMessage
+        )
+    }
+    val money = { v: Double -> "$currency ${String.format(Locale.US, "%,.2f", v)}" }
+
+    Column(modifier = Modifier.fillMaxSize().background(DT.Bg).statusBarsPadding()) {
         Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp).padding(top = 48.dp, bottom = 24.dp)
-                .navigationBarsPadding(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp).padding(top = 14.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             if (state.isLoading) {
-                CircularProgressIndicator(color = DT.Teal, modifier = Modifier.size(48.dp))
+                Box(Modifier.fillMaxWidth().padding(top = 80.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = DT.Teal, modifier = Modifier.size(40.dp))
+                }
             } else {
-                // ── Status icon ───────────────────────────────────────────────
-                Box(
-                    modifier = Modifier.size(96.dp).scale(scale).clip(CircleShape)
-                        .background(statusColor(sale?.status).copy(0.15f))
-                        .border(3.dp, statusColor(sale?.status), CircleShape)
-                        .semantics { contentDescription = "Sale status" },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(statusIcon(sale?.status), null,
-                        tint = statusColor(sale?.status), modifier = Modifier.size(56.dp))
-                }
-
-                Text(statusLabel(sale?.status), color = statusColor(sale?.status),
-                    fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
-
-                Text("Receipt #${sale?.receiptNumber ?: saleId}",
-                    color = DT.SubText, style = MaterialTheme.typography.bodySmall)
-
-                // Status badge for voided/refunded
-                if (isVoided || isRefunded) {
-                    Box(modifier = Modifier.clip(RoundedCornerShape(20.dp))
-                        .background(DT.Red.copy(0.15f)).border(1.dp, DT.Red.copy(0.4f), RoundedCornerShape(20.dp))
-                        .padding(horizontal = 16.dp, vertical = 6.dp)) {
-                        Text(if (isVoided) "VOIDED" else "REFUNDED",
-                            color = DT.Red, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+                val sc = statusColor(sale?.status)
+                // ── Compact status header ─────────────────────────────────────
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier.size(52.dp).scale(scale).clip(CircleShape)
+                            .background(sc.copy(0.15f)).border(2.dp, sc, CircleShape)
+                            .semantics { contentDescription = "Sale status" },
+                        contentAlignment = Alignment.Center
+                    ) { Icon(statusIcon(sale?.status), null, tint = sc, modifier = Modifier.size(30.dp)) }
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(statusLabel(sale?.status), color = sc, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                        Text("#${sale?.receiptNumber ?: saleId}", color = DT.SubText, fontSize = 12.sp,
+                            maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                     }
-                    sale?.notes?.let { if (it.isNotBlank()) Text("Reason: $it", color = DT.SubText, style = MaterialTheme.typography.labelSmall) }
+                    if (isVoided || isRefunded) {
+                        Text(if (isVoided) "VOIDED" else "REFUNDED", color = DT.Red, fontWeight = FontWeight.ExtraBold, fontSize = 11.sp,
+                            modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(DT.Red.copy(0.15f))
+                                .border(1.dp, DT.Red.copy(0.4f), RoundedCornerShape(20.dp))
+                                .padding(horizontal = 10.dp, vertical = 4.dp))
+                    }
                 }
+                if ((isVoided || isRefunded) && !sale?.notes.isNullOrBlank())
+                    Text("Reason: ${sale?.notes}", color = DT.SubText, fontSize = 11.sp)
 
                 // ── Receipt card ─────────────────────────────────────────────
                 if (items.isNotEmpty()) {
-                    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
-                        .background(androidx.compose.ui.graphics.Brush.verticalGradient(
-                            listOf(DT.Surface, DT.Surface2)))
-                        .border(1.dp, DT.Border, RoundedCornerShape(20.dp))) {
-                        Column(modifier = Modifier.padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                            // Store header
-                            Column(modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(storeName, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-                                Text("TAX RECEIPT", color = DT.Teal, fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                    Column(
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+                            .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(DT.Surface, DT.Surface2)))
+                            .border(1.dp, DT.Border, RoundedCornerShape(18.dp))
+                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(storeName, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp,
+                                    maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                Text(
+                                    "${(state.cashierName ?: cashierName).ifBlank { "Admin" }} · " +
+                                        (sale?.createdAt?.let { SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault()).format(Date(it)) } ?: ""),
+                                    color = DT.SubText, fontSize = 11.sp, maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                             }
-                            Spacer(Modifier.height(10.dp))
-                            HorizontalDivider(color = DT.Border)
-                            Spacer(Modifier.height(10.dp))
-                            // Cashier + date
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Column(Modifier.weight(1f)) {
-                                    Text("Cashier", color = DT.SubText, fontSize = 10.sp)
-                                    Text((state.cashierName ?: cashierName).ifBlank { "Admin" }, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text("Date", color = DT.SubText, fontSize = 10.sp)
-                                    Text(sale?.createdAt?.let { java.text.SimpleDateFormat("dd/MM/yy HH:mm", java.util.Locale.getDefault()).format(java.util.Date(it)) } ?: "", color = Color.White, fontSize = 12.sp)
-                                }
-                            }
-                            Spacer(Modifier.height(10.dp))
-                            HorizontalDivider(color = DT.Border)
-                            Spacer(Modifier.height(10.dp))
-                            // Header row
-                            Row(modifier = Modifier.fillMaxWidth()) {
-                                Text("ITEM", color = DT.SubText, fontSize = 10.sp, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
-                                Text("QTY", color = DT.SubText, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
-                                Spacer(Modifier.width(16.dp))
-                                Text("AMOUNT", color = DT.SubText, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
-                            }
-                            Spacer(Modifier.height(6.dp))
-                            // Items
-                            items.forEach { item ->
-                                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically) {
-                                    Column(Modifier.weight(1f)) {
-                                        Text(item.productName, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
-                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                                        // Bug fix: for weighed items, unitPrice is actually the
-                                        // calculated LINE TOTAL (weight × price/kg) — see
-                                        // CartViewModel.addWeighedItem() which overwrites
-                                        // product.price with that total, not a per-kg rate.
-                                        // Derive price/kg by dividing back for display.
-                                        Text(
-                                            if (item.weightKg > 0)
-                                                "@ $currency ${String.format("%.2f", item.unitPrice / item.weightKg)}/kg"
-                                            else "@ $currency ${String.format("%.2f", item.unitPrice)}",
-                                            color = DT.SubText, fontSize = 10.sp)
-                                    }
-                                    Text(
-                                        if (item.weightKg > 0) "${String.format("%.3f", item.weightKg)} kg"
-                                        else "×${item.quantity}",
-                                        color = DT.SubText, fontSize = 12.sp)
-                                    Spacer(Modifier.width(16.dp))
-                                    Text("$currency ${String.format("%.2f", item.lineTotal)}",
-                                        color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                }
-                            }
-                            Spacer(Modifier.height(8.dp))
-                            HorizontalDivider(color = DT.Teal.copy(0.3f), thickness = 1.5.dp)
-                            Spacer(Modifier.height(10.dp))
-                            // Totals
-                            sale?.discountAmount?.let { disc ->
-                                if (disc > 0) {
-                                    Row(modifier = Modifier.fillMaxWidth()) {
-                                        Text("Discount", color = DT.Amber, modifier = Modifier.weight(1f), fontSize = 13.sp)
-                                        Text("- $currency ${String.format("%.2f", disc)}", color = DT.Amber, fontSize = 13.sp)
-                                    }
-                                    Spacer(Modifier.height(4.dp))
-                                }
-                            }
-                            sale?.taxAmount?.let { tax ->
-                                if (tax > 0) {
-                                    Row(modifier = Modifier.fillMaxWidth()) {
-                                        Text("VAT (incl.)", color = DT.SubText, modifier = Modifier.weight(1f), fontSize = 12.sp)
-                                        Text("$currency ${String.format("%.2f", tax)}", color = DT.SubText, fontSize = 12.sp)
-                                    }
-                                    Spacer(Modifier.height(6.dp))
-                                }
-                            }
-                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text("TOTAL", color = Color.White, fontWeight = FontWeight.ExtraBold,
-                                    fontSize = 18.sp, modifier = Modifier.weight(1f), letterSpacing = 1.sp)
-                                Text("$currency ${String.format("%.2f", sale?.totalAmount ?: 0.0)}",
-                                    color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
-                            }
-                            sale?.changeGiven?.let { change ->
-                                if (change > 0) {
-                                    Spacer(Modifier.height(4.dp))
-                                    Row(modifier = Modifier.fillMaxWidth()) {
-                                        Text("Change", color = DT.Green, modifier = Modifier.weight(1f), fontSize = 13.sp)
-                                        Text("$currency ${String.format("%.2f", change)}", color = DT.Green, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
-                            Spacer(Modifier.height(10.dp))
-                            HorizontalDivider(color = DT.Border)
-                            Spacer(Modifier.height(10.dp))
-                            // Payment method badge
                             sale?.paymentMethod?.let { pm ->
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Payment", color = DT.SubText, fontSize = 12.sp)
-                                    Box(modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                                        .background(DT.Teal.copy(0.15f))
+                                Text(pm.name, color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 11.sp,
+                                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(DT.Teal.copy(0.15f))
                                         .border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(8.dp))
-                                        .padding(horizontal = 12.dp, vertical = 4.dp)) {
-                                        Text(pm.name, color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                    }
+                                        .padding(horizontal = 10.dp, vertical = 4.dp))
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        HorizontalDivider(color = DT.Border)
+                        Spacer(Modifier.height(4.dp))
+                        items.forEach { item ->
+                            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(item.productName, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                    // For weighed items unitPrice holds the calculated line total (see
+                                    // CartViewModel.addWeighedItem), so price/kg is derived by dividing back.
+                                    Text(
+                                        (if (item.weightKg > 0) "${String.format("%.3f", item.weightKg)} kg @ ${String.format("%.2f", item.unitPrice / item.weightKg)}/kg"
+                                         else "${item.quantity} × ${String.format("%.2f", item.unitPrice)}"),
+                                        color = DT.SubText, fontSize = 11.sp)
                                 }
+                                Text(money(item.lineTotal), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                             }
-                            if (footerMessage.isNotBlank()) {
-                                Spacer(Modifier.height(10.dp))
-                                HorizontalDivider(color = DT.Border)
-                                Spacer(Modifier.height(8.dp))
-                                Text(footerMessage, color = DT.SubText, fontSize = 11.sp,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth())
+                        }
+                        Spacer(Modifier.height(4.dp))
+                        HorizontalDivider(color = DT.Teal.copy(0.3f), thickness = 1.dp)
+                        Spacer(Modifier.height(8.dp))
+                        sale?.discountAmount?.takeIf { it > 0 }?.let { d ->
+                            Row(Modifier.fillMaxWidth()) {
+                                Text("Discount", color = DT.Amber, modifier = Modifier.weight(1f), fontSize = 12.sp)
+                                Text("- ${money(d)}", color = DT.Amber, fontSize = 12.sp)
                             }
+                            Spacer(Modifier.height(3.dp))
+                        }
+                        sale?.taxAmount?.takeIf { it > 0 }?.let { t ->
+                            Row(Modifier.fillMaxWidth()) {
+                                Text("VAT (incl.)", color = DT.SubText, modifier = Modifier.weight(1f), fontSize = 11.sp)
+                                Text(money(t), color = DT.SubText, fontSize = 11.sp)
+                            }
+                            Spacer(Modifier.height(4.dp))
+                        }
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text("TOTAL", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp,
+                                modifier = Modifier.weight(1f), letterSpacing = 1.sp)
+                            Text(money(sale?.totalAmount ?: 0.0), color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                        }
+                        sale?.changeGiven?.takeIf { it > 0 }?.let { c ->
+                            Spacer(Modifier.height(3.dp))
+                            Row(Modifier.fillMaxWidth()) {
+                                Text("Change", color = DT.Green, modifier = Modifier.weight(1f), fontSize = 12.sp)
+                                Text(money(c), color = DT.Green, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        if (footerMessage.isNotBlank()) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(footerMessage, color = DT.SubText, fontSize = 11.sp,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.fillMaxWidth())
                         }
                     }
                 }
 
-                HorizontalDivider(color = DT.Border)
-
-                // ── Share / PDF row ───────────────────────────────────────────
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Share, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Share Receipt", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                }
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                // ── Share row ─────────────────────────────────────────────────
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ReceiptActionBtn(Modifier.weight(1f), Icons.Default.PictureAsPdf, "PDF", DT.Red, isGeneratingPdf) {
                         scope.launch {
                             isGeneratingPdf = true
                             try {
-                                val data = ReceiptData(
-                                    sale = sale ?: return@launch,
-                                    items = items,
-                                    productNames = items.associate { it.productId to it.productName },
-                                    storeName = storeName, currency = currency,
-                                    cashierName = state.cashierName ?: cashierName, footerMessage = footerMessage
-                                )
+                                val data = receiptData() ?: return@launch
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                                 statusMsg = "✓ PDF: ${file.name}"
                             } catch (e: Exception) { statusMsg = "PDF error: ${e.message}" }
                             finally { isGeneratingPdf = false }
                         }
                     }
-
                     ReceiptActionBtn(Modifier.weight(1f), Icons.Default.Share, "WhatsApp", Color(0xFF25D366)) {
                         scope.launch {
                             try {
-                                val data = ReceiptData(
-                                    sale = sale ?: return@launch,
-                                    items = items,
-                                    productNames = items.associate { it.productId to it.productName },
-                                    storeName = storeName, currency = currency,
-                                    cashierName = state.cashierName ?: cashierName, footerMessage = footerMessage
-                                )
+                                val data = receiptData() ?: return@launch
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                                 val uri = PdfReceiptGenerator.getShareUri(context, file)
-                                PdfReceiptGenerator.shareViaWhatsApp(context, uri, storeName,
-                                    "$currency ${String.format("%.2f", sale?.totalAmount ?: 0.0)}")
+                                PdfReceiptGenerator.shareViaWhatsApp(context, uri, storeName, money(sale?.totalAmount ?: 0.0))
                             } catch (e: Exception) { statusMsg = "Share error: ${e.message}" }
                         }
                     }
-
                     ReceiptActionBtn(Modifier.weight(1f), Icons.Default.IosShare, "Share", DT.Teal) {
                         scope.launch {
                             try {
-                                val data = ReceiptData(
-                                    sale = sale ?: return@launch,
-                                    items = items,
-                                    productNames = items.associate { it.productId to it.productName },
-                                    storeName = storeName, currency = currency,
-                                    cashierName = state.cashierName ?: cashierName, footerMessage = footerMessage
-                                )
+                                val data = receiptData() ?: return@launch
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
-                                val uri = PdfReceiptGenerator.getShareUri(context, file)
-                                PdfReceiptGenerator.shareGeneric(context, uri)
+                                PdfReceiptGenerator.shareGeneric(context, PdfReceiptGenerator.getShareUri(context, file))
                             } catch (e: Exception) { statusMsg = "Error: ${e.message}" }
                         }
                     }
@@ -327,68 +251,58 @@ fun ReceiptScreen(
 
                 // ── Refund / Void (only for completed sales) ──────────────────
                 if (canManageSales && sale?.status == SaleStatus.COMPLETED) {
-                    HorizontalDivider(color = DT.Border)
-                    Text("Manage Sale", color = DT.OnSurface, fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.fillMaxWidth())
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(
                             onClick = { showRefundDialog = true },
-                            modifier = Modifier.weight(1f).height(48.dp),
+                            modifier = Modifier.weight(1f).height(42.dp),
                             shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, DT.Amber),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, DT.Amber.copy(0.7f)),
                             enabled = !state.isProcessing
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.Undo, null, tint = DT.Amber, modifier = Modifier.size(18.dp))
+                            Icon(Icons.AutoMirrored.Filled.Undo, null, tint = DT.Amber, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Refund", color = DT.Amber, fontWeight = FontWeight.SemiBold)
+                            Text("Refund", color = DT.Amber, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                         }
                         OutlinedButton(
                             onClick = { showVoidDialog = true },
-                            modifier = Modifier.weight(1f).height(48.dp),
+                            modifier = Modifier.weight(1f).height(42.dp),
                             shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, DT.Red),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, DT.Red.copy(0.7f)),
                             enabled = !state.isProcessing
                         ) {
-                            if (state.isProcessing) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = DT.Red, strokeWidth = 2.dp)
-                            else Icon(Icons.Default.Cancel, null, tint = DT.Red, modifier = Modifier.size(18.dp))
+                            if (state.isProcessing) CircularProgressIndicator(modifier = Modifier.size(14.dp), color = DT.Red, strokeWidth = 2.dp)
+                            else Icon(Icons.Default.Cancel, null, tint = DT.Red, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Void", color = DT.Red, fontWeight = FontWeight.SemiBold)
+                            Text("Void", color = DT.Red, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                         }
                     }
-                    Text("Refund or void restores stock automatically.",
-                        color = DT.SubText, style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.fillMaxWidth())
                 }
 
-                // Status feedback
-                AnimatedVisibility(visible = statusMsg != null) {
-                    Row(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                        .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(10.dp)).padding(12.dp)) {
-                        Icon(Icons.Default.Info, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(statusMsg ?: "", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
+                FeedbackBanner(statusMsg, isError = statusMsg?.let { it.contains("error", true) || it.startsWith("Error") } == true)
+            }
+        }
 
-                HorizontalDivider(color = DT.Border)
-
-                // ── Nav buttons ───────────────────────────────────────────────
-                Button(onClick = onNewSale,
-                    modifier = Modifier.fillMaxWidth().height(52.dp).semantics { contentDescription = "New sale" },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
-                    Icon(Icons.Default.QrCode, null, tint = Color.White)
-                    Spacer(Modifier.width(8.dp))
-                    Text("New Sale", fontWeight = FontWeight.Bold, color = Color.White)
-                }
-                OutlinedButton(onClick = onDashboard,
-                    modifier = Modifier.fillMaxWidth().height(52.dp).semantics { contentDescription = "Dashboard" },
-                    shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) {
-                    Icon(Icons.Default.Home, null, tint = DT.SubText)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Dashboard", color = DT.SubText)
-                }
+        // ── Pinned actions: always reachable without scrolling ────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth().background(DT.Surface)
+                .padding(horizontal = 16.dp, vertical = 10.dp).navigationBarsPadding(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            OutlinedButton(onClick = onDashboard,
+                modifier = Modifier.weight(1f).height(50.dp).semantics { contentDescription = "Dashboard" },
+                shape = RoundedCornerShape(14.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) {
+                Icon(Icons.Default.Home, null, tint = DT.SubText, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Home", color = DT.SubText, fontSize = 14.sp)
+            }
+            Button(onClick = onNewSale,
+                modifier = Modifier.weight(1.6f).height(50.dp).semantics { contentDescription = "New sale" },
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
+                Icon(Icons.Default.QrCode, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("New Sale", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 15.sp)
             }
         }
     }
@@ -457,14 +371,14 @@ private fun statusLabel(status: SaleStatus?) = when (status) {
 @Composable
 private fun ReceiptActionBtn(modifier: Modifier, icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String, color: Color, isLoading: Boolean = false, onClick: () -> Unit) {
-    Box(modifier = modifier.clip(RoundedCornerShape(14.dp))
-        .background(color.copy(0.12f)).border(1.dp, color.copy(0.3f), RoundedCornerShape(14.dp))
-        .clickable(enabled = !isLoading, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
-        .padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (isLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp), color = color, strokeWidth = 2.dp)
-            else Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
-            Text(label, color = color, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+    Box(modifier = modifier.height(44.dp).clip(RoundedCornerShape(12.dp))
+        .background(color.copy(0.12f)).border(1.dp, color.copy(0.3f), RoundedCornerShape(12.dp))
+        .clickable(enabled = !isLoading, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick),
+        contentAlignment = Alignment.Center) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (isLoading) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = color, strokeWidth = 2.dp)
+            else Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
+            Text(label, color = color, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
         }
     }
 }
