@@ -173,47 +173,45 @@ fun DashboardScreen(
                 val interaction = remember { MutableInteractionSource() }
                 // One combined summary card: revenue on the left, count + average basket on the right.
                 Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(RoundedCornerShape(20.dp))
                     .background(Brush.linearGradient(listOf(Color(0xFF0B3A33), Color(0xFF0A2A3A), Color(0xFF14204A))))
-                    .border(1.5.dp, TealGlow.copy(0.55f), RoundedCornerShape(24.dp))) {
-                    MiniLineChart(spark, TealGlow.copy(0.3f),
-                        Modifier.align(Alignment.BottomStart).fillMaxWidth(0.55f).height(56.dp).padding(bottom = 34.dp))
-                    Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.Top) {
+                    .border(1.dp, TealGlow.copy(0.5f), RoundedCornerShape(20.dp))) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         // Left: revenue
-                        Column(Modifier.weight(1.2f)) {
+                        Column(Modifier.weight(1.25f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(Modifier.size(48.dp).clip(RoundedCornerShape(15.dp))
+                                Box(Modifier.size(36.dp).clip(RoundedCornerShape(11.dp))
                                     .background(Brush.linearGradient(listOf(Color(0xFF00B398), Color(0xFF00695C)))),
                                     contentAlignment = Alignment.Center) {
-                                    Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = White, modifier = Modifier.size(26.dp))
+                                    Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = White, modifier = Modifier.size(20.dp))
                                 }
-                                Spacer(Modifier.width(10.dp))
-                                Text("Today's Sales Revenue", color = White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
-                                    maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 19.sp)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Today's Sales Revenue", color = White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                                    maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 15.sp)
                             }
-                            Spacer(Modifier.height(14.dp))
-                            Text(money(state.todayRevenue), color = White, fontWeight = FontWeight.ExtraBold, fontSize = 32.sp,
+                            Spacer(Modifier.height(8.dp))
+                            Text(money(state.todayRevenue), color = White, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Spacer(Modifier.height(10.dp))
+                            Spacer(Modifier.height(8.dp))
                             HorizontalDivider(color = TealGlow.copy(0.25f), thickness = 1.dp)
-                            Spacer(Modifier.height(10.dp))
+                            Spacer(Modifier.height(8.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CalendarMonth, null, tint = Sub, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp))
+                                Icon(Icons.Default.CalendarMonth, null, tint = Sub, modifier = Modifier.size(13.dp))
+                                Spacer(Modifier.width(5.dp))
                                 if (hasYesterday) {
                                     // Only a real comparison: with no sales yesterday there is nothing to compare to.
                                     Text("${if (up) "▲ +" else "▼ "}${String.format(java.util.Locale.US, "%.0f", pct)}% vs yesterday",
-                                        color = if (up) GreenGlow else RedGlow, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        color = if (up) GreenGlow else RedGlow, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 } else {
-                                    Text("No sales yesterday to compare", color = Sub, fontSize = 12.sp,
-                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    Text("No sales yesterday to compare", color = Sub, fontSize = 11.sp,
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                             }
                         }
-                        Spacer(Modifier.width(14.dp))
+                        Spacer(Modifier.width(12.dp))
                         // Right: count + average basket (tap through to detail)
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             SummaryStat(Icons.Default.ShoppingBag, PurpleGlow, "Sales (Count)", state.todaySaleCount.toString(),
                                 onNavigateToSalesHistory, interaction)
                             SummaryStat(Icons.Default.ShoppingCart, GreenGlow, "Average Basket Value", money(avgBasket),
@@ -422,15 +420,15 @@ private fun SummaryStat(icon: ImageVector, glow: Color, label: String, value: St
     Row(modifier = Modifier.fillMaxWidth()
         .clickable(indication = null, interactionSource = interaction, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(42.dp).clip(RoundedCornerShape(13.dp)).background(glow.copy(0.3f)),
+        Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(glow.copy(0.3f)),
             contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = glow, modifier = Modifier.size(22.dp))
+            Icon(icon, null, tint = glow, modifier = Modifier.size(18.dp))
         }
         Spacer(Modifier.width(8.dp))
         Column(Modifier.weight(1f)) {
-            Text(label, color = White.copy(0.9f), fontSize = 12.sp, fontWeight = FontWeight.Medium,
-                maxLines = 2, lineHeight = 15.sp)
-            Text(value, color = White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp,
+            Text(label, color = White.copy(0.85f), fontSize = 11.sp, fontWeight = FontWeight.Medium,
+                maxLines = 2, lineHeight = 13.sp)
+            Text(value, color = White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
