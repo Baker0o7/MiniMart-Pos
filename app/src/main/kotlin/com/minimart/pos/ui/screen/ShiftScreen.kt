@@ -56,10 +56,10 @@ fun ShiftScreen(
     Scaffold(
         containerColor = com.minimart.pos.ui.theme.DT.Bg,
         topBar = {
-            TopAppBar(
-                title = { Text("Shift Management", fontWeight = FontWeight.Bold, color = Color.White) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = com.minimart.pos.ui.theme.DT.Teal)
+            GradientHeader(
+                title = "Shifts",
+                subtitle = state.activeShift?.let { "Open · ${it.cashierName}" } ?: "Clock in, close and Z-reports",
+                onBack = onBack
             )
         }
     ) { padding ->
@@ -103,23 +103,8 @@ fun ShiftScreen(
             }
 
             // Feedback
-            state.successMessage?.let { msg ->
-                item {
-                    Row(modifier = Modifier.fillMaxWidth().background(SuccessGreen, RoundedCornerShape(10.dp)).padding(12.dp)) {
-                        Icon(Icons.Default.CheckCircle, null, tint = Color.White, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(msg, color = Color.White, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            }
-            state.error?.let { err ->
-                item {
-                    Row(modifier = Modifier.fillMaxWidth().background(ErrorRed, RoundedCornerShape(10.dp)).padding(12.dp)) {
-                        Icon(Icons.Default.Error, null, tint = Color.White, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(err, color = Color.White, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
+            if (state.successMessage != null || state.error != null) {
+                item { FeedbackBanner(state.error ?: state.successMessage, isError = state.error != null) }
             }
 
             // ── Shift history ──
