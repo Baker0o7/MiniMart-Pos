@@ -204,7 +204,7 @@ fun DashboardScreen(
                                         color = if (up) GreenGlow else RedGlow, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
                                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 } else {
-                                    Text("No sales yesterday to compare", color = Sub, fontSize = 11.sp,
+                                    Text("No sales yesterday", color = Sub, fontSize = 11.sp,
                                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                             }
