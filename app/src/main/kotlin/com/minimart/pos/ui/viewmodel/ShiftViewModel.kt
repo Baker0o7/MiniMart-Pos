@@ -21,14 +21,19 @@ data class ShiftUiState(
     // Bug fix: ShiftScreen hardcoded "KES" in 8 places despite the app having a
     // configurable currency setting — SettingsRepository was already injected here
     // but its currency Flow was never exposed to the UI state.
-    val currency: String = "KES"
+    val currency: String = "KES",
+    // Blind close: cashiers don't see expected cash or the over/short figure; managers/owners do.
+    val blindClose: Boolean = true,
+    val canSeeVariance: Boolean = false
 )
 
 @HiltViewModel
 class ShiftViewModel @Inject constructor(
     private val shiftRepo: ShiftRepository,
     private val userRepo: UserRepository,
-    private val settingsRepo: SettingsRepository
+    private val settingsRepo: SettingsRepository,
+    private val printer: com.minimart.pos.printer.ThermalPrinter,
+    private val cashDrawer: com.minimart.pos.printer.CashDrawerManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ShiftUiState())
@@ -39,6 +44,16 @@ class ShiftViewModel @Inject constructor(
             settingsRepo.currency.catch { emit("KES") }.collect { cur ->
                 _uiState.update { it.copy(currency = cur) }
             }
+        }
+        viewModelScope.launch {
+            combine(settingsRepo.blindClose, settingsRepo.loggedInUserId) { blind, uid -> blind to uid }
+                .catch { }
+                .collect { (blind, uid) ->
+                    val role = uid?.let { userRepo.getUserById(it)?.role }
+                    _uiState.update {
+                        it.copy(blindClose = blind, canSeeVariance = !blind || com.minimart.pos.util.RoleManager.canViewReports(role))
+                    }
+                }
         }
         viewModelScope.launch {
             // Load all recent shifts
@@ -92,6 +107,39 @@ class ShiftViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false, activeShift = null, lastClosedShift = closed, successMessage = "Shift ended") }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = "Clock-out failed: ${e.message}") }
+            }
+        }
+    }
+
+    /** Z-report text for [shiftId], honouring blind close for the current viewer. */
+    suspend fun zText(shiftId: Long): String? {
+        val z = shiftRepo.zReport(shiftId) ?: return null
+        val store = try { settingsRepo.storeName.first() } catch (_: Exception) { "" }
+        val st = _uiState.value
+        return com.minimart.pos.util.ZReportFormatter.format(z, store, st.currency, st.canSeeVariance)
+    }
+
+    fun printZReport(shiftId: Long) {
+        viewModelScope.launch {
+            val text = try { zText(shiftId) } catch (e: Exception) { null }
+            if (text == null) { _uiState.update { it.copy(error = "Report not found") }; return@launch }
+            when (val r = printer.printPlainText(text)) {
+                is com.minimart.pos.printer.PrintResult.Success -> _uiState.update { it.copy(successMessage = "Z-report printed") }
+                is com.minimart.pos.printer.PrintResult.Error -> _uiState.update { it.copy(error = r.message + " — use Share instead") }
+            }
+        }
+    }
+
+    /** Opens the drawer. A no-sale open during a shift is counted and shown on the Z-report. */
+    fun openDrawer(noSale: Boolean) {
+        viewModelScope.launch {
+            val r = cashDrawer.openDrawer()
+            if (r is com.minimart.pos.printer.DrawerResult.Success) {
+                val shift = _uiState.value.activeShift
+                if (noSale && shift != null) runCatching { settingsRepo.recordNoSaleOpen(shift.id) }
+                _uiState.update { it.copy(successMessage = "Drawer opened") }
+            } else if (r is com.minimart.pos.printer.DrawerResult.Error) {
+                _uiState.update { it.copy(error = "Drawer: ${r.msg}") }
             }
         }
     }

@@ -26,6 +26,9 @@ class SettingsRepository @Inject constructor(
         val KEY_EXPIRY_ALERT_MONTHS = intPreferencesKey("expiry_alert_months")
         val KEY_CASH_DRAWER_ADDRESS = stringPreferencesKey("cash_drawer_address")
         val KEY_CASH_DRAWER_ON_SALE = booleanPreferencesKey("cash_drawer_on_sale")
+        val KEY_CASH_DRAWER_PIN = intPreferencesKey("cash_drawer_pin")
+        val KEY_BLIND_CLOSE = booleanPreferencesKey("blind_close")
+        val KEY_CUSTOMER_DISPLAY = booleanPreferencesKey("customer_display_second_screen")
         val KEY_MPESA_SMS_TRACKING = booleanPreferencesKey("mpesa_sms_tracking")
         val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
         val KEY_PRINTER_NAME     = stringPreferencesKey("printer_name")
@@ -95,6 +98,26 @@ class SettingsRepository @Inject constructor(
     suspend fun setMpesaSmsTracking(v: Boolean) = context.dataStore.edit { it[KEY_MPESA_SMS_TRACKING] = v }
     suspend fun setCashDrawerAddress(addr: String) = context.dataStore.edit { it[KEY_CASH_DRAWER_ADDRESS] = addr }
     suspend fun setCashDrawerOnSale(v: Boolean) = context.dataStore.edit { it[KEY_CASH_DRAWER_ON_SALE] = v }
+
+    /** ESC/POS kick connector pin: 0 = pin 2 (most drawers), 1 = pin 5. */
+    val cashDrawerPin: Flow<Int> = context.dataStore.data.map { (it[KEY_CASH_DRAWER_PIN] ?: 0).coerceIn(0, 1) }
+    suspend fun setCashDrawerPin(pin: Int) = context.dataStore.edit { it[KEY_CASH_DRAWER_PIN] = pin.coerceIn(0, 1) }
+
+    /** Blind close: the cashier counts the till without seeing the expected amount or the variance. */
+    val blindClose: Flow<Boolean> = context.dataStore.data.map { it[KEY_BLIND_CLOSE] ?: true }
+    suspend fun setBlindClose(v: Boolean) = context.dataStore.edit { it[KEY_BLIND_CLOSE] = v }
+
+    /** Mirror the live cart on a second (HDMI / dual-screen POS) display when one is attached. */
+    val customerDisplayEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_CUSTOMER_DISPLAY] ?: false }
+    suspend fun setCustomerDisplayEnabled(v: Boolean) = context.dataStore.edit { it[KEY_CUSTOMER_DISPLAY] = v }
+
+    /** How many times the drawer was opened without a sale during a shift (shown on the Z-report). */
+    suspend fun noSaleOpens(shiftId: Long): Int =
+        context.dataStore.data.first()[intPreferencesKey("no_sale_$shiftId")] ?: 0
+    suspend fun recordNoSaleOpen(shiftId: Long) {
+        val key = intPreferencesKey("no_sale_$shiftId")
+        context.dataStore.edit { it[key] = (it[key] ?: 0) + 1 }
+    }
     suspend fun setReceiptFooter(f: String) = context.dataStore.edit { it[KEY_RECEIPT_FOOTER] = f }
     suspend fun setDarkMode(dark: Boolean) = context.dataStore.edit { it[KEY_DARK_MODE] = dark }
     suspend fun setLoggedInUser(userId: Long?) = context.dataStore.edit {

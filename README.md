@@ -141,6 +141,18 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **Supplier payments**: record what you've paid per order; the app shows what you still owe each supplier.
 - **Share** an order as text (WhatsApp, SMS, email).
 
+### 🧾 Shift Close, Z-Reports & Drawer
+- **Blind close** (on by default; Settings → Shift close & display): the cashier counts the drawer without seeing the expected amount. The over/short figure is shown only to managers and owners.
+- **Z-report** at the end of every shift: sales by payment type, discounts, voids, refunds, credit sales, float, counted cash, expected cash and variance, no-sale drawer opens, signature lines. **Print** on the thermal printer or **Share** as text. Past shifts can be reprinted from Shift History.
+- **Cash drawer**: kicks on cash sales, **Open drawer (no sale)** on the shift screen (counted on the Z-report), **Open drawer to count** during close, and a selectable kick pin (2 or 5).
+
+### 📺 Customer-Facing Display
+- Live cart with big total, discount and a "Thank you / your change" screen after each sale.
+- **Customer tile** on Home shows it full-screen on this device; or enable **second screen** in Settings to mirror it on an attached HDMI / dual-screen POS display.
+
+### 🏷️ Barcode Label Printing
+- **Labels** tile (managers/owners): search products, pick copies, optionally print the price, or add all low-stock items. Prints EAN-13 or Code 128 labels on the connected thermal printer.
+
 ### 🏠 Home & Settings
 - Home shows the signed-in user's initial and today's date, a real vs-yesterday trend (hidden when there was
   no sale yesterday), and low-stock / expiry alerts right under the stats

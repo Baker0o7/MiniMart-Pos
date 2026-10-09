@@ -31,6 +31,7 @@ import com.minimart.pos.ui.viewmodel.ShiftViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.abs
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,6 +74,7 @@ fun ShiftScreen(
                     ActiveShiftCard(
                         shift = shift,
                         currency = state.currency,
+                        onOpenDrawer = { vm.openDrawer(noSale = true) },
                         onClockOut = { showClockOutDialog = true }
                     )
                 } ?: run {
@@ -141,20 +143,39 @@ fun ShiftScreen(
     if (showClockOutDialog) {
         ClockOutDialog(
             currency = state.currency,
+            blind = state.blindClose,
+            onOpenDrawer = { vm.openDrawer(noSale = false) },
             onDismiss = { showClockOutDialog = false },
             onClockOut = { float, notes -> vm.clockOut(float, notes); showClockOutDialog = false }
         )
     }
 
     showSummaryDialog?.let { shift ->
-        ShiftSummaryDialog(shift = shift, currency = state.currency, onDismiss = { showSummaryDialog = null })
+        val ctx = androidx.compose.ui.platform.LocalContext.current
+        val scope = rememberCoroutineScope()
+        ShiftSummaryDialog(
+            shift = shift, currency = state.currency, showVariance = state.canSeeVariance,
+            onPrint = { vm.printZReport(shift.id) },
+            onShare = {
+                scope.launch {
+                    val text = try { vm.zText(shift.id) } catch (_: Exception) { null }
+                    if (text != null) {
+                        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, text)
+                        }
+                        try { ctx.startActivity(android.content.Intent.createChooser(send, "Share Z-report").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {}
+                    }
+                }
+            },
+            onDismiss = { showSummaryDialog = null }
+        )
     }
 }
 
 // ─── Active Shift Card ────────────────────────────────────────────────────────
 
 @Composable
-private fun ActiveShiftCard(shift: Shift, currency: String, onClockOut: () -> Unit) {
+private fun ActiveShiftCard(shift: Shift, currency: String, onOpenDrawer: () -> Unit, onClockOut: () -> Unit) {
     val df = SimpleDateFormat("HH:mm", Locale.getDefault())
     val dfFull = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
     // Re-read the clock every 30s so the elapsed time doesn't freeze while the screen is open.
@@ -191,6 +212,16 @@ private fun ActiveShiftCard(shift: Shift, currency: String, onClockOut: () -> Un
                     Icon(Icons.Default.Money, null, tint = com.minimart.pos.ui.theme.DT.SubText, modifier = Modifier.size(18.dp))
                     Text("Opening float: $currency ${String.format("%.2f", shift.openingFloat)}", style = MaterialTheme.typography.bodySmall, color = com.minimart.pos.ui.theme.DT.SubText)
                 }
+            }
+            OutlinedButton(
+                onClick = onOpenDrawer,
+                modifier = Modifier.fillMaxWidth().height(44.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, com.minimart.pos.ui.theme.DT.Teal)
+            ) {
+                Icon(Icons.Default.LocalAtm, null, tint = com.minimart.pos.ui.theme.DT.Teal, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Open drawer (no sale)", color = com.minimart.pos.ui.theme.DT.Teal, fontWeight = FontWeight.SemiBold)
             }
             Button(
                 onClick = onClockOut,
@@ -303,7 +334,7 @@ private fun ClockInDialog(currency: String, onDismiss: () -> Unit, onClockIn: (D
 // ─── Clock Out Dialog ─────────────────────────────────────────────────────────
 
 @Composable
-private fun ClockOutDialog(currency: String, onDismiss: () -> Unit, onClockOut: (Double, String) -> Unit) {
+private fun ClockOutDialog(currency: String, blind: Boolean, onOpenDrawer: () -> Unit, onDismiss: () -> Unit, onClockOut: (Double, String) -> Unit) {
     val DT = com.minimart.pos.ui.theme.DT
     var closingFloat by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
@@ -313,6 +344,16 @@ private fun ClockOutDialog(currency: String, onDismiss: () -> Unit, onClockOut: 
         title = { Text("End Shift", fontWeight = FontWeight.Bold, color = Color.White) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    if (blind) "Blind close: count everything in the drawer and enter the total. The expected amount stays hidden."
+                    else "Count everything in the drawer and enter the total.",
+                    color = DT.SubText, style = MaterialTheme.typography.bodySmall
+                )
+                TextButton(onClick = onOpenDrawer) {
+                    Icon(Icons.Default.LocalAtm, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Open drawer to count", color = DT.Teal)
+                }
                 OutlinedTextField(value = closingFloat, onValueChange = { closingFloat = it.replace(',', '.').filter { c -> c.isDigit() || c == '.' }.take(12) },
                     label = { Text("Closing Cash Counted ($currency)", color = DT.SubText) },
                     leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
@@ -347,7 +388,7 @@ private fun ClockOutDialog(currency: String, onDismiss: () -> Unit, onClockOut: 
 // ─── Shift Summary Dialog ─────────────────────────────────────────────────────
 
 @Composable
-private fun ShiftSummaryDialog(shift: Shift, currency: String, onDismiss: () -> Unit) {
+private fun ShiftSummaryDialog(shift: Shift, currency: String, showVariance: Boolean, onPrint: () -> Unit, onShare: () -> Unit, onDismiss: () -> Unit) {
     val DT = com.minimart.pos.ui.theme.DT
     val df = SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault())
     val durationMs = (shift.clockOut ?: System.currentTimeMillis()) - shift.clockIn
@@ -381,14 +422,18 @@ private fun ShiftSummaryDialog(shift: Shift, currency: String, onDismiss: () -> 
                 SummaryRow("Opening Float", "$currency ${String.format("%.2f", shift.openingFloat)}")
                 shift.closingFloat?.let { cf ->
                     SummaryRow("Closing Float", "$currency ${String.format("%.2f", cf)}")
-                    SummaryRow("Expected Cash", "$currency ${String.format("%.2f", shift.expectedCash)}")
-                    val disc = shift.cashDiscrepancy
-                    SummaryRow(
-                        "Discrepancy",
-                        "${if (disc >= 0) "+" else ""}$currency ${String.format("%.2f", disc)}",
-                        bold = true,
-                        color = when { disc > 10 -> SuccessGreen; disc < -10 -> ErrorRed; else -> Color.White }
-                    )
+                    if (showVariance) {
+                        SummaryRow("Expected Cash", "$currency ${String.format("%.2f", shift.expectedCash)}")
+                        val disc = shift.cashDiscrepancy
+                        SummaryRow(
+                            "Discrepancy",
+                            "${if (disc >= 0) "+" else ""}$currency ${String.format("%.2f", disc)}",
+                            bold = true,
+                            color = when { disc > 10 -> SuccessGreen; disc < -10 -> ErrorRed; else -> Color.White }
+                        )
+                    } else {
+                        Text("Blind close — variance is visible to managers only.", style = MaterialTheme.typography.bodySmall, color = DT.SubText)
+                    }
                 }
                 if (shift.notes.isNotBlank()) {
                     HorizontalDivider(color = DT.Border)
@@ -396,7 +441,15 @@ private fun ShiftSummaryDialog(shift: Shift, currency: String, onDismiss: () -> 
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close", color = DT.SubText) } }
+        confirmButton = {
+            Row {
+                if (shift.clockOut != null) {
+                    TextButton(onClick = onPrint) { Text("Print Z", color = DT.Teal) }
+                    TextButton(onClick = onShare) { Text("Share", color = DT.Teal) }
+                }
+                TextButton(onClick = onDismiss) { Text("Close", color = DT.SubText) }
+            }
+        }
     )
 }
 

@@ -81,6 +81,7 @@ class CartViewModel @Inject constructor(
     private val customerRepo: com.minimart.pos.data.repository.CustomerRepository,
     private val auditLogger: com.minimart.pos.util.AuditLogger,
     private val completeSale: com.minimart.pos.domain.usecase.CompleteSaleUseCase,
+    private val customerDisplay: com.minimart.pos.display.CustomerDisplayHub,
     keyboardScanner: KeyboardScanner
 ) : ViewModel() {
 
@@ -94,6 +95,22 @@ class CartViewModel @Inject constructor(
     val loggedInUserId = settingsRepo.loggedInUserId.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     init {
+        // Mirror the cart on the customer-facing display.
+        viewModelScope.launch {
+            _uiState.collect { st ->
+                customerDisplay.showCart(
+                    lines = st.items.map { ci ->
+                        com.minimart.pos.display.DisplayLine(
+                            name = ci.product.name,
+                            qty = if (ci.product.isWeighed && ci.weightKg > 0) ci.displayWeight
+                                  else "${ci.quantity} × ${String.format(java.util.Locale.US, "%,.2f", ci.product.price)}",
+                            total = ci.lineTotal
+                        )
+                    },
+                    subtotal = st.subtotal, discount = st.totalDiscount, total = st.total
+                )
+            }
+        }
         // Listen to keyboard/HID scanner events
         viewModelScope.launch {
             keyboardScanner.barcodeFlow
@@ -362,6 +379,7 @@ class CartViewModel @Inject constructor(
                         if (autoOpen) cashDrawer.openDrawer()
                     } catch (_: Exception) {}
                 }
+                customerDisplay.showThanks(sale.totalAmount, sale.changeGiven)
                 _uiState.update { CartUiState() } // clear cart after sale
                 // The sale is already saved: a failing audit write must not report "Checkout failed".
                 runCatching { auditLogger.log(com.minimart.pos.util.AuditEvent.SALE_COMPLETED,
@@ -428,6 +446,7 @@ class CartViewModel @Inject constructor(
                     try { val ao = settingsRepo.cashDrawerOnSale.first(); if (ao) cashDrawer.openDrawer() }
                     catch (_: Exception) {}
                 }
+                customerDisplay.showThanks(sale.totalAmount, sale.changeGiven)
                 _uiState.update { CartUiState() }
                 runCatching {
                     auditLogger.log(com.minimart.pos.util.AuditEvent.SALE_COMPLETED,

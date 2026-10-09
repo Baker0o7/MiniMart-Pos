@@ -25,6 +25,14 @@ import com.minimart.pos.ui.theme.MiniMartTheme
 import com.minimart.pos.util.SessionManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import android.hardware.display.DisplayManager
+import android.os.Handler
+import android.os.Looper
+import androidx.lifecycle.lifecycleScope
+import com.minimart.pos.display.CustomerDisplayHub
+import com.minimart.pos.display.CustomerPresentation
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -38,6 +46,48 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var printer: ThermalPrinter
     @Inject lateinit var settingsRepo: SettingsRepository
     @Inject lateinit var sessionManager: SessionManager
+    @Inject lateinit var customerDisplayHub: CustomerDisplayHub
+
+    // Customer-facing second screen (HDMI / dual-screen POS), shown only while the app is visible.
+    private var presentation: CustomerPresentation? = null
+    private var secondScreenEnabled = false
+    private var visible = false
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) = refreshPresentation()
+        override fun onDisplayRemoved(displayId: Int) = refreshPresentation()
+        override fun onDisplayChanged(displayId: Int) {}
+    }
+
+    private fun refreshPresentation() {
+        try {
+            val current = presentation
+            if (current != null && (!visible || !secondScreenEnabled || !current.display.isValid)) {
+                current.dismiss(); presentation = null
+            }
+            if (presentation == null && visible && secondScreenEnabled) {
+                val dm = getSystemService(DISPLAY_SERVICE) as DisplayManager
+                val target = dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION).firstOrNull() ?: return
+                presentation = CustomerPresentation(this, target, customerDisplayHub).also { it.show() }
+            }
+        } catch (_: Exception) {
+            // A display that vanishes mid-show or refuses a window must never take the till down.
+            presentation = null
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        visible = true
+        (getSystemService(DISPLAY_SERVICE) as DisplayManager).registerDisplayListener(displayListener, Handler(Looper.getMainLooper()))
+        refreshPresentation()
+    }
+
+    override fun onStop() {
+        visible = false
+        (getSystemService(DISPLAY_SERVICE) as DisplayManager).unregisterDisplayListener(displayListener)
+        refreshPresentation()
+        super.onStop()
+    }
 
     // Where a tapped notification wants to go. Consumed by the nav graph once the cashier is
     // signed in, so a tap never bypasses the PIN screen.
@@ -59,6 +109,9 @@ class MainActivity : ComponentActivity() {
         // Only read the extra on a fresh launch — after rotation the same intent is replayed.
         if (savedInstanceState == null) readNavigationExtra(intent)
         requestNotificationPermissionIfNeeded()
+        lifecycleScope.launch {
+            settingsRepo.customerDisplayEnabled.catch { }.collect { on -> secondScreenEnabled = on; refreshPresentation() }
+        }
         setContent {
             val darkMode by settingsRepo.darkMode.collectAsState(false)
             MiniMartTheme(darkTheme = darkMode) {

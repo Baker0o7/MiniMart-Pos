@@ -80,6 +80,8 @@ fun DashboardScreen(
     onNavigateToAnalytics: () -> Unit = {},
     onNavigateToStockInsights: () -> Unit = {},
     onNavigateToPurchasing: () -> Unit = {},
+    onNavigateToLabels: () -> Unit = {},
+    onNavigateToCustomerDisplay: () -> Unit = {},
     currentRole: UserRole? = null,
     currentUserName: String? = null,
     settingsRepo: SettingsRepository? = null,
@@ -291,6 +293,10 @@ fun DashboardScreen(
                         add(DashCard_("stockinsights","Insights","Reorder & value",Icons.Default.Inventory2,Color(0xFF1E1708),AmberGlow,onNavigateToStockInsights))
                     if (rm.canEditPrices(currentRole) && "purchasing" !in hidden)
                         add(DashCard_("purchasing","Purchasing","Suppliers & POs",Icons.Default.LocalShipping,Color(0xFF0B2220),GreenGlow,onNavigateToPurchasing))
+                    if (rm.canEditPrices(currentRole) && "labels" !in hidden)
+                        add(DashCard_("labels","Labels","Print barcodes",Icons.Default.QrCode2,Color(0xFF1A1030),PurpleGlow,onNavigateToLabels))
+                    if ("customerview" !in hidden)
+                        add(DashCard_("customerview","Customer","Display screen",Icons.Default.Tv,Color(0xFF0B1A2C),BlueGlow,onNavigateToCustomerDisplay))
                     if ("history"  !in hidden) add(DashCard_("history",  "History","Past sales",        Icons.Default.History,   Color(0xFF081525), BlueGlow,   onNavigateToSalesHistory))
                     if ("lowstock" !in hidden) add(DashCard_("lowstock", "Low Stock",    "Running low", Icons.Default.Warning,   Color(0xFF1E0808), RedGlow,    onNavigateToLowStock))
                     if ("mpesa" !in hidden) add(DashCard_("mpesa", "M-Pesa", "Payments", Icons.Default.PhoneAndroid, Color(0xFF0B2210), GreenGlow, onNavigateToMpesa))

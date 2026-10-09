@@ -62,6 +62,8 @@ object Routes {
     const val ANALYTICS = "analytics"
     const val STOCK_INSIGHTS = "stock_insights"
     const val PURCHASING = "purchasing"
+    const val LABELS = "labels"
+    const val CUSTOMER_DISPLAY = "customer_display"
     const val SUPPLIERS = "suppliers"
     const val PURCHASE_ORDER = "purchase_order/{poId}"
     fun purchaseOrder(poId: Long) = "purchase_order/$poId"
@@ -207,6 +209,8 @@ fun MiniMartNavGraph(
                         onNavigateToAnalytics    = { navController.navigate(Routes.ANALYTICS) { launchSingleTop = true } },
                         onNavigateToStockInsights = { navController.navigate(Routes.STOCK_INSIGHTS) { launchSingleTop = true } },
                         onNavigateToPurchasing   = { navController.navigate(Routes.PURCHASING) { launchSingleTop = true } },
+                        onNavigateToLabels       = { navController.navigate(Routes.LABELS) { launchSingleTop = true } },
+                        onNavigateToCustomerDisplay = { navController.navigate(Routes.CUSTOMER_DISPLAY) { launchSingleTop = true } },
                         currentRole              = authState.currentUser?.role,
                         currentUserName          = authState.currentUser?.displayName,
                         settingsRepo             = settingsRepo
@@ -256,6 +260,15 @@ fun MiniMartNavGraph(
                         hasAccess = RoleManager.canViewReports(authState.currentUser?.role),
                         onBack = { navController.popBackStack() }
                     ) { AnalyticsScreen(onBack = { navController.popBackStack() }) }
+                }
+                composable(Routes.LABELS) {
+                    AccessGuard(
+                        hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
+                        onBack = { navController.popBackStack() }
+                    ) { LabelPrintScreen(onBack = { navController.popBackStack() }) }
+                }
+                composable(Routes.CUSTOMER_DISPLAY) {
+                    CustomerDisplayScreen(onExit = { navController.popBackStack() })
                 }
                 composable(Routes.PURCHASING) {
                     AccessGuard(

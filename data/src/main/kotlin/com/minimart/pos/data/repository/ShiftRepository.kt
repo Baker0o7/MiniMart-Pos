@@ -11,10 +11,23 @@ import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/** Everything printed on the end-of-shift Z-report. [zNumber] is derived from the shift id. */
+data class ZReport(
+    val shift: Shift,
+    val zNumber: String,
+    val voidCount: Int,
+    val voidTotal: Double,
+    val refundCount: Int,
+    val refundTotal: Double,
+    val creditSales: Double,
+    val noSaleOpens: Int
+)
+
 @Singleton
 class ShiftRepository @Inject constructor(
     private val shiftDao: ShiftDao,
-    private val saleRepo: SaleRepository
+    private val saleRepo: SaleRepository,
+    private val settings: SettingsRepository
 ) {
     fun getAllShifts(): Flow<List<Shift>> = shiftDao.getAllShifts()
     fun getShiftsForCashier(id: Long): Flow<List<Shift>> = shiftDao.getShiftsForCashier(id)
@@ -110,5 +123,30 @@ class ShiftRepository @Inject constructor(
         )
         shiftDao.updateShift(closed)
         return closed
+    }
+
+    /** Builds the Z-report for a shift (works for open shifts too, as an X-report). */
+    suspend fun zReport(shiftId: Long): ZReport? {
+        val shift = shiftDao.getShiftById(shiftId) ?: return null
+        val end = shift.clockOut ?: System.currentTimeMillis()
+        val mine = saleRepo.getSalesByDateRange(shift.clockIn, end).first()
+            .filter { it.cashierId == shift.cashierId }
+        val voided = mine.filter { it.status == SaleStatus.VOIDED }
+        val refunded = mine.filter { it.status == SaleStatus.REFUNDED }
+        val credit = mine.filter { it.status == SaleStatus.COMPLETED }.sumOf {
+            when (it.paymentMethod) {
+                PaymentMethod.CREDIT -> it.totalAmount
+                PaymentMethod.MIXED -> (it.totalAmount - it.cashPortion).coerceAtLeast(0.0)
+                else -> 0.0
+            }
+        }
+        return ZReport(
+            shift = shift,
+            zNumber = "Z-" + shift.id.toString().padStart(4, '0'),
+            voidCount = voided.size, voidTotal = voided.sumOf { it.totalAmount },
+            refundCount = refunded.size, refundTotal = refunded.sumOf { it.totalAmount },
+            creditSales = credit,
+            noSaleOpens = settings.noSaleOpens(shift.id)
+        )
     }
 }

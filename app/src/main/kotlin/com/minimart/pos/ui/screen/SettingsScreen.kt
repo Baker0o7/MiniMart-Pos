@@ -405,7 +405,7 @@ fun SettingsScreen(
                                 scope.launch {
                                     testStatus = "Opening drawer..."
                                     // Just send kick via printer if connected
-                                    val r = printer.sendRaw(byteArrayOf(0x1B, 0x70, 0x00, 0x19, 0xFA.toByte()))
+                                    val r = printer.sendRaw(com.minimart.pos.printer.CashDrawerManager.kickCommand(settingsRepo.cashDrawerPin.first()))
                                     testStatus = if (r is com.minimart.pos.printer.PrintResult.Success) "✓ Drawer opened!" else "✗ Not connected to printer"
                                 }
                             }, border = androidx.compose.foundation.BorderStroke(1.dp, DT.Teal), shape = RoundedCornerShape(12.dp)) {
@@ -417,6 +417,41 @@ fun SettingsScreen(
                         testStatus?.let {
                             Spacer(Modifier.height(4.dp))
                             Text(it, color = if (it.startsWith("✓")) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+
+                // ── Shift close & customer display ─────────────────────────────
+                if (isAdmin) {
+                    val blindClose by settingsRepo.blindClose.collectAsState(true)
+                    val secondScreen by settingsRepo.customerDisplayEnabled.collectAsState(false)
+                    val kickPin by settingsRepo.cashDrawerPin.collectAsState(0)
+                    DSection("Shift close & display", Icons.Default.Tv,
+                        summary = if (blindClose) "Blind close on" else "Blind close off",
+                        initiallyExpanded = false) {
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Blind close", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text("Cashiers count the till without seeing the expected cash. Managers and owners see the variance on the Z-report.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                            }
+                            Switch(checked = blindClose, onCheckedChange = { scope.launch { settingsRepo.setBlindClose(it) } },
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border))
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Customer display on second screen", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text("Shows the live cart on an attached HDMI or dual-screen display. The Customer tile on Home also works full-screen on this device.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                            }
+                            Switch(checked = secondScreen, onCheckedChange = { scope.launch { settingsRepo.setCustomerDisplayEnabled(it) } },
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border))
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        Text("Drawer kick pin", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                        Text("Try pin 5 if the drawer does not open on pin 2.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
+                            FilterChip(selected = kickPin == 0, onClick = { scope.launch { settingsRepo.setCashDrawerPin(0) } }, label = { Text("Pin 2") })
+                            FilterChip(selected = kickPin == 1, onClick = { scope.launch { settingsRepo.setCashDrawerPin(1) } }, label = { Text("Pin 5") })
                         }
                     }
                 }

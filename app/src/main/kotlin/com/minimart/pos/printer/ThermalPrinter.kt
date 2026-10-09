@@ -40,6 +40,9 @@ object EscPos {
     fun divider(char: Char = '-') = text(char.toString().repeat(LINE_CHARS)) + NEWLINE
 }
 
+/** One product's barcode label job. */
+data class LabelSpec(val name: String, val barcode: String, val price: Double, val copies: Int)
+
 sealed class PrintResult {
     object Success : PrintResult()
     data class Error(val message: String) : PrintResult()
@@ -51,6 +54,7 @@ class ThermalPrinter @Inject constructor(
 ) {
     companion object {
         private const val TAG = "ThermalPrinter"
+        private const val MAX_LABELS_PER_JOB = 300
         private val SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     }
 
@@ -219,6 +223,71 @@ class ThermalPrinter @Inject constructor(
         } catch (e: Exception) {
             PrintResult.Error("Print failed: ${e.message}")
         }
+    }
+
+    /** Prints already laid-out monospace text (32 columns) and cuts — used for the Z-report. */
+    suspend fun printPlainText(text: String): PrintResult {
+        if (!isConnected) return PrintResult.Error("Printer not connected")
+        return try {
+            write(EscPos.INIT, EscPos.ALIGN_LEFT, EscPos.text(text), EscPos.NEWLINE, EscPos.NEWLINE, EscPos.NEWLINE, EscPos.CUT)
+            PrintResult.Success
+        } catch (e: Exception) {
+            PrintResult.Error("Print failed: ${e.message}")
+        }
+    }
+
+    /**
+     * Prints barcode labels with the printer's built-in barcode generator (EAN-13 when the code is
+     * a valid 13-digit EAN, otherwise Code 128). Returns an error naming any products skipped because
+     * their code cannot be encoded.
+     */
+    suspend fun printLabels(labels: List<LabelSpec>, showPrice: Boolean, currency: String): PrintResult {
+        if (!isConnected) return PrintResult.Error("Printer not connected")
+        return try {
+            var printed = 0
+            val skipped = mutableListOf<String>()
+            write(EscPos.INIT)
+            for (l in labels) {
+                val code = barcodeCommand(l.barcode)
+                if (code == null) { skipped += l.name; continue }
+                repeat(l.copies.coerceIn(1, 99)) {
+                    if (printed >= MAX_LABELS_PER_JOB) return@repeat
+                    write(EscPos.ALIGN_CENTER, EscPos.BOLD_ON, EscPos.text(l.name.take(EscPos.LINE_CHARS)), EscPos.NEWLINE, EscPos.BOLD_OFF)
+                    if (showPrice) write(EscPos.FONT_MEDIUM, EscPos.text(formatMoney(l.price, currency)), EscPos.NEWLINE, EscPos.FONT_NORMAL)
+                    write(
+                        byteArrayOf(0x1D, 0x68, 70),   // barcode height
+                        byteArrayOf(0x1D, 0x77, 2),    // module width
+                        byteArrayOf(0x1D, 0x48, 2),    // human-readable digits below
+                        byteArrayOf(0x1D, 0x66, 0),    // HRI font A
+                        code, EscPos.NEWLINE, EscPos.NEWLINE
+                    )
+                    printed++
+                }
+            }
+            write(EscPos.NEWLINE, EscPos.CUT)
+            when {
+                printed == 0 -> PrintResult.Error("Nothing printed: no printable barcodes")
+                skipped.isNotEmpty() -> PrintResult.Error("Printed $printed. Skipped (bad barcode): ${skipped.take(3).joinToString()}")
+                else -> PrintResult.Success
+            }
+        } catch (e: Exception) {
+            PrintResult.Error("Print failed: ${e.message}")
+        }
+    }
+
+    private fun barcodeCommand(raw: String): ByteArray? {
+        val c = raw.trim()
+        if (c.isEmpty()) return null
+        if (c.length == 13 && c.all { it in '0'..'9' } && ean13Valid(c))
+            return byteArrayOf(0x1D, 0x6B, 67, 13) + c.toByteArray(Charsets.US_ASCII)
+        if (c.length > 40 || c.any { it.code !in 32..126 }) return null
+        val data = "{B$c".toByteArray(Charsets.US_ASCII)   // Code 128, subset B
+        return byteArrayOf(0x1D, 0x6B, 73, data.size.toByte()) + data
+    }
+
+    private fun ean13Valid(c: String): Boolean {
+        val sum = (0 until 12).sumOf { (c[it] - '0') * if (it % 2 == 0) 1 else 3 }
+        return (10 - sum % 10) % 10 == c[12] - '0'
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

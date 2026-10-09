@@ -8,6 +8,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
@@ -21,7 +22,8 @@ sealed class DrawerResult {
 @Singleton
 class CashDrawerManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val printer: ThermalPrinter
+    private val printer: ThermalPrinter,
+    private val settings: com.minimart.pos.data.repository.SettingsRepository
 ) {
     companion object {
         private const val TAG = "CashDrawerManager"
@@ -47,9 +49,13 @@ class CashDrawerManager @Inject constructor(
      *   1. Via already-connected thermal printer (RJ11 wired to printer)
      *   2. Via a separate Bluetooth drawer at [directAddress]
      */
-    suspend fun openDrawer(directAddress: String? = null, pin: Int = 0): DrawerResult =
+    suspend fun openDrawer(directAddress: String? = null, pinOverride: Int? = null): DrawerResult =
         withContext(Dispatchers.IO) {
             try {
+                // Defaults come from Settings: sale-time callers pass nothing, and a drawer address
+                // saved there used to be ignored by them.
+                val pin = pinOverride ?: settings.cashDrawerPin.first()
+                val directAddress = directAddress ?: settings.cashDrawerAddress.first()
                 // Strategy 1 — via thermal printer (most common setup)
                 if (printer.isConnected) {
                     val result = printer.sendRaw(kickCommand(pin))
