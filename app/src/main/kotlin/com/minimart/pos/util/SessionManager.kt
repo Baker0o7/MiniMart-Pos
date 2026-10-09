@@ -20,6 +20,11 @@ class SessionManager @Inject constructor() {
 
     private var lastActivityMs = System.currentTimeMillis()
 
+    private val coldStart = java.util.concurrent.atomic.AtomicBoolean(true)
+
+    /** True exactly once per process: the first sign-in check after the app process started. */
+    fun consumeColdStart(): Boolean = coldStart.getAndSet(false)
+
     /** Call on every user interaction (tap, swipe, keypress) */
     fun recordActivity() {
         lastActivityMs = System.currentTimeMillis()

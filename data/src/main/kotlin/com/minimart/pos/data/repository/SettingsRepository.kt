@@ -45,6 +45,7 @@ class SettingsRepository @Inject constructor(
         // bypassable. Now persisted via DataStore so it survives app restarts.
         val KEY_FAILED_ATTEMPTS  = intPreferencesKey("failed_pin_attempts")
         val KEY_LOCKOUT_UNTIL    = longPreferencesKey("lockout_until_epoch_ms")
+        val KEY_LOCKOUT_ROUNDS   = intPreferencesKey("lockout_rounds")
         // Bug fix: SyncServer had ZERO authentication — any device on the same WiFi
         // network could read pending sync data or inject arbitrary fabricated entries
         // with no barrier at all. This key holds a per-device, auto-generated shared
@@ -126,10 +127,24 @@ class SettingsRepository @Inject constructor(
             newCount = (prefs[KEY_FAILED_ATTEMPTS] ?: 0) + 1
             prefs[KEY_FAILED_ATTEMPTS] = newCount
             if (newCount >= maxAttempts) {
-                prefs[KEY_LOCKOUT_UNTIL] = System.currentTimeMillis() + lockoutDurationMs
+                // Each lockout in a row doubles (30s, 1m, 2m, 4m ... capped at 15 min). A flat 30s let
+                // someone guess a 4-digit PIN at 3 tries per 30s, i.e. all 10,000 in about a day.
+                val rounds = prefs[KEY_LOCKOUT_ROUNDS] ?: 0
+                val duration = (lockoutDurationMs * (1L shl rounds.coerceIn(0, 5))).coerceAtMost(15 * 60_000L)
+                prefs[KEY_LOCKOUT_UNTIL] = System.currentTimeMillis() + duration
+                prefs[KEY_LOCKOUT_ROUNDS] = rounds + 1
             }
         }
         return newCount
+    }
+
+    /** A correct PIN: forgive the escalation too, not just the current attempt count. */
+    suspend fun resetLockoutHistory() {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_FAILED_ATTEMPTS] = 0
+            prefs[KEY_LOCKOUT_UNTIL] = 0L
+            prefs[KEY_LOCKOUT_ROUNDS] = 0
+        }
     }
 
     suspend fun clearLockout() {

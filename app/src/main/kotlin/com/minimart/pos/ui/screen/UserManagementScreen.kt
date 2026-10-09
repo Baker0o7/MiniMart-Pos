@@ -74,8 +74,23 @@ class UserManagementViewModel @Inject constructor(
         }
     }
 
+    private fun isOwner() = _state.value.currentUser?.role == UserRole.OWNER
+
+    /** Same rule as the Settings PIN change: at least 4 digits, and not the factory default. */
+    private fun pinProblem(pin: String): String? = when {
+        pin.length < 4 || pin.length > 12 || !pin.all { it.isDigit() } -> "PIN must be 4–12 digits"
+        pin == "1234" -> "Choose a PIN other than 1234"
+        else -> null
+    }
+
     fun changePassword(userId: Long, newPin: String) {
         viewModelScope.launch {
+            // Enforced here, not only by hiding the screen: only an Owner may reset someone else's PIN.
+            if (!isOwner() && _state.value.currentUser?.id != userId) {
+                _state.update { it.copy(error = "Only an Owner can change another user's PIN") }
+                return@launch
+            }
+            pinProblem(newPin.trim())?.let { msg -> _state.update { it.copy(error = msg) }; return@launch }
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 val user = userRepo.getUserById(userId)
@@ -84,7 +99,7 @@ class UserManagementViewModel @Inject constructor(
                     _state.update { it.copy(isLoading = false, error = "That user no longer exists") }
                     return@launch
                 }
-                val hash = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { pinHasher.hash(newPin) }
+                val hash = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { pinHasher.hash(newPin.trim()) }
                 userRepo.updateUser(user.copy(pinHash = hash))
                 // Resetting someone's PIN is a sensitive action — it belongs in the audit trail.
                 auditLogger.log(com.minimart.pos.util.AuditEvent.PIN_CHANGED,
@@ -99,6 +114,8 @@ class UserManagementViewModel @Inject constructor(
 
     fun addUser(username: String, displayName: String, pin: String, role: UserRole) {
         viewModelScope.launch {
+            if (!isOwner()) { _state.update { it.copy(error = "Only an Owner can add users") }; return@launch }
+            pinProblem(pin.trim())?.let { msg -> _state.update { it.copy(error = msg) }; return@launch }
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 val cleanName = username.trim()
@@ -106,7 +123,7 @@ class UserManagementViewModel @Inject constructor(
                     _state.update { it.copy(isLoading = false, error = "Username \"$cleanName\" is already taken") }
                     return@launch
                 }
-                val hash = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { pinHasher.hash(pin) }
+                val hash = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { pinHasher.hash(pin.trim()) }
                 userRepo.insertUser(User(username = cleanName, pinHash = hash,
                     displayName = displayName.trim(), role = role))
                 auditLogger.log(com.minimart.pos.util.AuditEvent.USER_CREATED,
@@ -123,6 +140,7 @@ class UserManagementViewModel @Inject constructor(
 
     fun deactivateUser(user: User) {
         viewModelScope.launch {
+            if (!isOwner()) { _state.update { it.copy(error = "Only an Owner can remove users") }; return@launch }
             try {
                 // Bug fix: no guard existed against removing the last active Owner.
                 // If the only Owner account got deactivated, nobody could reach

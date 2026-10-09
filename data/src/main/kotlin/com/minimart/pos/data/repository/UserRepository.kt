@@ -18,11 +18,6 @@ class UserRepository @Inject constructor(private val dao: UserDao) {
     suspend fun updateUser(user: User) = dao.updateUser(user)
     suspend fun deleteUser(user: User) = dao.deleteUser(user)
 
-    suspend fun login(username: String, pin: String): User? {
-        val user = dao.getUserByUsername(username.trim()) ?: return null
-        return if (sha256(pin.trim()) == user.pinHash) user else null
-    }
-
     /** Login using PinHasher — supports both Argon2id and legacy SHA-256 */
     suspend fun loginWithHasher(
         username: String, pin: String,

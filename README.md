@@ -189,6 +189,12 @@ unauthorized users, even on direct navigation. Cannot remove the last active
 Owner account (permanent lockout protection).
 
 ### 🔐 Security
+- **PIN required after the app restarts** — a signed-in session no longer survives the app being killed or the
+  phone rebooting; removed accounts lose their session immediately
+- **Escalating PIN lockout** — after 3 wrong PINs the lock lasts 30s, then 1m, 2m, 4m … up to 15 min, and resets
+  on a correct PIN (persisted, so force-closing doesn't reset it)
+- **User management is enforced in code, not just hidden** — only an Owner can add or remove users or reset
+  another user's PIN, and new PINs must be 4–12 digits and not `1234`
 - **Argon2id PIN hashing** (t=3, m=64MB, p=4), auto-upgrades legacy SHA-256 on
   login, constant-time comparison on both paths; hashing runs off the main thread
   and new users always get Argon2id

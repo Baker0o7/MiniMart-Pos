@@ -207,7 +207,8 @@ class AuthViewModel @Inject constructor(
     private val userRepo: UserRepository,
     private val settingsRepo: SettingsRepository,
     private val pinHasher: com.minimart.pos.util.PinHasher,
-    private val auditLogger: com.minimart.pos.util.AuditLogger
+    private val auditLogger: com.minimart.pos.util.AuditLogger,
+    private val sessionManager: com.minimart.pos.util.SessionManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -221,13 +222,22 @@ class AuthViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            // The signed-in user is persisted, so without this anyone opening the app after it was
+            // killed (or the phone restarted) landed straight in the previous user's session with no
+            // PIN. A fresh process always starts at the login screen; the idle timer covers the rest.
+            if (sessionManager.consumeColdStart()) {
+                try { settingsRepo.setLoggedInUser(null) } catch (_: Exception) {}
+            }
             settingsRepo.loggedInUserId
                 .catch { emit(null) }
                 .collect { userId ->
                     if (userId != null) {
                         try {
                             val user = userRepo.getUserById(userId)
-                            _uiState.update { it.copy(isLoggedIn = user != null, currentUser = user) }
+                            // A removed (deactivated) account must not keep a live session.
+                            val usable = user != null && user.isActive
+                            _uiState.update { it.copy(isLoggedIn = usable, currentUser = if (usable) user else null) }
+                            if (!usable) try { settingsRepo.setLoggedInUser(null) } catch (_: Exception) {}
                         } catch (e: Exception) {
                             _uiState.update { it.copy(isLoggedIn = false, currentUser = null) }
                         }
@@ -283,7 +293,7 @@ class AuthViewModel @Inject constructor(
                 val user = userRepo.loginWithHasher(username.trim(), pin.trim(), pinHasher)
                 if (user != null) {
                     settingsRepo.setLoggedInUser(user.id)
-                    settingsRepo.clearLockout()
+                    settingsRepo.resetLockoutHistory()
                     auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_SUCCESS,
                         user = username, detail = "Role: ${user.role.name}")
                     if (pinHasher.needsUpgrade(user.pinHash)) {
@@ -299,12 +309,15 @@ class AuthViewModel @Inject constructor(
                 } else {
                     val attempts = settingsRepo.recordFailedAttempt(MAX_ATTEMPTS, LOCKOUT_DURATION_MS)
                     val nowLocked = attempts >= MAX_ATTEMPTS
+                    val lockedForSec = if (nowLocked)
+                        (((settingsRepo.lockoutUntilMs.first() - System.currentTimeMillis()) + 999) / 1000).toInt().coerceAtLeast(1)
+                    else 0
                     auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_FAILED,
                         user = username, detail = "Attempt $attempts of $MAX_ATTEMPTS${if (nowLocked) " — LOCKED OUT" else ""}")
                     _uiState.update {
                         it.copy(isLoading = false, error = "Invalid username or PIN",
                             isLockedOut = nowLocked, failedAttempts = attempts,
-                            lockoutRemainingSeconds = if (nowLocked) (LOCKOUT_DURATION_MS / 1000).toInt() else 0)
+                            lockoutRemainingSeconds = lockedForSec)
                     }
                 }
             } catch (e: Exception) {
@@ -370,7 +383,7 @@ class AuthViewModel @Inject constructor(
                 val user = userRepo.getUserById(boundUserId)
                 if (user != null && user.isActive) {
                     settingsRepo.setLoggedInUser(user.id)
-                    settingsRepo.clearLockout()
+                    settingsRepo.resetLockoutHistory()
                     auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_SUCCESS,
                         user = user.username, detail = "Role: ${user.role.name} (biometric)")
                     _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user) }
