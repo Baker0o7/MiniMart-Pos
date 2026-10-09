@@ -134,6 +134,13 @@ Built with Kotlin + Jetpack Compose 🇰🇪
   another product; save/adjust errors are shown on screen
 - Negative price/stock can't be saved (validated at both the UI and repository layer)
 
+### 🚚 Suppliers & Purchase Orders
+- **Purchasing** (Home tile; managers/owners only): suppliers with phone/email/address/notes, tap-to-call, and one-tap import of suppliers already typed into your products.
+- **Purchase orders**: draft → sent → partly/fully received, or cancelled. Add items by search, or **Add low stock** (prefers that supplier's own products). Weighed items are ordered in kg.
+- **Receive goods** (full or partial): adds to stock and can update each product's cost price. **Close short** finishes a partly delivered order.
+- **Supplier payments**: record what you've paid per order; the app shows what you still owe each supplier.
+- **Share** an order as text (WhatsApp, SMS, email).
+
 ### 🏠 Home & Settings
 - Home shows the signed-in user's initial and today's date, a real vs-yesterday trend (hidden when there was
   no sale yesterday), and low-stock / expiry alerts right under the stats

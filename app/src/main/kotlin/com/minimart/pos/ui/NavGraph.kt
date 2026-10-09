@@ -61,6 +61,10 @@ object Routes {
     const val MPESA     = "mpesa_payments"
     const val ANALYTICS = "analytics"
     const val STOCK_INSIGHTS = "stock_insights"
+    const val PURCHASING = "purchasing"
+    const val SUPPLIERS = "suppliers"
+    const val PURCHASE_ORDER = "purchase_order/{poId}"
+    fun purchaseOrder(poId: Long) = "purchase_order/$poId"
     fun receipt(saleId: Long) = "receipt/$saleId"
 }
 
@@ -202,6 +206,7 @@ fun MiniMartNavGraph(
                         onNavigateToMpesa        = { navController.navigate(Routes.MPESA) { launchSingleTop = true } },
                         onNavigateToAnalytics    = { navController.navigate(Routes.ANALYTICS) { launchSingleTop = true } },
                         onNavigateToStockInsights = { navController.navigate(Routes.STOCK_INSIGHTS) { launchSingleTop = true } },
+                        onNavigateToPurchasing   = { navController.navigate(Routes.PURCHASING) { launchSingleTop = true } },
                         currentRole              = authState.currentUser?.role,
                         currentUserName          = authState.currentUser?.displayName,
                         settingsRepo             = settingsRepo
@@ -251,6 +256,31 @@ fun MiniMartNavGraph(
                         hasAccess = RoleManager.canViewReports(authState.currentUser?.role),
                         onBack = { navController.popBackStack() }
                     ) { AnalyticsScreen(onBack = { navController.popBackStack() }) }
+                }
+                composable(Routes.PURCHASING) {
+                    AccessGuard(
+                        hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
+                        onBack = { navController.popBackStack() }
+                    ) {
+                        PurchaseOrdersScreen(
+                            onBack = { navController.popBackStack() },
+                            onSuppliers = { navController.navigate(Routes.SUPPLIERS) { launchSingleTop = true } },
+                            onOpenOrder = { id -> navController.navigate(Routes.purchaseOrder(id)) { launchSingleTop = true } },
+                            currency = currency
+                        )
+                    }
+                }
+                composable(Routes.SUPPLIERS) {
+                    AccessGuard(
+                        hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
+                        onBack = { navController.popBackStack() }
+                    ) { SuppliersScreen(onBack = { navController.popBackStack() }, currency = currency) }
+                }
+                composable(Routes.PURCHASE_ORDER, arguments = listOf(navArgument("poId") { type = NavType.LongType })) {
+                    AccessGuard(
+                        hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
+                        onBack = { navController.popBackStack() }
+                    ) { PurchaseOrderEditorScreen(onBack = { navController.popBackStack() }, currency = currency) }
                 }
                 composable(Routes.STOCK_INSIGHTS) {
                     AccessGuard(

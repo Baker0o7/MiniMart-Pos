@@ -10,8 +10,9 @@ import com.minimart.pos.data.entity.*
 import javax.inject.Inject
 
 @Database(
-    entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class, MpesaPayment::class],
-    version = 14,
+    entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class, MpesaPayment::class,
+        Supplier::class, PurchaseOrder::class, PurchaseOrderItem::class],
+    version = 15,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -24,6 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun customerDao(): com.minimart.pos.data.dao.CustomerDao
     abstract fun syncDao(): com.minimart.pos.data.dao.SyncDao
     abstract fun mpesaPaymentDao(): MpesaPaymentDao
+    abstract fun purchasingDao(): PurchasingDao
     companion object { const val DATABASE_NAME = "minimart_pos.db" }
 }
 
@@ -104,7 +106,20 @@ object AppMigrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
+    /** v14 → v15: suppliers and purchase orders. */
+    val MIGRATION_14_15 = object : androidx.room.migration.Migration(14, 15) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS `suppliers` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `phone` TEXT NOT NULL, `email` TEXT NOT NULL, `address` TEXT NOT NULL, `notes` TEXT NOT NULL, `isActive` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_suppliers_name` ON `suppliers` (`name`)")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `purchase_orders` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `supplierId` INTEGER NOT NULL, `status` TEXT NOT NULL, `notes` TEXT NOT NULL, `amountPaid` REAL NOT NULL, `createdAt` INTEGER NOT NULL, `orderedAt` INTEGER NOT NULL, `receivedAt` INTEGER NOT NULL)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_purchase_orders_supplierId` ON `purchase_orders` (`supplierId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_purchase_orders_status` ON `purchase_orders` (`status`)")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `purchase_order_items` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `poId` INTEGER NOT NULL, `productId` INTEGER NOT NULL, `productName` TEXT NOT NULL, `quantity` REAL NOT NULL, `receivedQty` REAL NOT NULL, `unitCost` REAL NOT NULL)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_purchase_order_items_poId` ON `purchase_order_items` (`poId`)")
+        }
+    }
+
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
 }
 
 class AppTypeConverters {
@@ -118,6 +133,8 @@ class AppTypeConverters {
     @TypeConverter fun toExpenseCategory(v: String): ExpenseCategory = ExpenseCategory.valueOf(v)
     @TypeConverter fun fromShiftStatus(v: ShiftStatus): String = v.name
     @TypeConverter fun toShiftStatus(v: String): ShiftStatus = ShiftStatus.valueOf(v)
+    @TypeConverter fun fromPoStatus(v: PurchaseOrderStatus): String = v.name
+    @TypeConverter fun toPoStatus(v: String): PurchaseOrderStatus = PurchaseOrderStatus.valueOf(v)
 }
 
 class DatabaseCallback @Inject constructor() : RoomDatabase.Callback() {
