@@ -350,13 +350,18 @@ class AuthViewModel @Inject constructor(
     }
 
     fun logout() {
+        val username = _uiState.value.currentUser?.username ?: ""
+        // Bug fix: the signed-out state used to be applied only AFTER the audit write and the
+        // DataStore update. The caller navigates to the login screen right away, and that screen
+        // bounced straight back to Home because the state still said "logged in" — leaving a blank
+        // screen and the old (Owner) session active, so signing in as a cashier appeared to hang.
+        // Clear the state synchronously; the persistence below can finish afterwards.
+        // Keep biometricEnabled: its DataStore flow only emits on change, so resetting it here
+        // hid the fingerprint button after every logout / idle lock until the app restarted.
+        _uiState.update { AuthUiState(biometricEnabled = it.biometricEnabled) }
         viewModelScope.launch {
-            val username = _uiState.value.currentUser?.username ?: ""
-            auditLogger.log(com.minimart.pos.util.AuditEvent.LOGOUT, user = username)
+            runCatching { auditLogger.log(com.minimart.pos.util.AuditEvent.LOGOUT, user = username) }
             try { settingsRepo.setLoggedInUser(null) } catch (_: Exception) {}
-            // Keep biometricEnabled: its DataStore flow only emits on change, so resetting it here
-            // hid the fingerprint button after every logout / idle lock until the app restarted.
-            _uiState.update { AuthUiState(biometricEnabled = it.biometricEnabled) }
         }
     }
 
