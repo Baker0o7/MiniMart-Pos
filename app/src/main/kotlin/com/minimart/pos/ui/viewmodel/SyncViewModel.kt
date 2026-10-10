@@ -86,6 +86,7 @@ class SyncViewModel @Inject constructor(
     }
 
     fun syncNow() = viewModelScope.launch {
+        if (_state.value.isSyncing) return@launch   // a double tap must not start two overlapping syncs
         val ip = _state.value.peerIp
         val key = _state.value.peerKey
         if (ip.isBlank()) { _state.update { it.copy(lastResult = "Enter server IP first") }; return@launch }

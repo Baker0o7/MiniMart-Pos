@@ -103,10 +103,21 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **Pairing secrets encrypted at rest** — both this device's own code and any
   remembered peer code are stored via Android Keystore-backed
   EncryptedSharedPreferences, not plaintext
-- **Duplicate-safe** — retrying a sync (dropped connection, double-tapping
-  "Sync Now") can't apply the same remote change twice
+- **Real replication, main-device model** — one device is the *main device*
+  (acts as server). Each till sends the sales, refunds and voids it made to the
+  main device, which validates and applies them (stock, customer credit), then
+  the till downloads the main device's products, stock and customer balances.
+  Every device ends up with the same stock and balances. Products and prices are
+  managed on the main device (a till's own edits are overwritten); sales made
+  before a till was paired are not sent.
+- **Exactly-once** — each change is applied together with its "received" marker
+  in one database transaction, so a retry (dropped connection, double-tapping
+  "Sync Now") can't sell the same goods twice. A sale the main device refuses is
+  rolled back, reported on the till, and quarantined (not retried forever)
 - Server device: toggle "Act as Sync Server", share the displayed code
-- Client device: enter server IP + pairing code → Sync Now
+- Till: enter the main device's IP + pairing code → Sync Now
+- **Payment validation** — see Security: every sale is re-checked in the data
+  layer, including sales arriving from another till
 
 ### 🗃️ Cash Drawer
 - ESC/POS kick via thermal printer RJ11 port
@@ -208,6 +219,12 @@ unauthorized users, even on direct navigation. Cannot remove the last active
 Owner account (permanent lockout protection).
 
 ### 🔐 Security
+- **Payments validated below the UI** — before a sale is saved (and when one
+  syncs in from another till) the data layer re-checks that line totals match
+  price × quantity, the total matches the lines and discounts, the cash or
+  M-Pesa amount covers the bill, change is right, credit and split sales have a
+  customer, and an M-Pesa reference is well formed, not already used by a live
+  sale, and (when the SMS tracker saw that payment) was for at least the amount due
 - **PIN required after the app restarts** — a signed-in session no longer survives the app being killed or the
   phone rebooting; removed accounts lose their session immediately
 - **Escalating PIN lockout** — after 3 wrong PINs the lock lasts 30s, then 1m, 2m, 4m … up to 15 min, and resets
