@@ -2,9 +2,6 @@ package com.minimart.pos.sync
 
 import android.util.Log
 import com.minimart.pos.data.dao.SyncDao
-import com.minimart.pos.data.entity.SyncLog
-import com.minimart.pos.data.entity.SyncOperation
-import com.minimart.pos.data.entity.SyncEntityType
 import com.minimart.pos.data.entity.SyncStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,36 +13,44 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 sealed class SyncResult {
-    data class Success(val pushed: Int, val pulled: Int) : SyncResult()
+    /** [pushed] sales the main device accepted, [rejected] it refused, then what changed locally. */
+    data class Success(val pushed: Int, val rejected: Int, val products: Int, val customers: Int, val rejectedReasons: List<String> = emptyList()) : SyncResult()
     data class Error(val message: String) : SyncResult()
 }
 
+private class Reply(val code: Int, val body: String?)
+
+/**
+ * Till side of sync. A till sends the sales (and refunds/voids) it queued to the main device, which
+ * validates and applies them, then downloads the main device's products and customers, which now
+ * include the effect of every till's sales. Products are managed on the main device.
+ */
 @Singleton
 class SyncClient @Inject constructor(
-    private val syncDao: SyncDao
+    private val syncDao: SyncDao,
+    private val snapshots: SnapshotService
 ) {
     companion object {
         private const val TAG     = "SyncClient"
-        private const val TIMEOUT = 5000
+        private const val TIMEOUT = 8000
+        private const val BATCH   = 40
     }
 
-    /** Full sync cycle: push local pending → pull remote pending.
-     * @param peerKey the pairing secret shown on the SERVER device's Settings screen —
-     *   required now that /changes and /apply reject unauthenticated requests. */
     suspend fun sync(serverIp: String, deviceId: String, peerKey: String): SyncResult = withContext(Dispatchers.IO) {
         try {
             val baseUrl = "http://$serverIp:${SyncServer.PORT}"
 
-            // 1. Ping (unauthenticated — just confirms a MiniMart server is there)
-            val ping = get("$baseUrl/ping") ?: return@withContext SyncResult.Error("Server unreachable at $serverIp")
-            Log.d(TAG, "Ping: $ping")
+            val ping = request("GET", "$baseUrl/ping", null, null)
+            if (ping == null || ping.code != 200) return@withContext SyncResult.Error("Main device unreachable at $serverIp")
 
-            // 2. Push local pending changes
-            val pending = syncDao.getPendingLogs()
+            // 1. Push queued sales / refunds / voids, oldest first, in small batches.
             var pushed = 0
-            if (pending.isNotEmpty()) {
+            var rejected = 0
+            val reasons = mutableListOf<String>()
+            val pending = syncDao.getPendingLogs()
+            for (batch in pending.chunked(BATCH)) {
                 val arr = JSONArray()
-                pending.forEach { log ->
+                batch.forEach { log ->
                     arr.put(JSONObject().apply {
                         put("id", log.id); put("entityType", log.entityType.name)
                         put("entityId", log.entityId); put("operation", log.operation.name)
@@ -53,75 +58,71 @@ class SyncClient @Inject constructor(
                         put("createdAt", log.createdAt)
                     })
                 }
-                val pushResponse = post("$baseUrl/apply", arr.toString(), peerKey)
-                if (pushResponse == null) {
-                    return@withContext SyncResult.Error("Pairing key rejected by server — check the code and try again")
+                val reply = request("POST", "$baseUrl/apply", arr.toString(), peerKey)
+                    ?: return@withContext SyncResult.Error("Lost connection to the main device")
+                authError(reply)?.let { return@withContext SyncResult.Error(it) }
+                if (reply.code != 200 || reply.body == null) return@withContext SyncResult.Error("Main device error (${reply.code})")
+                val results = JSONObject(reply.body).optJSONArray("results")
+                    ?: return@withContext SyncResult.Error("Main device is running an older version — update it first")
+                val done = mutableListOf<Long>()
+                for (i in 0 until results.length()) {
+                    val r = results.getJSONObject(i)
+                    val id = r.optLong("id", -1)
+                    when (r.optString("status")) {
+                        "ok" -> { pushed++; done += id }
+                        "duplicate" -> done += id
+                        else -> {
+                            rejected++
+                            reasons += r.optString("error", "rejected")
+                            syncDao.updateStatus(id, SyncStatus.CONFLICT)
+                        }
+                    }
                 }
-                val applied = JSONObject(pushResponse).optInt("applied", 0)
-                syncDao.markSynced(pending.map { it.id })
-                pushed = applied
-                Log.i(TAG, "Pushed $pushed changes")
+                if (done.isNotEmpty()) syncDao.markSynced(done)
             }
 
-            // 3. Pull remote pending changes
-            val remoteChanges = get("$baseUrl/changes", peerKey)
-                ?: return@withContext SyncResult.Error("Pairing key rejected by server — check the code and try again")
-            var pulled = 0
-            run {
-                val arr = JSONArray(remoteChanges)
-                for (i in 0 until arr.length()) {
-                    val obj = arr.getJSONObject(i)
-                    val remoteDeviceId = obj.getString("deviceId")
-                    if (remoteDeviceId == deviceId) continue // skip own changes
-                    val log = SyncLog(
-                        entityType = SyncEntityType.valueOf(obj.getString("entityType")),
-                        entityId   = obj.getLong("entityId"),
-                        operation  = SyncOperation.valueOf(obj.getString("operation")),
-                        deviceId   = remoteDeviceId,
-                        payload    = obj.getString("payload"),
-                        status     = SyncStatus.SYNCED,
-                        createdAt  = obj.getLong("createdAt")
-                    )
-                    // Bug fix: same duplicate-on-retry issue as SyncServer's /apply
-                    // handler — unconditional insertLog() re-inserted the same remote
-                    // change as a new row on every repeated sync (double-tap "Sync Now",
-                    // a dropped connection retry, etc). Only count it toward `pulled`
-                    // if it was actually new.
-                    if (syncDao.insertLogIfNew(log) != null) pulled++
-                }
-                Log.i(TAG, "Pulled $pulled changes")
+            // 2. Pull the main device's catalogue and customers — only when nothing of ours is still
+            //    waiting, so its stock figures can't overwrite a sale it hasn't seen yet.
+            if (syncDao.countPending() > 0) {
+                return@withContext SyncResult.Error("Some sales are still waiting to be sent; try again")
             }
+            val snap = request("GET", "$baseUrl/snapshot", null, peerKey)
+                ?: return@withContext SyncResult.Error("Lost connection to the main device")
+            authError(snap)?.let { return@withContext SyncResult.Error(it) }
+            val body = snap.body
+            if (snap.code != 200 || body == null) return@withContext SyncResult.Error("Main device error (${snap.code})")
+            val applied = snapshots.apply(body)
 
-            // 4. Prune old synced logs (keep last 7 days)
+            // 3. Prune old synced logs (keep last 7 days)
             syncDao.pruneOldLogs(System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L)
 
-            SyncResult.Success(pushed, pulled)
+            SyncResult.Success(pushed, rejected, applied.products, applied.customers, reasons.distinct().take(3))
         } catch (e: Exception) {
             Log.e(TAG, "Sync error", e)
             SyncResult.Error(e.localizedMessage ?: "Sync failed")
         }
     }
 
-    private fun get(url: String, syncKey: String? = null): String? = try {
-        val conn = URL(url).openConnection() as HttpURLConnection
-        conn.connectTimeout = TIMEOUT; conn.readTimeout = TIMEOUT
-        conn.requestMethod = "GET"
-        syncKey?.let { conn.setRequestProperty("X-Sync-Key", it) }
-        if (conn.responseCode == 200) conn.inputStream.bufferedReader().readText()
-        else null
-    } catch (_: Exception) { null }
+    private fun authError(r: Reply): String? = when (r.code) {
+        401 -> "Pairing code rejected — check the code on the main device"
+        429 -> "Too many wrong codes — wait 30 seconds and try again"
+        else -> null
+    }
 
-    private fun post(url: String, body: String, syncKey: String? = null): String? = try {
+    private fun request(method: String, url: String, body: String?, syncKey: String?): Reply? = try {
         val conn = URL(url).openConnection() as HttpURLConnection
-        conn.connectTimeout = TIMEOUT; conn.readTimeout = TIMEOUT
-        conn.requestMethod = "POST"
-        conn.doOutput = true
-        conn.setRequestProperty("Content-Type", "application/json")
-        conn.setRequestProperty("Content-Length", body.toByteArray().size.toString())
+        conn.connectTimeout = TIMEOUT; conn.readTimeout = TIMEOUT * 4
+        conn.requestMethod = method
         syncKey?.let { conn.setRequestProperty("X-Sync-Key", it) }
-        conn.outputStream.write(body.toByteArray())
-        conn.outputStream.flush()
-        if (conn.responseCode == 200) conn.inputStream.bufferedReader().readText()
-        else null
+        if (body != null) {
+            val bytes = body.toByteArray(Charsets.UTF_8)
+            conn.doOutput = true
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.setFixedLengthStreamingMode(bytes.size)
+            conn.outputStream.use { it.write(bytes) }
+        }
+        val code = conn.responseCode
+        val text = (if (code in 200..299) conn.inputStream else conn.errorStream)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
+        Reply(code, text)
     } catch (_: Exception) { null }
 }

@@ -30,4 +30,7 @@ class ProductRepository @Inject constructor(
     suspend fun incrementStockKg(productId: Long, kg: Double): Int = productDao.incrementStockKg(productId, kg)
     suspend fun releaseDeletedBarcode(barcode: String): Int = productDao.releaseDeletedBarcode(barcode)
     suspend fun getProductCount(): Int = productDao.getProductCount()
+    suspend fun getAnyByBarcode(barcode: String): Product? = productDao.getAnyByBarcode(barcode)
+    suspend fun getAllIncludingInactive(): List<Product> = productDao.getAllIncludingInactive()
+    suspend fun decrementStockClamped(productId: Long, qty: Int): Int = productDao.decrementStockClamped(productId, qty)
 }

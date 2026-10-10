@@ -17,6 +17,12 @@ interface CustomerDao {
     @Query("SELECT * FROM customers WHERE id = :id")
     suspend fun getCustomerById(id: Long): Customer?
 
+    @Query("SELECT * FROM customers WHERE name = :name COLLATE NOCASE AND phone = '' LIMIT 1")
+    suspend fun getCustomerByNameNoPhone(name: String): Customer?
+
+    @Query("SELECT * FROM customers ORDER BY id ASC")
+    suspend fun getAllCustomersList(): List<Customer>
+
     @Query("SELECT * FROM customers WHERE phone = :phone LIMIT 1")
     suspend fun getCustomerByPhone(phone: String): Customer?
 

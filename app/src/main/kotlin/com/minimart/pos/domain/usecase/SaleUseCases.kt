@@ -11,7 +11,10 @@ import javax.inject.Inject
  */
 
 /** Records a sale atomically (sale + stock + customer credit). Returns the new sale id. */
-class CompleteSaleUseCase @Inject constructor(private val saleRepo: SaleRepository) {
+class CompleteSaleUseCase @Inject constructor(
+    private val saleRepo: SaleRepository,
+    private val syncEnqueuer: com.minimart.pos.sync.SyncEnqueuer
+) {
     suspend operator fun invoke(
         sale: Sale,
         items: List<SaleItem>,
@@ -20,16 +23,35 @@ class CompleteSaleUseCase @Inject constructor(private val saleRepo: SaleReposito
         purchaseAmount: Double = 0.0
     ): Long {
         require(items.isNotEmpty()) { "Cannot complete a sale with no items" }
-        return saleRepo.completeSale(sale, items, customerId, creditAmount, purchaseAmount)
+        val saleId = saleRepo.completeSale(sale, items, customerId, creditAmount, purchaseAmount)
+        // Queue it for the main device; a sync problem must never undo or fail the sale.
+        runCatching { syncEnqueuer.saleCreated(saleId, customerId, creditAmount, purchaseAmount) }
+        return saleId
     }
 }
 
 /** Refunds a COMPLETED sale (restores stock, returns credit). No-op if already refunded/voided. */
-class RefundSaleUseCase @Inject constructor(private val saleRepo: SaleRepository) {
-    suspend operator fun invoke(saleId: Long, reason: String) = saleRepo.refundSale(saleId, reason.trim())
+class RefundSaleUseCase @Inject constructor(
+    private val saleRepo: SaleRepository,
+    private val syncEnqueuer: com.minimart.pos.sync.SyncEnqueuer
+) {
+    suspend operator fun invoke(saleId: Long, reason: String) {
+        val before = saleRepo.getSaleWithItems(saleId)?.sale
+        saleRepo.refundSale(saleId, reason.trim())
+        if (before != null && before.status == com.minimart.pos.data.entity.SaleStatus.COMPLETED)
+            runCatching { syncEnqueuer.saleReversed(before, com.minimart.pos.data.entity.SaleStatus.REFUNDED, reason.trim()) }
+    }
 }
 
 /** Voids a COMPLETED sale (restores stock, returns credit). No-op if already refunded/voided. */
-class VoidSaleUseCase @Inject constructor(private val saleRepo: SaleRepository) {
-    suspend operator fun invoke(saleId: Long, reason: String) = saleRepo.voidSale(saleId, reason.trim())
+class VoidSaleUseCase @Inject constructor(
+    private val saleRepo: SaleRepository,
+    private val syncEnqueuer: com.minimart.pos.sync.SyncEnqueuer
+) {
+    suspend operator fun invoke(saleId: Long, reason: String) {
+        val before = saleRepo.getSaleWithItems(saleId)?.sale
+        saleRepo.voidSale(saleId, reason.trim())
+        if (before != null && before.status == com.minimart.pos.data.entity.SaleStatus.COMPLETED)
+            runCatching { syncEnqueuer.saleReversed(before, com.minimart.pos.data.entity.SaleStatus.VOIDED, reason.trim()) }
+    }
 }

@@ -3,9 +3,6 @@ package com.minimart.pos.sync
 import android.content.Context
 import android.net.wifi.WifiManager
 import android.util.Log
-import com.minimart.pos.data.dao.SyncDao
-import com.minimart.pos.data.entity.SyncLog
-import com.minimart.pos.data.entity.SyncStatus
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.withPermit
@@ -21,7 +18,8 @@ import javax.inject.Singleton
 @Singleton
 class SyncServer @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val syncDao: SyncDao,
+    private val applier: SyncApplier,
+    private val snapshots: SnapshotService,
     private val settingsRepo: com.minimart.pos.data.repository.SettingsRepository
 ) {
     companion object {
@@ -116,7 +114,7 @@ class SyncServer @Inject constructor(
             // MiniMart POS server exists here"); /changes and /apply now require a
             // matching X-Sync-Key header — the pairing secret shown on this device's
             // Settings screen, which must be typed into the other device once.
-            val requiresAuth = path == "/changes" || path == "/apply"
+            val requiresAuth = path == "/snapshot" || path == "/apply"
             if (requiresAuth) {
                 // Check lockout BEFORE doing any key comparison — rejects immediately
                 // during an active lockout window regardless of whether this particular
@@ -158,18 +156,9 @@ class SyncServer @Inject constructor(
                 method == "GET" && path == "/ping" -> {
                     respond(writer, 200, """{"status":"ok","service":"MiniMartPOS"}""")
                 }
-                method == "GET" && path == "/changes" -> {
-                    val pending = syncDao.getPendingLogs()
-                    val arr = JSONArray()
-                    pending.forEach { log ->
-                        arr.put(JSONObject().apply {
-                            put("id", log.id); put("entityType", log.entityType.name)
-                            put("entityId", log.entityId); put("operation", log.operation.name)
-                            put("deviceId", log.deviceId); put("payload", log.payload)
-                            put("createdAt", log.createdAt)
-                        })
-                    }
-                    respond(writer, 200, arr.toString())
+                method == "GET" && path == "/snapshot" -> {
+                    // Catalogue + customers with this device's current stock and balances.
+                    respond(writer, 200, snapshots.build())
                 }
                 method == "POST" && path == "/apply" -> {
                     // Bug fix: a single reader.read(buf) call is NOT guaranteed to fill the
@@ -200,29 +189,11 @@ class SyncServer @Inject constructor(
                         }
                     }
                     val body = sb.toString()
-                    val arr  = JSONArray(body)
-                    val ids  = mutableListOf<Long>()
-                    for (i in 0 until arr.length()) {
-                        val obj = arr.getJSONObject(i)
-                        val log = SyncLog(
-                            entityType = com.minimart.pos.data.entity.SyncEntityType.valueOf(obj.getString("entityType")),
-                            entityId   = obj.getLong("entityId"),
-                            operation  = com.minimart.pos.data.entity.SyncOperation.valueOf(obj.getString("operation")),
-                            deviceId   = obj.getString("deviceId"),
-                            payload    = obj.getString("payload"),
-                            status     = SyncStatus.SYNCED,
-                            createdAt  = obj.getLong("createdAt")
-                        )
-                        // Bug fix: was unconditional syncDao.insertLog(log) — inserted
-                        // this change as a brand-new row every single time, with no check
-                        // for whether the exact same change (same origin device/entity/
-                        // operation/timestamp) had already been applied in an earlier
-                        // sync cycle. Any retry duplicated it. insertLogIfNew() skips the
-                        // insert (and correctly omits the id from the response) if a
-                        // matching row already exists.
-                        syncDao.insertLogIfNew(log)?.let { ids.add(it) }
-                    }
-                    respond(writer, 200, """{"applied":${ids.size}}""")
+                    // Each change is applied once and validated; the till gets a verdict per change.
+                    val results = applier.apply(JSONArray(body))
+                    var applied = 0
+                    for (i in 0 until results.length()) if (results.getJSONObject(i).optString("status") == "ok") applied++
+                    respond(writer, 200, JSONObject().put("applied", applied).put("results", results).toString())
                 }
                 else -> respond(writer, 404, """{"error":"Not found"}""")
             }

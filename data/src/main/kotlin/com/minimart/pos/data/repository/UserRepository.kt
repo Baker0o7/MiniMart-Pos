@@ -3,6 +3,7 @@ package com.minimart.pos.data.repository
 import com.minimart.pos.data.dao.UserDao
 import com.minimart.pos.data.entity.User
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -14,6 +15,8 @@ class UserRepository @Inject constructor(private val dao: UserDao) {
     suspend fun getUserById(id: Long): User? = dao.getUserById(id)
     suspend fun getUserByUsername(username: String): User? = dao.getUserByUsername(username)
     suspend fun getUserCount(): Int = dao.getUserCount()
+    /** Fallback owner of a synced sale whose cashier has no account on this device. */
+    suspend fun getAllUsersFirstId(): Long = dao.getAllUsers().first().firstOrNull()?.id ?: 1L
     suspend fun insertUser(user: User): Long = dao.insertUser(user)
     suspend fun updateUser(user: User) = dao.updateUser(user)
     suspend fun deleteUser(user: User) = dao.deleteUser(user)

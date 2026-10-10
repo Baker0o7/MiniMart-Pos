@@ -543,6 +543,9 @@ fun SettingsScreen(
                         summary = if (syncState.serverRunning) "Server running" else "Off",
                         initiallyExpanded = false) {
                         Text("Device ID: ${syncState.deviceId.take(8)}…", color = DT.SubText, fontSize = 11.sp)
+                        Spacer(Modifier.height(6.dp))
+                        Text("One device is the main device (it acts as server). Other tills enter its address and code: they send their sales to it, then receive its products, stock and customer balances. Manage products on the main device. Sales made before a till was paired are not sent.",
+                            color = DT.SubText, fontSize = 11.sp, lineHeight = 15.sp)
                         Spacer(Modifier.height(10.dp))
 
                         // This device as server

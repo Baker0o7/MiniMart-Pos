@@ -137,6 +137,14 @@ interface SaleDao {
     @Query("UPDATE sales SET status = 'VOIDED', notes = CASE WHEN notes = '' THEN :reason ELSE notes || ' | ' || :reason END WHERE id = :saleId AND status = 'COMPLETED'")
     suspend fun voidSale(saleId: Long, reason: String): Int
 
+    /** How many live (not refunded/voided) sales already claim this M-Pesa reference. */
+    @Query("SELECT COUNT(*) FROM sales WHERE mpesaRef = :ref COLLATE NOCASE AND status = 'COMPLETED'")
+    suspend fun countCompletedWithMpesaRef(ref: String): Int
+
+    /** Finds a sale by receipt number and creation time (how a synced sale is matched on the main device). */
+    @Query("SELECT * FROM sales WHERE receiptNumber = :receipt AND createdAt = :createdAt LIMIT 1")
+    suspend fun findByReceiptAndTime(receipt: String, createdAt: Long): Sale?
+
     @Transaction
     suspend fun insertSaleWithItems(sale: Sale, items: List<SaleItem>): Long {
         val saleId = insertSale(sale)

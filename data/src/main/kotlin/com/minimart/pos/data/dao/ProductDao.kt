@@ -21,6 +21,13 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE pluCode = :plu AND isWeighed = 1 AND isActive = 1 LIMIT 1")
     suspend fun getProductByPlu(plu: String): Product?
 
+    /** Any product with this barcode, active or not (sync matches on the barcode). */
+    @Query("SELECT * FROM products WHERE barcode = :barcode LIMIT 1")
+    suspend fun getAnyByBarcode(barcode: String): Product?
+
+    @Query("SELECT * FROM products ORDER BY id ASC")
+    suspend fun getAllIncludingInactive(): List<Product>
+
     @Query("SELECT * FROM products WHERE id = :id LIMIT 1")
     suspend fun getProductById(id: Long): Product?
 
@@ -88,6 +95,10 @@ interface ProductDao {
      *  which made that barcode impossible to add again. Renaming the deleted row frees it. */
     @Query("UPDATE products SET barcode = barcode || '~del' || id WHERE barcode = :barcode AND isActive = 0")
     suspend fun releaseDeletedBarcode(barcode: String): Int
+
+    /** For a sale that already happened elsewhere (synced in): take the units off but never go below 0. */
+    @Query("UPDATE products SET stock = MAX(stock - :quantity, 0), updatedAt = :now WHERE id = :productId")
+    suspend fun decrementStockClamped(productId: Long, quantity: Int, now: Long = System.currentTimeMillis()): Int
 
     @Query("UPDATE products SET isActive = 0, updatedAt = :now WHERE id = :productId")
     suspend fun softDeleteProduct(productId: Long, now: Long = System.currentTimeMillis())

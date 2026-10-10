@@ -25,6 +25,8 @@ class CustomerRepository @Inject constructor(
 
     suspend fun getById(id: Long): Customer? = dao.getCustomerById(id)
     suspend fun getByPhone(phone: String): Customer? = dao.getCustomerByPhone(phone)
+    suspend fun getByNameWithoutPhone(name: String): Customer? = dao.getCustomerByNameNoPhone(name)
+    suspend fun getAllList(): List<Customer> = dao.getAllCustomersList()
 
     suspend fun saveCustomer(customer: Customer): Long = db.withTransaction {
         if (customer.id == 0L) dao.insertCustomer(customer)

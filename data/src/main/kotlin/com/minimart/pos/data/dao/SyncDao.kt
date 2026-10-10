@@ -56,4 +56,7 @@ interface SyncDao {
 
     @Query("SELECT COUNT(*) FROM sync_log WHERE status = 'PENDING'")
     fun getPendingCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM sync_log WHERE status = 'PENDING'")
+    suspend fun countPending(): Int
 }

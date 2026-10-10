@@ -95,7 +95,11 @@ class SyncViewModel @Inject constructor(
         _state.update { it.copy(
             isSyncing  = false,
             lastResult = when (result) {
-                is SyncResult.Success -> "✓ Pushed ${result.pushed}, pulled ${result.pulled} changes"
+                is SyncResult.Success -> buildString {
+                    append("✓ Sent ${result.pushed} sale${if (result.pushed == 1) "" else "s"}; ")
+                    append("updated ${result.products} product${if (result.products == 1) "" else "s"}, ${result.customers} customer${if (result.customers == 1) "" else "s"}")
+                    if (result.rejected > 0) append(". ${result.rejected} refused: ${result.rejectedReasons.joinToString("; ")}")
+                }
                 is SyncResult.Error   -> "✗ ${result.message}"
             }
         ) }
