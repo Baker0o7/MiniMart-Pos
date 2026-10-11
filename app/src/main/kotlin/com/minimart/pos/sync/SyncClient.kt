@@ -104,7 +104,7 @@ class SyncClient @Inject constructor(
     }
 
     private fun authError(r: Reply): String? = when (r.code) {
-        401 -> "Pairing code rejected — check the code on the main device"
+        401 -> "Pairing code rejected — check the code, that both phones run the latest app, and that both clocks are correct"
         429 -> "Too many wrong codes — wait 30 seconds and try again"
         else -> null
     }
@@ -113,7 +113,11 @@ class SyncClient @Inject constructor(
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.connectTimeout = TIMEOUT; conn.readTimeout = TIMEOUT * 4
         conn.requestMethod = method
-        syncKey?.let { conn.setRequestProperty("X-Sync-Key", it) }
+        syncKey?.let {
+            val ts = System.currentTimeMillis()
+            conn.setRequestProperty("X-Sync-Ts", ts.toString())
+            conn.setRequestProperty("X-Sync-Sig", SyncAuth.sign(it, method, URL(url).path, body ?: "", ts))
+        }
         if (body != null) {
             val bytes = body.toByteArray(Charsets.UTF_8)
             conn.doOutput = true

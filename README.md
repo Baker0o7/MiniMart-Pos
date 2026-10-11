@@ -114,6 +114,7 @@ Built with Kotlin + Jetpack Compose 🇰🇪
   in one database transaction, so a retry (dropped connection, double-tapping
   "Sync Now") can't sell the same goods twice. A sale the main device refuses is
   rolled back, reported on the till, and quarantined (not retried forever)
+- Requests are signed (HMAC-SHA256 over time, path and body) so the pairing code never crosses the network and a captured request cannot be altered or replayed; both phones need the same app version and a roughly correct clock. Data itself is not encrypted on the LAN: use a Wi-Fi network you trust.
 - Server device: toggle "Act as Sync Server", share the displayed code
 - Till: enter the main device's IP + pairing code → Sync Now
 - **Payment validation** — see Security: every sale is re-checked in the data
@@ -182,8 +183,8 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 ### ☁️ Multi-Store Cloud Dashboard
 See every store in one web page: sales totals and 30-day trend, low-stock and expiry alerts, estimated profit and expenses, and shift / Z-report status (with cash variance). Uses **your own free Supabase project**; nothing goes through anyone else's server.
 
-1. Create a project at supabase.com. Open **SQL Editor**, paste `cloud/supabase_setup.sql`, **change the setup code on line 15 first**, and run it.
-2. **Authentication → Users → Add user** (your email + password), then turn **off** "Allow new users to sign up".
+1. Create a project at supabase.com. Open **SQL Editor**, paste `cloud/supabase_setup.sql`, **first change the setup code and the owner email near the top**, and run it.
+2. **Authentication → Users → Add user** (the same owner email you put in the script, plus a password), then turn **off** "Allow new users to sign up". Only that email can read the data, even if sign-ups stay on. Already set up? Run the new script and then `update app_config set value = 'you@example.com' where key = 'owner_email';`.
 3. In each store's app (admin): **Settings → Cloud dashboard** → enter Project URL, anon key (Project Settings → API) and the setup code → **Connect & upload**. The app then uploads every few hours and when a shift is closed.
 4. Open `cloud/dashboard/index.html` (double-click it, or host it on GitHub Pages / any static host), enter the URL and anon key, and sign in.
 

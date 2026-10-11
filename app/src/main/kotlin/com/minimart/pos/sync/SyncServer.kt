@@ -116,6 +116,31 @@ class SyncServer @Inject constructor(
             // MiniMart POS server exists here"); /changes and /apply now require a
             // matching X-Sync-Key header — the pairing secret shown on this device's
             // Settings screen, which must be typed into the other device once.
+            // The body is read first because the request signature covers it.
+            var body = ""
+            if (method == "POST") {
+                if (contentLength !in 0..MAX_BODY_BYTES) {
+                    respond(writer, 413, """{"error":"Payload too large"}""")
+                    return
+                }
+                // Content-Length counts BYTES but the reader yields chars: product or
+                // customer names with accents/emoji are multi-byte in UTF-8, so counting
+                // chars made the server wait for data that never came. Count encoded bytes.
+                val sb = StringBuilder()
+                var bytesRead = 0
+                while (bytesRead < contentLength) {
+                    val c = reader.read()
+                    if (c == -1) break // peer closed early
+                    sb.append(c.toChar())
+                    bytesRead += when {
+                        c < 0x80 -> 1
+                        c < 0x800 -> 2
+                        Character.isSurrogate(c.toChar()) -> 2 // surrogate pair = 4 bytes
+                        else -> 3
+                    }
+                }
+                body = sb.toString()
+            }
             val requiresAuth = path == "/snapshot" || path == "/apply"
             if (requiresAuth) {
                 // Check lockout BEFORE doing any key comparison — rejects immediately
@@ -127,26 +152,20 @@ class SyncServer @Inject constructor(
                     return
                 }
                 val mySecret = settingsRepo.getOrCreateSyncSecret()
-                val providedKey = headers["X-Sync-Key"]
-                // Bug fix: `providedKey != mySecret` is a plain String comparison, which
-                // (like the SHA-256 PIN comparison fixed earlier in PinHasher) returns
-                // early on the first mismatched character — a timing side-channel that
-                // an attacker on the same WiFi network could use to narrow down the
-                // 6-digit pairing code character-by-character by measuring response
-                // times across repeated guesses. MessageDigest.isEqual does a
-                // constant-time comparison regardless of where the first difference is.
-                val keysMatch = providedKey != null &&
-                    java.security.MessageDigest.isEqual(
-                        providedKey.toByteArray(Charsets.UTF_8),
-                        mySecret.toByteArray(Charsets.UTF_8)
-                    )
+                // The pairing code itself is never sent: each request carries a timestamp and an
+                // HMAC-SHA256 over (timestamp, method, path, body hash). A listener on the Wi-Fi can
+                // neither learn the code nor alter or replay a captured request.
+                val keysMatch = SyncAuth.verify(
+                    secret = mySecret, method = method, path = path, body = body,
+                    timestamp = headers["X-Sync-Ts"], signature = headers["X-Sync-Sig"]
+                )
                 if (!keysMatch) {
                     val attempts = failedAuthAttempts.incrementAndGet()
                     if (attempts >= MAX_FAILED_ATTEMPTS) {
                         authLockoutUntilMs.set(System.currentTimeMillis() + LOCKOUT_DURATION_MS)
                         failedAuthAttempts.set(0)
                     }
-                    respond(writer, 401, """{"error":"Unauthorized — pairing key mismatch"}""")
+                    respond(writer, 401, """{"error":"Unauthorized — pairing code mismatch or device clock is off by more than 5 minutes"}""")
                     return
                 }
                 // Successful auth — clear any prior failed attempts so a legitimate
@@ -170,27 +189,6 @@ class SyncServer @Inject constructor(
                     // array, which the outer catch swallows with no response sent back —
                     // leaving the sync client to see a confusing generic failure instead of
                     // the real cause. Loop until all contentLength chars are read (or EOF).
-                    if (contentLength !in 0..MAX_BODY_BYTES) {
-                        respond(writer, 413, """{"error":"Payload too large"}""")
-                        return
-                    }
-                    // Content-Length counts BYTES but the reader yields chars: product or
-                    // customer names with accents/emoji are multi-byte in UTF-8, so counting
-                    // chars made the server wait for data that never came. Count encoded bytes.
-                    val sb = StringBuilder()
-                    var bytesRead = 0
-                    while (bytesRead < contentLength) {
-                        val c = reader.read()
-                        if (c == -1) break // peer closed early
-                        sb.append(c.toChar())
-                        bytesRead += when {
-                            c < 0x80 -> 1
-                            c < 0x800 -> 2
-                            Character.isSurrogate(c.toChar()) -> 2 // surrogate pair = 4 bytes
-                            else -> 3
-                        }
-                    }
-                    val body = sb.toString()
                     // Each change is applied once and validated; the till gets a verdict per change.
                     val results = applier.apply(JSONArray(body))
                     var applied = 0

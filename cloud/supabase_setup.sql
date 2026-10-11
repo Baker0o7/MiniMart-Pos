@@ -12,6 +12,10 @@ create extension if not exists pgcrypto with schema extensions;
 
 -- 1. CHANGE THIS before running: the code you type into each store's app the first time.
 create table if not exists app_config (key text primary key, value text not null);
+-- 1b. CHANGE THIS too: the email of the owner account that may read the dashboard data.
+insert into app_config (key, value) values ('owner_email', 'owner@example.com')
+  on conflict (key) do nothing;
+
 insert into app_config (key, value) values ('setup_code', 'CHANGE-ME-TO-A-LONG-RANDOM-CODE')
 on conflict (key) do nothing;
 
@@ -34,9 +38,23 @@ alter table app_config      enable row level security;
 alter table stores          enable row level security;
 alter table store_snapshots enable row level security;
 
+-- Only the owner's email may read, even if someone manages to sign up to the project.
+create or replace function is_owner() returns boolean
+language sql security definer stable set search_path = public as $$
+  select exists (
+    select 1 from app_config
+    where key = 'owner_email'
+      and lower(value) = lower(coalesce(auth.jwt() ->> 'email', ''))
+      and (auth.jwt() ->> 'email_verified' is distinct from 'false')
+  )
+$$;
+revoke all on function is_owner() from public;
+grant execute on function is_owner() to authenticated;
+
 drop policy if exists "signed-in owner reads snapshots" on store_snapshots;
-create policy "signed-in owner reads snapshots" on store_snapshots
-  for select to authenticated using (true);
+drop policy if exists "owner reads snapshots" on store_snapshots;
+create policy "owner reads snapshots" on store_snapshots
+  for select to authenticated using (is_owner());
 
 revoke all on app_config, stores, store_snapshots from anon, authenticated;
 grant select on store_snapshots to authenticated;
@@ -46,6 +64,7 @@ create or replace function register_store(p_setup_code text, p_store_id uuid, p_
 returns void language plpgsql security definer set search_path = public, extensions as $$
 begin
   if p_setup_code is distinct from (select value from app_config where key = 'setup_code') then
+    perform pg_sleep(1.5);   -- slows down guessing of the setup code
     raise exception 'Invalid setup code';
   end if;
   if length(coalesce(p_secret, '')) < 24 then
@@ -64,6 +83,7 @@ declare s stores%rowtype;
 begin
   select * into s from stores where id = p_store_id;
   if not found or s.secret_hash <> crypt(p_secret, s.secret_hash) then
+    perform pg_sleep(1.5);
     raise exception 'Unknown store or wrong secret';
   end if;
   if pg_column_size(p_payload) > 400000 then
