@@ -187,6 +187,8 @@ See every store in one web page: sales totals and 30-day trend, low-stock and ex
 3. In each store's app (admin): **Settings → Cloud dashboard** → enter Project URL, anon key (Project Settings → API) and the setup code → **Connect & upload**. The app then uploads every few hours and when a shift is closed.
 4. Open `cloud/dashboard/index.html` (double-click it, or host it on GitHub Pages / any static host), enter the URL and anon key, and sign in.
 
+Re-installing the app or tapping Disconnect registers the phone as a new store; delete the old one in Supabase (Table Editor → `stores`) so it disappears from the dashboard. Renaming the shop updates its name on the next upload.
+
 Security: the anon key alone can neither read data nor write to an existing store; each phone has its own random secret (only a hash is stored online) and only the signed-in owner can read. Customer names, phone numbers and receipts are not uploaded. Profit is only accurate for products that have a cost price (the dashboard shows the coverage).
 
 ### 📊 Reports & Analytics

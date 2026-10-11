@@ -88,7 +88,7 @@ $("store").onchange=render;
 
 async function load(){
   const {data,error}=await sb.from("store_snapshots").select("store_id,store_name,payload,pushed_at").order("store_name");
-  if(error){$("kpis").innerHTML='<div class="card bad">'+esc(error.message)+'</div>';return}
+  if(error){if(/jwt|expired|not authenticated/i.test(error.message)){await sb.auth.signOut();return showLogin()}$("kpis").innerHTML='<div class="card bad">'+esc(error.message)+'</div>';return}
   rows=data||[];
   const cur=$("store").value;
   $("store").innerHTML='<option value="*">All stores ('+rows.length+')</option>'+rows.map(r=>'<option value="'+esc(r.store_id)+'">'+esc(r.store_name||"Store")+'</option>').join("");

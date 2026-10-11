@@ -69,6 +69,11 @@ begin
   if pg_column_size(p_payload) > 400000 then
     raise exception 'Snapshot too large';
   end if;
+  -- keep the store's name in step with the app (the owner may rename the shop)
+  if coalesce(p_payload->>'storeName', '') <> '' and left(p_payload->>'storeName', 80) <> s.name then
+    s.name := left(p_payload->>'storeName', 80);
+    update stores set name = s.name where id = p_store_id;
+  end if;
   insert into store_snapshots (store_id, store_name, payload, pushed_at)
   values (p_store_id, s.name, p_payload, now())
   on conflict (store_id) do update
