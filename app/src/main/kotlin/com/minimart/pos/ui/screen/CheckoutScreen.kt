@@ -24,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -260,9 +261,15 @@ fun CheckoutScreen(
             // ── Payment Method ────────────────────────────────────────────────
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Payment, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Payment Method", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Box(Modifier.size(34.dp).clip(RoundedCornerShape(9.dp))
+                    .background(Brush.linearGradient(listOf(Color(0xFF19D3B2), Color(0xFF0B8F7A)))),
+                    contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.CreditCard, null, tint = Color(0xFF05201C), modifier = Modifier.size(20.dp))
+                }
+                Spacer(Modifier.width(12.dp))
+                Box(Modifier.width(1.5.dp).height(26.dp).background(DT.Teal.copy(0.6f)))
+                Spacer(Modifier.width(12.dp))
+                Text("Payment Method", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
             }
             Spacer(Modifier.height(10.dp))
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -274,37 +281,16 @@ fun CheckoutScreen(
                 if (canApplyDiscounts) {
                     val disc = state.discount
                     val has = disc > 0
-                    Box(modifier = Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(12.dp))
-                        .background(if (has) DT.Amber.copy(0.15f) else DT.Surface)
-                        .border(1.5.dp, if (has) DT.Amber else DT.Border, RoundedCornerShape(12.dp))
-                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showDiscountDialog = true },
-                        contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Icon(Icons.Default.Discount, null, tint = if (has) DT.Amber else DT.SubText, modifier = Modifier.size(18.dp))
-                            Text(if (has) "-${plainNumber(disc)}" else "Discount",
-                                color = if (has) DT.Amber else DT.SubText, fontSize = 10.sp,
-                                fontWeight = if (has) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
-                        }
-                    }
+                    PayTile(Modifier.weight(1f), if (has) "-${plainNumber(disc)}" else "Discount", Icons.Default.Discount,
+                        active = false, accent = if (has) DT.Amber else null) { showDiscountDialog = true }
                 }
                 // Customer (optional) — picks / changes the customer; clear it from the strip below.
                 run {
                     val has = selectedCustomer != null
-                    Box(modifier = Modifier.weight(1f).height(52.dp).clip(RoundedCornerShape(12.dp))
-                        .background(if (has) DT.Teal.copy(0.15f) else DT.Surface)
-                        .border(1.5.dp, if (has) DT.Teal else DT.Border, RoundedCornerShape(12.dp))
-                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showCustomerSearch = true },
-                        contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Icon(if (has) Icons.Default.Person else Icons.Default.PersonSearch, null,
-                                tint = if (has) DT.Teal else DT.SubText, modifier = Modifier.size(18.dp))
-                            Text(selectedCustomer?.name?.trim()?.substringBefore(' ')?.ifBlank { null } ?: "Customer",
-                                color = if (has) DT.Teal else DT.SubText, fontSize = 10.sp,
-                                fontWeight = if (has) FontWeight.Bold else FontWeight.Normal,
-                                maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(horizontal = 3.dp))
-                        }
-                    }
+                    PayTile(Modifier.weight(1f),
+                        selectedCustomer?.name?.trim()?.substringBefore(' ')?.ifBlank { null } ?: "Customer",
+                        if (has) Icons.Default.Person else Icons.Default.PersonSearch,
+                        active = false, accent = if (has) DT.Teal else null) { showCustomerSearch = true }
                 }
                 // Credit only shown when customer selected
                 AnimatedVisibility(visible = selectedCustomer != null, modifier = Modifier.weight(1f)) {
@@ -992,16 +978,31 @@ private fun CreditStat(label: String, value: String, color: Color) {
 private fun PaymentCard(modifier: Modifier, label: String, icon: ImageVector,
     method: PaymentMethod, selected: PaymentMethod, enabled: Boolean = true,
     onSelect: (PaymentMethod) -> Unit) {
-    val isSelected = method == selected
-    Box(modifier = modifier.height(52.dp).clip(RoundedCornerShape(12.dp))
-        .background(if (isSelected) DT.Teal else DT.Surface)
-        .border(1.5.dp, if (isSelected) DT.Teal else if (!enabled) DT.Border.copy(0.4f) else DT.Border, RoundedCornerShape(12.dp))
-        .clickable(enabled = enabled, indication = null, interactionSource = remember { MutableInteractionSource() }) { onSelect(method) },
+    PayTile(modifier, label, icon, active = method == selected, enabled = enabled) { onSelect(method) }
+}
+
+/** Large rounded tile: glowing teal gradient when active, dark teal glass otherwise. */
+@Composable
+private fun PayTile(modifier: Modifier, label: String, icon: ImageVector, active: Boolean,
+    accent: Color? = null, enabled: Boolean = true, onClick: () -> Unit) {
+    val soft = Color(0xFFB4E9E0)
+    val shape = RoundedCornerShape(20.dp)
+    val tint = when { !enabled -> soft.copy(0.35f); active -> Color.White; accent != null -> accent; else -> soft }
+    val base = modifier.height(84.dp)
+    val decorated = if (active) base.shadow(14.dp, shape, ambientColor = DT.Teal, spotColor = DT.Teal) else base
+    Box(decorated.clip(shape)
+        .background(when {
+            active -> Brush.verticalGradient(listOf(Color(0xFF0FD1B0), Color(0xFF0A8C7B)))
+            accent != null -> Brush.verticalGradient(listOf(accent.copy(0.18f), accent.copy(0.08f)))
+            else -> Brush.verticalGradient(listOf(Color(0xFF0E2A2B), Color(0xFF0A1F21)))
+        })
+        .border(1.5.dp, when { active -> Color(0xFF3FE8CB); accent != null -> accent.copy(0.8f); else -> Color(0xFF2E6A6A) }, shape)
+        .clickable(enabled = enabled, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick),
         contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Icon(icon, null, tint = if (isSelected) Color.White else if (!enabled) DT.SubText.copy(0.4f) else DT.SubText, modifier = Modifier.size(18.dp))
-            Text(label, color = if (isSelected) Color.White else if (!enabled) DT.SubText.copy(0.4f) else DT.SubText,
-                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Normal, fontSize = 10.sp, maxLines = 1)
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Icon(icon, null, tint = tint, modifier = Modifier.size(28.dp))
+            Text(label, color = tint, fontWeight = if (active) FontWeight.ExtraBold else FontWeight.SemiBold,
+                fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 4.dp))
         }
     }
 }

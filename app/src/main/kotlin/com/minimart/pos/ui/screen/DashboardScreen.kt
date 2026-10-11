@@ -24,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -106,7 +107,14 @@ fun DashboardScreen(
             // ── Greeting header ───────────────────────────────────────────────
             item {
                 Box(modifier = Modifier.fillMaxWidth()
-                    .background(Brush.verticalGradient(listOf(Color(0xFF0D2420), Bg)))
+                    .background(Brush.verticalGradient(listOf(Color(0xFF0A2623), Bg)))
+                    .drawBehind {
+                        // soft teal glows in the corners
+                        drawCircle(Brush.radialGradient(listOf(Color(0x3319D3B2), Color.Transparent), center = Offset(0f, 0f), radius = size.width * 0.55f),
+                            radius = size.width * 0.55f, center = Offset(0f, 0f))
+                        drawCircle(Brush.radialGradient(listOf(Color(0x2619D3B2), Color.Transparent), center = Offset(size.width, size.height), radius = size.width * 0.5f),
+                            radius = size.width * 0.5f, center = Offset(size.width, size.height))
+                    }
                     .padding(start = 18.dp, end = 18.dp, top = 18.dp, bottom = 20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         // Avatar: glowing rounded tile with the flag and an "online" dot
@@ -124,18 +132,20 @@ fun DashboardScreen(
                                 .background(Bg).padding(2.dp).clip(CircleShape).background(GreenGlow))
                         }
                         Spacer(Modifier.width(12.dp))
+                        Box(Modifier.width(1.5.dp).height(52.dp).background(TealGlow.copy(0.6f)))
+                        Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(roleLabel(currentRole) ?: "Welcome", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
                             // A long shop name must not wrap and unbalance the header.
-                            Text(state.storeName, color = Sub, fontSize = 14.sp,
+                            Text(state.storeName, color = Color(0xFF8FF0E0), fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
                             val today = remember { java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale.getDefault()).format(java.util.Date()) }
                             Spacer(Modifier.height(4.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CalendarToday, null, tint = Sub, modifier = Modifier.size(14.dp))
+                                Icon(Icons.Default.CalendarToday, null, tint = TealGlow, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(5.dp))
-                                Text(today, color = Sub, fontSize = 13.sp, maxLines = 1)
+                                Text(today, color = White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                             }
                         }
                         Spacer(Modifier.width(8.dp))
@@ -145,11 +155,13 @@ fun DashboardScreen(
                             .border(1.dp, TealGlow.copy(0.45f), RoundedCornerShape(24.dp))
                             .padding(horizontal = 11.dp, vertical = 9.dp),
                             verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(8.dp).clip(CircleShape).background(TealGlow))
-                            Text(" Offline", color = TealGlow, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                            Box(Modifier.size(9.dp).clip(CircleShape).background(Color(0xFF8CA3B5)))
+                            Text(" Offline", color = White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.width(8.dp))
-                            Box(Modifier.size(8.dp).clip(CircleShape).background(GreenGlow))
-                            Text(" Ready", color = GreenGlow, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                            Box(Modifier.width(1.dp).height(16.dp).background(TealGlow.copy(0.6f)))
+                            Spacer(Modifier.width(8.dp))
+                            Box(Modifier.size(9.dp).clip(CircleShape).background(GreenGlow))
+                            Text(" Ready", color = White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                         Spacer(Modifier.width(8.dp))
                         // Settings button
@@ -158,7 +170,7 @@ fun DashboardScreen(
                             .border(1.5.dp, TealGlow.copy(0.45f), CircleShape)
                             .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onNavigateToSettings() },
                             contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Settings, "Settings", tint = TealGlow, modifier = Modifier.size(22.dp))
+                            Icon(Icons.Default.Settings, "Settings", tint = Color(0xFF2EE6F2), modifier = Modifier.size(26.dp))
                         }
                     }
                 }
