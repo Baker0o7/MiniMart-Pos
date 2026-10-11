@@ -292,7 +292,7 @@ class CartViewModel @Inject constructor(
             discountAuditJob = viewModelScope.launch {
                 kotlinx.coroutines.delay(1500)
                 auditLogger.log(com.minimart.pos.util.AuditEvent.DISCOUNT_APPLIED,
-                    detail = "Global discount KES ${String.format("%.2f", clamped)} on cart of KES ${String.format("%.2f", state.subtotal)}")
+                    detail = "Global discount KES ${String.format(java.util.Locale.US, "%.2f", clamped)} on cart of KES ${String.format(java.util.Locale.US, "%.2f", state.subtotal)}")
             }
         }
     }
@@ -383,7 +383,7 @@ class CartViewModel @Inject constructor(
                 _uiState.update { CartUiState() } // clear cart after sale
                 // The sale is already saved: a failing audit write must not report "Checkout failed".
                 runCatching { auditLogger.log(com.minimart.pos.util.AuditEvent.SALE_COMPLETED,
-                    detail = "Receipt #${sale.receiptNumber} • KES ${String.format("%.2f", sale.totalAmount)} • ${sale.paymentMethod.name}") }
+                    detail = "Receipt #${sale.receiptNumber} • KES ${String.format(java.util.Locale.US, "%.2f", sale.totalAmount)} • ${sale.paymentMethod.name}") }
                 _checkoutResult.emit(CheckoutResult.Success(saleId, sale.changeGiven))
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = "Checkout failed: ${e.message}") }
@@ -450,10 +450,10 @@ class CartViewModel @Inject constructor(
                 _uiState.update { CartUiState() }
                 runCatching {
                     auditLogger.log(com.minimart.pos.util.AuditEvent.SALE_COMPLETED,
-                        detail = "Receipt #${sale.receiptNumber} • KES ${String.format("%.2f", sale.totalAmount)} • SPLIT (credit=${String.format("%.2f", creditAmount)} cash=${String.format("%.2f", cashAmount)})")
+                        detail = "Receipt #${sale.receiptNumber} • KES ${String.format(java.util.Locale.US, "%.2f", sale.totalAmount)} • SPLIT (credit=${String.format(java.util.Locale.US, "%.2f", creditAmount)} cash=${String.format(java.util.Locale.US, "%.2f", cashAmount)})")
                     if (creditAmount > 0)
                         auditLogger.log(com.minimart.pos.util.AuditEvent.CREDIT_USED,
-                            detail = "KES ${String.format("%.2f", creditAmount)} from customer #$customerId • Sale #$saleId")
+                            detail = "KES ${String.format(java.util.Locale.US, "%.2f", creditAmount)} from customer #$customerId • Sale #$saleId")
                 }
                 _checkoutResult.emit(CheckoutResult.Success(saleId, sale.changeGiven))
             } catch (e: Exception) {

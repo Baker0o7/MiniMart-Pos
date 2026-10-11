@@ -100,7 +100,7 @@ class CustomerViewModel @Inject constructor(
         // would erase that record. Make the balance be settled first.
         val current = repo.getById(customer.id)
         if (current != null && kotlin.math.abs(current.creditBalance) > 0.005) {
-            _state.update { it.copy(message = "${current.name} has a credit balance of ${String.format("%.2f", current.creditBalance)} — settle it before deleting") }
+            _state.update { it.copy(message = "${current.name} has a credit balance of ${String.format(java.util.Locale.US, "%.2f", current.creditBalance)} — settle it before deleting") }
             return@launch
         }
         repo.deleteCustomer(customer)
@@ -112,7 +112,7 @@ class CustomerViewModel @Inject constructor(
         if (ok) {
             // Bug fix: was hardcoded "KES" in this success message regardless of the
             // app's configurable currency setting.
-            _state.update { it.copy(message = "$currency ${String.format("%.2f", amount)} credit added") }
+            _state.update { it.copy(message = "$currency ${String.format(java.util.Locale.US, "%.2f", amount)} credit added") }
             // Refresh selected customer
             val updated = repo.getById(customerId)
             _state.update { it.copy(selectedCustomer = updated) }

@@ -12,12 +12,12 @@ import java.util.*
 // ─── Money formatting ─────────────────────────────────────────────────────────
 
 fun Double.formatMoney(currency: String = "KES"): String =
-    "$currency ${String.format("%.2f", this)}"
+    "$currency ${String.format(java.util.Locale.US, "%.2f", this)}"
 
 fun Double.formatMoneyCompact(currency: String = "KES"): String {
     return when {
-        this >= 1_000_000 -> "$currency ${String.format("%.1f", this / 1_000_000)}M"
-        this >= 1_000     -> "$currency ${String.format("%.1f", this / 1_000)}K"
+        this >= 1_000_000 -> "$currency ${String.format(java.util.Locale.US, "%.1f", this / 1_000_000)}M"
+        this >= 1_000     -> "$currency ${String.format(java.util.Locale.US, "%.1f", this / 1_000)}K"
         else              -> formatMoney(currency)
     }
 }

@@ -183,7 +183,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("Revenue", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Text("${state.currency} ${String.format("%,.2f", state.totalRevenue)}",
+                                Text("${state.currency} ${String.format(java.util.Locale.US, "%,.2f", state.totalRevenue)}",
                                     color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
                             }
                             Column(horizontalAlignment = Alignment.End) {
@@ -216,7 +216,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                                 Spacer(Modifier.width(6.dp))
                                 Text("Avg Basket", color = DT.SubText, fontSize = 11.sp)
                             }
-                            Text("${state.currency} ${String.format("%,.2f", state.averageBasket)}",
+                            Text("${state.currency} ${String.format(java.util.Locale.US, "%,.2f", state.averageBasket)}",
                                 color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                             Text("per transaction", color = DT.SubText, fontSize = 10.sp)
                         }
@@ -276,10 +276,10 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                                         Spacer(Modifier.width(8.dp))
                                         Text(method.name, color = DT.OnSurface, fontSize = 13.sp,
                                             fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                                        Text("${state.currency} ${String.format("%,.0f", amount)}",
+                                        Text("${state.currency} ${String.format(java.util.Locale.US, "%,.0f", amount)}",
                                             color = color, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                                         Spacer(Modifier.width(8.dp))
-                                        Text("${String.format("%.0f", pct)}%",
+                                        Text("${String.format(java.util.Locale.US, "%.0f", pct)}%",
                                             color = DT.SubText, fontSize = 11.sp,
                                             modifier = Modifier.width(36.dp))
                                     }
@@ -332,7 +332,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             Spacer(Modifier.width(12.dp))
                             Box(Modifier.clip(RoundedCornerShape(8.dp)).background(DT.TealDim)
                                 .padding(horizontal = 8.dp, vertical = 3.dp)) {
-                                Text("${state.currency} ${String.format("%,.0f", seller.totalRevenue)}",
+                                Text("${state.currency} ${String.format(java.util.Locale.US, "%,.0f", seller.totalRevenue)}",
                                     color = DT.TealLight, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                             }
                         }

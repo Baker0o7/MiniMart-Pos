@@ -488,7 +488,7 @@ fun AddEditProductDialog(
                     if (sellPrice > 0.0 && costValue > 0.0) {
                         val profit = sellPrice - costValue
                         val margin = profit / sellPrice * 100
-                        Text("Profit $currency ${String.format("%.2f", profit)} per ${if (isWeighed) "kg" else "unit"}  •  margin ${String.format("%.0f", margin)}%",
+                        Text("Profit $currency ${String.format(java.util.Locale.US, "%.2f", profit)} per ${if (isWeighed) "kg" else "unit"}  •  margin ${String.format(java.util.Locale.US, "%.0f", margin)}%",
                             color = if (profit >= 0) DT.Green else DT.Red, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
 

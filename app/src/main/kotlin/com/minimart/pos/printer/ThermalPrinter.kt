@@ -146,7 +146,7 @@ class ThermalPrinter @Inject constructor(
                 // Weighed items: product.price holds the line total (see CartViewModel
                 // .addWeighedItem), so print the weight and the per-kg rate instead of "x1".
                 val weighed  = item.product.isWeighed && item.weightKg > 0
-                val qtyCol   = (if (weighed) String.format("%.2fkg", item.weightKg) else "x${item.quantity}").padStart(7)
+                val qtyCol   = (if (weighed) String.format(java.util.Locale.US, "%.2fkg", item.weightKg) else "x${item.quantity}").padStart(7)
                 val totalCol = formatMoney(item.lineTotal, currency).padStart(10)
                 write(EscPos.text("${item.product.name.take(15).padEnd(15)}$qtyCol$totalCol"), EscPos.NEWLINE)
                 val unitPrice = if (weighed) "  @ ${formatMoney(item.product.pricePerKg, currency)}/kg"
@@ -293,7 +293,7 @@ class ThermalPrinter @Inject constructor(
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun formatMoney(amount: Double, currency: String) =
-        "$currency ${String.format("%.2f", amount)}"
+        "$currency ${String.format(java.util.Locale.US, "%.2f", amount)}"
 
     private fun padLR(left: String, right: String): String {
         val total = EscPos.LINE_CHARS

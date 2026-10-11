@@ -99,7 +99,7 @@ fun CreditOverviewScreen(
                                 Text("Owed to Shop", color = DT.SubText, fontSize = 11.sp)
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text("$currency ${String.format("%,.2f", totalOwed)}",
+                            Text("$currency ${String.format(java.util.Locale.US, "%,.2f", totalOwed)}",
                                 color = DT.Red, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                             Text("$debtors customer${if (debtors != 1) "s" else ""}", color = DT.SubText, fontSize = 10.sp)
                         }
@@ -117,7 +117,7 @@ fun CreditOverviewScreen(
                             Spacer(Modifier.height(4.dp))
                             Text(state.customers.size.toString(),
                                 color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
-                            Text("$currency ${String.format("%,.0f", state.customers.sumOf { it.totalPurchases })} total spent", color = DT.SubText, fontSize = 10.sp)
+                            Text("$currency ${String.format(java.util.Locale.US, "%,.0f", state.customers.sumOf { it.totalPurchases })} total spent", color = DT.SubText, fontSize = 10.sp)
                         }
                     }
                 }
@@ -175,7 +175,7 @@ fun CreditOverviewScreen(
                                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 if (customer.phone.isNotBlank())
                                     Text(customer.phone, color = DT.SubText, fontSize = 12.sp)
-                                Text("${customer.visitCount} visits  •  Total spent $currency ${String.format("%,.0f", customer.totalPurchases)}",
+                                Text("${customer.visitCount} visits  •  Total spent $currency ${String.format(java.util.Locale.US, "%,.0f", customer.totalPurchases)}",
                                     color = DT.SubText, fontSize = 10.sp)
                             }
                             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -183,9 +183,9 @@ fun CreditOverviewScreen(
                                 // red = customer owes money (buy-on-account / negative balance)
                                 val balanceColor = if (customer.creditBalance < 0) DT.Red else DT.Green
                                 val balanceLabel = if (customer.creditBalance < 0)
-                                    "OWES $currency ${String.format("%.2f", -customer.creditBalance)}"
+                                    "OWES $currency ${String.format(java.util.Locale.US, "%.2f", -customer.creditBalance)}"
                                 else
-                                    "$currency ${String.format("%.2f", customer.creditBalance)}"
+                                    "$currency ${String.format(java.util.Locale.US, "%.2f", customer.creditBalance)}"
                                 Box(Modifier.clip(RoundedCornerShape(10.dp))
                                     .background(balanceColor.copy(0.15f))
                                     .border(1.dp, balanceColor.copy(0.4f), RoundedCornerShape(10.dp))
@@ -266,10 +266,10 @@ private fun CreditTxRow(tx: CreditTransaction, currency: String) {
             Text(df.format(Date(tx.createdAt)), color = DT.SubText, fontSize = 10.sp)
         }
         Column(horizontalAlignment = Alignment.End) {
-            Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format("%.2f", tx.amount)}",
+            Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format(java.util.Locale.US, "%.2f", tx.amount)}",
                 color = if (tx.amount > 0) DT.Green else DT.Red,
                 fontWeight = FontWeight.Bold, fontSize = 13.sp)
-            Text("Bal: $currency ${String.format("%.2f", tx.balanceAfter)}", color = DT.SubText, fontSize = 10.sp)
+            Text("Bal: $currency ${String.format(java.util.Locale.US, "%.2f", tx.balanceAfter)}", color = DT.SubText, fontSize = 10.sp)
         }
     }
 }

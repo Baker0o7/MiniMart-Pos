@@ -45,7 +45,7 @@ internal fun sanitizeMoneyInput(raw: String): String = sanitizeDecimalInput(raw,
 
 /** "50" for whole amounts, "49.50" otherwise — `%.0f` used to round 12.50 up to 13. */
 internal fun formatPrice(value: Double): String =
-    if (value % 1.0 == 0.0) value.toLong().toString() else String.format("%.2f", value)
+    if (value % 1.0 == 0.0) value.toLong().toString() else String.format(java.util.Locale.US, "%.2f", value)
 
 /** Editable text for a number: 12.50 -> "12.5", 100.0 -> "100" (no stray trailing zeros). */
 internal fun plainNumber(value: Double, maxDecimals: Int = 2): String {

@@ -92,14 +92,14 @@ object PdfReceiptGenerator {
             // where unitPrice is actually the pre-calculated line total (weight ×
             // price/kg), not a true per-unit price. Use the persisted lineTotal
             // instead, and show weight (not "×1") for weighed lines.
-            val qtyLabel = if (item.weightKg > 0) "${String.format("%.3f", item.weightKg)}kg" else "×${item.quantity}"
+            val qtyLabel = if (item.weightKg > 0) "${String.format(java.util.Locale.US, "%.3f", item.weightKg)}kg" else "×${item.quantity}"
             canvas.drawText(name.take(28), MARGIN, y, normPaint)
             canvas.drawText(qtyLabel, cx - 20f, y, normPaint)
-            canvas.drawText("${data.currency} ${String.format("%.2f", item.lineTotal)}", rw, y, rightPaint)
+            canvas.drawText("${data.currency} ${String.format(java.util.Locale.US, "%.2f", item.lineTotal)}", rw, y, rightPaint)
             y += lineH * 0.85f
             val unitLabel = if (item.weightKg > 0)
-                "@ ${data.currency} ${String.format("%.2f", item.unitPrice / item.weightKg)}/kg"
-            else "@ ${data.currency} ${String.format("%.2f", item.unitPrice)} each"
+                "@ ${data.currency} ${String.format(java.util.Locale.US, "%.2f", item.unitPrice / item.weightKg)}/kg"
+            else "@ ${data.currency} ${String.format(java.util.Locale.US, "%.2f", item.unitPrice)} each"
             canvas.drawText(unitLabel, MARGIN + 8f, y, smallPaint)
             y += lineH * 0.75f
         }
@@ -111,18 +111,18 @@ object PdfReceiptGenerator {
         // ── Totals ────────────────────────────────────────────────────────────
         if (data.sale.discountAmount > 0) {
             canvas.drawText("Discount:", MARGIN, y, normPaint)
-            canvas.drawText("-${data.currency} ${String.format("%.2f", data.sale.discountAmount)}", rw, y, rightPaint)
+            canvas.drawText("-${data.currency} ${String.format(java.util.Locale.US, "%.2f", data.sale.discountAmount)}", rw, y, rightPaint)
             y += lineH
         }
         if (data.sale.taxAmount > 0) {
             canvas.drawText("Tax (16% VAT):", MARGIN, y, normPaint)
-            canvas.drawText("${data.currency} ${String.format("%.2f", data.sale.taxAmount)}", rw, y, rightPaint)
+            canvas.drawText("${data.currency} ${String.format(java.util.Locale.US, "%.2f", data.sale.taxAmount)}", rw, y, rightPaint)
             y += lineH
         }
         canvas.drawLine(MARGIN, y, rw, y, linePaint)
         y += 14f
         canvas.drawText("TOTAL", MARGIN, y + 2f, boldPaint.apply { textAlign = Paint.Align.LEFT; textSize = 16f })
-        canvas.drawText("${data.currency} ${String.format("%.2f", data.sale.totalAmount)}", rw, y + 2f, totalPaint)
+        canvas.drawText("${data.currency} ${String.format(java.util.Locale.US, "%.2f", data.sale.totalAmount)}", rw, y + 2f, totalPaint)
         y += lineH + 4f
 
         // ── Payment ──────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ object PdfReceiptGenerator {
         canvas.drawText("Payment: $payLabel", MARGIN, y, smallPaint)
         if (data.sale.paymentMethod == PaymentMethod.CASH && data.sale.amountPaid > 0) {
             val change = data.sale.amountPaid - data.sale.totalAmount
-            canvas.drawText("Paid: ${data.currency} ${String.format("%.2f", data.sale.amountPaid)}   Change: ${data.currency} ${String.format("%.2f", change.coerceAtLeast(0.0))}", MARGIN, y + lineH * 0.85f, smallPaint)
+            canvas.drawText("Paid: ${data.currency} ${String.format(java.util.Locale.US, "%.2f", data.sale.amountPaid)}   Change: ${data.currency} ${String.format(java.util.Locale.US, "%.2f", change.coerceAtLeast(0.0))}", MARGIN, y + lineH * 0.85f, smallPaint)
             y += lineH
         }
         if (data.sale.mpesaRef?.isNotBlank() == true) {

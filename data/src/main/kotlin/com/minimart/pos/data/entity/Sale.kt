@@ -98,5 +98,5 @@ data class CartItem(
     val lineTotal: Double get() = lineSubtotal - lineDiscount
     // Display helpers
     val displayWeight: String get() = if (product.isWeighed && weightKg > 0)
-        "${String.format("%.3f", weightKg)} kg" else "${quantity} pcs"
+        "${String.format(java.util.Locale.US, "%.3f", weightKg)} kg" else "${quantity} pcs"
 }

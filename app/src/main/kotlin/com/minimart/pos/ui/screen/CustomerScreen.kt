@@ -196,7 +196,7 @@ private fun CustomerCard(customer: Customer, currency: String, onSelect: () -> U
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (customer.phone.isNotBlank())
                     Text(customer.phone, color = DT.SubText, fontSize = 12.sp)
-                Text("${customer.visitCount} visits  •  $currency ${String.format("%.0f", customer.totalPurchases)} total",
+                Text("${customer.visitCount} visits  •  $currency ${String.format(java.util.Locale.US, "%.0f", customer.totalPurchases)} total",
                     color = DT.SubText, fontSize = 11.sp)
             }
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -217,8 +217,8 @@ private fun CustomerCard(customer: Customer, currency: String, onSelect: () -> U
                     .padding(horizontal = 10.dp, vertical = 5.dp)) {
                     Text(
                         if (customer.creditBalance < 0)
-                            "OWES $currency ${String.format("%.2f", -customer.creditBalance)}"
-                        else "$currency ${String.format("%.2f", customer.creditBalance)}",
+                            "OWES $currency ${String.format(java.util.Locale.US, "%.2f", -customer.creditBalance)}"
+                        else "$currency ${String.format(java.util.Locale.US, "%.2f", customer.creditBalance)}",
                         color = balColor, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
                 Box(modifier = Modifier.size(30.dp).clip(CircleShape)
@@ -250,8 +250,8 @@ private fun CustomerDetailSheet(
             text = {
                 // Deleting wipes the credit ledger too — make the cashier look at what is being lost.
                 val balanceNote = when {
-                    customer.creditBalance < 0 -> "They still OWE $currency ${String.format("%.2f", -customer.creditBalance)}, which will be lost. "
-                    customer.creditBalance > 0 -> "They hold $currency ${String.format("%.2f", customer.creditBalance)} of credit, which will be lost. "
+                    customer.creditBalance < 0 -> "They still OWE $currency ${String.format(java.util.Locale.US, "%.2f", -customer.creditBalance)}, which will be lost. "
+                    customer.creditBalance > 0 -> "They hold $currency ${String.format(java.util.Locale.US, "%.2f", customer.creditBalance)} of credit, which will be lost. "
                     else -> ""
                 }
                 Text(balanceNote + "This also deletes their credit history. This cannot be undone.",
@@ -301,11 +301,11 @@ private fun CustomerDetailSheet(
                     }
                     val balLabel = if (customer.creditBalance < 0) "Owed to Shop" else "Credit Balance"
                     val balValue = if (customer.creditBalance < 0)
-                        "$currency ${String.format("%.2f", -customer.creditBalance)}"
-                    else "$currency ${String.format("%.2f", customer.creditBalance)}"
+                        "$currency ${String.format(java.util.Locale.US, "%.2f", -customer.creditBalance)}"
+                    else "$currency ${String.format(java.util.Locale.US, "%.2f", customer.creditBalance)}"
                     StatChip(Modifier.weight(1f), balLabel, balValue, balColor)
                     StatChip(Modifier.weight(1f), "Total Spent",
-                        "$currency ${String.format("%.0f", customer.totalPurchases)}", DT.Green)
+                        "$currency ${String.format(java.util.Locale.US, "%.0f", customer.totalPurchases)}", DT.Green)
                     StatChip(Modifier.weight(1f), "Visits", customer.visitCount.toString(), DT.SubText)
                 }
             }
@@ -340,9 +340,9 @@ private fun CustomerDetailSheet(
                             Text(df.format(Date(tx.createdAt)), color = DT.SubText, fontSize = 11.sp)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format("%.2f", tx.amount)}",
+                            Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format(java.util.Locale.US, "%.2f", tx.amount)}",
                                 color = if (tx.amount > 0) DT.Green else DT.Red, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("Bal: $currency ${String.format("%.2f", tx.balanceAfter)}",
+                            Text("Bal: $currency ${String.format(java.util.Locale.US, "%.2f", tx.balanceAfter)}",
                                 color = DT.SubText, fontSize = 10.sp)
                         }
                     }
@@ -424,8 +424,8 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
                 // money. Now uses the configurable currency and red when balance < 0.
                 Text(
                     if (customer.creditBalance < 0)
-                        "Currently owes: $currency ${String.format("%.2f", -customer.creditBalance)}"
-                    else "Current balance: $currency ${String.format("%.2f", customer.creditBalance)}",
+                        "Currently owes: $currency ${String.format(java.util.Locale.US, "%.2f", -customer.creditBalance)}"
+                    else "Current balance: $currency ${String.format(java.util.Locale.US, "%.2f", customer.creditBalance)}",
                     color = if (customer.creditBalance < 0) DT.Red else DT.Teal, fontWeight = FontWeight.SemiBold)
                 OutlinedTextField(value = amount, onValueChange = { amount = it.replace(',', '.').filter { c -> c.isDigit() || c == '.' }.take(12) },
                     label = { Text("Amount ($currency)", color = DT.SubText) },

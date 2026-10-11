@@ -39,5 +39,5 @@ data class Product(
     val updatedAt: Long = System.currentTimeMillis()
 ) {
     /** Human-readable stock: exact kg for weighed products, whole units otherwise. */
-    val stockLabel: String get() = if (isWeighed) String.format("%.2f kg", stockKg) else stock.toString()
+    val stockLabel: String get() = if (isWeighed) String.format(java.util.Locale.US, "%.2f kg", stockKg) else stock.toString()
 }
