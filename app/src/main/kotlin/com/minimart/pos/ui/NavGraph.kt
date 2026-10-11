@@ -94,6 +94,12 @@ fun MiniMartNavGraph(
     val sessionVm: com.minimart.pos.ui.viewmodel.SessionViewModel = hiltViewModel()
     val authState by authVm.uiState.collectAsState()
     val sessionExpired by sessionVm.sessionManager.isExpired.collectAsState()
+    // Used by AccessGuard when a screen is not allowed. Signing out clears the user first, which makes
+    // every guarded screen (Settings, Users…) look "forbidden" for a moment; popping the back stack then
+    // removed the login screen that logout had just navigated to, leaving a blank, hung screen.
+    val guardBack: () -> Unit = {
+        if (authState.isLoggedIn && navController.previousBackStackEntry != null) navController.popBackStack()
+    }
 
     // Auto-logout on session expiry
     LaunchedEffect(sessionExpired) {
@@ -258,13 +264,13 @@ fun MiniMartNavGraph(
                 composable(Routes.ANALYTICS) {
                     AccessGuard(
                         hasAccess = RoleManager.canViewReports(authState.currentUser?.role),
-                        onBack = { navController.popBackStack() }
+                        onBack = guardBack
                     ) { AnalyticsScreen(onBack = { navController.popBackStack() }) }
                 }
                 composable(Routes.LABELS) {
                     AccessGuard(
                         hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
-                        onBack = { navController.popBackStack() }
+                        onBack = guardBack
                     ) { LabelPrintScreen(onBack = { navController.popBackStack() }) }
                 }
                 composable(Routes.CUSTOMER_DISPLAY) {
@@ -273,7 +279,7 @@ fun MiniMartNavGraph(
                 composable(Routes.PURCHASING) {
                     AccessGuard(
                         hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
-                        onBack = { navController.popBackStack() }
+                        onBack = guardBack
                     ) {
                         PurchaseOrdersScreen(
                             onBack = { navController.popBackStack() },
@@ -286,19 +292,19 @@ fun MiniMartNavGraph(
                 composable(Routes.SUPPLIERS) {
                     AccessGuard(
                         hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
-                        onBack = { navController.popBackStack() }
+                        onBack = guardBack
                     ) { SuppliersScreen(onBack = { navController.popBackStack() }, currency = currency) }
                 }
                 composable(Routes.PURCHASE_ORDER, arguments = listOf(navArgument("poId") { type = NavType.LongType })) {
                     AccessGuard(
                         hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
-                        onBack = { navController.popBackStack() }
+                        onBack = guardBack
                     ) { PurchaseOrderEditorScreen(onBack = { navController.popBackStack() }, currency = currency) }
                 }
                 composable(Routes.STOCK_INSIGHTS) {
                     AccessGuard(
                         hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
-                        onBack = { navController.popBackStack() }
+                        onBack = guardBack
                     ) { InventoryInsightsScreen(onBack = { navController.popBackStack() }) }
                 }
                 composable(Routes.REPORTS)   {
@@ -309,7 +315,7 @@ fun MiniMartNavGraph(
                     // check whatsoever.
                     AccessGuard(
                         hasAccess = com.minimart.pos.util.RoleManager.canViewReports(authState.currentUser?.role),
-                        onBack = { navController.popBackStack() }
+                        onBack = guardBack
                     ) { ReportsScreen(onBack = { navController.popBackStack() }) }
                 }
                 composable(Routes.MPESA) {
@@ -344,7 +350,7 @@ fun MiniMartNavGraph(
                     // could manage every account in the system with no role check.
                     AccessGuard(
                         hasAccess = com.minimart.pos.util.RoleManager.canManageUsers(authState.currentUser?.role),
-                        onBack = { navController.popBackStack() }
+                        onBack = guardBack
                     ) { UserManagementScreen(onBack = { navController.popBackStack() }) }
                 }
                 composable(Routes.SHIFTS)    { ShiftScreen(onBack = { navController.popBackStack() }) }
@@ -352,7 +358,7 @@ fun MiniMartNavGraph(
                 composable(Routes.SETTINGS) {
                     AccessGuard(
                         hasAccess = com.minimart.pos.util.RoleManager.canAccessSettings(authState.currentUser?.role),
-                        onBack = { navController.popBackStack() }
+                        onBack = guardBack
                     ) {
                         SettingsScreen(
                             onBack       = { navController.popBackStack() },
