@@ -46,6 +46,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     syncVm: SyncViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    cloudVm: com.minimart.pos.ui.viewmodel.CloudViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     onBack: () -> Unit,
     onShifts: () -> Unit,
     onUsers: () -> Unit,
@@ -641,6 +642,58 @@ fun SettingsScreen(
                         syncState.lastResult?.let {
                             Spacer(Modifier.height(6.dp))
                             Text(it, color = if (it.startsWith("✓")) DT.Green else DT.Red, fontSize = 12.sp)
+                        }
+                    }
+                }
+
+                // ── Cloud dashboard (multi-store) ─────────────────────────────
+                if (isAdmin) {
+                    val cs by cloudVm.state.collectAsState()
+                    val fieldColors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
+                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                        focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg)
+                    DSection("Cloud dashboard (multi-store)", Icons.Default.Sync,
+                        summary = if (cs.connected) "Connected" else "Off",
+                        initiallyExpanded = false) {
+                        Text("Sends a daily summary (sales, stock alerts, expenses, shifts) of this store to your own Supabase project so you can see all stores in one web dashboard. Customer names and receipts are not sent. See the README for the 5-minute setup.",
+                            color = DT.SubText, fontSize = 11.sp, lineHeight = 15.sp)
+                        Spacer(Modifier.height(10.dp))
+                        if (!cs.connected) {
+                            OutlinedTextField(cs.url, cloudVm::setUrl, label = { Text("Project URL (https://…supabase.co)") },
+                                singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedTextField(cs.anonKey, cloudVm::setAnonKey, label = { Text("Anon (public) key") },
+                                singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedTextField(cs.setupCode, cloudVm::setSetupCode, label = { Text("Setup code") },
+                                singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
+                            Spacer(Modifier.height(10.dp))
+                            Button(onClick = { cloudVm.connect() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.Surface2)) {
+                                if (cs.busy) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                                else Text("Connect & upload", color = Color.White, fontSize = 13.sp)
+                            }
+                        } else {
+                            Text(if (cs.lastPushAt > 0) "Last upload: " + java.text.SimpleDateFormat("d MMM, HH:mm", java.util.Locale.getDefault()).format(java.util.Date(cs.lastPushAt)) else "Not uploaded yet",
+                                color = Color.White, fontSize = 12.sp)
+                            Spacer(Modifier.height(4.dp))
+                            Text("Uploads automatically every few hours and when a shift is closed.", color = DT.SubText, fontSize = 11.sp)
+                            Spacer(Modifier.height(10.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Button(onClick = { cloudVm.uploadNow() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.Surface2)) {
+                                    if (cs.busy) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                                    else Text("Upload now", color = Color.White, fontSize = 13.sp)
+                                }
+                                OutlinedButton(onClick = { cloudVm.disconnect() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp)) {
+                                    Text("Disconnect", color = DT.Red, fontSize = 13.sp)
+                                }
+                            }
+                        }
+                        cs.message?.let {
+                            Spacer(Modifier.height(6.dp))
+                            Text(it, color = if (cs.isError) DT.Red else DT.Green, fontSize = 12.sp)
                         }
                     }
                 }

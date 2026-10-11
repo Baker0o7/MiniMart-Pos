@@ -22,6 +22,7 @@ class MiniMartApp : Application(), Configuration.Provider {
         try {
             com.minimart.pos.worker.LowStockWorker.schedule(this)
             com.minimart.pos.worker.ExpiryAlertWorker.schedule(this)
+            com.minimart.pos.worker.CloudUploadWorker.schedule(this)
         } catch (_: Exception) {}
     }
 }

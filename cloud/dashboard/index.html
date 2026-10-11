@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MiniMart Dashboard</title>
+<style>
+:root{--bg:#0f1419;--s1:#171e26;--s2:#1f2933;--bd:#2b3744;--tx:#e8eef4;--sub:#8a9bab;--teal:#19c3a6;--red:#ff6b6b;--amb:#ffb84d;--grn:#4cd48a}
+@media (prefers-color-scheme:light){:root{--bg:#f3f6f9;--s1:#fff;--s2:#eef2f6;--bd:#d8e0e8;--tx:#16202a;--sub:#5d6f80;--teal:#0a9c84;--red:#d64545;--amb:#b8741a;--grn:#1c9a5a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0}h2{font-size:14px;margin:0 0 10px;color:var(--sub);text-transform:uppercase;letter-spacing:.06em}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.bar .sp{flex:1}
+select,input,button{background:var(--s2);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:9px 12px;font:inherit}
+button{cursor:pointer;background:var(--teal);color:#fff;border:0;font-weight:600}button.ghost{background:var(--s2);color:var(--tx);border:1px solid var(--bd)}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:14px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:14px}
+.kpi{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:12px}.kpi b{display:block;font-size:20px;margin-top:2px}.kpi span{color:var(--sub);font-size:12px}
+.two{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+table{width:100%;border-collapse:collapse}td,th{padding:7px 6px;border-bottom:1px solid var(--bd);text-align:left;font-size:13px}th{color:var(--sub);font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.warn{color:var(--amb)}.bad{color:var(--red)}.ok{color:var(--grn)}.sub{color:var(--sub)}.small{font-size:12px}
+#login{max-width:380px;margin:12vh auto}#login input{width:100%;margin-bottom:10px}
+svg text{fill:var(--sub);font-size:10px}
+.empty{color:var(--sub);padding:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="login" class="card" hidden>
+  <h1>MiniMart Dashboard</h1><p class="sub small">Sign in with the owner account you created in Supabase.</p>
+  <input id="url" placeholder="Project URL (https://xxxx.supabase.co)" autocomplete="off">
+  <input id="key" placeholder="Anon (public) key" autocomplete="off">
+  <input id="email" type="email" placeholder="Email" autocomplete="username">
+  <input id="pass" type="password" placeholder="Password" autocomplete="current-password">
+  <button id="go" style="width:100%">Sign in</button>
+  <p id="lerr" class="bad small"></p>
+</div>
+<div id="app" hidden>
+  <div class="bar"><h1>MiniMart Dashboard</h1><span class="sp"></span>
+    <select id="store"></select><button class="ghost" id="refresh">Refresh</button><button class="ghost" id="out">Sign out</button></div>
+  <div id="stale"></div>
+  <div class="grid" id="kpis"></div>
+  <div class="card"><h2>Daily sales (last 30 days)</h2><div id="chart"></div></div>
+  <div class="card" id="storesCard"><h2>Stores</h2><div id="stores"></div></div>
+  <div class="two">
+    <div class="card"><h2>Payment mix (30 days)</h2><div id="mix"></div></div>
+    <div class="card"><h2>Profit &amp; expenses (30 days)</h2><div id="profit"></div></div>
+    <div class="card"><h2>Low stock</h2><div id="low"></div></div>
+    <div class="card"><h2>Expiring soon</h2><div id="exp"></div></div>
+  </div>
+  <div class="card"><h2>Shifts &amp; Z-report status</h2><div id="shifts"></div></div>
+  <div class="card"><h2>Voids &amp; refunds (30 days)</h2><div id="vr"></div></div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ls={get:k=>{try{return localStorage.getItem(k)||""}catch(e){return ""}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+let sb=null,rows=[];
+const fmt=n=>Math.round(n||0).toLocaleString();
+const dt=ms=>ms?new Date(ms).toLocaleString([], {day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"-";
+const ago=ms=>{const h=(Date.now()-ms)/36e5;return h<1?Math.max(1,Math.round(h*60))+" min ago":h<48?Math.round(h)+" h ago":Math.round(h/24)+" d ago"};
+
+function showLogin(){ $("login").hidden=false;$("app").hidden=true;$("url").value=ls.get("mm_url");$("key").value=ls.get("mm_key"); }
+async function start(){
+  const url=ls.get("mm_url"),key=ls.get("mm_key");
+  if(!url||!key||!window.supabase) return showLogin();
+  sb=supabase.createClient(url,key);
+  const {data}=await sb.auth.getSession();
+  if(!data.session) return showLogin();
+  $("login").hidden=true;$("app").hidden=false;load();
+}
+$("go").onclick=async()=>{
+  const url=$("url").value.trim().replace(/\/+$/,""),key=$("key").value.trim();
+  $("lerr").textContent="";
+  if(!url.startsWith("https://")||!key){$("lerr").textContent="Enter the project URL and anon key.";return}
+  ls.set("mm_url",url);ls.set("mm_key",key);
+  sb=supabase.createClient(url,key);
+  const {error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("pass").value});
+  if(error){$("lerr").textContent=error.message;return}
+  $("pass").value="";start();
+};
+$("out").onclick=async()=>{await sb.auth.signOut();showLogin()};
+$("refresh").onclick=load;
+$("store").onchange=render;
+
+async function load(){
+  const {data,error}=await sb.from("store_snapshots").select("store_id,store_name,payload,pushed_at").order("store_name");
+  if(error){$("kpis").innerHTML='<div class="card bad">'+esc(error.message)+'</div>';return}
+  rows=data||[];
+  const cur=$("store").value;
+  $("store").innerHTML='<option value="*">All stores ('+rows.length+')</option>'+rows.map(r=>'<option value="'+esc(r.store_id)+'">'+esc(r.store_name||"Store")+'</option>').join("");
+  if([...$("store").options].some(o=>o.value===cur)) $("store").value=cur;
+  render();
+}
+const sel=()=>{const v=$("store").value;return v==="*"?rows:rows.filter(r=>r.store_id===v)};
+const sum=(arr,f)=>arr.reduce((a,x)=>a+(+f(x)||0),0);
+
+function render(){
+  const rs=sel(), cur=(rs[0]?.payload?.currency)||"KES";
+  if(!rows.length){$("kpis").innerHTML='<div class="card empty">No stores have uploaded yet. In each store\'s app: Settings → Cloud dashboard → Connect & upload.</div>';return}
+  const stale=rs.filter(r=>Date.now()-new Date(r.pushed_at)>864e5);
+  $("stale").innerHTML=stale.length?'<div class="card warn">No upload in over 24h from: '+stale.map(r=>esc(r.store_name)+" ("+ago(new Date(r.pushed_at))+")").join(", ")+'</div>':"";
+  const today=new Date();const key=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const days=[];for(let i=29;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);days.push(key(d))}
+  const agg={};days.forEach(d=>agg[d]={revenue:0,tx:0,expenses:0});
+  const tot={cash:0,mpesa:0,card:0,credit:0,voids:0,voidTotal:0,refunds:0,refundTotal:0,discounts:0};
+  rs.forEach(r=>(r.payload.daily||[]).forEach(x=>{
+    const a=agg[x.day];if(!a)return;a.revenue+=x.revenue;a.tx+=x.transactions;a.expenses+=x.expenses;
+    for(const k in tot) tot[k]+=+x[k]||0;
+  }));
+  const rev=n=>days.slice(-n).reduce((a,d)=>a+agg[d].revenue,0);
+  const tx30=days.reduce((a,d)=>a+agg[d].tx,0), exp30=days.reduce((a,d)=>a+agg[d].expenses,0), rev30=rev(30);
+  const cr=sum(rs,r=>r.payload.profit?.costedRevenue), cc=sum(rs,r=>r.payload.profit?.costedCost);
+  const gross=cr-cc, cov=rev30>0?Math.min(1,cr/rev30):0;
+  const tile=(l,v,s)=>'<div class="kpi"><span>'+l+'</span><b>'+v+'</b>'+(s?'<span>'+s+'</span>':'')+'</div>';
+  $("kpis").innerHTML=
+    tile("Today",fmt(agg[days[29]].revenue)+" "+cur,agg[days[29]].tx+" sales")+
+    tile("Last 7 days",fmt(rev(7)))+tile("Last 30 days",fmt(rev30),fmt(tx30)+" sales")+
+    tile("Avg basket",tx30?fmt(rev30/tx30):"-")+
+    tile("Expenses (30d)",fmt(exp30))+
+    tile("Est. profit (30d)",fmt(gross-exp30),"gross "+fmt(gross)+" − expenses")+
+    tile("Credit owed",fmt(sum(rs,r=>r.payload.customerCredit)))+
+    tile("Stock value (cost)",fmt(sum(rs,r=>r.payload.stock?.costValue)),fmt(sum(rs,r=>r.payload.stock?.productCount))+" products");
+  chart(days,agg);
+  $("stores").innerHTML='<table><tr><th>Store</th><th class="n">Today</th><th class="n">7d</th><th class="n">30d</th><th class="n">Low stock</th><th>Last upload</th></tr>'+
+    rows.map(r=>{const m={};(r.payload.daily||[]).forEach(x=>m[x.day]=x.revenue);
+      const s=n=>days.slice(-n).reduce((a,d)=>a+(m[d]||0),0);const old=Date.now()-new Date(r.pushed_at)>864e5;
+      return '<tr><td>'+esc(r.store_name)+'</td><td class="n">'+fmt(s(1))+'</td><td class="n">'+fmt(s(7))+'</td><td class="n">'+fmt(s(30))+'</td><td class="n '+((r.payload.stock?.lowStock||[]).length?'warn':'')+'">'+(r.payload.stock?.lowStock||[]).length+'</td><td class="'+(old?'warn':'sub')+'">'+ago(new Date(r.pushed_at))+'</td></tr>'}).join("")+'</table>';
+  const mixT=tot.cash+tot.mpesa+tot.card+tot.credit;
+  $("mix").innerHTML=mixT?[["Cash",tot.cash],["M-Pesa",tot.mpesa],["Card",tot.card],["Credit",tot.credit]].map(([l,v])=>
+    '<div style="margin:6px 0"><div class="small" style="display:flex;justify-content:space-between"><span>'+l+'</span><span>'+fmt(v)+' · '+Math.round(v/mixT*100)+'%</span></div><div style="height:8px;background:var(--s2);border-radius:6px"><div style="height:8px;width:'+(v/mixT*100)+'%;background:var(--teal);border-radius:6px"></div></div></div>').join(""):'<div class="empty">No sales yet.</div>';
+  $("profit").innerHTML='<table><tr><td>Revenue</td><td class="n">'+fmt(rev30)+'</td></tr><tr><td>Gross profit (costed items)</td><td class="n">'+fmt(gross)+'</td></tr><tr><td>Expenses</td><td class="n">'+fmt(exp30)+'</td></tr><tr><td><b>Estimated profit</b></td><td class="n"><b class="'+(gross-exp30<0?'bad':'ok')+'">'+fmt(gross-exp30)+'</b></td></tr></table>'+
+    '<p class="small '+(cov<.8?'warn':'sub')+'">Cost prices set for '+Math.round(cov*100)+'% of revenue. '+(cov<.8?'Profit is understated until more products have cost prices.':'')+'</p>';
+  const multi=rs.length>1, nm=r=>multi?' <span class="sub small">'+esc(r.store_name)+'</span>':'';
+  const low=rs.flatMap(r=>(r.payload.stock?.lowStock||[]).map(x=>({...x,r})));
+  $("low").innerHTML=low.length?'<table>'+low.slice(0,40).map(x=>'<tr><td>'+esc(x.name)+nm(x.r)+'</td><td class="n '+(x.stock<=0?'bad':'warn')+'">'+x.stock+' '+esc(x.unit||"")+'</td></tr>').join("")+'</table>':'<div class="empty ok">Nothing low.</div>';
+  const ex=rs.flatMap(r=>(r.payload.stock?.expiring||[]).map(x=>({...x,r}))).sort((a,b)=>a.expiryDate-b.expiryDate);
+  $("exp").innerHTML=ex.length?'<table>'+ex.slice(0,40).map(x=>'<tr><td>'+esc(x.name)+nm(x.r)+'</td><td class="n '+(x.expiryDate<Date.now()?'bad':'warn')+'">'+new Date(x.expiryDate).toLocaleDateString()+'</td></tr>').join("")+'</table>':'<div class="empty ok">Nothing expiring.</div>';
+  const sh=rs.flatMap(r=>(r.payload.shifts||[]).map(x=>({...x,r}))).sort((a,b)=>b.clockIn-a.clockIn);
+  $("shifts").innerHTML=sh.length?'<table><tr><th>Cashier</th>'+(multi?'<th>Store</th>':'')+'<th>Opened</th><th>Status</th><th class="n">Sales</th><th class="n">Expected</th><th class="n">Counted</th><th class="n">Variance</th></tr>'+
+    sh.slice(0,40).map(x=>{const v=x.variance;return '<tr><td>'+esc(x.cashier)+'</td>'+(multi?'<td>'+esc(x.r.store_name)+'</td>':'')+'<td>'+dt(x.clockIn)+'</td><td class="'+(x.open?'warn':'ok')+'">'+(x.open?'Open':'Closed '+dt(x.clockOut))+'</td><td class="n">'+fmt(x.totalSales)+'</td><td class="n">'+(x.expectedCash==null?'-':fmt(x.expectedCash))+'</td><td class="n">'+(x.countedCash==null?'-':fmt(x.countedCash))+'</td><td class="n '+(v==null?'':Math.abs(v)<1?'ok':'bad')+'">'+(v==null?'-':(v>0?'+':'')+fmt(v))+'</td></tr>'}).join("")+'</table>':'<div class="empty">No shifts uploaded.</div>';
+  $("vr").innerHTML='<table><tr><td>Voided sales</td><td class="n">'+fmt(tot.voids)+' · '+fmt(tot.voidTotal)+'</td></tr><tr><td>Refunds</td><td class="n">'+fmt(tot.refunds)+' · '+fmt(tot.refundTotal)+'</td></tr><tr><td>Discounts given</td><td class="n">'+fmt(tot.discounts)+'</td></tr></table>';
+}
+
+function chart(days,agg){
+  const W=1000,H=200,P=24,max=Math.max(1,...days.map(d=>agg[d].revenue));
+  const bw=(W-P*2)/days.length;
+  let s='<svg viewBox="0 0 '+W+' '+(H+22)+'" width="100%" role="img" aria-label="Daily sales bar chart">';
+  [0,.5,1].forEach(f=>{const y=H-f*(H-10);s+='<line x1="'+P+'" x2="'+(W-P)+'" y1="'+y+'" y2="'+y+'" stroke="var(--bd)"/><text x="0" y="'+(y-2)+'">'+(f?fmt(max*f):"0")+'</text>'});
+  days.forEach((d,i)=>{const h=agg[d].revenue/max*(H-10),x=P+i*bw;
+    s+='<rect x="'+(x+1)+'" y="'+(H-h)+'" width="'+(bw-2)+'" height="'+h+'" rx="2" fill="var(--teal)"><title>'+d+': '+fmt(agg[d].revenue)+' ('+agg[d].tx+' sales)</title></rect>';
+    if(i%5===0) s+='<text x="'+x+'" y="'+(H+14)+'">'+d.slice(5)+'</text>'});
+  $("chart").innerHTML=s+'</svg>';
+}
+start();
+</script>
+</body>
+</html>

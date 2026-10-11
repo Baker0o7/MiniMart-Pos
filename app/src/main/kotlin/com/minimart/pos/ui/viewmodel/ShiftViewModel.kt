@@ -33,7 +33,9 @@ class ShiftViewModel @Inject constructor(
     private val userRepo: UserRepository,
     private val settingsRepo: SettingsRepository,
     private val printer: com.minimart.pos.printer.ThermalPrinter,
-    private val cashDrawer: com.minimart.pos.printer.CashDrawerManager
+    private val cashDrawer: com.minimart.pos.printer.CashDrawerManager,
+    private val cloud: com.minimart.pos.cloud.CloudReporter,
+    private val cloudConfig: com.minimart.pos.cloud.CloudConfig
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ShiftUiState())
@@ -105,6 +107,7 @@ class ShiftViewModel @Inject constructor(
                 }
                 val closed = shiftRepo.clockOut(shift.id, closingFloat, notes)
                 _uiState.update { it.copy(isLoading = false, activeShift = null, lastClosedShift = closed, successMessage = "Shift ended") }
+                if (cloudConfig.isConfigured) launch { runCatching { cloud.push() } }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = "Clock-out failed: ${e.message}") }
             }

@@ -179,6 +179,16 @@ Built with Kotlin + Jetpack Compose 🇰🇪
   from the MPESA sender ID. Texts from ordinary numbers (forwarded or typed fakes) are ignored
 - This is a separate payments ledger; it does not create sales, so it never double-counts a sale rung up at the till
 
+### ☁️ Multi-Store Cloud Dashboard
+See every store in one web page: sales totals and 30-day trend, low-stock and expiry alerts, estimated profit and expenses, and shift / Z-report status (with cash variance). Uses **your own free Supabase project**; nothing goes through anyone else's server.
+
+1. Create a project at supabase.com. Open **SQL Editor**, paste `cloud/supabase_setup.sql`, **change the setup code on line 15 first**, and run it.
+2. **Authentication → Users → Add user** (your email + password), then turn **off** "Allow new users to sign up".
+3. In each store's app (admin): **Settings → Cloud dashboard** → enter Project URL, anon key (Project Settings → API) and the setup code → **Connect & upload**. The app then uploads every few hours and when a shift is closed.
+4. Open `cloud/dashboard/index.html` (double-click it, or host it on GitHub Pages / any static host), enter the URL and anon key, and sign in.
+
+Security: the anon key alone can neither read data nor write to an existing store; each phone has its own random secret (only a hash is stored online) and only the signed-in owner can read. Customer names, phone numbers and receipts are not uploaded. Profit is only accurate for products that have a cost price (the dashboard shows the coverage).
+
 ### 📊 Reports & Analytics
 - **Analytics dashboard** (Home tile; managers/owners): 7 / 30 / 90-day view with revenue (and change vs the
   previous period), sales count, average basket, gross and net profit (it warns when too few products have a
