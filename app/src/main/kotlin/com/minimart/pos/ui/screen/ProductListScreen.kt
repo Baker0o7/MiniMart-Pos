@@ -81,7 +81,7 @@ fun ProductListScreen(
         if (uiState.error != null) { kotlinx.coroutines.delay(4000); vm.clearMessages() }
     }
 
-    val visible = if (lowOnly) products.filter { stockLevel(it) != StockLevel.OK } else products
+    val visible = remember(products, lowOnly) { if (lowOnly) products.filter { stockLevel(it) != StockLevel.OK } else products }
     val filtering = searchQuery.isNotBlank() || selectedCat != null || lowOnly
     val subtitle = buildString {
         append(if (filtering) "${visible.size} shown" else "${products.size} product${if (products.size != 1) "s" else ""}")

@@ -49,7 +49,9 @@ class SyncServer @Inject constructor(
     val isRunning: StateFlow<Boolean> = _isRunning
 
     fun start() {
-        if (_isRunning.value) return
+        // A second start() while the first is still binding would fail with "address in use" and its
+        // finally block would then report the healthy first server as stopped.
+        if (_isRunning.value || serverJob?.isActive == true) return
         serverJob = scope.launch {
             try {
                 // reuseAddress lets the server restart straight after a stop() instead of failing
