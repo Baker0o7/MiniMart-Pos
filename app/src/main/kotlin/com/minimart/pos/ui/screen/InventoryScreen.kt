@@ -116,6 +116,8 @@ fun InventoryScreen(
                     }
                 },
                 singleLine = true,
+                keyboardOptions = searchKeyboardOptions(),
+                keyboardActions = searchKeyboardActions(),
                 shape = RoundedCornerShape(28.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,

@@ -127,3 +127,14 @@ internal fun FeedbackBanner(message: String?, isError: Boolean, modifier: Modifi
         Text(message, color = tint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
     }
 }
+
+
+/** Search fields: show a Search key on the keyboard and close the keyboard when it is pressed. */
+fun searchKeyboardOptions() = androidx.compose.foundation.text.KeyboardOptions(
+    imeAction = androidx.compose.ui.text.input.ImeAction.Search)
+
+@androidx.compose.runtime.Composable
+fun searchKeyboardActions(): androidx.compose.foundation.text.KeyboardActions {
+    val focus = androidx.compose.ui.platform.LocalFocusManager.current
+    return androidx.compose.foundation.text.KeyboardActions(onSearch = { focus.clearFocus() })
+}

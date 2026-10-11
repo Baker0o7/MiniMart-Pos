@@ -24,6 +24,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -877,6 +879,7 @@ private fun CustomerSearchSheet(
                     Icon(Icons.Default.Close, null, tint = DT.SubText, modifier = Modifier.size(16.dp)) }
                 },
                 singleLine = true, modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = searchKeyboardOptions(), keyboardActions = searchKeyboardActions(),
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
@@ -988,7 +991,11 @@ private fun PayTile(modifier: Modifier, label: String, icon: ImageVector, active
     val soft = Color(0xFFB4E9E0)
     val shape = RoundedCornerShape(20.dp)
     val tint = when { !enabled -> soft.copy(0.35f); active -> Color.White; accent != null -> accent; else -> soft }
-    val base = modifier.height(84.dp)
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val scale by androidx.compose.animation.core.animateFloatAsState(if (pressed && enabled) 0.95f else 1f, label = "payTilePress")
+    val base = modifier.height(84.dp).graphicsLayer { scaleX = scale; scaleY = scale }
     val decorated = if (active) base.shadow(14.dp, shape, ambientColor = DT.Teal, spotColor = DT.Teal) else base
     Box(decorated.clip(shape)
         .background(when {
@@ -997,7 +1004,10 @@ private fun PayTile(modifier: Modifier, label: String, icon: ImageVector, active
             else -> Brush.verticalGradient(listOf(Color(0xFF0E2A2B), Color(0xFF0A1F21)))
         })
         .border(1.5.dp, when { active -> Color(0xFF3FE8CB); accent != null -> accent.copy(0.8f); else -> Color(0xFF2E6A6A) }, shape)
-        .clickable(enabled = enabled, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick),
+        .clickable(enabled = enabled, indication = null, interactionSource = source) {
+            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+            onClick()
+        },
         contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp)) {
             Icon(icon, null, tint = tint, modifier = Modifier.size(28.dp))

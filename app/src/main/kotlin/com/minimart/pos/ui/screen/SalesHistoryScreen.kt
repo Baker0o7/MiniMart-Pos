@@ -131,6 +131,8 @@ fun SalesHistoryScreen(
                     }
                 },
                 singleLine = true,
+                keyboardOptions = searchKeyboardOptions(),
+                keyboardActions = searchKeyboardActions(),
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
