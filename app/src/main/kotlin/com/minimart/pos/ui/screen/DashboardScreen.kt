@@ -118,59 +118,61 @@ fun DashboardScreen(
                     .padding(start = 18.dp, end = 18.dp, top = 18.dp, bottom = 20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         // Avatar: glowing rounded tile with the flag and an "online" dot
-                        Box(modifier = Modifier.size(62.dp)) {
-                            Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp))
+                        Box(modifier = Modifier.size(56.dp)) {
+                            Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(18.dp))
                                 .background(Brush.linearGradient(listOf(Color(0xFF0E3A33), Color(0xFF06201C))))
-                                .border(2.dp, TealGlow.copy(0.55f), RoundedCornerShape(20.dp)),
+                                .border(2.dp, TealGlow.copy(0.55f), RoundedCornerShape(18.dp)),
                                 contentAlignment = Alignment.Center) {
-                                Box(Modifier.size(46.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF0A1A18)),
+                                Box(Modifier.size(40.dp).clip(RoundedCornerShape(11.dp)).background(Color(0xFF0A1A18)),
                                     contentAlignment = Alignment.Center) {
-                                    Text("🇰🇪", fontSize = 26.sp)
+                                    Text("🇰🇪", fontSize = 22.sp)
                                 }
                             }
                             Box(Modifier.align(Alignment.BottomEnd).size(16.dp).clip(CircleShape)
                                 .background(Bg).padding(2.dp).clip(CircleShape).background(GreenGlow))
                         }
-                        Spacer(Modifier.width(12.dp))
-                        Box(Modifier.width(1.5.dp).height(52.dp).background(TealGlow.copy(0.6f)))
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Box(Modifier.width(1.5.dp).height(46.dp).background(TealGlow.copy(0.6f)))
+                        Spacer(Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(roleLabel(currentRole) ?: "Welcome", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp,
+                            Text(roleLabel(currentRole) ?: "Welcome", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
                             // A long shop name must not wrap and unbalance the header.
-                            Text(state.storeName, color = Color(0xFF8FF0E0), fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
+                            Text(state.storeName, color = Color(0xFF8FF0E0), fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
                             val today = remember { java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale.getDefault()).format(java.util.Date()) }
                             Spacer(Modifier.height(4.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.CalendarToday, null, tint = TealGlow, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(5.dp))
-                                Text(today, color = White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                Text(today, color = White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
                             }
                         }
                         Spacer(Modifier.width(8.dp))
-                        // Status pill
-                        Row(modifier = Modifier.clip(RoundedCornerShape(24.dp))
+                        // Status pill: stacked so the name, shop and date keep enough width on narrow phones.
+                        Column(modifier = Modifier.clip(RoundedCornerShape(16.dp))
                             .background(Color(0xFF0A1F1C))
-                            .border(1.dp, TealGlow.copy(0.45f), RoundedCornerShape(24.dp))
-                            .padding(horizontal = 11.dp, vertical = 9.dp),
-                            verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(9.dp).clip(CircleShape).background(Color(0xFF8CA3B5)))
-                            Text(" Offline", color = White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                            Spacer(Modifier.width(8.dp))
-                            Box(Modifier.width(1.dp).height(16.dp).background(TealGlow.copy(0.6f)))
-                            Spacer(Modifier.width(8.dp))
-                            Box(Modifier.size(9.dp).clip(CircleShape).background(GreenGlow))
-                            Text(" Ready", color = White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            .border(1.dp, TealGlow.copy(0.45f), RoundedCornerShape(16.dp))
+                            .padding(horizontal = 10.dp, vertical = 7.dp),
+                            horizontalAlignment = Alignment.Start) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF8CA3B5)))
+                                Text(" Offline", color = White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+                            }
+                            Box(Modifier.padding(vertical = 4.dp).width(60.dp).height(1.dp).background(TealGlow.copy(0.45f)))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.size(8.dp).clip(CircleShape).background(GreenGlow))
+                                Text(" Ready", color = White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+                            }
                         }
                         Spacer(Modifier.width(8.dp))
                         // Settings button
-                        Box(modifier = Modifier.size(48.dp).clip(CircleShape)
+                        Box(modifier = Modifier.size(42.dp).clip(CircleShape)
                             .background(Color(0xFF0A1F1C))
                             .border(1.5.dp, TealGlow.copy(0.45f), CircleShape)
                             .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onNavigateToSettings() },
                             contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Settings, "Settings", tint = Color(0xFF2EE6F2), modifier = Modifier.size(26.dp))
+                            Icon(Icons.Default.Settings, "Settings", tint = Color(0xFF2EE6F2), modifier = Modifier.size(23.dp))
                         }
                     }
                 }
