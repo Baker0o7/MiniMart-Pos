@@ -44,5 +44,11 @@ class IntegrityViewModel @Inject constructor(
         }
     }
 
+    /** Manual backups and restores go in the activity log; flushed because a restore restarts the app. */
+    fun recordBackup(event: AuditEvent, detail: String) {
+        audit.log(event, detail = detail)
+        viewModelScope.launch(Dispatchers.IO) { audit.flush() }
+    }
+
     fun dismiss() { _report.value = null; _failed.value = null }
 }

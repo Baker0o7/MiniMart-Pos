@@ -84,13 +84,25 @@ class AuditLogger @Inject constructor(
     private var lastHash: String? = null
     private var lineCount = -1
 
+    // Writes happen on one background thread so a sale or a login never waits on file storage
+    // (the first write also reads the whole file to resume the hash chain). One thread keeps the order.
+    private val writer = java.util.concurrent.Executors.newSingleThreadExecutor { r ->
+        Thread(r, "audit-writer").apply { isDaemon = true }
+    }
+
     fun log(event: AuditEvent, user: String = "", detail: String = "") {
+        // Capture who/when now; the write itself may happen a moment later.
+        val who = user.ifBlank { actor }
+        val whenMs = System.currentTimeMillis()
+        try { writer.execute { write(event, who, detail, whenMs) } } catch (_: Exception) {}
+    }
+
+    private fun write(event: AuditEvent, who: String, detail: String, whenMs: Long) {
         synchronized(lock) {
             try {
                 ensureState()
-                val who = user.ifBlank { actor }
                 val clean = detail.replace('\n', ' ').replace('\r', ' ')
-                val body = "[${df.format(Date())}] ${event.name} | user=$who | $clean"
+                val body = "[${df.format(Date(whenMs))}] ${event.name} | user=$who | $clean"
                 val h = hashOf(lastHash ?: GENESIS, body)
                 logFile.appendText("$body | h=$h\n")
                 lastHash = h
@@ -101,14 +113,17 @@ class AuditLogger @Inject constructor(
         }
     }
 
-    /** Newest [limit] lines, oldest first. */
-    fun getRecentLogs(limit: Int = 50): List<String> = synchronized(lock) {
-        try { logFile.readLines().takeLast(limit) } catch (_: Exception) { emptyList() }
-    }
+    /** Waits (briefly) for queued writes, so a read right after a log() sees it. Call off the main thread. */
+    fun flush() { try { writer.submit {}.get(2, java.util.concurrent.TimeUnit.SECONDS) } catch (_: Exception) {} }
 
-    fun verify(): AuditCheck = synchronized(lock) {
+    /** Newest [limit] lines, oldest first. */
+    fun getRecentLogs(limit: Int = 50): List<String> = run { flush(); synchronized(lock) {
+        try { logFile.readLines().takeLast(limit) } catch (_: Exception) { emptyList() }
+    } }
+
+    fun verify(): AuditCheck = run { flush(); synchronized(lock) {
         try { verifyLines(logFile.readLines()) } catch (_: Exception) { AuditCheck(0, true) }
-    }
+    } }
 
     private fun ensureState() {
         if (lastHash != null && lineCount >= 0) return
@@ -121,9 +136,11 @@ class AuditLogger @Inject constructor(
     /** Keeps the full history: the old file is archived, and the new one continues the hash chain. */
     private fun rotate() {
         val prev = lastHash ?: GENESIS
-        val archive = File(context.filesDir, "audit.log.1")
-        if (archive.exists()) archive.delete()
-        logFile.renameTo(archive)
+        // Keep the last three full archives (audit.log.1 newest) instead of throwing history away.
+        File(context.filesDir, "audit.log.3").delete()
+        for (n in 2 downTo 1) File(context.filesDir, "audit.log.$n").takeIf { it.exists() }
+            ?.renameTo(File(context.filesDir, "audit.log.${n + 1}"))
+        logFile.renameTo(File(context.filesDir, "audit.log.1"))
         logFile.createNewFile()
         val body = "[${df.format(Date())}] ${AuditEvent.LOG_ROTATED.name} | user= | prev=$prev"
         val h = hashOf(prev, body)

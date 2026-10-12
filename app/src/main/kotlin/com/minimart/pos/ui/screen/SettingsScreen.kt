@@ -777,6 +777,9 @@ fun SettingsScreen(
                                                     is com.minimart.pos.util.BackupResult.Success -> { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context); r.message }
                                                     is com.minimart.pos.util.BackupResult.Error -> r.message
                                                 }
+                                                integrityVm.recordBackup(
+                                                    if (r is com.minimart.pos.util.BackupResult.Success) com.minimart.pos.util.AuditEvent.BACKUP_CREATED else com.minimart.pos.util.AuditEvent.BACKUP_FAILED,
+                                                    if (r is com.minimart.pos.util.BackupResult.Success) "Manual backup${if (chosen != null) " (encrypted)" else ""}" else "Manual backup failed")
                                                 isBackingUp = false
                                             }
                                         },
@@ -902,6 +905,9 @@ fun SettingsScreen(
                                                 // pointed at the now-replaced database file, risking a
                                                 // crash or stale/corrupted reads if the user kept using
                                                 // the app instead of remembering to close it themselves.
+                                                integrityVm.recordBackup(
+                                                    if (r is com.minimart.pos.util.BackupResult.Success) com.minimart.pos.util.AuditEvent.BACKUP_RESTORED else com.minimart.pos.util.AuditEvent.BACKUP_FAILED,
+                                                    (if (r is com.minimart.pos.util.BackupResult.Success) "Restored " else "Restore failed: ") + f.name)
                                                 if (r is com.minimart.pos.util.BackupResult.Success) {
                                                     kotlinx.coroutines.delay(1200)
                                                     com.minimart.pos.util.BackupManager.restartApp(context)
