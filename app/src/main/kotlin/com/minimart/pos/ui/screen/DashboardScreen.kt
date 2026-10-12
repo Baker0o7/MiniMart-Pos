@@ -182,7 +182,12 @@ fun DashboardScreen(
             // ── Backup warning (owner / manager only) ─────────────────────────
             item {
                 val ctx = androidx.compose.ui.platform.LocalContext.current
-                val warn = remember(state.todayRevenue, state.todaySaleCount) { com.minimart.pos.util.BackupManager.warning(ctx) }
+                val backupWarn = remember(state.todayRevenue, state.todaySaleCount) { com.minimart.pos.util.BackupManager.warning(ctx) }
+                val refused by vm.refusedSales.collectAsState()
+                val warn = listOfNotNull(
+                    backupWarn,
+                    if (refused > 0) "$refused sale${if (refused == 1) "" else "s"} refused by the main device — open Settings → Sync to retry" else null
+                ).joinToString("\n").ifBlank { null }
                 if (warn != null && rm.canAccessSettings(currentRole)) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 10.dp)
                         .clip(RoundedCornerShape(14.dp)).background(AmberGlow.copy(0.14f))

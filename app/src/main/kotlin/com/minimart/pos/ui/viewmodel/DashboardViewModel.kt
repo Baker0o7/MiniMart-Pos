@@ -38,8 +38,14 @@ class DashboardViewModel @Inject constructor(
     private val saleRepo: SaleRepository,
     private val productRepo: ProductRepository,
     private val settingsRepo: SettingsRepository,
-    userRepo: UserRepository
+    userRepo: UserRepository,
+    syncDao: com.minimart.pos.data.dao.SyncDao
 ) : ViewModel() {
+
+    /** Sales the main device refused; they exist only on this till until retried. */
+    val refusedSales: StateFlow<Int> = syncDao.getConflictCount()
+        .catch { emit(0) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     private val todayStart: Long
         get() {
