@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     syncVm: SyncViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     cloudVm: com.minimart.pos.ui.viewmodel.CloudViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    integrityVm: com.minimart.pos.ui.viewmodel.IntegrityViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     onBack: () -> Unit,
     onShifts: () -> Unit,
     onUsers: () -> Unit,
@@ -784,6 +785,32 @@ fun SettingsScreen(
                             }
                         }
                         backupStatus?.let { Text(it, color = if ("saved" in it) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall) }
+                        val integrityRunning by integrityVm.running.collectAsState()
+                        val integrityReport by integrityVm.report.collectAsState()
+                        val integrityFailed by integrityVm.failed.collectAsState()
+                        TextButton(onClick = { integrityVm.run() }, enabled = !integrityRunning, contentPadding = PaddingValues(0.dp)) {
+                            if (integrityRunning) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = DT.Teal, strokeWidth = 2.dp)
+                            else Icon(Icons.Default.FactCheck, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Check data (sales, stock, balances)", color = DT.Teal, style = MaterialTheme.typography.labelSmall)
+                        }
+                        if (integrityReport != null || integrityFailed != null) {
+                            AlertDialog(onDismissRequest = { integrityVm.dismiss() }, containerColor = DT.Surface,
+                                title = { Text(if (integrityFailed != null) "Check could not run" else if (integrityReport?.ok == true) "No problems found" else "Problems found",
+                                    color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+                                text = {
+                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        val r = integrityReport
+                                        if (integrityFailed != null) Text(integrityFailed ?: "", color = DT.Red, style = MaterialTheme.typography.bodySmall)
+                                        else if (r != null) {
+                                            Text("${r.salesChecked} completed sales checked.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                                            r.issues.take(15).forEach { Text("• $it", color = DT.OnSurface, style = MaterialTheme.typography.bodySmall) }
+                                            if (r.issues.size > 15) Text("…and ${r.issues.size - 15} more", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                                        }
+                                    }
+                                },
+                                confirmButton = { TextButton(onClick = { integrityVm.dismiss() }) { Text("OK", color = DT.Teal) } })
+                        }
                         if (backupFiles.isNotEmpty()) {
                             TextButton(onClick = { com.minimart.pos.util.BackupManager.shareBackup(context, backupFiles.first()) },
                                 contentPadding = PaddingValues(0.dp)) {

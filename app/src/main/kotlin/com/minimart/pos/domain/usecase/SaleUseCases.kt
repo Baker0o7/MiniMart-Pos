@@ -34,9 +34,12 @@ class CompleteSaleUseCase @Inject constructor(
 class RefundSaleUseCase @Inject constructor(
     private val saleRepo: SaleRepository,
     private val syncEnqueuer: com.minimart.pos.sync.SyncEnqueuer,
-    private val audit: com.minimart.pos.util.AuditLogger
+    private val audit: com.minimart.pos.util.AuditLogger,
+    private val guard: com.minimart.pos.util.PermissionGuard
 ) {
     suspend operator fun invoke(saleId: Long, reason: String) {
+        if (!guard.allow("refund a sale", com.minimart.pos.util.RoleManager::canVoidSales))
+            throw com.minimart.pos.util.PermissionDeniedException("refund sales")
         val before = saleRepo.getSaleWithItems(saleId)?.sale
         saleRepo.refundSale(saleId, reason.trim())
         if (before != null && before.status == com.minimart.pos.data.entity.SaleStatus.COMPLETED) {
@@ -51,9 +54,12 @@ class RefundSaleUseCase @Inject constructor(
 class VoidSaleUseCase @Inject constructor(
     private val saleRepo: SaleRepository,
     private val syncEnqueuer: com.minimart.pos.sync.SyncEnqueuer,
-    private val audit: com.minimart.pos.util.AuditLogger
+    private val audit: com.minimart.pos.util.AuditLogger,
+    private val guard: com.minimart.pos.util.PermissionGuard
 ) {
     suspend operator fun invoke(saleId: Long, reason: String) {
+        if (!guard.allow("void a sale", com.minimart.pos.util.RoleManager::canVoidSales))
+            throw com.minimart.pos.util.PermissionDeniedException("void sales")
         val before = saleRepo.getSaleWithItems(saleId)?.sale
         saleRepo.voidSale(saleId, reason.trim())
         if (before != null && before.status == com.minimart.pos.data.entity.SaleStatus.COMPLETED) {

@@ -18,6 +18,7 @@ class SaleRepository @Inject constructor(
     private val saleDao: SaleDao,
     private val productRepository: ProductRepository,
     private val customerRepository: CustomerRepository,
+    private val batches: BatchRepository,
     private val db: AppDatabase
 ) {
     fun getAllSalesWithItems(): Flow<List<SaleWithItems>> = saleDao.getAllSalesWithItems()
@@ -60,7 +61,10 @@ class SaleRepository @Inject constructor(
         purchaseAmount: Double = 0.0
     ): Long = db.withTransaction {
         checkPayment(sale, items, customerId != null, creditAmount)
-        val saleId = saleDao.insertSaleWithItems(sale, items)
+        // Cost the goods from the oldest batches first; the cost is stored on each line.
+        val (costedItems, allocations) = batches.costLines(items)
+        val saleId = saleDao.insertSaleWithItems(sale, costedItems)
+        batches.saveAllocations(saleDao.getItemIds(saleId), allocations)
         items.forEach { item ->
             if (item.weightKg > 0.0) {
                 // Weighed item: deduct the actual kilograms sold (floored at 0 — weighed stock is
@@ -130,7 +134,10 @@ class SaleRepository @Inject constructor(
                 ).let { stub -> stub.copy(id = productRepository.insert(stub)) }
             item.copy(productId = product.id)
         }
-        val saleId = saleDao.insertSaleWithItems(sale, mapped)
+        // The main device does the costing, from its own batches (a till's own figure is not trusted).
+        val (costedMapped, allocations) = batches.costLines(mapped)
+        val saleId = saleDao.insertSaleWithItems(sale, costedMapped)
+        batches.saveAllocations(saleDao.getItemIds(saleId), allocations)
         mapped.forEach { item ->
             if (item.weightKg > 0.0) productRepository.decrementStockKg(item.productId, item.weightKg)
             else productRepository.decrementStockClamped(item.productId, item.quantity)
@@ -178,5 +185,6 @@ class SaleRepository @Inject constructor(
             else productRepository.incrementStock(item.productId, item.quantity)
         }
         customerRepository.reverseCreditForSale(saleId, reason)
+        batches.restoreForSale(saleId)
     }
 }

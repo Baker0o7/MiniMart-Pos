@@ -64,8 +64,9 @@ interface SaleDao {
                COALESCE(p.category, 'General') AS category,
                COALESCE(SUM(CASE WHEN si.weightKg > 0 THEN si.weightKg ELSE si.quantity END), 0.0) AS qty,
                COALESCE(SUM(si.lineTotal), 0.0) AS revenue,
-               COALESCE(SUM((CASE WHEN si.weightKg > 0 THEN si.weightKg ELSE si.quantity END) * COALESCE(p.costPrice, 0.0)), 0.0) AS cost,
-               COALESCE(SUM(CASE WHEN COALESCE(p.costPrice, 0.0) > 0 THEN si.lineTotal ELSE 0.0 END), 0.0) AS costedRevenue
+               COALESCE(SUM(CASE WHEN si.costTotal > 0 THEN si.costTotal
+                                 ELSE (CASE WHEN si.weightKg > 0 THEN si.weightKg ELSE si.quantity END) * COALESCE(p.costPrice, 0.0) END), 0.0) AS cost,
+               COALESCE(SUM(CASE WHEN si.costTotal > 0 OR COALESCE(p.costPrice, 0.0) > 0 THEN si.lineTotal ELSE 0.0 END), 0.0) AS costedRevenue
         FROM sale_items si
         INNER JOIN sales s ON si.saleId = s.id
         LEFT JOIN products p ON p.id = si.productId
@@ -144,6 +145,10 @@ interface SaleDao {
     /** Finds a sale by receipt number and creation time (how a synced sale is matched on the main device). */
     @Query("SELECT * FROM sales WHERE receiptNumber = :receipt AND createdAt = :createdAt LIMIT 1")
     suspend fun findByReceiptAndTime(receipt: String, createdAt: Long): Sale?
+
+    /** Ids of a sale's lines in the order they were inserted. */
+    @Query("SELECT id FROM sale_items WHERE saleId = :saleId ORDER BY id ASC")
+    suspend fun getItemIds(saleId: Long): List<Long>
 
     @Transaction
     suspend fun insertSaleWithItems(sale: Sale, items: List<SaleItem>): Long {

@@ -11,8 +11,9 @@ import javax.inject.Inject
 
 @Database(
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class, MpesaPayment::class,
-        Supplier::class, PurchaseOrder::class, PurchaseOrderItem::class],
-    version = 15,
+        Supplier::class, PurchaseOrder::class, PurchaseOrderItem::class,
+        com.minimart.pos.data.entity.StockBatch::class, com.minimart.pos.data.entity.SaleItemCost::class],
+    version = 16,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -26,6 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun syncDao(): com.minimart.pos.data.dao.SyncDao
     abstract fun mpesaPaymentDao(): MpesaPaymentDao
     abstract fun purchasingDao(): PurchasingDao
+    abstract fun batchDao(): BatchDao
     companion object { const val DATABASE_NAME = "minimart_pos.db" }
 }
 
@@ -119,7 +121,21 @@ object AppMigrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15)
+    /** v15 → v16: FIFO batch costing. Existing stock simply has no batches yet; it is costed at the
+     *  product's cost price until new deliveries create batches. */
+    val MIGRATION_15_16 = object : androidx.room.migration.Migration(15, 16) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE sale_items ADD COLUMN costTotal REAL NOT NULL DEFAULT 0.0")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `stock_batches` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `productId` INTEGER NOT NULL, `receivedAt` INTEGER NOT NULL, `quantity` REAL NOT NULL, `remaining` REAL NOT NULL, `unitCost` REAL NOT NULL, `source` TEXT NOT NULL, `batchNumber` TEXT NOT NULL, `expiryDate` INTEGER NOT NULL)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_batches_productId` ON `stock_batches` (`productId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_stock_batches_productId_receivedAt` ON `stock_batches` (`productId`, `receivedAt`)")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `sale_item_costs` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `saleItemId` INTEGER NOT NULL, `batchId` INTEGER NOT NULL, `quantity` REAL NOT NULL, `unitCost` REAL NOT NULL)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_sale_item_costs_saleItemId` ON `sale_item_costs` (`saleItemId`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_sale_item_costs_batchId` ON `sale_item_costs` (`batchId`)")
+        }
+    }
+
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
 }
 
 class AppTypeConverters {

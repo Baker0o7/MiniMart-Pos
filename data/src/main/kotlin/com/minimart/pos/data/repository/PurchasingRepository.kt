@@ -17,6 +17,7 @@ import kotlin.math.roundToInt
 class PurchasingRepository @Inject constructor(
     private val dao: PurchasingDao,
     private val productDao: ProductDao,
+    private val batches: BatchRepository,
     private val db: AppDatabase
 ) {
     fun getSuppliers(): Flow<List<Supplier>> = dao.getSuppliers()
@@ -93,10 +94,17 @@ class PurchasingRepository @Inject constructor(
             if (arrived <= 0.0) return@forEach
             val product = productDao.getProductById(item.productId)
             if (product != null) {
-                if (product.isWeighed) productDao.incrementStockKg(product.id, arrived)
-                else {
+                val source = "PO #$poId"
+                val unitCost = if (item.unitCost > 0.0) item.unitCost else product.costPrice
+                if (product.isWeighed) {
+                    productDao.incrementStockKg(product.id, arrived)
+                    batches.addBatch(product.id, arrived, unitCost, source)
+                } else {
                     val units = arrived.roundToInt()
-                    if (units > 0) productDao.incrementStock(product.id, units)
+                    if (units > 0) {
+                        productDao.incrementStock(product.id, units)
+                        batches.addBatch(product.id, units.toDouble(), unitCost, source)
+                    }
                 }
                 if (updateCostPrices && item.unitCost > 0.0) {
                     productDao.getProductById(product.id)?.let {

@@ -23,7 +23,9 @@ data class ProductUiState(
 @HiltViewModel
 class ProductViewModel @Inject constructor(
     private val repo: ProductRepository,
-    private val audit: com.minimart.pos.util.AuditLogger
+    private val audit: com.minimart.pos.util.AuditLogger,
+    private val batches: com.minimart.pos.data.repository.BatchRepository,
+    private val guard: com.minimart.pos.util.PermissionGuard
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -59,6 +61,11 @@ class ProductViewModel @Inject constructor(
 
     fun saveProduct(product: Product) {
         viewModelScope.launch {
+            if (!guard.allow(if (product.id == 0L) "add a product" else "edit a product",
+                    if (product.id == 0L) com.minimart.pos.util.RoleManager::canAddProducts else com.minimart.pos.util.RoleManager::canEditPrices)) {
+                _uiState.update { it.copy(error = "You don't have permission to change products") }
+                return@launch
+            }
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 // insertProduct uses REPLACE and barcode is unique, so saving a new product
@@ -79,7 +86,13 @@ class ProductViewModel @Inject constructor(
                 // Free the barcode if only a deleted product still holds it.
                 repo.releaseDeletedBarcode(product.barcode)
                 val before = if (product.id != 0L) repo.getById(product.id) else null
-                if (product.id == 0L) repo.insert(product) else repo.update(product)
+                val savedId = if (product.id == 0L) repo.insert(product) else { repo.update(product); product.id }
+                // Keep the cost layers in step with a stock figure typed into the product form.
+                runCatching {
+                    val delta = if (product.isWeighed) product.stockKg - (before?.stockKg ?: 0.0)
+                                else (product.stock - (before?.stock ?: 0)).toDouble()
+                    batches.recordManualChange(savedId, delta, product.costPrice, if (before == null) "Opening stock" else "Stock edited")
+                }
                 runCatching {
                     val money = { v: Double -> String.format(java.util.Locale.US, "%.2f", v) }
                     if (before == null) audit.log(com.minimart.pos.util.AuditEvent.PRODUCT_CREATED,
@@ -107,6 +120,10 @@ class ProductViewModel @Inject constructor(
 
     fun deleteProduct(productId: Long) {
         viewModelScope.launch {
+            if (!guard.allow("delete a product", com.minimart.pos.util.RoleManager::canDeleteProducts)) {
+                _uiState.update { it.copy(error = "Only the owner can delete products") }
+                return@launch
+            }
             val name = repo.getById(productId)?.name ?: "#$productId"
             repo.softDelete(productId)
             runCatching { audit.log(com.minimart.pos.util.AuditEvent.PRODUCT_DELETED, detail = name) }
@@ -116,22 +133,27 @@ class ProductViewModel @Inject constructor(
 
     fun adjustStock(productId: Long, delta: Int) {
         viewModelScope.launch {
+            if (!guard.allow("adjust stock", com.minimart.pos.util.RoleManager::canAdjustStock)) {
+                _uiState.update { it.copy(error = "You don't have permission to adjust stock") }
+                return@launch
+            }
             val product = repo.getById(productId)
             if (delta != 0) runCatching { audit.log(com.minimart.pos.util.AuditEvent.STOCK_ADJUSTED,
                 detail = "${product?.name ?: "#$productId"}: ${if (delta > 0) "+" else ""}$delta") }
             if (product?.isWeighed == true) {
                 // Weighed products keep exact kg stock; the integer figure is a mirror of it.
-                if (delta > 0) repo.incrementStockKg(productId, delta.toDouble())
+                if (delta > 0) { repo.incrementStockKg(productId, delta.toDouble()); runCatching { batches.recordManualChange(productId, delta.toDouble(), product.costPrice, "Stock added") } }
                 else if (delta < 0) {
                     if (product.stockKg < -delta) _uiState.update { it.copy(error = "Cannot remove more than the current stock") }
-                    else repo.decrementStockKg(productId, -delta.toDouble())
+                    else { repo.decrementStockKg(productId, -delta.toDouble()); runCatching { batches.recordManualChange(productId, delta.toDouble(), product.costPrice, "Stock removed") } }
                 }
                 return@launch
             }
-            if (delta > 0) repo.incrementStock(productId, delta)
+            if (delta > 0) { repo.incrementStock(productId, delta); runCatching { batches.recordManualChange(productId, delta.toDouble(), product?.costPrice ?: 0.0, "Stock added") } }
             else if (delta < 0) {
                 if (repo.decrementStock(productId, -delta) == 0)
                     _uiState.update { it.copy(error = "Cannot remove more than the current stock") }
+                else runCatching { batches.recordManualChange(productId, delta.toDouble(), product?.costPrice ?: 0.0, "Stock removed") }
             }
         }
     }
@@ -139,13 +161,17 @@ class ProductViewModel @Inject constructor(
     /** Signed kg change for a weighed product (e.g. +12.5 when a sack is received). */
     fun adjustWeighedStock(productId: Long, deltaKg: Double) {
         viewModelScope.launch {
+            if (!guard.allow("adjust stock", com.minimart.pos.util.RoleManager::canAdjustStock)) {
+                _uiState.update { it.copy(error = "You don't have permission to adjust stock") }
+                return@launch
+            }
             val product = repo.getById(productId) ?: return@launch
             if (deltaKg != 0.0) runCatching { audit.log(com.minimart.pos.util.AuditEvent.STOCK_ADJUSTED,
                 detail = "${product.name}: ${if (deltaKg > 0) "+" else ""}${String.format(java.util.Locale.US, "%.3f", deltaKg)} kg") }
-            if (deltaKg > 0) repo.incrementStockKg(productId, deltaKg)
+            if (deltaKg > 0) { repo.incrementStockKg(productId, deltaKg); runCatching { batches.recordManualChange(productId, deltaKg, product.costPrice, "Stock added") } }
             else if (deltaKg < 0) {
                 if (product.stockKg < -deltaKg) _uiState.update { it.copy(error = "Cannot remove more than the current stock") }
-                else repo.decrementStockKg(productId, -deltaKg)
+                else { repo.decrementStockKg(productId, -deltaKg); runCatching { batches.recordManualChange(productId, deltaKg, product.costPrice, "Stock removed") } }
             }
         }
     }

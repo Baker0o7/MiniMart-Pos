@@ -67,7 +67,10 @@ data class SaleItem(
     // Bug fix: weightKg was never persisted — weighed (PLU/scale) items always stored
     // quantity=1 and lost the actual weight. Receipts showed "1 pcs" instead of "0.500 kg"
     // and refunds couldn't reconstruct the correct line total for weighed sales.
-    @androidx.room.ColumnInfo(defaultValue = "0.0") val weightKg: Double = 0.0
+    @androidx.room.ColumnInfo(defaultValue = "0.0") val weightKg: Double = 0.0,
+    // What the goods on this line cost (FIFO batches), so profit is real, not estimated from the
+    // product's latest cost price. 0 on sales made before batch costing existed.
+    @androidx.room.ColumnInfo(defaultValue = "0.0") val costTotal: Double = 0.0
 )
 
 // ─── Sale with items (Room relation) ─────────────────────────────────────────

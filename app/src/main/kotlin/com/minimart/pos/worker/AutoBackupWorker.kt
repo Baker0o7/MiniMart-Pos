@@ -16,10 +16,21 @@ import java.util.concurrent.TimeUnit
 class AutoBackupWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val audit: AuditLogger
+    private val audit: AuditLogger,
+    private val integrity: com.minimart.pos.data.repository.IntegrityChecker
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result =
+    override suspend fun doWork(): Result {
+        // A nightly look at the books: anything that no longer adds up goes in the activity log.
+        runCatching {
+            val report = integrity.check()
+            if (!report.ok) audit.log(AuditEvent.DATA_CHECK, user = "system",
+                detail = "${report.issues.size} problem(s): ${report.issues.take(3).joinToString("; ")}")
+        }
+        return runBackup()
+    }
+
+    private suspend fun runBackup(): Result =
         when (val r = BackupManager.autoBackup(applicationContext)) {
             is BackupResult.Success -> { runCatching { audit.log(AuditEvent.BACKUP_CREATED, user = "system", detail = r.file.name) }; Result.success() }
             is BackupResult.Error -> {

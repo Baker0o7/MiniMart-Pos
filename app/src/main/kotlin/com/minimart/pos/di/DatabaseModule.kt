@@ -45,6 +45,7 @@ object DatabaseModule {
     @Provides @Singleton fun provideSyncDao(db: AppDatabase) = db.syncDao()
     @Provides @Singleton fun provideMpesaPaymentDao(db: AppDatabase) = db.mpesaPaymentDao()
     @Provides @Singleton fun providePurchasingDao(db: AppDatabase) = db.purchasingDao()
+    @Provides @Singleton fun provideBatchDao(db: AppDatabase) = db.batchDao()
 
     /** Creates an EncryptedSharedPreferences-backed store for the given file name, with
      * a defensive fallback to plain SharedPreferences if Keystore/security-crypto setup

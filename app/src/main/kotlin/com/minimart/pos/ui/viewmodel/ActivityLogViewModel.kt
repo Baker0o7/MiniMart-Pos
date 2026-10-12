@@ -24,7 +24,7 @@ enum class ActivityFilter(val label: String, val events: Set<String>?) {
     STOCK("Stock & prices", setOf("PRODUCT_CREATED", "PRODUCT_EDITED", "PRODUCT_DELETED", "STOCK_ADJUSTED")),
     SHIFTS("Shifts", setOf("SHIFT_OPENED", "SHIFT_CLOSED")),
     SECURITY("Sign-ins & staff", setOf("LOGIN_SUCCESS", "LOGIN_FAILED", "LOGOUT", "SESSION_EXPIRED", "USER_CREATED", "USER_DELETED", "PIN_CHANGED")),
-    SYSTEM("Backups", setOf("BACKUP_CREATED", "BACKUP_FAILED", "BACKUP_RESTORED", "LOG_ROTATED", "SETTINGS_CHANGED"))
+    SYSTEM("Backups", setOf("BACKUP_CREATED", "BACKUP_FAILED", "BACKUP_RESTORED", "DATA_CHECK", "PERMISSION_DENIED", "LOG_ROTATED", "SETTINGS_CHANGED"))
 }
 
 data class ActivityUiState(
