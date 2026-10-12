@@ -111,7 +111,14 @@ object BackupManager {
         }
     }
 
-    /** Daily automatic backup: plain file in the backup folder, checked, with the oldest ones pruned. */
+    /**
+     * Automatic backups are plain database copies, so they live in the app's private storage, not in the
+     * external folder that other apps can read on older Android versions. (Manual backups can be
+     * passphrase-encrypted and are meant to leave the phone.)
+     */
+    private fun autoDir(context: Context): File = File(context.filesDir, "auto_backups")
+
+    /** Daily automatic backup: plain file in private storage, checked, with the oldest ones pruned. */
     suspend fun autoBackup(context: Context): BackupResult = withContext(Dispatchers.IO) {
         try {
             val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
@@ -121,7 +128,7 @@ object BackupManager {
                     dbFile.absolutePath, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
                 ).use { it.execSQL("PRAGMA wal_checkpoint(TRUNCATE)") }
             } catch (_: Exception) { /* verification below decides whether the copy is usable */ }
-            val dir = backupDir(context).apply { mkdirs() }
+            val dir = autoDir(context).apply { mkdirs() }
             val dest = File(dir, "$AUTO_PREFIX${df.format(Date())}.db")
             dbFile.copyTo(dest, overwrite = true)
             verify(dest)?.let { problem ->
@@ -132,6 +139,9 @@ object BackupManager {
             // Keep only the newest few automatic backups (manual ones are never touched).
             dir.listFiles { f -> f.name.startsWith(AUTO_PREFIX) && f.name.endsWith(".db") }
                 ?.sortedByDescending { it.lastModified() }?.drop(KEEP_AUTO)?.forEach { it.delete() }
+            // Earlier versions kept these in the external folder; remove those readable plain copies now
+            // that a fresh verified one exists.
+            backupDir(context).listFiles { f -> f.name.startsWith(AUTO_PREFIX) }?.forEach { it.delete() }
             recordSuccess(context)
             BackupResult.Success(dest, "Automatic backup saved: ${dest.name}")
         } catch (e: Exception) {
@@ -306,7 +316,7 @@ object BackupManager {
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
             "MiniMartPOS/backups"
         )
-        return listOf(backupDir(context), legacyDir)
+        return listOf(backupDir(context), autoDir(context), legacyDir)
             .flatMap { dir -> dir.listFiles { f -> f.name.endsWith(".db") || f.name.endsWith(".mmbak") }?.toList() ?: emptyList() }
             .sortedByDescending { it.lastModified() }
     }

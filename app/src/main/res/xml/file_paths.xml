@@ -3,6 +3,7 @@
     <external-path name="exports" path="MiniMartPOS/" />
     <cache-path name="cache" path="." />
     <files-path name="receipts" path="receipts/" />
+    <files-path name="auto_backups" path="auto_backups/" />
     <external-files-path name="backups" path="backups/" />
     <external-path name="downloads" path="Download/" />
 </paths>

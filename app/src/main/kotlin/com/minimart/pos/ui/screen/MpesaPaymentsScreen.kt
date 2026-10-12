@@ -126,7 +126,7 @@ fun MpesaPaymentsScreen(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text("Require a verified code", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                Text("An M-Pesa sale can only be completed with a code that matches a payment received on this phone (tracking must be on). Payments confirmed by STK push are exempt.",
+                                Text("An M-Pesa sale can only be completed with a code that matches a payment received on this phone (tracking must be on). Payments confirmed by STK push are exempt. Text-message sender names can be faked, so for large payments also check the money in your M-Pesa balance.",
                                     color = DT.SubText, fontSize = 12.sp)
                             }
                             Spacer(Modifier.width(10.dp))

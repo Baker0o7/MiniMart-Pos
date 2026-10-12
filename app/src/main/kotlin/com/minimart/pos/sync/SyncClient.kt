@@ -20,7 +20,7 @@ sealed class SyncResult {
     data class Error(val message: String) : SyncResult()
 }
 
-private class Reply(val code: Int, val body: String?)
+private class Reply(val code: Int, val body: String?, val ts: String? = null, val sig: String? = null)
 
 /**
  * Till side of sync. A till sends the sales (and refunds/voids) it queued to the main device, which
@@ -43,7 +43,9 @@ class SyncClient @Inject constructor(
 
     suspend fun sync(serverIp: String, deviceId: String, peerKey: String): SyncResult = syncLock.withLock { withContext(Dispatchers.IO) {
         try {
-            val baseUrl = "http://$serverIp:${SyncServer.PORT}"
+            if (!LanAddress.isPrivate(serverIp))
+                return@withContext SyncResult.Error("Enter the main phone's Wi-Fi address (for example 192.168.1.20). Sync only works on your own network.")
+            val baseUrl = "http://${serverIp.trim()}:${SyncServer.PORT}"
 
             val ping = request("GET", "$baseUrl/ping", null, null)
             if (ping == null || ping.code != 200) return@withContext SyncResult.Error("Main device unreachable at $serverIp")
@@ -67,6 +69,7 @@ class SyncClient @Inject constructor(
                     ?: return@withContext SyncResult.Error("Lost connection to the main device")
                 authError(reply)?.let { return@withContext SyncResult.Error(it) }
                 if (reply.code != 200 || reply.body == null) return@withContext SyncResult.Error("Main device error (${reply.code})")
+                replyProblem(reply, "/apply", peerKey)?.let { return@withContext SyncResult.Error(it) }
                 val results = JSONObject(reply.body).optJSONArray("results")
                     ?: return@withContext SyncResult.Error("Main device is running an older version — update it first")
                 val done = mutableListOf<Long>()
@@ -96,6 +99,7 @@ class SyncClient @Inject constructor(
             authError(snap)?.let { return@withContext SyncResult.Error(it) }
             val body = snap.body
             if (snap.code != 200 || body == null) return@withContext SyncResult.Error("Main device error (${snap.code})")
+            replyProblem(snap, "/snapshot", peerKey)?.let { return@withContext SyncResult.Error(it) }
             val applied = snapshots.apply(body)
 
             // 3. Prune old synced logs (keep last 7 days)
@@ -108,6 +112,15 @@ class SyncClient @Inject constructor(
         }
     } }
 
+    /** The reply must carry the main device's signature; an unsigned or altered reply is never applied. */
+    private fun replyProblem(r: Reply, path: String, peerKey: String): String? {
+        val ts = r.ts ?: return "Reply could not be verified"
+        if (r.sig.isNullOrBlank())
+            return "The main device did not sign its reply — update the app on both phones to the latest version"
+        return if (SyncAuth.verifyResponse(peerKey, path, ts, r.body.orEmpty(), r.sig)) null
+        else "The reply did not come from the paired main device — check you are on your own Wi-Fi"
+    }
+
     private fun authError(r: Reply): String? = when (r.code) {
         401 -> "Pairing code rejected — check the code, that both phones run the latest app, and that both clocks are correct"
         429 -> "Too many wrong codes — wait 30 seconds and try again"
@@ -118,8 +131,10 @@ class SyncClient @Inject constructor(
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.connectTimeout = TIMEOUT; conn.readTimeout = TIMEOUT * 4
         conn.requestMethod = method
+        var reqTs: String? = null
         syncKey?.let {
             val ts = System.currentTimeMillis()
+            reqTs = ts.toString()
             conn.setRequestProperty("X-Sync-Ts", ts.toString())
             conn.setRequestProperty("X-Sync-Sig", SyncAuth.sign(it, method, URL(url).path, body ?: "", ts))
         }
@@ -132,6 +147,6 @@ class SyncClient @Inject constructor(
         }
         val code = conn.responseCode
         val text = (if (code in 200..299) conn.inputStream else conn.errorStream)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
-        Reply(code, text)
+        Reply(code, text, ts = reqTs, sig = conn.getHeaderField("X-Sync-Resp-Sig"))
     } catch (_: Exception) { null }
 }

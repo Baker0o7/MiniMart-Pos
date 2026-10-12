@@ -38,4 +38,19 @@ class SyncAuthTest {
     @Test fun missingHeadersRejected() {
         assertFalse(SyncAuth.verify(secret, "POST", "/apply", "", null, null, now))
     }
+
+    @Test fun signedResponseVerifies() {
+        val sig = SyncAuth.signResponse(secret, "/snapshot", "1700000000000", "{\"products\":[]}")
+        assertTrue(SyncAuth.verifyResponse(secret, "/snapshot", "1700000000000", "{\"products\":[]}", sig))
+    }
+
+    @Test fun alteredOrUnsignedResponseRejected() {
+        val sig = SyncAuth.signResponse(secret, "/snapshot", "1700000000000", "{\"a\":1}")
+        assertFalse(SyncAuth.verifyResponse(secret, "/snapshot", "1700000000000", "{\"a\":2}", sig))      // body changed
+        assertFalse(SyncAuth.verifyResponse("000000", "/snapshot", "1700000000000", "{\"a\":1}", sig))    // wrong key
+        assertFalse(SyncAuth.verifyResponse(secret, "/apply", "1700000000000", "{\"a\":1}", sig))         // other path
+        assertFalse(SyncAuth.verifyResponse(secret, "/snapshot", "1700000000001", "{\"a\":1}", sig))      // other request
+        assertFalse(SyncAuth.verifyResponse(secret, "/snapshot", "1700000000000", "{\"a\":1}", null))
+        assertFalse(SyncAuth.verifyResponse(secret, "/snapshot", "1700000000000", "{\"a\":1}", ""))
+    }
 }

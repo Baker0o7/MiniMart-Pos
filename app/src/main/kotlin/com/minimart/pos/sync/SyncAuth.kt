@@ -29,5 +29,23 @@ object SyncAuth {
         return seen.putIfAbsent(expected, ts + MAX_SKEW_MS) == null
     }
 
+    /**
+     * The main device signs what it sends back, bound to the till's own request timestamp, so a device
+     * that merely answers on the main phone's IP address cannot hand a till forged products,
+     * prices or customer balances.
+     */
+    fun signResponse(secret: String, path: String, requestTs: String, body: String): String {
+        val bodyHash = hex(MessageDigest.getInstance("SHA-256").digest(body.toByteArray(Charsets.UTF_8)))
+        val mac = Mac.getInstance("HmacSHA256")
+        mac.init(SecretKeySpec(secret.toByteArray(Charsets.UTF_8), "HmacSHA256"))
+        return hex(mac.doFinal("resp\n$requestTs\n$path\n$bodyHash".toByteArray(Charsets.UTF_8)))
+    }
+
+    fun verifyResponse(secret: String, path: String, requestTs: String, body: String, signature: String?): Boolean {
+        if (signature.isNullOrBlank()) return false
+        val expected = signResponse(secret, path, requestTs, body)
+        return MessageDigest.isEqual(expected.toByteArray(Charsets.UTF_8), signature.lowercase().toByteArray(Charsets.UTF_8))
+    }
+
     private fun hex(b: ByteArray) = b.joinToString("") { "%02x".format(it) }
 }

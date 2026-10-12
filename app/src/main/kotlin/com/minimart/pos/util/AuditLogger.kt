@@ -107,7 +107,7 @@ class AuditLogger @Inject constructor(
                 logFile.appendText("$body | h=$h\n")
                 lastHash = h
                 lineCount++
-                Log.i("AUDIT", body)
+                Log.i("AUDIT", event.name)  // details stay in the private log file, not logcat
                 if (lineCount >= ROTATE_AT_LINES) rotate()
             } catch (_: Exception) {}
         }

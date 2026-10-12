@@ -142,6 +142,7 @@ class SyncServer @Inject constructor(
                 body = sb.toString()
             }
             val requiresAuth = path == "/snapshot" || path == "/apply"
+            var mySecretForReply = ""
             if (requiresAuth) {
                 // Check lockout BEFORE doing any key comparison — rejects immediately
                 // during an active lockout window regardless of whether this particular
@@ -171,6 +172,7 @@ class SyncServer @Inject constructor(
                 // Successful auth — clear any prior failed attempts so a legitimate
                 // user's earlier typo doesn't count toward a future lockout.
                 failedAuthAttempts.set(0)
+                mySecretForReply = mySecret
             }
 
             when {
@@ -179,7 +181,7 @@ class SyncServer @Inject constructor(
                 }
                 method == "GET" && path == "/snapshot" -> {
                     // Catalogue + customers with this device's current stock and balances.
-                    respond(writer, 200, snapshots.build())
+                    respond(writer, 200, snapshots.build(), signFor = Triple(mySecretForReply, path, headers["X-Sync-Ts"].orEmpty()))
                 }
                 method == "POST" && path == "/apply" -> {
                     // Bug fix: a single reader.read(buf) call is NOT guaranteed to fill the
@@ -193,7 +195,8 @@ class SyncServer @Inject constructor(
                     val results = applier.apply(JSONArray(body))
                     var applied = 0
                     for (i in 0 until results.length()) if (results.getJSONObject(i).optString("status") == "ok") applied++
-                    respond(writer, 200, JSONObject().put("applied", applied).put("results", results).toString())
+                    respond(writer, 200, JSONObject().put("applied", applied).put("results", results).toString(),
+                        signFor = Triple(mySecretForReply, path, headers["X-Sync-Ts"].orEmpty()))
                 }
                 else -> respond(writer, 404, """{"error":"Not found"}""")
             }
@@ -211,10 +214,13 @@ class SyncServer @Inject constructor(
         }
     }
 
-    private fun respond(writer: PrintWriter, code: Int, body: String) {
+    /** [signFor] = (secret, path, request timestamp): adds a signature the till checks before trusting the reply. */
+    private fun respond(writer: PrintWriter, code: Int, body: String, signFor: Triple<String, String, String>? = null) {
         val status = if (code == 200) "OK" else "Error"
         writer.println("HTTP/1.1 $code $status")
         writer.println("Content-Type: application/json")
+        if (signFor != null && signFor.first.isNotEmpty())
+            writer.println("X-Sync-Resp-Sig: " + SyncAuth.signResponse(signFor.first, signFor.second, signFor.third, body))
         writer.println("Content-Length: ${body.toByteArray().size}")
         writer.println()
         writer.println(body)
