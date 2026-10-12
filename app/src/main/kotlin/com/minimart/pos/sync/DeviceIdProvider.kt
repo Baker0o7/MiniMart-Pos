@@ -12,5 +12,8 @@ class DeviceIdProvider @Inject constructor(private val prefs: SharedPreferences)
         ?: UUID.randomUUID().toString().also { prefs.edit().putString("device_id", it).apply() }
 
     /** A device with a main-device address saved is a till: its sales are queued to be sent. */
+    fun peerIp(): String = prefs.getString("peer_ip", "") ?: ""
+    fun peerKey(): String = prefs.getString("peer_sync_key", "") ?: ""
+
     fun isPaired(): Boolean = !prefs.getString("peer_ip", "").isNullOrBlank()
 }

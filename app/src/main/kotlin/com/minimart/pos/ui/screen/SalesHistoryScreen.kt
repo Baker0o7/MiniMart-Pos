@@ -107,6 +107,12 @@ fun SalesHistoryScreen(
     val sales   = vm.sales.collectAsLazyPagingItems()
     val stats   by vm.stats.collectAsState()
     val df      = remember { SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault()) }
+    var pendingVoidId by remember { mutableStateOf<Long?>(null) }
+    pendingVoidId?.let { id ->
+        ReasonDialog("Void Sale", "This cannot be undone. Stock will be restored.", DT.Red,
+            onDismiss = { pendingVoidId = null },
+            onConfirm = { reason -> vm.voidSale(id, reason); pendingVoidId = null })
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -166,7 +172,7 @@ fun SalesHistoryScreen(
                             currency = currency,
                             df = df,
                             canVoid = canVoid,
-                            onVoid = { vm.voidSale(saleWithItems.sale.id, "Voided by manager") },
+                            onVoid = { pendingVoidId = saleWithItems.sale.id },
                             onClick = { onSaleClick(saleWithItems.sale.id) }
                         )
                     }

@@ -64,6 +64,7 @@ object Routes {
     const val PURCHASING = "purchasing"
     const val LABELS = "labels"
     const val CUSTOMER_DISPLAY = "customer_display"
+    const val ACTIVITY_LOG = "activity_log"
     const val SUPPLIERS = "suppliers"
     const val PURCHASE_ORDER = "purchase_order/{poId}"
     fun purchaseOrder(poId: Long) = "purchase_order/$poId"
@@ -217,6 +218,7 @@ fun MiniMartNavGraph(
                         onNavigateToPurchasing   = { navController.navigate(Routes.PURCHASING) { launchSingleTop = true } },
                         onNavigateToLabels       = { navController.navigate(Routes.LABELS) { launchSingleTop = true } },
                         onNavigateToCustomerDisplay = { navController.navigate(Routes.CUSTOMER_DISPLAY) { launchSingleTop = true } },
+                        onNavigateToActivityLog  = { navController.navigate(Routes.ACTIVITY_LOG) { launchSingleTop = true } },
                         currentRole              = authState.currentUser?.role,
                         currentUserName          = authState.currentUser?.displayName,
                         settingsRepo             = settingsRepo
@@ -272,6 +274,12 @@ fun MiniMartNavGraph(
                         hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
                         onBack = guardBack
                     ) { LabelPrintScreen(onBack = { navController.popBackStack() }) }
+                }
+                composable(Routes.ACTIVITY_LOG) {
+                    AccessGuard(
+                        hasAccess = RoleManager.canManageUsers(authState.currentUser?.role),
+                        onBack = guardBack
+                    ) { ActivityLogScreen(onBack = { navController.popBackStack() }) }
                 }
                 composable(Routes.CUSTOMER_DISPLAY) {
                     CustomerDisplayScreen(onExit = { navController.popBackStack() })

@@ -35,7 +35,8 @@ class ShiftViewModel @Inject constructor(
     private val printer: com.minimart.pos.printer.ThermalPrinter,
     private val cashDrawer: com.minimart.pos.printer.CashDrawerManager,
     private val cloud: com.minimart.pos.cloud.CloudReporter,
-    private val cloudConfig: com.minimart.pos.cloud.CloudConfig
+    private val cloudConfig: com.minimart.pos.cloud.CloudConfig,
+    private val audit: com.minimart.pos.util.AuditLogger
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ShiftUiState())
@@ -89,6 +90,8 @@ class ShiftViewModel @Inject constructor(
                 }
                 val shiftId = shiftRepo.clockIn(userId, user.displayName, openingFloat)
                 val shift = shiftRepo.getOpenShift(userId)
+                runCatching { audit.log(com.minimart.pos.util.AuditEvent.SHIFT_OPENED,
+                    detail = "Opening float ${String.format(java.util.Locale.US, "%.2f", openingFloat)}") }
                 _uiState.update { it.copy(isLoading = false, activeShift = shift, successMessage = "Shift started! Good luck ${user.displayName} 👋") }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = "Clock-in failed: ${e.message}") }
@@ -106,6 +109,11 @@ class ShiftViewModel @Inject constructor(
                     return@launch
                 }
                 val closed = shiftRepo.clockOut(shift.id, closingFloat, notes)
+                runCatching {
+                    val money = { v: Double -> String.format(java.util.Locale.US, "%.2f", v) }
+                    audit.log(com.minimart.pos.util.AuditEvent.SHIFT_CLOSED,
+                        detail = "Counted ${money(closingFloat)}" + (closed?.let { " · expected ${money(it.expectedCash)} · variance ${money(it.cashDiscrepancy)}" } ?: ""))
+                }
                 _uiState.update { it.copy(isLoading = false, activeShift = null, lastClosedShift = closed, successMessage = "Shift ended") }
                 if (cloudConfig.isConfigured) launch { runCatching { cloud.push() } }
             } catch (e: Exception) {
@@ -139,7 +147,7 @@ class ShiftViewModel @Inject constructor(
             val r = cashDrawer.openDrawer()
             if (r is com.minimart.pos.printer.DrawerResult.Success) {
                 val shift = _uiState.value.activeShift
-                if (noSale && shift != null) runCatching { settingsRepo.recordNoSaleOpen(shift.id) }
+                if (noSale && shift != null) runCatching { settingsRepo.recordNoSaleOpen(shift.id); audit.log(com.minimart.pos.util.AuditEvent.NO_SALE, detail = "Drawer opened without a sale (shift #${shift.id})") }
                 _uiState.update { it.copy(successMessage = "Drawer opened") }
             } else if (r is com.minimart.pos.printer.DrawerResult.Error) {
                 _uiState.update { it.copy(error = "Drawer: ${r.msg}") }

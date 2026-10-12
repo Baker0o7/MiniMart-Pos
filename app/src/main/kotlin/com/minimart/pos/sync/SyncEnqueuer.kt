@@ -23,7 +23,8 @@ class SyncEnqueuer @Inject constructor(
     private val saleRepo: SaleRepository,
     private val customerRepo: CustomerRepository,
     private val userRepo: UserRepository,
-    private val device: DeviceIdProvider
+    private val device: DeviceIdProvider,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) {
     suspend fun saleCreated(saleId: Long, customerId: Long?, creditAmount: Double, purchaseAmount: Double) {
         if (!device.isPaired()) return
@@ -37,6 +38,7 @@ class SyncEnqueuer @Inject constructor(
             entityType = SyncEntityType.SALE, entityId = saleId, operation = SyncOperation.CREATE,
             deviceId = device.id(), payload = payload.toString()
         ))
+        com.minimart.pos.worker.SyncWorker.kick(context)
     }
 
     suspend fun saleReversed(sale: Sale, status: SaleStatus, reason: String) {
@@ -45,5 +47,6 @@ class SyncEnqueuer @Inject constructor(
             entityType = SyncEntityType.SALE, entityId = sale.id, operation = SyncOperation.UPDATE,
             deviceId = device.id(), payload = SyncPayloads.saleReversed(sale, status, reason).toString()
         ))
+        com.minimart.pos.worker.SyncWorker.kick(context)
     }
 }

@@ -93,6 +93,11 @@ Built with Kotlin + Jetpack Compose 🇰🇪
   - 🟢 Wallet balances shown in green
   - Two summary stats: "Owed to Shop" + "Wallet Credit"
 
+### 🛡️ Accountability & Recovery
+- **Activity log (owner):** every sign-in, sale, discount, void and refund (a written reason is now required), price/cost change, stock adjustment, product add/delete, no-sale drawer opening, shift open/close (with cash variance) and backup is recorded with who did it. Each line is chained to the one before by a hash, so an edited or removed line is detected and the screen says where. Deleting only the newest lines cannot be detected on the phone itself.
+- **Automatic backups:** about once a day the shop database is copied, opened and checked (integrity check plus required tables); a copy that fails the check is discarded. The newest 7 are kept, manual backups are never deleted, and manual backups are checked too. Owners and managers see a warning on Home when there has been no good backup for 3 days or the last one failed.
+- **Hands-free sync:** a paired till syncs every 15 minutes and shortly after each sale or refund, retrying with growing delays when the main device is out of reach. Sales stay queued on the till meanwhile, and sync runs never overlap.
+
 ### 🌐 Multi-Device LAN Sync
 - No internet, no cloud — pure local WiFi sync
 - **Pairing code authentication** — 6-digit code shown on server device,

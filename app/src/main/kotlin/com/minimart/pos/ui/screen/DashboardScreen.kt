@@ -83,6 +83,7 @@ fun DashboardScreen(
     onNavigateToPurchasing: () -> Unit = {},
     onNavigateToLabels: () -> Unit = {},
     onNavigateToCustomerDisplay: () -> Unit = {},
+    onNavigateToActivityLog: () -> Unit = {},
     currentRole: UserRole? = null,
     currentUserName: String? = null,
     settingsRepo: SettingsRepository? = null,
@@ -174,6 +175,23 @@ fun DashboardScreen(
                             contentAlignment = Alignment.Center) {
                             Icon(Icons.Default.Settings, "Settings", tint = Color(0xFF2EE6F2), modifier = Modifier.size(23.dp))
                         }
+                    }
+                }
+            }
+
+            // ── Backup warning (owner / manager only) ─────────────────────────
+            item {
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val warn = remember(state.todayRevenue, state.todaySaleCount) { com.minimart.pos.util.BackupManager.warning(ctx) }
+                if (warn != null && rm.canAccessSettings(currentRole)) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 10.dp)
+                        .clip(RoundedCornerShape(14.dp)).background(AmberGlow.copy(0.14f))
+                        .border(1.dp, AmberGlow.copy(0.6f), RoundedCornerShape(14.dp))
+                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onNavigateToSettings() }
+                        .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Warning, null, tint = AmberGlow, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Text(warn, color = White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -309,6 +327,8 @@ fun DashboardScreen(
                         add(DashCard_("purchasing","Purchasing","Suppliers & POs",Icons.Default.LocalShipping,Color(0xFF0B2220),GreenGlow,onNavigateToPurchasing))
                     if (rm.canEditPrices(currentRole) && "labels" !in hidden)
                         add(DashCard_("labels","Labels","Print barcodes",Icons.Default.QrCode2,Color(0xFF1A1030),PurpleGlow,onNavigateToLabels))
+                    if (rm.canManageUsers(currentRole) && "activity" !in hidden)
+                        add(DashCard_("activity","Activity","Who did what",Icons.Default.Fingerprint,Color(0xFF1A0F1F),PurpleGlow,onNavigateToActivityLog))
                     if ("customerview" !in hidden)
                         add(DashCard_("customerview","Customer","Display screen",Icons.Default.Tv,Color(0xFF0B1A2C),BlueGlow,onNavigateToCustomerDisplay))
                     if ("history"  !in hidden) add(DashCard_("history",  "History","Past sales",        Icons.Default.History,   Color(0xFF081525), BlueGlow,   onNavigateToSalesHistory))

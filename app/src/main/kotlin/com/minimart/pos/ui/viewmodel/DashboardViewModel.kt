@@ -236,12 +236,14 @@ class AuthViewModel @Inject constructor(
                             val user = userRepo.getUserById(userId)
                             // A removed (deactivated) account must not keep a live session.
                             val usable = user != null && user.isActive
+                            auditLogger.actor = if (usable) user?.username.orEmpty() else ""
                             _uiState.update { it.copy(isLoggedIn = usable, currentUser = if (usable) user else null) }
                             if (!usable) try { settingsRepo.setLoggedInUser(null) } catch (_: Exception) {}
                         } catch (e: Exception) {
                             _uiState.update { it.copy(isLoggedIn = false, currentUser = null) }
                         }
                     } else {
+                        auditLogger.actor = ""
                         _uiState.update { it.copy(isLoggedIn = false, currentUser = null) }
                     }
                 }
@@ -294,6 +296,7 @@ class AuthViewModel @Inject constructor(
                 if (user != null) {
                     settingsRepo.setLoggedInUser(user.id)
                     settingsRepo.resetLockoutHistory()
+                    auditLogger.actor = user.username
                     auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_SUCCESS,
                         user = username, detail = "Role: ${user.role.name}")
                     if (pinHasher.needsUpgrade(user.pinHash)) {
@@ -359,6 +362,7 @@ class AuthViewModel @Inject constructor(
         // Keep biometricEnabled: its DataStore flow only emits on change, so resetting it here
         // hid the fingerprint button after every logout / idle lock until the app restarted.
         _uiState.update { AuthUiState(biometricEnabled = it.biometricEnabled) }
+        auditLogger.actor = ""   // the logout line below names the user explicitly
         viewModelScope.launch {
             runCatching { auditLogger.log(com.minimart.pos.util.AuditEvent.LOGOUT, user = username) }
             try { settingsRepo.setLoggedInUser(null) } catch (_: Exception) {}
@@ -389,6 +393,7 @@ class AuthViewModel @Inject constructor(
                 if (user != null && user.isActive) {
                     settingsRepo.setLoggedInUser(user.id)
                     settingsRepo.resetLockoutHistory()
+                    auditLogger.actor = user.username
                     auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_SUCCESS,
                         user = user.username, detail = "Role: ${user.role.name} (biometric)")
                     _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user) }

@@ -705,6 +705,10 @@ fun SettingsScreen(
                         var isBackingUp  by remember { mutableStateOf(false) }
                         var backupFiles  by remember { mutableStateOf<List<java.io.File>>(emptyList()) }
                         var showRestore  by remember { mutableStateOf(false) }
+                        val backupHealth = remember(backupStatus, isBackingUp) { com.minimart.pos.util.BackupManager.statusText(context) }
+                        Text(backupHealth, color = if (backupHealth.contains("failed")) DT.Red else DT.SubText, fontSize = 12.sp)
+                        Text("A checked copy is also made automatically about once a day, keeping the latest 7.", color = DT.SubText, fontSize = 11.sp)
+                        Spacer(Modifier.height(8.dp))
                         // Bug fix: previously tapping a backup filename immediately restored
                         // it with NO confirmation step — a single misplaced tap could wipe
                         // today's sales with zero warning. Every other destructive action in

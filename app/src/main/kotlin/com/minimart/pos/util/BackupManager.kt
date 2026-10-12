@@ -48,12 +48,28 @@ object BackupManager {
             // file, and the companions would otherwise sit next to it in plaintext.
             if (!passphrase.isNullOrEmpty()) {
                 val enc = File(backupDir, "minimart_backup_$timestamp.mmbak")
+                // The encrypted file cannot be opened without the passphrase, so check the data first.
+                val plainCopy = File(context.cacheDir, "backup_check.db")
+                try {
+                    dbFile.copyTo(plainCopy, overwrite = true)
+                    verify(plainCopy)?.let { problem ->
+                        recordFailure(context, problem)
+                        return@withContext BackupResult.Error("Backup was not saved: $problem")
+                    }
+                } finally { plainCopy.delete() }
                 dbFile.inputStream().use { ins -> enc.outputStream().use { outs -> BackupCrypto.encrypt(ins, outs, passphrase) } }
+                recordSuccess(context)
                 return@withContext BackupResult.Success(enc, "Encrypted backup saved: ${enc.name}\nKeep the passphrase — it cannot be recovered.")
             }
 
             val dest = File(backupDir, "minimart_backup_$timestamp.db")
             dbFile.copyTo(dest, overwrite = true)
+            // A backup that cannot be opened is worse than none: it gives false comfort.
+            verify(dest)?.let { problem ->
+                dest.delete()
+                recordFailure(context, problem)
+                return@withContext BackupResult.Error("Backup was not saved: $problem")
+            }
 
             // Also copy WAL and SHM if they exist
             listOf("-wal", "-shm").forEach { suffix ->
@@ -61,9 +77,108 @@ object BackupManager {
                 if (extra.exists()) extra.copyTo(File(backupDir, dest.name + suffix), overwrite = true)
             }
 
-            BackupResult.Success(dest, "Backup saved: ${dest.name}\nUse \"Share Latest Backup\" to copy it off this device.")
+            recordSuccess(context)
+            BackupResult.Success(dest, "Backup saved and checked: ${dest.name}\nUse \"Share Latest Backup\" to copy it off this device.")
         } catch (e: Exception) {
             BackupResult.Error("Backup failed: ${e.message}")
+        }
+    }
+
+    // ── Verification, automatic backups and status ───────────────────────────────
+
+    private const val STATUS_PREFS = "minimart_backup_status"
+    private const val KEEP_AUTO = 7
+    private const val AUTO_PREFIX = "minimart_auto_"
+    private const val STALE_AFTER_MS = 3L * 24 * 60 * 60 * 1000
+
+    /** Returns a description of the problem, or null if [file] is a complete, readable MiniMart database. */
+    fun verify(file: File): String? {
+        if (!file.exists() || file.length() < 4096) return "the file is empty or too small"
+        return try {
+            android.database.sqlite.SQLiteDatabase.openDatabase(
+                file.absolutePath, null, android.database.sqlite.SQLiteDatabase.OPEN_READONLY
+            ).use { db ->
+                val check = db.rawQuery("PRAGMA integrity_check", null).use { c -> if (c.moveToFirst()) c.getString(0) else "no result" }
+                if (check != "ok") return "database check failed ($check)"
+                val tables = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null).use { c ->
+                    buildSet { while (c.moveToNext()) add(c.getString(0)) }
+                }
+                val missing = listOf("users", "sales", "products").filter { it !in tables }
+                if (missing.isNotEmpty()) "missing data: ${missing.joinToString()}" else null
+            }
+        } catch (e: Exception) {
+            "cannot be opened (${e.message})"
+        }
+    }
+
+    /** Daily automatic backup: plain file in the backup folder, checked, with the oldest ones pruned. */
+    suspend fun autoBackup(context: Context): BackupResult = withContext(Dispatchers.IO) {
+        try {
+            val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
+            if (!dbFile.exists()) return@withContext BackupResult.Error("Database file not found")
+            try {
+                android.database.sqlite.SQLiteDatabase.openDatabase(
+                    dbFile.absolutePath, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
+                ).use { it.execSQL("PRAGMA wal_checkpoint(TRUNCATE)") }
+            } catch (_: Exception) { /* verification below decides whether the copy is usable */ }
+            val dir = backupDir(context).apply { mkdirs() }
+            val dest = File(dir, "$AUTO_PREFIX${df.format(Date())}.db")
+            dbFile.copyTo(dest, overwrite = true)
+            verify(dest)?.let { problem ->
+                dest.delete()
+                recordFailure(context, problem)
+                return@withContext BackupResult.Error("Automatic backup failed: $problem")
+            }
+            // Keep only the newest few automatic backups (manual ones are never touched).
+            dir.listFiles { f -> f.name.startsWith(AUTO_PREFIX) && f.name.endsWith(".db") }
+                ?.sortedByDescending { it.lastModified() }?.drop(KEEP_AUTO)?.forEach { it.delete() }
+            recordSuccess(context)
+            BackupResult.Success(dest, "Automatic backup saved: ${dest.name}")
+        } catch (e: Exception) {
+            recordFailure(context, e.message ?: "unknown error")
+            BackupResult.Error("Automatic backup failed: ${e.message}")
+        }
+    }
+
+    private fun recordSuccess(context: Context) {
+        context.getSharedPreferences(STATUS_PREFS, Context.MODE_PRIVATE).edit()
+            .putLong("last_ok_at", System.currentTimeMillis()).remove("last_error").apply()
+    }
+
+    private fun recordFailure(context: Context, message: String) {
+        context.getSharedPreferences(STATUS_PREFS, Context.MODE_PRIVATE).edit()
+            .putString("last_error", message).putLong("last_error_at", System.currentTimeMillis()).apply()
+    }
+
+    /** Time of the last backup that passed its check, or 0 if there has never been one. */
+    fun lastVerifiedBackupAt(context: Context): Long =
+        context.getSharedPreferences(STATUS_PREFS, Context.MODE_PRIVATE).getLong("last_ok_at", 0L)
+
+    /** One line for the Settings screen. */
+    fun statusText(context: Context): String {
+        val p = context.getSharedPreferences(STATUS_PREFS, Context.MODE_PRIVATE)
+        val ok = p.getLong("last_ok_at", 0L)
+        val err = p.getString("last_error", null)
+        val whenText = if (ok > 0) SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()).format(Date(ok)) else null
+        return when {
+            err != null && whenText != null -> "Last good backup $whenText. Latest attempt failed: $err"
+            err != null -> "No good backup yet. Latest attempt failed: $err"
+            whenText != null -> "Last good backup: $whenText"
+            else -> "No backup yet. The first automatic one runs within a day."
+        }
+    }
+
+    /** Message for a Home-screen warning, or null when backups are healthy. */
+    fun warning(context: Context): String? {
+        val p = context.getSharedPreferences(STATUS_PREFS, Context.MODE_PRIVATE)
+        val ok = p.getLong("last_ok_at", 0L)
+        val errAt = p.getLong("last_error_at", 0L)
+        val now = System.currentTimeMillis()
+        return when {
+            p.getString("last_error", null) != null && errAt >= ok -> "The last backup failed. Open Settings → Data & Backup."
+            ok == 0L -> null   // brand-new install: the first automatic backup is still due
+            now - ok > STALE_AFTER_MS -> "No good backup for ${(now - ok) / 86_400_000L} days. Open Settings → Data & Backup."
+            else -> null
         }
     }
 

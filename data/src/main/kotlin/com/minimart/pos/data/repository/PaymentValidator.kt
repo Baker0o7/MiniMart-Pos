@@ -58,7 +58,7 @@ object PaymentValidator {
         if (globalDiscount > lineSum + TOTAL_SLACK) return "Discount is larger than the sale"
         val expectedTotal = (lineSum - globalDiscount).coerceAtLeast(0.0)
         if (!near(sale.totalAmount, expectedTotal, TOTAL_SLACK))
-            return "Sale total does not match the items (expected ${"%.2f".format(expectedTotal)})"
+            return "Sale total does not match the items (expected ${String.format(java.util.Locale.US, "%.2f", expectedTotal)})"
 
         val total = sale.totalAmount
         val change = (sale.amountPaid - total).coerceAtLeast(0.0)

@@ -33,25 +33,33 @@ class CompleteSaleUseCase @Inject constructor(
 /** Refunds a COMPLETED sale (restores stock, returns credit). No-op if already refunded/voided. */
 class RefundSaleUseCase @Inject constructor(
     private val saleRepo: SaleRepository,
-    private val syncEnqueuer: com.minimart.pos.sync.SyncEnqueuer
+    private val syncEnqueuer: com.minimart.pos.sync.SyncEnqueuer,
+    private val audit: com.minimart.pos.util.AuditLogger
 ) {
     suspend operator fun invoke(saleId: Long, reason: String) {
         val before = saleRepo.getSaleWithItems(saleId)?.sale
         saleRepo.refundSale(saleId, reason.trim())
-        if (before != null && before.status == com.minimart.pos.data.entity.SaleStatus.COMPLETED)
+        if (before != null && before.status == com.minimart.pos.data.entity.SaleStatus.COMPLETED) {
+            runCatching { audit.log(com.minimart.pos.util.AuditEvent.SALE_REFUNDED,
+                detail = "Sale #$saleId total ${String.format(java.util.Locale.US, "%.2f", before.totalAmount)} · reason: ${reason.trim().ifBlank { "none given" }}") }
             runCatching { syncEnqueuer.saleReversed(before, com.minimart.pos.data.entity.SaleStatus.REFUNDED, reason.trim()) }
+        }
     }
 }
 
 /** Voids a COMPLETED sale (restores stock, returns credit). No-op if already refunded/voided. */
 class VoidSaleUseCase @Inject constructor(
     private val saleRepo: SaleRepository,
-    private val syncEnqueuer: com.minimart.pos.sync.SyncEnqueuer
+    private val syncEnqueuer: com.minimart.pos.sync.SyncEnqueuer,
+    private val audit: com.minimart.pos.util.AuditLogger
 ) {
     suspend operator fun invoke(saleId: Long, reason: String) {
         val before = saleRepo.getSaleWithItems(saleId)?.sale
         saleRepo.voidSale(saleId, reason.trim())
-        if (before != null && before.status == com.minimart.pos.data.entity.SaleStatus.COMPLETED)
+        if (before != null && before.status == com.minimart.pos.data.entity.SaleStatus.COMPLETED) {
+            runCatching { audit.log(com.minimart.pos.util.AuditEvent.SALE_VOIDED,
+                detail = "Sale #$saleId total ${String.format(java.util.Locale.US, "%.2f", before.totalAmount)} · reason: ${reason.trim().ifBlank { "none given" }}") }
             runCatching { syncEnqueuer.saleReversed(before, com.minimart.pos.data.entity.SaleStatus.VOIDED, reason.trim()) }
+        }
     }
 }

@@ -4,6 +4,8 @@ import android.util.Log
 import com.minimart.pos.data.dao.SyncDao
 import com.minimart.pos.data.entity.SyncStatus
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -36,7 +38,10 @@ class SyncClient @Inject constructor(
         private const val BATCH   = 40
     }
 
-    suspend fun sync(serverIp: String, deviceId: String, peerKey: String): SyncResult = withContext(Dispatchers.IO) {
+    // The background worker, the post-sale kick and the Sync Now button must never overlap.
+    private val syncLock = Mutex()
+
+    suspend fun sync(serverIp: String, deviceId: String, peerKey: String): SyncResult = syncLock.withLock { withContext(Dispatchers.IO) {
         try {
             val baseUrl = "http://$serverIp:${SyncServer.PORT}"
 
@@ -101,7 +106,7 @@ class SyncClient @Inject constructor(
             Log.e(TAG, "Sync error", e)
             SyncResult.Error(e.localizedMessage ?: "Sync failed")
         }
-    }
+    } }
 
     private fun authError(r: Reply): String? = when (r.code) {
         401 -> "Pairing code rejected — check the code, that both phones run the latest app, and that both clocks are correct"

@@ -323,7 +323,7 @@ fun ReceiptScreen(
 }
 
 @Composable
-private fun ReasonDialog(title: String, subtitle: String, color: Color,
+internal fun ReasonDialog(title: String, subtitle: String, color: Color,
     onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     var reason by remember { mutableStateOf("") }
     AlertDialog(onDismissRequest = onDismiss, containerColor = DT.Surface,
@@ -332,7 +332,7 @@ private fun ReasonDialog(title: String, subtitle: String, color: Color,
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(subtitle, color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                 OutlinedTextField(value = reason, onValueChange = { reason = it },
-                    label = { Text("Reason (optional)", color = DT.SubText) },
+                    label = { Text("Reason (required)", color = DT.SubText) },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -342,7 +342,7 @@ private fun ReasonDialog(title: String, subtitle: String, color: Color,
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(reason) },
+            Button(onClick = { onConfirm(reason.trim()) }, enabled = reason.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = color)) {
                 Text("Confirm", color = if (color == DT.Red) Color.White else Color.Black, fontWeight = FontWeight.Bold)
             }

@@ -100,7 +100,7 @@ class SaleRepository @Inject constructor(
         db.mpesaPaymentDao().findByCode(ref)?.let { paid ->
             val due = if (sale.paymentMethod == PaymentMethod.MPESA) sale.totalAmount else sale.amountPaid - sale.cashPortion
             if (paid.amount + 0.011 < due)
-                throw IllegalArgumentException("M-Pesa payment $ref was only ${"%.2f".format(paid.amount)}, less than the ${"%.2f".format(due)} due")
+                throw IllegalArgumentException("M-Pesa payment $ref was only ${String.format(java.util.Locale.US, "%.2f", paid.amount)}, less than the ${String.format(java.util.Locale.US, "%.2f", due)} due")
         }
     }
 

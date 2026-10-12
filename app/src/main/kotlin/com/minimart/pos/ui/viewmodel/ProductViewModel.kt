@@ -22,7 +22,8 @@ data class ProductUiState(
 @OptIn(ExperimentalCoroutinesApi::class, kotlinx.coroutines.FlowPreview::class)
 @HiltViewModel
 class ProductViewModel @Inject constructor(
-    private val repo: ProductRepository
+    private val repo: ProductRepository,
+    private val audit: com.minimart.pos.util.AuditLogger
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -77,7 +78,24 @@ class ProductViewModel @Inject constructor(
                 }
                 // Free the barcode if only a deleted product still holds it.
                 repo.releaseDeletedBarcode(product.barcode)
+                val before = if (product.id != 0L) repo.getById(product.id) else null
                 if (product.id == 0L) repo.insert(product) else repo.update(product)
+                runCatching {
+                    val money = { v: Double -> String.format(java.util.Locale.US, "%.2f", v) }
+                    if (before == null) audit.log(com.minimart.pos.util.AuditEvent.PRODUCT_CREATED,
+                        detail = "${product.name} · price ${money(product.price)}")
+                    else {
+                        val changes = buildList {
+                            if (before.price != product.price) add("price ${money(before.price)} → ${money(product.price)}")
+                            if (before.costPrice != product.costPrice) add("cost ${money(before.costPrice)} → ${money(product.costPrice)}")
+                            if (before.pricePerKg != product.pricePerKg) add("per-kg ${money(before.pricePerKg)} → ${money(product.pricePerKg)}")
+                            if (before.stock != product.stock) add("stock ${before.stock} → ${product.stock}")
+                            if (before.name != product.name) add("renamed from ${before.name}")
+                        }
+                        if (changes.isNotEmpty()) audit.log(com.minimart.pos.util.AuditEvent.PRODUCT_EDITED,
+                            detail = "${product.name}: ${changes.joinToString(", ")}")
+                    }
+                }
                 _uiState.update { it.copy(isLoading = false, successMessage = "Product saved") }
             } catch (e: android.database.sqlite.SQLiteConstraintException) {
                 _uiState.update { it.copy(isLoading = false, error = "Barcode already exists (it may belong to a deleted product)") }
@@ -89,7 +107,9 @@ class ProductViewModel @Inject constructor(
 
     fun deleteProduct(productId: Long) {
         viewModelScope.launch {
+            val name = repo.getById(productId)?.name ?: "#$productId"
             repo.softDelete(productId)
+            runCatching { audit.log(com.minimart.pos.util.AuditEvent.PRODUCT_DELETED, detail = name) }
             _uiState.update { it.copy(successMessage = "Product deleted") }
         }
     }
@@ -97,6 +117,8 @@ class ProductViewModel @Inject constructor(
     fun adjustStock(productId: Long, delta: Int) {
         viewModelScope.launch {
             val product = repo.getById(productId)
+            if (delta != 0) runCatching { audit.log(com.minimart.pos.util.AuditEvent.STOCK_ADJUSTED,
+                detail = "${product?.name ?: "#$productId"}: ${if (delta > 0) "+" else ""}$delta") }
             if (product?.isWeighed == true) {
                 // Weighed products keep exact kg stock; the integer figure is a mirror of it.
                 if (delta > 0) repo.incrementStockKg(productId, delta.toDouble())
@@ -118,6 +140,8 @@ class ProductViewModel @Inject constructor(
     fun adjustWeighedStock(productId: Long, deltaKg: Double) {
         viewModelScope.launch {
             val product = repo.getById(productId) ?: return@launch
+            if (deltaKg != 0.0) runCatching { audit.log(com.minimart.pos.util.AuditEvent.STOCK_ADJUSTED,
+                detail = "${product.name}: ${if (deltaKg > 0) "+" else ""}${String.format(java.util.Locale.US, "%.3f", deltaKg)} kg") }
             if (deltaKg > 0) repo.incrementStockKg(productId, deltaKg)
             else if (deltaKg < 0) {
                 if (product.stockKg < -deltaKg) _uiState.update { it.copy(error = "Cannot remove more than the current stock") }
