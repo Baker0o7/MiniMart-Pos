@@ -152,7 +152,7 @@ fun ProductListScreen(
                         onDelete = { vm.deleteProduct(product.id) }
                     )
                 }
-                if (visible.isEmpty()) {
+                if (visible.isEmpty() && (searchQuery.isNotBlank() || filtering)) {
                     item {
                         Box(Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally,
