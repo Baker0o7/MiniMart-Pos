@@ -42,7 +42,12 @@ svg text{fill:var(--sub);font-size:10px}
   <div id="stale"></div>
   <div class="grid" id="kpis"></div>
   <div class="card"><h2>Daily sales (last 30 days)</h2><div id="chart"></div></div>
-  <div class="card" id="storesCard"><h2>Stores</h2><div id="stores"></div></div>
+  <div class="card" id="storesCard"><h2>Stores</h2><div id="stores"></div>
+    <details style="margin-top:12px"><summary class="small">Manage stores</summary>
+      <div id="manage" style="margin-top:8px"></div>
+      <p class="small sub" style="margin-top:10px">Removing a store deletes its uploaded data and key. To add or re-add a store, make a new setup code, then enter it in that store's app (Settings → Cloud dashboard).</p>
+      <button class="ghost" id="rotate">Make a new setup code</button><div id="newcode" class="small" style="margin-top:8px;word-break:break-all"></div>
+    </details></div>
   <div class="two">
     <div class="card"><h2>Payment mix (30 days)</h2><div id="mix"></div></div>
     <div class="card"><h2>Profit &amp; expenses (30 days)</h2><div id="profit"></div></div>
@@ -84,6 +89,11 @@ $("go").onclick=async()=>{
 };
 $("out").onclick=async()=>{await sb.auth.signOut();showLogin()};
 $("refresh").onclick=load;
+$("rotate").onclick=async()=>{
+  if(!confirm("Make a new setup code? The old one stops working for new stores. Stores already connected are not affected."))return;
+  const {data,error}=await sb.rpc("owner_rotate_setup_code");
+  $("newcode").innerHTML=error?'<span class="bad">'+esc(error.message.includes("owner_rotate")?"Run the latest cloud/supabase_setup.sql first.":error.message)+'</span>':'New setup code (shown once — copy it now):<br><b>'+esc(data)+'</b>';
+};
 $("store").onchange=render;
 
 async function load(){
@@ -125,6 +135,13 @@ function render(){
     tile("Credit owed",fmt(sum(rs,r=>r.payload.customerCredit)))+
     tile("Stock value (cost)",fmt(sum(rs,r=>r.payload.stock?.costValue)),fmt(sum(rs,r=>r.payload.stock?.productCount))+" products");
   chart(days,agg);
+  $("manage").innerHTML=rows.map(r=>'<div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0;gap:8px"><span>'+esc(r.store_name)+'</span><button class="ghost" data-del="'+esc(r.store_id)+'" data-name="'+esc(r.store_name)+'">Remove</button></div>').join("")||'<div class="empty">No stores.</div>';
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{
+    if(!confirm('Remove "'+b.dataset.name+'" and all of its uploaded data from the cloud? The phone keeps its own data.'))return;
+    const {error}=await sb.rpc("owner_delete_store",{p_store_id:b.dataset.del});
+    if(error){alert(error.message.includes("owner_delete_store")?"Run the latest cloud/supabase_setup.sql first.":error.message);return}
+    load();
+  });
   $("stores").innerHTML='<table><tr><th>Store</th><th class="n">Today</th><th class="n">7d</th><th class="n">30d</th><th class="n">Low stock</th><th>Last upload</th></tr>'+
     rows.map(r=>{const m={};(r.payload.daily||[]).forEach(x=>m[x.day]=x.revenue);
       const s=n=>days.slice(-n).reduce((a,d)=>a+(m[d]||0),0);const old=Date.now()-new Date(r.pushed_at)>864e5;

@@ -59,4 +59,11 @@ interface SyncDao {
 
     @Query("SELECT COUNT(*) FROM sync_log WHERE status = 'PENDING'")
     suspend fun countPending(): Int
+
+    /** Sales the main device refused. They exist only on this till until someone looks at them. */
+    @Query("SELECT COUNT(*) FROM sync_log WHERE status = 'CONFLICT'")
+    fun getConflictCount(): Flow<Int>
+
+    @Query("UPDATE sync_log SET status = 'PENDING' WHERE status = 'CONFLICT'")
+    suspend fun retryConflicts(): Int
 }

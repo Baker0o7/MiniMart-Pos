@@ -107,3 +107,29 @@ grant execute on function push_snapshot(uuid, text, jsonb) to anon, authenticate
 
 -- 4. Afterwards, in the dashboard: Authentication → Users → "Add user" (your email + password),
 --    and Authentication → Sign In / Providers → turn OFF "Allow new users to sign up".
+
+-- 5. Owner management from the web dashboard (all guarded by is_owner(); safe to run again).
+--    Remove a store (its data and its upload key); the phone can register again with the setup code.
+create or replace function owner_delete_store(p_store_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not is_owner() then raise exception 'Not allowed'; end if;
+  delete from stores where id = p_store_id;   -- snapshots cascade
+end $$;
+
+--    Make a new setup code (returned once). Existing stores keep working; only new stores need it.
+create or replace function owner_rotate_setup_code()
+returns text language plpgsql security definer set search_path = public, extensions as $$
+declare c text;
+begin
+  if not is_owner() then raise exception 'Not allowed'; end if;
+  c := encode(extensions.gen_random_bytes(18), 'hex');
+  insert into app_config (key, value) values ('setup_code', c)
+    on conflict (key) do update set value = excluded.value;
+  return c;
+end $$;
+
+revoke all on function owner_delete_store(uuid) from public, anon;
+revoke all on function owner_rotate_setup_code() from public, anon;
+grant execute on function owner_delete_store(uuid) to authenticated;
+grant execute on function owner_rotate_setup_code() to authenticated;

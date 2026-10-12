@@ -18,6 +18,8 @@ data class SyncUiState(
     val isSyncing:      Boolean = false,
     val lastResult:     String? = null,
     val pendingCount:   Int = 0,
+    val conflictCount:  Int = 0,
+    val lastSyncAt:     Long = 0L,
     val serverIp:       String = "",
     val peerIp:         String = "",
     val deviceId:       String = "",
@@ -42,7 +44,8 @@ class SyncViewModel @Inject constructor(
             prefs.edit().putString("device_id", it).apply()
         },
         peerIp   = prefs.getString("peer_ip", "") ?: "",
-        peerKey  = prefs.getString("peer_sync_key", "") ?: ""
+        peerKey  = prefs.getString("peer_sync_key", "") ?: "",
+        lastSyncAt = prefs.getLong("last_sync_at", 0L)
     ))
     val state: StateFlow<SyncUiState> = _state
 
@@ -52,6 +55,11 @@ class SyncViewModel @Inject constructor(
             syncDao.getPendingCount()
                 .catch { emit(0) }
                 .collect { count -> _state.update { it.copy(pendingCount = count) } }
+        }
+        viewModelScope.launch {
+            syncDao.getConflictCount()
+                .catch { emit(0) }
+                .collect { count -> _state.update { it.copy(conflictCount = count) } }
         }
         // Watch server state
         viewModelScope.launch {
@@ -85,6 +93,12 @@ class SyncViewModel @Inject constructor(
         _state.update { it.copy(peerKey = key) }
     }
 
+    /** Puts refused sales back in the queue and tries again; the main device repeats its reasons if it still refuses. */
+    fun retryRefused() = viewModelScope.launch {
+        syncDao.retryConflicts()
+        syncNow()
+    }
+
     fun syncNow() = viewModelScope.launch {
         if (_state.value.isSyncing) return@launch   // a double tap must not start two overlapping syncs
         val ip = _state.value.peerIp
@@ -93,8 +107,10 @@ class SyncViewModel @Inject constructor(
         if (key.isBlank()) { _state.update { it.copy(lastResult = "Enter the server's pairing code first") }; return@launch }
         _state.update { it.copy(isSyncing = true, lastResult = null) }
         val result = client.sync(ip, _state.value.deviceId, key)
+        if (result is SyncResult.Success) prefs.edit().putLong("last_sync_at", System.currentTimeMillis()).apply()
         _state.update { it.copy(
             isSyncing  = false,
+            lastSyncAt = if (result is SyncResult.Success) System.currentTimeMillis() else it.lastSyncAt,
             lastResult = when (result) {
                 is SyncResult.Success -> buildString {
                     append("✓ Sent ${result.pushed} sale${if (result.pushed == 1) "" else "s"}; ")

@@ -644,6 +644,24 @@ fun SettingsScreen(
                             Spacer(Modifier.height(6.dp))
                             Text(it, color = if (it.startsWith("✓")) DT.Green else DT.Red, fontSize = 12.sp)
                         }
+                        if (syncState.lastSyncAt > 0L) {
+                            Spacer(Modifier.height(4.dp))
+                            Text("Last synced " + java.text.SimpleDateFormat("d MMM, HH:mm", java.util.Locale.getDefault()).format(java.util.Date(syncState.lastSyncAt)),
+                                color = DT.SubText, fontSize = 11.sp)
+                        }
+                        if (syncState.conflictCount > 0) {
+                            Spacer(Modifier.height(8.dp))
+                            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(DT.Red.copy(0.12f)).padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text("${syncState.conflictCount} sale${if (syncState.conflictCount == 1) "" else "s"} refused by the main device",
+                                    color = DT.Red, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("These sales are only on this phone, so the main device's totals and stock are missing them. Retry after fixing the cause (for example a product or M-Pesa code problem); the reason is shown after a retry.",
+                                    color = DT.SubText, fontSize = 11.sp)
+                                OutlinedButton(onClick = { syncVm.retryRefused() },
+                                    enabled = !syncState.isSyncing && syncState.peerIp.isNotBlank() && syncState.peerKey.isNotBlank(),
+                                    shape = RoundedCornerShape(10.dp)) { Text("Retry refused sales", color = DT.Red, fontSize = 12.sp) }
+                            }
+                        }
                     }
                 }
 
