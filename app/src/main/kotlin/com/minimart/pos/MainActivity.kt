@@ -115,7 +115,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val darkMode by settingsRepo.darkMode.collectAsState(false)
             val accentName by settingsRepo.accent.collectAsState(initial = com.minimart.pos.ui.theme.DT.accent.name)
-            androidx.compose.runtime.SideEffect { com.minimart.pos.ui.theme.DT.accent = com.minimart.pos.ui.theme.AppAccent.fromName(accentName) }
+            // Only when the saved choice changes: a plain SideEffect re-applied the old value on every
+            // recomposition and could undo a pick before it had been saved.
+            androidx.compose.runtime.LaunchedEffect(accentName) { com.minimart.pos.ui.theme.DT.accent = com.minimart.pos.ui.theme.AppAccent.fromName(accentName) }
             MiniMartTheme(darkTheme = darkMode) {
                 MiniMartNavGraph(
                     settingsRepo = settingsRepo,

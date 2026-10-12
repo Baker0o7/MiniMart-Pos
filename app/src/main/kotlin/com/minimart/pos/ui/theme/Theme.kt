@@ -69,7 +69,7 @@ fun MiniMartTheme(
         surface = DT.Surface, onSurface = DT.OnSurface,
         surfaceVariant = DT.Surface2, onSurfaceVariant = DT.SubText,
         surfaceTint = DT.Teal,
-        outline = DT.Border, outlineVariant = DT.Border,
+        outline = DT.SubText, outlineVariant = DT.Border,  // outline is the off-switch thumb: it must stand out from the track
         error = DT.Red, onError = Color.White,
         surfaceContainerLowest = DT.Bg, surfaceContainerLow = DT.Surface,
         surfaceContainer = DT.Surface, surfaceContainerHigh = DT.Surface2, surfaceContainerHighest = DT.Surface2

@@ -542,7 +542,10 @@ fun SettingsScreen(
                                     .background(a.palette.accent)
                                     .border(if (picked) 3.dp else 1.dp, if (picked) Color.White else DT.Border,
                                         androidx.compose.foundation.shape.CircleShape)
-                                    .clickable { scope.launch { settingsRepo.setAccent(a.name) } }
+                                    .clickable {
+                                        com.minimart.pos.ui.theme.DT.accent = a            // instant
+                                        scope.launch { settingsRepo.setAccent(a.name) }   // remembered
+                                    }
                                     .semantics { contentDescription = a.label + if (picked) ", selected" else "" },
                                 contentAlignment = Alignment.Center
                             ) { if (picked) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(22.dp)) }
