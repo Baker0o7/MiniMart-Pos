@@ -361,7 +361,7 @@ private fun RevenueBarChart(points: List<Float>, modifier: Modifier = Modifier) 
             val y = size.height - barH
             // Shadow / glow
             drawLine(
-                color = Color(0xFF00897B).copy(alpha = 0.18f),
+                color = DT.Teal.copy(alpha = 0.18f),
                 start = Offset(x + barW / 2, size.height),
                 end = Offset(x + barW / 2, y),
                 strokeWidth = barW + 6.dp.toPx(),
@@ -369,7 +369,7 @@ private fun RevenueBarChart(points: List<Float>, modifier: Modifier = Modifier) 
             )
             // Bar
             drawLine(
-                color = if (v > 0f) Color(0xFF00897B) else DT.Border,
+                color = if (v > 0f) DT.Teal else DT.Border,
                 start = Offset(x + barW / 2, size.height),
                 end = Offset(x + barW / 2, y),
                 strokeWidth = barW,
@@ -377,7 +377,7 @@ private fun RevenueBarChart(points: List<Float>, modifier: Modifier = Modifier) 
             )
             // Top dot on non-zero bars
             if (v > 0f) {
-                drawCircle(Color(0xFF4DB6AC), radius = 3.dp.toPx(), center = Offset(x + barW / 2, y))
+                drawCircle(DT.TealLight, radius = 3.dp.toPx(), center = Offset(x + barW / 2, y))
             }
         }
     }

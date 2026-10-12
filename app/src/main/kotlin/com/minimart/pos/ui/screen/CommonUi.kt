@@ -71,7 +71,7 @@ internal fun GradientHeader(
     Box(
         modifier = Modifier.fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 28.dp, bottomEnd = 28.dp))
-            .background(Brush.verticalGradient(listOf(DT.Teal, Color(0xFF006B5E), Color(0xFF004D40))))
+            .background(Brush.verticalGradient(listOf(DT.Teal, DT.HeaderMid, DT.HeaderEnd)))
             .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 20.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

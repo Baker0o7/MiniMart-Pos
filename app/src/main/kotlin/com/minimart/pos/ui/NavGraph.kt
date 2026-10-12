@@ -1,5 +1,6 @@
 package com.minimart.pos.ui
 
+import com.minimart.pos.ui.theme.DT
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -71,10 +72,10 @@ object Routes {
     fun receipt(saleId: Long) = "receipt/$saleId"
 }
 
-private val NavBg    = Color(0xFF0F1E1D)
-private val NavSel   = Color(0xFF00897B)
-private val NavUnsel = Color(0xFF4A6B68)
-private val NavSurface = Color(0xFF1A2E2C)
+private val NavBg: Color get() = DT.NavBg
+private val NavSel: Color get() = DT.Teal
+private val NavUnsel: Color get() = DT.NavUnsel
+private val NavSurface: Color get() = DT.NavSurface
 
 // Routes that should show the bottom nav
 private val mainRoutes = setOf(
@@ -406,7 +407,7 @@ private fun BottomNavBar(
         Box(modifier = Modifier.fillMaxWidth().height(68.dp).align(Alignment.BottomCenter)
             .clip(RoundedCornerShape(30.dp))
             .background(NavSurface)
-            .border(1.dp, Color(0xFF1F4A42), RoundedCornerShape(30.dp))) {
+            .border(1.dp, DT.NavBorder, RoundedCornerShape(30.dp))) {
             Row(modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically) {
@@ -425,7 +426,7 @@ private fun BottomNavBar(
             .border(2.dp, NavSel.copy(0.7f), CircleShape)
             .padding(7.dp)
             .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(NavSel, Color(0xFF00897B))))
+            .background(Brush.linearGradient(listOf(NavSel, DT.HeaderMid)))
             .clickable(onClick = onScan),
             contentAlignment = Alignment.Center) {
             Icon(Icons.Default.QrCode2, "Scan", tint = Color.White, modifier = Modifier.size(32.dp))

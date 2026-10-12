@@ -32,6 +32,7 @@ class SettingsRepository @Inject constructor(
         val KEY_MPESA_SMS_TRACKING = booleanPreferencesKey("mpesa_sms_tracking")
         val KEY_MPESA_STRICT = booleanPreferencesKey("mpesa_strict")
         val KEY_SYNC_SERVER = booleanPreferencesKey("sync_server_enabled")
+        val KEY_ACCENT = stringPreferencesKey("accent")
         val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
         val KEY_PRINTER_NAME     = stringPreferencesKey("printer_name")
         val KEY_RECEIPT_FOOTER   = stringPreferencesKey("receipt_footer")
@@ -98,6 +99,9 @@ class SettingsRepository @Inject constructor(
     val cashDrawerOnSale:  Flow<Boolean> = context.dataStore.data.map { it[KEY_CASH_DRAWER_ON_SALE] ?: true }
     val mpesaSmsTracking: Flow<Boolean> = context.dataStore.data.map { it[KEY_MPESA_SMS_TRACKING] ?: false }
     suspend fun setMpesaSmsTracking(v: Boolean) = context.dataStore.edit { it[KEY_MPESA_SMS_TRACKING] = v }
+    /** Name of the chosen accent colour (TEAL, BLUE, …); the app maps it to a palette. */
+    val accent: Flow<String> = context.dataStore.data.map { it[KEY_ACCENT] ?: "TEAL" }
+    suspend fun setAccent(name: String) = context.dataStore.edit { it[KEY_ACCENT] = name }
     /** Whether this phone is meant to be the main device; the app restarts the sync server on launch if so. */
     val syncServerEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_SYNC_SERVER] ?: false }
     suspend fun setSyncServerEnabled(v: Boolean) = context.dataStore.edit { it[KEY_SYNC_SERVER] = v }

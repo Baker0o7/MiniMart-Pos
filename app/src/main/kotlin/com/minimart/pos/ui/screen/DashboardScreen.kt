@@ -49,15 +49,15 @@ private fun roleLabel(role: UserRole?): String? = when (role) {
 }
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
-private val Bg          = Color(0xFF060C0B)
-private val TealGlow    = Color(0xFF00C9A7)
+private val Bg: Color get() = DT.DashBg
+private val TealGlow: Color get() = DT.Glow
 private val GreenGlow   = Color(0xFF4CAF50)
 private val PurpleGlow  = Color(0xFFB39DDB)
 private val BlueGlow    = Color(0xFF64B5F6)
 private val AmberGlow   = Color(0xFFFFB74D)
 private val RedGlow     = Color(0xFFEF5350)
 private val White       = Color.White
-private val Sub         = Color(0xFF7A9E9B)
+private val Sub: Color get() = DT.SubText
 
 private data class DashCard_(
     val id: String, val title: String, val sub: String,
@@ -108,12 +108,12 @@ fun DashboardScreen(
             // ── Greeting header ───────────────────────────────────────────────
             item {
                 Box(modifier = Modifier.fillMaxWidth()
-                    .background(Brush.verticalGradient(listOf(Color(0xFF0A2623), Bg)))
+                    .background(Brush.verticalGradient(listOf(DT.DashTop, Bg)))
                     .drawBehind {
                         // soft teal glows in the corners
-                        drawCircle(Brush.radialGradient(listOf(Color(0x3319D3B2), Color.Transparent), center = Offset(0f, 0f), radius = size.width * 0.55f),
+                        drawCircle(Brush.radialGradient(listOf(DT.Glow.copy(alpha = 0.20f), Color.Transparent), center = Offset(0f, 0f), radius = size.width * 0.55f),
                             radius = size.width * 0.55f, center = Offset(0f, 0f))
-                        drawCircle(Brush.radialGradient(listOf(Color(0x2619D3B2), Color.Transparent), center = Offset(size.width, size.height), radius = size.width * 0.5f),
+                        drawCircle(Brush.radialGradient(listOf(DT.Glow.copy(alpha = 0.15f), Color.Transparent), center = Offset(size.width, size.height), radius = size.width * 0.5f),
                             radius = size.width * 0.5f, center = Offset(size.width, size.height))
                     }
                     .padding(start = 18.dp, end = 18.dp, top = 18.dp, bottom = 20.dp)) {
@@ -121,10 +121,10 @@ fun DashboardScreen(
                         // Avatar: glowing rounded tile with the flag and an "online" dot
                         Box(modifier = Modifier.size(56.dp)) {
                             Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(18.dp))
-                                .background(Brush.linearGradient(listOf(Color(0xFF0E3A33), Color(0xFF06201C))))
+                                .background(Brush.linearGradient(listOf(DT.CardTop, DT.CardBottom)))
                                 .border(2.dp, TealGlow.copy(0.55f), RoundedCornerShape(18.dp)),
                                 contentAlignment = Alignment.Center) {
-                                Box(Modifier.size(40.dp).clip(RoundedCornerShape(11.dp)).background(Color(0xFF0A1A18)),
+                                Box(Modifier.size(40.dp).clip(RoundedCornerShape(11.dp)).background(DT.Bg),
                                     contentAlignment = Alignment.Center) {
                                     Text("🇰🇪", fontSize = 22.sp)
                                 }
@@ -139,7 +139,7 @@ fun DashboardScreen(
                             Text(roleLabel(currentRole) ?: "Welcome", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
                             // A long shop name must not wrap and unbalance the header.
-                            Text(state.storeName, color = Color(0xFF8FF0E0), fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                            Text(state.storeName, color = DT.StoreText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
                             val today = remember { java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale.getDefault()).format(java.util.Date()) }
                             Spacer(Modifier.height(4.dp))
@@ -152,7 +152,7 @@ fun DashboardScreen(
                         Spacer(Modifier.width(8.dp))
                         // Status pill: stacked so the name, shop and date keep enough width on narrow phones.
                         Column(modifier = Modifier.clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFF0A1F1C))
+                            .background(DT.Chip)
                             .border(1.dp, TealGlow.copy(0.45f), RoundedCornerShape(16.dp))
                             .padding(horizontal = 10.dp, vertical = 7.dp),
                             horizontalAlignment = Alignment.Start) {
@@ -169,11 +169,11 @@ fun DashboardScreen(
                         Spacer(Modifier.width(8.dp))
                         // Settings button
                         Box(modifier = Modifier.size(42.dp).clip(CircleShape)
-                            .background(Color(0xFF0A1F1C))
+                            .background(DT.Chip)
                             .border(1.5.dp, TealGlow.copy(0.45f), CircleShape)
                             .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onNavigateToSettings() },
                             contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Settings, "Settings", tint = Color(0xFF2EE6F2), modifier = Modifier.size(23.dp))
+                            Icon(Icons.Default.Settings, "Settings", tint = DT.Glow, modifier = Modifier.size(23.dp))
                         }
                     }
                 }
@@ -220,7 +220,7 @@ fun DashboardScreen(
                         Column(Modifier.weight(1.25f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.size(36.dp).clip(RoundedCornerShape(11.dp))
-                                    .background(Brush.linearGradient(listOf(Color(0xFF00B398), Color(0xFF00695C)))),
+                                    .background(Brush.linearGradient(listOf(DT.Glow, DT.HeaderMid))),
                                     contentAlignment = Alignment.Center) {
                                     Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = White, modifier = Modifier.size(20.dp))
                                 }
@@ -297,7 +297,7 @@ fun DashboardScreen(
                         Text("Everything else is in the bottom bar", color = Sub, fontSize = 12.sp)
                     }
                     Box(modifier = Modifier.clip(RoundedCornerShape(16.dp))
-                        .background(if (showManageActions) DT.Teal else Color(0xFF0A1F1C))
+                        .background(if (showManageActions) DT.Teal else DT.Chip)
                         .border(1.dp, if (showManageActions) DT.Teal else TealGlow.copy(0.5f), RoundedCornerShape(16.dp))
                         .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showManageActions = !showManageActions }
                         .padding(horizontal = 16.dp, vertical = 11.dp)) {

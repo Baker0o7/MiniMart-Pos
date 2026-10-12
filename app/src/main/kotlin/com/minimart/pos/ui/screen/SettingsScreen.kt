@@ -3,6 +3,8 @@ package com.minimart.pos.ui.screen
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -528,13 +530,23 @@ fun SettingsScreen(
                 }
 
                 // ── Appearance ────────────────────────────────────────────────
-                DSection("Appearance", Icons.Default.Palette) {
-                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.DarkMode, null, tint = DT.SubText, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(10.dp))
-                        Text("Dark Mode", color = DT.OnSurface, modifier = Modifier.weight(1f))
-                        Switch(checked = darkMode, onCheckedChange = { scope.launch { settingsRepo.setDarkMode(it) } },
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal))
+                DSection("Appearance", Icons.Default.Palette, summary = com.minimart.pos.ui.theme.DT.accent.label) {
+                    Text("The whole app is dark. Pick the colour used for buttons, headers and highlights.",
+                        color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(10.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        com.minimart.pos.ui.theme.AppAccent.entries.forEach { a ->
+                            val picked = com.minimart.pos.ui.theme.DT.accent == a
+                            Box(
+                                Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                                    .background(a.palette.accent)
+                                    .border(if (picked) 3.dp else 1.dp, if (picked) Color.White else DT.Border,
+                                        androidx.compose.foundation.shape.CircleShape)
+                                    .clickable { scope.launch { settingsRepo.setAccent(a.name) } }
+                                    .semantics { contentDescription = a.label + if (picked) ", selected" else "" },
+                                contentAlignment = Alignment.Center
+                            ) { if (picked) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(22.dp)) }
+                        }
                     }
                 }
 

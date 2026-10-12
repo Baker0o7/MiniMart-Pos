@@ -47,20 +47,33 @@ private val DarkColorScheme = darkColorScheme(
     error            = Color(0xFFEF9A9A)
 )
 
+/**
+ * The app is dark on every screen, so Material's own parts (menus, dialogs, text selection, date
+ * pickers, switches) are given the same dark palette. They used to follow the system light/dark
+ * setting and the wallpaper colours, which put pale menus on dark screens. [darkTheme] and
+ * [dynamicColor] are kept for callers but no longer change anything.
+ */
 @Composable
 fun MiniMartTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    @Suppress("UNUSED_PARAMETER") darkTheme: Boolean = true,
+    @Suppress("UNUSED_PARAMETER") dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else      -> LightColorScheme
-    }
+    val colorScheme = darkColorScheme(
+        primary = DT.Teal, onPrimary = Color.White,
+        primaryContainer = DT.TealDim, onPrimaryContainer = DT.TealLight,
+        secondary = DT.TealLight, onSecondary = Color.Black,
+        secondaryContainer = DT.Surface2, onSecondaryContainer = DT.OnSurface,
+        tertiary = Accent, onTertiary = Color.Black,
+        background = DT.Bg, onBackground = DT.OnSurface,
+        surface = DT.Surface, onSurface = DT.OnSurface,
+        surfaceVariant = DT.Surface2, onSurfaceVariant = DT.SubText,
+        surfaceTint = DT.Teal,
+        outline = DT.Border, outlineVariant = DT.Border,
+        error = DT.Red, onError = Color.White,
+        surfaceContainerLowest = DT.Bg, surfaceContainerLow = DT.Surface,
+        surfaceContainer = DT.Surface, surfaceContainerHigh = DT.Surface2, surfaceContainerHighest = DT.Surface2
+    )
 
     val view = LocalView.current
     if (!view.isInEditMode) {
