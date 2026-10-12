@@ -3,6 +3,10 @@ package com.minimart.pos.data.repository
 import com.minimart.pos.data.dao.ProductDao
 import com.minimart.pos.data.entity.Product
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -11,6 +15,20 @@ class ProductRepository @Inject constructor(
     private val productDao: ProductDao
 ) {
     fun getAllProducts(): Flow<List<Product>> = productDao.getAllProducts()
+
+    private val cacheScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default)
+
+    /**
+     * The full catalogue, kept in memory. The last list is remembered even when no screen is open, so
+     * Products and Inventory show their rows the moment they open instead of starting empty and waiting
+     * for the database; the query keeps running while a screen is open and updates the list live.
+     */
+    val allProductsHot: kotlinx.coroutines.flow.StateFlow<List<Product>?> = productDao.getAllProducts()
+        .map<List<Product>, List<Product>?> { it }
+        .stateIn(cacheScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(60_000L, Long.MAX_VALUE), null)
+
+    /** Loads the catalogue into the cache in the background (call once at app start). */
+    suspend fun warmUp() { allProductsHot.filterNotNull().first() }
     fun getProductsByCategory(category: String): Flow<List<Product>> = productDao.getProductsByCategory(category)
     fun searchProducts(query: String): Flow<List<Product>> = productDao.searchProducts(query)
     fun getExpiryCandidates(): Flow<List<Product>> = productDao.getExpiryCandidates()

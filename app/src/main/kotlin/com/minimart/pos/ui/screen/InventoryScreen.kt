@@ -145,7 +145,7 @@ fun InventoryScreen(
                 contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(shown, key = { it.id }) { product ->
+                items(shown, key = { it.id }, contentType = { "product" }) { product ->
                     InventoryRow(
                         product = product,
                         currency = currency,

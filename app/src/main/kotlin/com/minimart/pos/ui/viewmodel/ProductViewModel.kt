@@ -39,16 +39,18 @@ class ProductViewModel @Inject constructor(
 
     // Products: reactive to search + category filter
     val products: StateFlow<List<Product>> = combine(
-        _searchQuery.debounce(150), _selectedCategory
+        // Wait for a pause only while typing; an empty box (the screen just opened) must not be delayed.
+        _searchQuery.debounce { if (it.isEmpty()) 0L else 150L }, _selectedCategory
     ) { query, category -> Pair(query, category) }
         .flatMapLatest { (query, category) ->
             when {
                 query.isNotBlank() -> repo.searchProducts(query)
                 category != null   -> repo.getProductsByCategory(category)
-                else               -> repo.getAllProducts()
+                else               -> repo.allProductsHot.filterNotNull()
             }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
+        // Starts from the cached catalogue, so a re-opened screen has its rows on the first frame.
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), repo.allProductsHot.value ?: emptyList())
 
     val categories: StateFlow<List<String>> = repo.getCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())

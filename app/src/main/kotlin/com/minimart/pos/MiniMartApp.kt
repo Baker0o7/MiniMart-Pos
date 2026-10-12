@@ -15,6 +15,7 @@ class MiniMartApp : Application(), Configuration.Provider {
     lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var settings: com.minimart.pos.data.repository.SettingsRepository
     @Inject lateinit var syncServer: com.minimart.pos.sync.SyncServer
+    @Inject lateinit var productRepo: com.minimart.pos.data.repository.ProductRepository
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -32,6 +33,7 @@ class MiniMartApp : Application(), Configuration.Provider {
         } catch (_: Exception) {}
         // The main device must be reachable again after a restart without anyone opening Settings.
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
+            try { productRepo.warmUp() } catch (_: Exception) {}
             try { if (settings.syncServerEnabled.first()) syncServer.start() } catch (_: Exception) {}
         }
     }

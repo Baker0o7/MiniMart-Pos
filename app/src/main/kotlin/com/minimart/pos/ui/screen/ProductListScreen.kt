@@ -145,7 +145,7 @@ fun ProductListScreen(
                 contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(visible, key = { it.id }) { product ->
+                items(visible, key = { it.id }, contentType = { "product" }) { product ->
                     ProductRow(
                         product = product, currency = currency, canEdit = canEditPrices,
                         onEdit = { editProduct = product; showAddDialog = true },
