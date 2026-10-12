@@ -80,8 +80,9 @@ class SyncViewModel @Inject constructor(
         }
     }
 
-    fun startServer() = viewModelScope.launch { server.start() }
-    fun stopServer()  = viewModelScope.launch { server.stop() }
+    // Remembered, so the main device comes back by itself after the app or phone restarts.
+    fun startServer() = viewModelScope.launch { settingsRepo.setSyncServerEnabled(true); server.start() }
+    fun stopServer()  = viewModelScope.launch { settingsRepo.setSyncServerEnabled(false); server.stop() }
 
     fun setPeerIp(ip: String) {
         prefs.edit().putString("peer_ip", ip).apply()

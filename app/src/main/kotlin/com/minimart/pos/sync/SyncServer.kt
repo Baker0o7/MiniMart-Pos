@@ -86,7 +86,9 @@ class SyncServer @Inject constructor(
         try {
             // A peer that connects and then stalls must not hold an IO thread forever.
             socket.soTimeout = SOCKET_TIMEOUT_MS
-            val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
+            // Headers and body together may never exceed the body limit plus a little: a peer that sends an
+            // endless header line must not be able to fill the phone's memory.
+            val reader = BufferedReader(InputStreamReader(LimitedInputStream(socket.getInputStream(), MAX_BODY_BYTES + 64_000L)))
             val writer = PrintWriter(socket.getOutputStream(), true)
 
             val requestLine = reader.readLine() ?: return
@@ -234,4 +236,21 @@ class SyncServer @Inject constructor(
             "${ip and 0xff}.${ip shr 8 and 0xff}.${ip shr 16 and 0xff}.${ip shr 24 and 0xff}"
         } catch (_: Exception) { "unknown" }
     }
+}
+
+/** Stops reading (as if the peer closed) after [limit] bytes. */
+internal class LimitedInputStream(private val inner: java.io.InputStream, private var left: Long) : java.io.InputStream() {
+    override fun read(): Int {
+        if (left <= 0) return -1
+        val b = inner.read()
+        if (b >= 0) left--
+        return b
+    }
+    override fun read(b: ByteArray, off: Int, len: Int): Int {
+        if (left <= 0) return -1
+        val n = inner.read(b, off, minOf(len.toLong(), left).toInt())
+        if (n > 0) left -= n
+        return n
+    }
+    override fun close() = inner.close()
 }

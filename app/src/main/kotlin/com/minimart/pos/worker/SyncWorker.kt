@@ -9,6 +9,7 @@ import com.minimart.pos.sync.SyncResult
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.flow.first
 
 /**
  * Keeps a paired till in step with the main device without anyone pressing Sync Now:
@@ -23,10 +24,14 @@ class SyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val client: SyncClient,
-    private val device: DeviceIdProvider
+    private val device: DeviceIdProvider,
+    private val server: com.minimart.pos.sync.SyncServer,
+    private val settings: com.minimart.pos.data.repository.SettingsRepository
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        // On the main device this doubles as a watchdog: if Android stopped the app, bring the server back.
+        try { if (settings.syncServerEnabled.first() && !server.isRunning.value) server.start() } catch (_: Exception) {}
         val ip = device.peerIp()
         val key = device.peerKey()
         if (ip.isBlank() || key.isBlank()) return Result.success()   // not a paired till
@@ -35,7 +40,9 @@ class SyncWorker @AssistedInject constructor(
                 is SyncResult.Success -> Result.success()
                 is SyncResult.Error ->
                     // A wrong code will not fix itself; an unreachable main device might.
-                    if (r.message.contains("Pairing code", true) || r.message.contains("Too many", true)) Result.success()
+                    if (r.message.contains("Pairing code", true) || r.message.contains("Too many", true) ||
+                        r.message.contains("update the app", true) || r.message.contains("did not come from", true) ||
+                        r.message.contains("Wi-Fi address", true)) Result.success()
                     else if (runAttemptCount < 6) Result.retry() else Result.success()
             }
         } catch (_: Exception) {
