@@ -26,7 +26,8 @@ class SyncApplier @Inject constructor(
     private val db: AppDatabase,
     private val syncDao: SyncDao,
     private val saleRepo: SaleRepository,
-    private val userRepo: UserRepository
+    private val userRepo: UserRepository,
+    private val audit: com.minimart.pos.util.AuditLogger
 ) {
     /** Returns one result per entry: {"id":<till's log id>,"status":"ok|duplicate|rejected","error":...}. */
     suspend fun apply(entries: JSONArray): JSONArray {
@@ -79,6 +80,13 @@ class SyncApplier @Inject constructor(
                 if (local.status == SaleStatus.COMPLETED) {
                     if (rev.status == SaleStatus.REFUNDED) saleRepo.refundSale(local.id, rev.reason)
                     else saleRepo.voidSale(local.id, rev.reason)
+                    runCatching {
+                        audit.log(
+                            if (rev.status == SaleStatus.REFUNDED) com.minimart.pos.util.AuditEvent.SALE_REFUNDED else com.minimart.pos.util.AuditEvent.SALE_VOIDED,
+                            user = "till sync",
+                            detail = "Sale ${rev.receiptNumber} total ${String.format(java.util.Locale.US, "%.2f", local.totalAmount)} · reason: ${rev.reason.ifBlank { "none given" }}"
+                        )
+                    }
                 }
             }
             SyncOperation.DELETE -> throw IllegalArgumentException("Sales cannot be deleted by sync")
