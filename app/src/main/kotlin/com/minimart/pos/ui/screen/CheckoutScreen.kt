@@ -58,7 +58,8 @@ fun CheckoutScreen(
     // zero-risk today and only protects against future call sites.
     canApplyDiscounts: Boolean = false,
     customerVm: CustomerViewModel = hiltViewModel(),
-    darajaVm: DarajaViewModel = hiltViewModel()
+    darajaVm: DarajaViewModel = hiltViewModel(),
+    mpesaCheckVm: com.minimart.pos.ui.viewmodel.MpesaCheckoutViewModel = hiltViewModel()
 ) {
     val state       by vm.uiState.collectAsState()
     val currency    by vm.currency.collectAsState()
@@ -103,12 +104,17 @@ fun CheckoutScreen(
         }
     }
 
+    val mpesaAssessment by mpesaCheckVm.assessment.collectAsState()
+    val mpesaStrict by mpesaCheckVm.strict.collectAsState()
+    LaunchedEffect(mpesaRef, state.total) { mpesaCheckVm.check(mpesaRef, state.total) }
+    val stkConfirmed = stkState.phase == StkPushPhase.SUCCESS && mpesaRef.isNotBlank() && mpesaRef == stkState.mpesaReceiptNumber
+
     val canComplete = when {
         state.total <= 0 -> false
         useSplitPayment  -> selectedCustomer != null && splitCredit > 0 && cashAmount >= splitCashNeeded
         else -> when (selectedMethod) {
             PaymentMethod.CASH   -> cashAmount >= state.total
-            PaymentMethod.MPESA  -> !stkInFlight
+            PaymentMethod.MPESA  -> !stkInFlight && (stkConfirmed || (!mpesaAssessment.isBlocking && (!mpesaStrict || mpesaAssessment.passesStrict)))
             PaymentMethod.CREDIT -> selectedCustomer != null && state.total > 0
             else                 -> true
         }
@@ -494,6 +500,20 @@ fun CheckoutScreen(
                                         focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
                                         focusedTextColor = Color.White, unfocusedTextColor = Color.White,
                                         cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface))
+
+                                if (!stkConfirmed) {
+                                    val a = mpesaAssessment
+                                    val (msg, col) = when (a.verdict) {
+                                        com.minimart.pos.data.repository.MpesaVerdict.VERIFIED -> "Verified: $currency ${String.format(java.util.Locale.US, "%.2f", a.receivedAmount ?: 0.0)} received with this code" to DT.Green
+                                        com.minimart.pos.data.repository.MpesaVerdict.UNDERPAID -> "This payment was only $currency ${String.format(java.util.Locale.US, "%.2f", a.receivedAmount ?: 0.0)}, less than the amount due" to DT.Red
+                                        com.minimart.pos.data.repository.MpesaVerdict.ALREADY_USED -> "This code was already used for another sale" to DT.Red
+                                        com.minimart.pos.data.repository.MpesaVerdict.BAD_FORMAT -> "Code looks wrong: letters and digits only, 6–20 characters" to DT.Red
+                                        com.minimart.pos.data.repository.MpesaVerdict.NOT_RECEIVED -> "No payment with this code has arrived on this phone yet" to DT.Amber
+                                        com.minimart.pos.data.repository.MpesaVerdict.UNCHECKED -> (if (mpesaStrict) "Turn on payment tracking to verify codes" else "Not checked (payment tracking is off)") to DT.SubText
+                                        com.minimart.pos.data.repository.MpesaVerdict.EMPTY -> (if (mpesaStrict) "Enter the M-Pesa code to complete this sale" else "") to DT.Amber
+                                    }
+                                    if (msg.isNotEmpty()) Text(msg, color = col, fontSize = 12.sp, modifier = Modifier.padding(start = 4.dp))
+                                }
 
                                 // ── Amount due ────────────────────────────────────────────
                                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))

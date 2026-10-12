@@ -96,6 +96,9 @@ class SaleRepository @Inject constructor(
      * bill, credit has a customer, and an M-Pesa reference is well formed, not already used by a live
      * sale, and (when the SMS tracker has seen that payment) was for at least this amount.
      */
+    suspend fun mpesaRefUseCount(ref: String): Int = saleDao.countCompletedWithMpesaRef(ref.trim())
+    fun claimedMpesaRefs(): kotlinx.coroutines.flow.Flow<List<String>> = saleDao.claimedMpesaRefs()
+
     private suspend fun checkPayment(sale: Sale, items: List<SaleItem>, hasCustomer: Boolean, creditAmount: Double) {
         PaymentValidator.validate(sale, items, creditAmount, hasCustomer)?.let { throw IllegalArgumentException(it) }
         val ref = sale.mpesaRef?.trim()?.takeIf { it.isNotEmpty() } ?: return

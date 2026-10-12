@@ -18,6 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Release checks
+        run: bash scripts/release-checks.sh
+
       - uses: actions/setup-java@v4
         with:
           java-version: '17'

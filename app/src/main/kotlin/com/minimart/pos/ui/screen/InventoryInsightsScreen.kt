@@ -160,7 +160,8 @@ private fun reorderText(ins: InventoryInsights): String = buildString {
     ins.reorder.groupBy { it.product.supplierName.ifBlank { "No supplier set" } }.forEach { (supplier, rows) ->
         appendLine()
         val phone = rows.firstOrNull { it.product.supplierPhone.isNotBlank() }?.product?.supplierPhone
-        appendLine(if (phone != null) "$supplier ($phone)" else supplier)
+        val est = rows.sumOf { it.orderCost }
+        appendLine((if (phone != null) "$supplier ($phone)" else supplier) + if (est > 0) " — about ${ins.currency} ${money(est)}" else "")
         rows.forEach { r ->
             val unit = if (r.product.isWeighed) "kg" else r.product.unit
             appendLine("• ${r.product.name} — ${r.suggestedQty} $unit (have ${plainNumber(r.onHand)})")
@@ -210,6 +211,7 @@ private fun ReorderRow(r: InsightRow) = RowCard {
     Column(horizontalAlignment = Alignment.End) {
         Text("Order", color = DT.SubText, fontSize = 10.sp)
         Text("${r.suggestedQty}", color = DT.TealLight, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+        if (r.orderCost > 0) Text("≈ ${money(r.orderCost)}", color = DT.SubText, fontSize = 10.sp)
     }
 }
 

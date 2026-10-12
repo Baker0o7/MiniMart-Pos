@@ -139,6 +139,9 @@ interface SaleDao {
     suspend fun voidSale(saleId: Long, reason: String): Int
 
     /** How many live (not refunded/voided) sales already claim this M-Pesa reference. */
+    @Query("SELECT UPPER(mpesaRef) FROM sales WHERE mpesaRef IS NOT NULL AND mpesaRef != '' AND status = 'COMPLETED'")
+    fun claimedMpesaRefs(): kotlinx.coroutines.flow.Flow<List<String>>
+
     @Query("SELECT COUNT(*) FROM sales WHERE mpesaRef = :ref COLLATE NOCASE AND status = 'COMPLETED'")
     suspend fun countCompletedWithMpesaRef(ref: String): Int
 

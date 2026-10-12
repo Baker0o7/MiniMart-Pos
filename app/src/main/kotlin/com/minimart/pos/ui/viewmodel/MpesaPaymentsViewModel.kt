@@ -29,8 +29,16 @@ sealed interface MpesaCheck {
 @HiltViewModel
 class MpesaPaymentsViewModel @Inject constructor(
     private val repo: MpesaPaymentRepository,
-    private val settings: SettingsRepository
+    private val settings: SettingsRepository,
+    private val sales: com.minimart.pos.data.repository.SaleRepository
 ) : ViewModel() {
+
+    /** Codes already used on a completed sale; anything else received is unclaimed. */
+    val claimed: StateFlow<Set<String>> = sales.claimedMpesaRefs().map { it.toSet() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptySet())
+    val strict: StateFlow<Boolean> = settings.mpesaStrict
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), false)
+    fun setStrict(on: Boolean) { viewModelScope.launch { settings.setMpesaStrict(on) } }
 
     private fun yearStartMs(): Long = Calendar.getInstance().apply {
         set(Calendar.DAY_OF_YEAR, 1)

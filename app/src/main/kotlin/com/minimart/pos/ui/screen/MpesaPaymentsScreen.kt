@@ -58,6 +58,8 @@ fun MpesaPaymentsScreen(
     val currency by vm.currency.collectAsState()
     val period by vm.period.collectAsState()
     val payments by vm.payments.collectAsState()
+    val claimed by vm.claimed.collectAsState()
+    val strict by vm.strict.collectAsState()
     val totals by vm.totals.collectAsState()
     val check by vm.check.collectAsState()
 
@@ -116,6 +118,23 @@ fun MpesaPaymentsScreen(
                         }
                     }
 
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(DT.Surface)
+                                .border(1.dp, DT.Border, RoundedCornerShape(16.dp)).padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Require a verified code", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text("An M-Pesa sale can only be completed with a code that matches a payment received on this phone (tracking must be on). Payments confirmed by STK push are exempt.",
+                                    color = DT.SubText, fontSize = 12.sp)
+                            }
+                            Spacer(Modifier.width(10.dp))
+                            Switch(checked = strict, onCheckedChange = { vm.setStrict(it) },
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border))
+                        }
+                    }
+
                     // ── Totals ─────────────────────────────────────────────────
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -156,7 +175,7 @@ fun MpesaPaymentsScreen(
                             }
                         }
                     } else {
-                        items(payments, key = { it.id }) { PaymentRow(it, currency) }
+                        items(payments, key = { it.id }) { PaymentRow(it, currency, it.code.uppercase() in claimed) }
                     }
                 }
             }
@@ -228,7 +247,7 @@ private fun TotalCard(period: MpesaPeriod, totals: com.minimart.pos.ui.viewmodel
 }
 
 @Composable
-private fun PaymentRow(p: MpesaPayment, currency: String) {
+private fun PaymentRow(p: MpesaPayment, currency: String, claimed: Boolean) {
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DT.Surface)
             .border(1.dp, DT.Border, RoundedCornerShape(14.dp)).padding(12.dp),
@@ -243,7 +262,8 @@ private fun PaymentRow(p: MpesaPayment, currency: String) {
                 fontWeight = FontWeight.SemiBold, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(listOf(p.code, p.senderPhone.takeIf { it.isNotBlank() && p.senderName.isNotBlank() }).filterNotNull().joinToString(" • "),
                 color = DT.SubText, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(timeLabel(p.receivedAt), color = DT.SubText, fontSize = 11.sp)
+            Text(timeLabel(p.receivedAt) + if (claimed) "  •  matched to a sale" else "  •  not matched to a sale",
+                color = if (claimed) DT.SubText else DT.Amber, fontSize = 11.sp)
         }
         Spacer(Modifier.width(8.dp))
         Text(mpesaMoney(currency, p.amount), color = DT.Green, fontWeight = FontWeight.Bold, fontSize = 14.sp)

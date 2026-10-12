@@ -9,7 +9,6 @@ import com.minimart.pos.data.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
-import kotlin.math.ceil
 
 /** One product with the numbers the stock-insight lists are built from. */
 data class InsightRow(
@@ -18,7 +17,9 @@ data class InsightRow(
     val sold30: Double,          // sold in the last 30 days (same unit)
     val avgDaily: Double,
     val daysCover: Double?,      // null when it hasn't been selling
-    val suggestedQty: Int,       // how many to order to reach ~2 weeks of cover
+    val suggestedQty: Int,       // how many to order to cover lead time plus ~2 weeks (0 when not due)
+    val needsReorder: Boolean = false,
+    val orderCost: Double = 0.0, // suggestedQty at the product's cost price
     val lastSoldAt: Long?,
     val costValue: Double,
     val retailValue: Double
@@ -83,21 +84,22 @@ class InventoryInsightsViewModel @Inject constructor(
             val sold30 = stats[p.id]?.qty ?: 0.0
             // A product added 5 days ago has only had 5 days to sell — don't dilute its rate over 30.
             val ageDays = ((now - p.createdAt) / DAY).toInt().coerceIn(1, WINDOW_DAYS)
-            val avgDaily = sold30 / ageDays
-            val cover = if (avgDaily > 0) onHand / avgDaily else null
-            val need = ceil(avgDaily * COVER_TARGET_DAYS - onHand).toInt()
-            val suggested = maxOf(p.reorderQuantity, need, 1)
+            val plan = com.minimart.pos.util.RestockPlanner.plan(
+                onHand = onHand, sold = sold30, sellingDays = ageDays,
+                lowStockThreshold = p.lowStockThreshold.toDouble(), minOrderQty = p.reorderQuantity)
+            val avgDaily = plan.avgDaily
+            val cover = plan.daysCover
+            val suggested = plan.suggestedQty
             val unitPrice = if (p.isWeighed) p.pricePerKg else p.price
             InsightRow(
                 product = p, onHand = onHand, sold30 = sold30, avgDaily = avgDaily, daysCover = cover,
-                suggestedQty = suggested, lastSoldAt = lastSold[p.id],
+                suggestedQty = suggested, needsReorder = plan.needsReorder, orderCost = suggested * p.costPrice,
+                lastSoldAt = lastSold[p.id],
                 costValue = onHand * p.costPrice, retailValue = onHand * unitPrice
             )
         }
 
-        val reorder = rows.filter { r ->
-            r.onHand <= r.product.lowStockThreshold || (r.daysCover != null && r.daysCover < LOW_COVER_DAYS)
-        }.sortedWith(compareBy<InsightRow> { it.daysCover ?: Double.MAX_VALUE }.thenBy { it.onHand })
+        val reorder = rows.filter { it.needsReorder }.sortedWith(compareBy<InsightRow> { it.daysCover ?: Double.MAX_VALUE }.thenBy { it.onHand })
 
         val deadCutoff = now - WINDOW_DAYS * DAY
         val dead = rows.filter { r ->

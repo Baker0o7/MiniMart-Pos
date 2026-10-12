@@ -30,6 +30,7 @@ class SettingsRepository @Inject constructor(
         val KEY_BLIND_CLOSE = booleanPreferencesKey("blind_close")
         val KEY_CUSTOMER_DISPLAY = booleanPreferencesKey("customer_display_second_screen")
         val KEY_MPESA_SMS_TRACKING = booleanPreferencesKey("mpesa_sms_tracking")
+        val KEY_MPESA_STRICT = booleanPreferencesKey("mpesa_strict")
         val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
         val KEY_PRINTER_NAME     = stringPreferencesKey("printer_name")
         val KEY_RECEIPT_FOOTER   = stringPreferencesKey("receipt_footer")
@@ -96,6 +97,9 @@ class SettingsRepository @Inject constructor(
     val cashDrawerOnSale:  Flow<Boolean> = context.dataStore.data.map { it[KEY_CASH_DRAWER_ON_SALE] ?: true }
     val mpesaSmsTracking: Flow<Boolean> = context.dataStore.data.map { it[KEY_MPESA_SMS_TRACKING] ?: false }
     suspend fun setMpesaSmsTracking(v: Boolean) = context.dataStore.edit { it[KEY_MPESA_SMS_TRACKING] = v }
+    /** When on, an M-Pesa sale needs a code that matches a payment this phone received. */
+    val mpesaStrict: Flow<Boolean> = context.dataStore.data.map { it[KEY_MPESA_STRICT] ?: false }
+    suspend fun setMpesaStrict(v: Boolean) = context.dataStore.edit { it[KEY_MPESA_STRICT] = v }
     suspend fun setCashDrawerAddress(addr: String) = context.dataStore.edit { it[KEY_CASH_DRAWER_ADDRESS] = addr }
     suspend fun setCashDrawerOnSale(v: Boolean) = context.dataStore.edit { it[KEY_CASH_DRAWER_ON_SALE] = v }
 
