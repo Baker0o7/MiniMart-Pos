@@ -121,7 +121,9 @@ class CartViewModel @Inject constructor(
 
     // ── Barcode handling ──────────────────────────────────────────────────────
 
-    fun processBarcode(barcode: String) {
+    fun processBarcode(rawBarcode: String) {
+        // Blank, oversized or control-character input is dropped before it reaches a lookup or banner.
+        val barcode = com.minimart.pos.scanner.BarcodeNormalizer.normalize(rawBarcode) ?: return
         viewModelScope.launch {
             // A lookup that threw used to leave isLoading stuck at true, and checkout() refuses to
             // run while isLoading is set — the till then looked frozen until the app was restarted.

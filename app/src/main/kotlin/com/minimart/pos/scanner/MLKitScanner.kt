@@ -31,8 +31,15 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.ZoomSuggestionOptions
 import com.google.mlkit.vision.barcode.common.Barcode
+import com.minimart.pos.ui.theme.DT
 import com.google.mlkit.vision.common.InputImage
+import android.annotation.SuppressLint
+import android.view.MotionEvent
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
+import android.util.Size as PxSize
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
@@ -41,15 +48,29 @@ import java.util.concurrent.atomic.AtomicReference
 /** The use cases this view bound, so disposing it never unbinds a newer screen's camera. */
 private class CameraHandle(val provider: ProcessCameraProvider, val useCases: Array<UseCase>, val camera: Camera)
 
-private val scannerOptions: BarcodeScannerOptions by lazy {
+/** Highest zoom the auto-zoom may ask for; clamped again to what the camera really supports. */
+private const val MAX_AUTO_ZOOM = 4f
+
+/**
+ * Scanner options. Auto-zoom lets ML Kit zoom in by itself when a barcode is detected but too
+ * small to decode, which is the usual reason a shelf barcode "won't scan" from arm's length.
+ */
+private fun buildScannerOptions(cameraRef: AtomicReference<Camera?>): BarcodeScannerOptions =
     BarcodeScannerOptions.Builder()
+        .setZoomSuggestionOptions(
+            ZoomSuggestionOptions.Builder { ratio ->
+                val cam = cameraRef.get() ?: return@Builder false
+                val zs = cam.cameraInfo.zoomState.value
+                val target = ratio.coerceIn(zs?.minZoomRatio ?: 1f, minOf(zs?.maxZoomRatio ?: 1f, MAX_AUTO_ZOOM))
+                try { cam.cameraControl.setZoomRatio(target); true } catch (e: Exception) { false }
+            }.setMaxSupportedZoomRatio(MAX_AUTO_ZOOM).build()
+        )
         .setBarcodeFormats(
             Barcode.FORMAT_EAN_13, Barcode.FORMAT_EAN_8,
             Barcode.FORMAT_UPC_A, Barcode.FORMAT_UPC_E,
             Barcode.FORMAT_CODE_128, Barcode.FORMAT_CODE_39,
             Barcode.FORMAT_QR_CODE, Barcode.FORMAT_DATA_MATRIX
         ).build()
-}
 
 @Composable
 fun BarcodeScannerView(
@@ -78,7 +99,8 @@ fun BarcodeScannerView(
     // released, and the camera stayed bound after the view left composition (e.g. a scanner
     // dialog closing on a screen that stays open) — leaking native resources and keeping the
     // camera light on. Everything is now torn down together in onDispose.
-    val scanner = remember { BarcodeScanning.getClient(scannerOptions) }
+    val cameraRef = remember { AtomicReference<Camera?>(null) }
+    val scanner = remember { BarcodeScanning.getClient(buildScannerOptions(cameraRef)) }
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     val providerRef = remember { AtomicReference<CameraHandle?>(null) }
     val disposed = remember { AtomicBoolean(false) }
@@ -97,7 +119,8 @@ fun BarcodeScannerView(
     AndroidView(
         factory = { ctx ->
             PreviewView(ctx).also { pv ->
-                startCamera(ctx, pv, lifecycleOwner, scanner, analysisExecutor, providerRef, disposed, { camera = it }) { barcode ->
+                attachTapToFocus(pv, cameraRef)
+                startCamera(ctx, pv, lifecycleOwner, scanner, analysisExecutor, providerRef, disposed, { cameraRef.set(it); camera = it }) { barcode ->
                     val now = System.currentTimeMillis()
                     if (barcode != lastScanned || now - lastScannedTime > 1500) {
                         lastScanned = barcode; lastScannedTime = now
@@ -132,7 +155,13 @@ private fun startCamera(
         val preview = Preview.Builder().build().also {
             it.surfaceProvider = previewView.surfaceProvider
         }
+        // The default analysis size is 640x480, too coarse for thin EAN/Code 128 bars; 1280x720
+        // reads them reliably and is still quick enough for continuous scanning.
+        val analysisSelector = ResolutionSelector.Builder()
+            .setResolutionStrategy(ResolutionStrategy(PxSize(1280, 720), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER))
+            .build()
         val imageAnalysis = ImageAnalysis.Builder()
+            .setResolutionSelector(analysisSelector)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
             .also { analysis ->
@@ -168,12 +197,39 @@ private fun processImageProxy(
         val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
         scanner.process(image)
             .addOnSuccessListener { barcodes ->
-                if (!disposed.get()) barcodes.firstOrNull()?.rawValue?.let { onBarcodeDetected(it) }
+                if (disposed.get()) return@addOnSuccessListener
+                // With several barcodes in view, take the one nearest the middle (the one aimed at).
+                val rotated = imageProxy.imageInfo.rotationDegrees % 180 != 0
+                val cx = (if (rotated) imageProxy.height else imageProxy.width) / 2f
+                val cy = (if (rotated) imageProxy.width else imageProxy.height) / 2f
+                val best = barcodes
+                    .mapNotNull { b -> BarcodeNormalizer.normalize(b.rawValue)?.let { v -> b to v } }
+                    .minByOrNull { (b, _) ->
+                        b.boundingBox?.let { r -> val dx = r.exactCenterX() - cx; val dy = r.exactCenterY() - cy; dx * dx + dy * dy }
+                            ?: Float.MAX_VALUE
+                    }
+                best?.let { onBarcodeDetected(it.second) }
             }
             .addOnCompleteListener { imageProxy.close() }
     } catch (e: Exception) {
         // Scanner already closed because the screen was leaving — just release the frame.
         imageProxy.close()
+    }
+}
+
+/** Tap the preview to focus and meter exposure there. */
+@SuppressLint("ClickableViewAccessibility")
+private fun attachTapToFocus(previewView: PreviewView, cameraRef: AtomicReference<Camera?>) {
+    previewView.setOnTouchListener { v, ev ->
+        if (ev.action == MotionEvent.ACTION_UP) {
+            cameraRef.get()?.let { cam ->
+                val point = previewView.meteringPointFactory.createPoint(ev.x, ev.y)
+                try { cam.cameraControl.startFocusAndMetering(FocusMeteringAction.Builder(point).build()) }
+                catch (e: Exception) { Log.w("BarcodeScanner", "focus failed", e) }
+            }
+            v.performClick()
+        }
+        true
     }
 }
 
@@ -226,7 +282,7 @@ fun ScannerOverlay(modifier: Modifier = Modifier, label: String = "Point at barc
             val laserPosY = by + laserY * boxH
             drawLine(
                 brush = Brush.horizontalGradient(
-                    colors = listOf(Color.Transparent, Color(0xFF00C9A7), Color(0xFF00C9A7), Color.Transparent),
+                    colors = listOf(Color.Transparent, DT.Teal, DT.Teal, Color.Transparent),
                     startX = bx, endX = bx + boxW
                 ),
                 start = Offset(bx, laserPosY),
@@ -246,8 +302,8 @@ fun ScannerOverlay(modifier: Modifier = Modifier, label: String = "Point at barc
             )
             corners.forEach { (corner, dir) ->
                 val (dx, dy) = dir
-                drawLine(Color(0xFF00C9A7), corner, Offset(corner.x + dx * len, corner.y), strokeWidth = strokeW)
-                drawLine(Color(0xFF00C9A7), corner, Offset(corner.x, corner.y + dy * len), strokeWidth = strokeW)
+                drawLine(DT.Teal, corner, Offset(corner.x + dx * len, corner.y), strokeWidth = strokeW)
+                drawLine(DT.Teal, corner, Offset(corner.x, corner.y + dy * len), strokeWidth = strokeW)
             }
         }
 
@@ -256,7 +312,7 @@ fun ScannerOverlay(modifier: Modifier = Modifier, label: String = "Point at barc
             .clip(RoundedCornerShape(20.dp))
             .background(Color.Black.copy(0.6f))
             .padding(horizontal = 16.dp, vertical = 6.dp)) {
-            Text(label, color = Color(0xFF00C9A7), fontSize = 12.sp,
+            Text(label, color = DT.Teal, fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold)
         }
     }

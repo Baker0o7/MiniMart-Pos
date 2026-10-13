@@ -45,7 +45,7 @@ class KeyboardScanner @Inject constructor() {
             }
             event.isPrintingKey -> {
                 val char = event.unicodeChar.toChar()
-                if (char.isLetterOrDigit() || char == '-') buffer.append(char)
+                if ((char.isLetterOrDigit() || char == '-') && buffer.length < BarcodeNormalizer.MAX_LENGTH) buffer.append(char)
                 true
             }
             else -> false
