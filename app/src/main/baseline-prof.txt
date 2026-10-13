@@ -1,0 +1,5 @@
+# Baseline profile: ahead-of-time compile the app's own code so start-up, the first open of each
+# screen and the first scroll are not spent interpreting and JIT-compiling it. Broad on purpose
+# (the app is small); the libraries bring their own profiles.
+HSPLcom/minimart/pos/**->**(**)**
+Lcom/minimart/pos/**;

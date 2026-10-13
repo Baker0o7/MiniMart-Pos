@@ -23,8 +23,8 @@ android {
         applicationId = "com.minimart.pos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 75
-        versionName = "1.16.10"
+        versionCode = 76
+        versionName = "1.16.11"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -64,6 +64,8 @@ android {
 }
 
 dependencies {
+    // Installs the baseline profile (src/main/baseline-prof.txt) on first launch, also for sideloaded APKs.
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
     implementation(project(":core"))
     implementation(project(":data"))
     implementation(libs.androidx.core.ktx)
