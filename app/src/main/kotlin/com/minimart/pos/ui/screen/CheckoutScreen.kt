@@ -270,9 +270,9 @@ fun CheckoutScreen(
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(34.dp).clip(RoundedCornerShape(9.dp))
-                    .background(Brush.linearGradient(listOf(Color(0xFF19D3B2), Color(0xFF0B8F7A)))),
+                    .background(Brush.linearGradient(listOf(DT.Teal, androidx.compose.ui.graphics.lerp(DT.Teal, DT.Bg, 0.4f)))),
                     contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.CreditCard, null, tint = Color(0xFF05201C), modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.CreditCard, null, tint = DT.Bg, modifier = Modifier.size(20.dp))
                 }
                 Spacer(Modifier.width(12.dp))
                 Box(Modifier.width(1.5.dp).height(26.dp).background(DT.Teal.copy(0.6f)))
@@ -411,7 +411,7 @@ fun CheckoutScreen(
                                                     },
                                                     modifier = Modifier.fillMaxWidth(),
                                                     shape = RoundedCornerShape(12.dp),
-                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
+                                                    colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
                                                 ) {
                                                     Icon(Icons.Default.PhoneAndroid, null, tint = Color.White, modifier = Modifier.size(18.dp))
                                                     Spacer(Modifier.width(8.dp))
@@ -536,7 +536,7 @@ fun CheckoutScreen(
                             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 // Credit summary card
                                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                                    .background(Brush.linearGradient(listOf(Color(0xFF0B2822), Color(0xFF081510))))
+                                    .background(Brush.linearGradient(listOf(DT.Surface2, DT.Surface)))
                                     .border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(16.dp))
                                     .padding(16.dp)) {
                                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1008,7 +1008,7 @@ private fun PaymentCard(modifier: Modifier, label: String, icon: ImageVector,
 @Composable
 private fun PayTile(modifier: Modifier, label: String, icon: ImageVector, active: Boolean,
     accent: Color? = null, enabled: Boolean = true, onClick: () -> Unit) {
-    val soft = Color(0xFFB4E9E0)
+    val soft = DT.TealLight
     val shape = RoundedCornerShape(20.dp)
     val tint = when { !enabled -> soft.copy(0.35f); active -> Color.White; accent != null -> accent; else -> soft }
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
@@ -1019,11 +1019,11 @@ private fun PayTile(modifier: Modifier, label: String, icon: ImageVector, active
     val decorated = if (active) base.shadow(14.dp, shape, ambientColor = DT.Teal, spotColor = DT.Teal) else base
     Box(decorated.clip(shape)
         .background(when {
-            active -> Brush.verticalGradient(listOf(Color(0xFF0FD1B0), Color(0xFF0A8C7B)))
+            active -> Brush.verticalGradient(listOf(DT.Teal, androidx.compose.ui.graphics.lerp(DT.Teal, DT.Bg, 0.35f)))
             accent != null -> Brush.verticalGradient(listOf(accent.copy(0.18f), accent.copy(0.08f)))
-            else -> Brush.verticalGradient(listOf(Color(0xFF0E2A2B), Color(0xFF0A1F21)))
+            else -> Brush.verticalGradient(listOf(DT.Surface2, DT.Surface))
         })
-        .border(1.5.dp, when { active -> Color(0xFF3FE8CB); accent != null -> accent.copy(0.8f); else -> Color(0xFF2E6A6A) }, shape)
+        .border(1.5.dp, when { active -> DT.TealLight; accent != null -> accent.copy(0.8f); else -> DT.Teal.copy(0.35f) }, shape)
         .clickable(enabled = enabled, indication = null, interactionSource = source) {
             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
             onClick()

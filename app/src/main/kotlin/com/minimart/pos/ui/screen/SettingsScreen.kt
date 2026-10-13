@@ -187,50 +187,97 @@ fun SettingsScreen(
                     }
                 }
 
-                // ── M-Pesa Configuration ──────────────────────────────────────
-                DSection("M-Pesa Configuration", Icons.Default.PhoneAndroid) {
-                    if (!isAdmin) {
-                        // Read-only for cashiers — just show the till number
-                        if (tillInput.isNotBlank()) {
+                // ── M-Pesa STK Push (Daraja API) ─────────────────────────────
+                if (isAdmin) {
+                    val initialDaraja = remember { settingsRepo.getDarajaConfig() }
+                    var darajaSandbox       by remember { mutableStateOf(initialDaraja.sandbox) }
+                    var darajaShortcode     by remember { mutableStateOf(initialDaraja.shortcode) }
+                    var darajaConsumerKey   by remember { mutableStateOf(initialDaraja.consumerKey) }
+                    var darajaConsumerSecret by remember { mutableStateOf(initialDaraja.consumerSecret) }
+                    var darajaPasskey       by remember { mutableStateOf(initialDaraja.passkey) }
+                    var showSecret          by remember { mutableStateOf(false) }
+                    var showPasskey         by remember { mutableStateOf(false) }
+                    var darajaSaved         by remember { mutableStateOf(false) }
+
+                    DSection("M-Pesa STK Push (Daraja API)", Icons.Default.Send,
+                        summary = if (initialDaraja.consumerKey.isBlank()) "Not set up" else if (darajaSandbox) "Sandbox" else "Production",
+                        initiallyExpanded = false) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Text("Environment", color = DT.OnSurface, fontSize = 14.sp)
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.PhoneAndroid, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text("Till Number: $tillInput", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+                                Text(if (darajaSandbox) "Sandbox" else "Production",
+                                    color = if (darajaSandbox) DT.Amber else DT.Green,
+                                    fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Spacer(Modifier.width(6.dp))
+                                Switch(checked = !darajaSandbox, onCheckedChange = { darajaSandbox = !it },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor   = DT.Green,
+                                        checkedTrackColor   = DT.Green.copy(0.3f),
+                                        uncheckedThumbColor = DT.Amber,
+                                        uncheckedTrackColor = DT.Amber.copy(0.3f)
+                                    ))
                             }
-                        } else {
-                            Text("M-Pesa not configured. Contact your manager.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                         }
-                    } else {
-                        // Account name
-                        DField(nameInput, { nameInput = it }, "Account / Business Name")
+                        Text(if (darajaSandbox) "Sandbox uses test credentials — no real money moves."
+                             else "Production — customers are charged for real.",
+                            color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                         Spacer(Modifier.height(8.dp))
-
-                        // Paybill
-                        SSubTitle("Paybill (for business payments)")
-                        DField(paybillInput, { paybillInput = it.filter(Char::isDigit).take(10) }, "Paybill Number", Icons.Default.Business, numeric = true)
-                        Spacer(Modifier.height(8.dp))
-
-                        // Till
-                        SSubTitle("Buy Goods / Till Number")
-                        DField(tillInput, { tillInput = it.filter(Char::isDigit).take(10) }, "Till Number", Icons.Default.PointOfSale, numeric = true)
-                        Spacer(Modifier.height(8.dp))
-
-                        // Withdraw
-                        SSubTitle("Withdrawal / Agent Number")
-                        DField(withdrawInput, { withdrawInput = it.filter(Char::isDigit).take(10) }, "Agent / Withdraw Number", Icons.Default.Money, numeric = true)
+                        DField(darajaShortcode, { darajaShortcode = it }, "Business Shortcode", Icons.Default.Storefront)
                         Spacer(Modifier.height(4.dp))
-                        Text("Used for end-of-day withdrawal reminders.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
-                        Spacer(Modifier.height(12.dp))
-
-                        val mpesaDirty = paybillInput != mpesaPaybill || tillInput != mpesaTill ||
-                            withdrawInput != mpesaWithdraw || nameInput != mpesaName
-                        SaveButton("Save M-Pesa Settings", enabled = mpesaDirty, color = DT.Teal, icon = Icons.Default.PhoneAndroid) {
-                            scope.launch {
-                                settingsRepo.setMpesaPaybill(paybillInput)
-                                settingsRepo.setMpesaTill(tillInput)
-                                settingsRepo.setMpesaWithdraw(withdrawInput)
-                                settingsRepo.setMpesaAccountName(nameInput)
-                            }
+                        DField(darajaConsumerKey, { darajaConsumerKey = it }, "Consumer Key", Icons.Default.VpnKey)
+                        Spacer(Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = darajaConsumerSecret, onValueChange = { darajaConsumerSecret = it },
+                            label = { Text("Consumer Secret", color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
+                            leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
+                            trailingIcon = {
+                                IconButton(onClick = { showSecret = !showSecret }) {
+                                    Icon(if (showSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility, null, tint = DT.SubText)
+                                }
+                            },
+                            visualTransformation = if (showSecret) androidx.compose.ui.text.input.VisualTransformation.None
+                                                   else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp), colors = dColors()
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = darajaPasskey, onValueChange = { darajaPasskey = it },
+                            label = { Text("Lipa na M-Pesa Passkey", color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
+                            leadingIcon = { Icon(Icons.Default.Key, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
+                            trailingIcon = {
+                                IconButton(onClick = { showPasskey = !showPasskey }) {
+                                    Icon(if (showPasskey) Icons.Default.VisibilityOff else Icons.Default.Visibility, null, tint = DT.SubText)
+                                }
+                            },
+                            visualTransformation = if (showPasskey) androidx.compose.ui.text.input.VisualTransformation.None
+                                                   else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp), colors = dColors()
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                settingsRepo.saveDarajaConfig(
+                                    com.minimart.pos.data.repository.SettingsRepository.DarajaConfig(
+                                        consumerKey    = darajaConsumerKey.trim(),
+                                        consumerSecret = darajaConsumerSecret.trim(),
+                                        passkey        = darajaPasskey.trim(),
+                                        shortcode      = darajaShortcode.trim(),
+                                        sandbox        = darajaSandbox
+                                    )
+                                )
+                                darajaSaved = true
+                                scope.launch { kotlinx.coroutines.delay(3000); darajaSaved = false }
+                            },
+                            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
+                        ) {
+                            Icon(Icons.Default.Send, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (darajaSaved) "✓ Saved — encrypted on this device" else "Save Daraja Settings",
+                                color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
