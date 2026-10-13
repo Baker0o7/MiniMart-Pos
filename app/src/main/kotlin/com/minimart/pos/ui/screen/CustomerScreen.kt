@@ -60,7 +60,7 @@ fun CustomerScreen(
         containerColor = DT.Bg,
         topBar = {
             Box(modifier = Modifier.fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(DT.Teal, Color(0xFF004D40))))
+                .background(Brush.verticalGradient(listOf(DT.Teal, DT.HeaderEnd)))
                 .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onBack,
@@ -186,7 +186,7 @@ private fun CustomerCard(customer: Customer, currency: String, onSelect: () -> U
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             // Avatar circle
             Box(modifier = Modifier.size(46.dp).clip(CircleShape)
-                .background(Brush.linearGradient(listOf(DT.Teal, Color(0xFF004D40)))),
+                .background(Brush.linearGradient(listOf(DT.Teal, DT.HeaderEnd))),
                 contentAlignment = Alignment.Center) {
                 Text(customer.name.firstOrNull()?.uppercase() ?: "?",
                     color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
@@ -273,7 +273,7 @@ private fun CustomerDetailSheet(
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(52.dp).clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(DT.Teal, Color(0xFF004D40)))),
+                        .background(Brush.linearGradient(listOf(DT.Teal, DT.HeaderEnd))),
                         contentAlignment = Alignment.Center) {
                         Text(customer.name.firstOrNull()?.uppercase() ?: "?",
                             color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)

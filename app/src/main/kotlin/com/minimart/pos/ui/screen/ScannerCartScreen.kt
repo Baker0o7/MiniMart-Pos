@@ -53,11 +53,11 @@ import com.minimart.pos.ui.viewmodel.CartViewModel
 import com.minimart.pos.ui.viewmodel.ProductSearchViewModel
 import com.minimart.pos.util.PluDecoder
 
-private val PanelBg   = Color(0xFF0C2420)
-private val PanelBg2  = Color(0xFF0A1E1B)
-private val TopGrad1  = DT.Teal
-private val TopGrad2  = Color(0xFF006B5E)
-private val TopGrad3  = Color(0xFF004D40)
+private val PanelBg: Color get() = androidx.compose.ui.graphics.lerp(DT.Surface, DT.Bg, 0.25f)
+private val PanelBg2: Color get() = androidx.compose.ui.graphics.lerp(DT.Surface, DT.Bg, 0.5f)
+private val TopGrad1: Color get() = DT.Teal
+private val TopGrad2: Color get() = DT.HeaderMid
+private val TopGrad3: Color get() = DT.HeaderEnd
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable

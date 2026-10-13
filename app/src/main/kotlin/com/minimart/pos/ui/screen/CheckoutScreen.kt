@@ -928,7 +928,7 @@ private fun CustomerSearchSheet(
                         .padding(12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(42.dp).clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(DT.Teal, Color(0xFF004D40)))),
+                                .background(Brush.linearGradient(listOf(DT.Teal, DT.HeaderEnd))),
                                 contentAlignment = Alignment.Center) {
                                 Text(cust.name.firstOrNull()?.uppercase() ?: "?",
                                     color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)

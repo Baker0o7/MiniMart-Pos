@@ -229,7 +229,7 @@ fun UserManagementScreen(
                     item {
                         Box(Modifier.fillMaxWidth()
                             .background(androidx.compose.ui.graphics.Brush.verticalGradient(
-                                listOf(DT.Teal, androidx.compose.ui.graphics.Color(0xFF004D40))))
+                                listOf(DT.Teal, DT.HeaderEnd)))
                             .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {

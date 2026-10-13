@@ -67,7 +67,7 @@ fun CreditOverviewScreen(
             // ── Top bar ───────────────────────────────────────────────────────
             item {
                 Box(modifier = Modifier.fillMaxWidth()
-                    .background(Brush.verticalGradient(listOf(DT.Teal, Color(0xFF004D40))))
+                    .background(Brush.verticalGradient(listOf(DT.Teal, DT.HeaderEnd)))
                     .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = onBack,
@@ -164,7 +164,7 @@ fun CreditOverviewScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             // Avatar
                             Box(Modifier.size(46.dp).clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(DT.Teal, Color(0xFF004D40)))),
+                                .background(Brush.linearGradient(listOf(DT.Teal, DT.HeaderEnd))),
                                 contentAlignment = Alignment.Center) {
                                 Text(customer.name.firstOrNull()?.uppercase() ?: "?",
                                     color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
