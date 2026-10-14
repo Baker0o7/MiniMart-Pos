@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -103,9 +104,9 @@ fun SalesHistoryScreen(
     vm: SalesHistoryViewModel = hiltViewModel()
 ) {
     val canVoid = com.minimart.pos.util.RoleManager.canApplyDiscounts(currentRole) // Manager+ only
-    val query   by vm.query.collectAsState()
+    val query   by vm.query.collectAsStateWithLifecycle()
     val sales   = vm.sales.collectAsLazyPagingItems()
-    val stats   by vm.stats.collectAsState()
+    val stats   by vm.stats.collectAsStateWithLifecycle()
     val df      = remember { SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault()) }
     var pendingVoidId by remember { mutableStateOf<Long?>(null) }
     pendingVoidId?.let { id ->

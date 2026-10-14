@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -104,7 +105,7 @@ fun PurchaseOrdersScreen(
     currency: String,
     vm: PurchasingViewModel = hiltViewModel()
 ) {
-    val state by vm.uiState.collectAsState()
+    val state by vm.uiState.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
         GradientHeader(
             title = "Purchasing",
@@ -160,7 +161,7 @@ fun PurchaseOrdersScreen(
 
 @Composable
 fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewModel = hiltViewModel()) {
-    val state by vm.uiState.collectAsState()
+    val state by vm.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var editing by remember { mutableStateOf<Supplier?>(null) }
 
@@ -270,7 +271,7 @@ private fun buildShareText(s: PoEditorState, currency: String): String = buildSt
 
 @Composable
 fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: PurchaseOrderEditorViewModel = hiltViewModel()) {
-    val s by vm.uiState.collectAsState()
+    val s by vm.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showPicker by remember { mutableStateOf(false) }
     var showReceive by remember { mutableStateOf(false) }

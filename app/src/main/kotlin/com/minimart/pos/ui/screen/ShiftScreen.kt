@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,7 +40,7 @@ fun ShiftScreen(
     onBack: () -> Unit,
     vm: ShiftViewModel = hiltViewModel()
 ) {
-    val state by vm.uiState.collectAsState()
+    val state by vm.uiState.collectAsStateWithLifecycle()
     var showClockInDialog by remember { mutableStateOf(false) }
     var showClockOutDialog by remember { mutableStateOf(false) }
     var showSummaryDialog by remember { mutableStateOf<Shift?>(null) }

@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.*
@@ -68,7 +69,7 @@ fun ScannerCartScreen(
     vm: CartViewModel = hiltViewModel(),
     searchVm: ProductSearchViewModel = hiltViewModel()
 ) {
-    val state by vm.uiState.collectAsState()
+    val state by vm.uiState.collectAsStateWithLifecycle()
     var showClearConfirm by remember { mutableStateOf(false) }
     if (showClearConfirm) {
         AlertDialog(
@@ -83,7 +84,7 @@ fun ScannerCartScreen(
             dismissButton = { TextButton(onClick = { showClearConfirm = false }) { Text("Keep items", color = DT.SubText) } }
         )
     }
-    val currency by vm.currency.collectAsState()
+    val currency by vm.currency.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
     var showScanner by remember { mutableStateOf(false) }
@@ -100,7 +101,7 @@ fun ScannerCartScreen(
     }
 
     val scanScope = rememberCoroutineScope()
-    val searchResults: List<Product> by searchVm.results.collectAsState()
+    val searchResults: List<Product> by searchVm.results.collectAsStateWithLifecycle()
 
     // Dialogs: tap a quantity to type it; weighed products need a weight (no scale ticket).
     var qtyEditItem by remember { mutableStateOf<CartItem?>(null) }

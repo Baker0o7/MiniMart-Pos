@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -44,7 +45,7 @@ fun CustomerScreen(
     currency: String = "KES",
     vm: CustomerViewModel = hiltViewModel()
 ) {
-    val state by vm.uiState.collectAsState()
+    val state by vm.uiState.collectAsStateWithLifecycle()
     var showAddDialog    by remember { mutableStateOf(false) }
     var showCreditDialog by remember { mutableStateOf<Customer?>(null) }
     var selectedCustomer by remember { mutableStateOf<Customer?>(null) }

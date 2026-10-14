@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.BorderStroke
@@ -41,12 +42,12 @@ fun InventoryScreen(
     onInsights: (() -> Unit)? = null,
     vm: ProductViewModel = hiltViewModel()
 ) {
-    val products by vm.products.collectAsState()
-    val categories by vm.categories.collectAsState()
-    val selectedCat by vm.selectedCategory.collectAsState()
-    val searchQuery by vm.searchQuery.collectAsState()
-    val uiState by vm.uiState.collectAsState()
-    val lowStock by vm.lowStockProducts.collectAsState()
+    val products by vm.products.collectAsStateWithLifecycle()
+    val categories by vm.categories.collectAsStateWithLifecycle()
+    val selectedCat by vm.selectedCategory.collectAsStateWithLifecycle()
+    val searchQuery by vm.searchQuery.collectAsStateWithLifecycle()
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
+    val lowStock by vm.lowStockProducts.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
     var editProduct by remember { mutableStateOf<Product?>(null) }
     var showStockDialog by remember { mutableStateOf<Product?>(null) }

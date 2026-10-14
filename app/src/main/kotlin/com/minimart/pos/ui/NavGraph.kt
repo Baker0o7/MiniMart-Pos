@@ -1,5 +1,6 @@
 package com.minimart.pos.ui
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.minimart.pos.ui.theme.DT
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -94,8 +95,8 @@ fun MiniMartNavGraph(
     val navController = rememberNavController()
     val authVm: AuthViewModel = hiltViewModel()
     val sessionVm: com.minimart.pos.ui.viewmodel.SessionViewModel = hiltViewModel()
-    val authState by authVm.uiState.collectAsState()
-    val sessionExpired by sessionVm.sessionManager.isExpired.collectAsState()
+    val authState by authVm.uiState.collectAsStateWithLifecycle()
+    val sessionExpired by sessionVm.sessionManager.isExpired.collectAsStateWithLifecycle()
     // Used by AccessGuard when a screen is not allowed. Signing out clears the user first, which makes
     // every guarded screen (Settings, Users…) look "forbidden" for a moment; popping the back stack then
     // removed the login screen that logout had just navigated to, leaving a blank, hung screen.
@@ -153,9 +154,9 @@ fun MiniMartNavGraph(
     }
     val cartVm: CartViewModel = hiltViewModel()
 
-    val storeName by settingsRepo.storeName.collectAsState("My MiniMart")
-    val currency   by settingsRepo.currency.collectAsState("KES")
-    val footer     by settingsRepo.receiptFooter.collectAsState("Thank you!")
+    val storeName by settingsRepo.storeName.collectAsStateWithLifecycle("My MiniMart")
+    val currency   by settingsRepo.currency.collectAsStateWithLifecycle("KES")
+    val footer     by settingsRepo.receiptFooter.collectAsStateWithLifecycle("Thank you!")
 
     val navBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStack?.destination?.route
@@ -179,7 +180,7 @@ fun MiniMartNavGraph(
             if (showBottomNav) {
                 BottomNavBar(
                     currentRoute  = currentRoute,
-                    cartItemCount = cartVm.uiState.collectAsState().value.itemCount,
+                    cartItemCount = cartVm.uiState.collectAsStateWithLifecycle().value.itemCount,
                     onHome        = { navController.navigate(Routes.DASHBOARD) { launchSingleTop = true; restoreState = true } },
                     onProducts    = { navController.navigate(Routes.PRODUCTS) { launchSingleTop = true } },
                     onScan        = { navController.navigate(Routes.SCANNER) { launchSingleTop = true } },

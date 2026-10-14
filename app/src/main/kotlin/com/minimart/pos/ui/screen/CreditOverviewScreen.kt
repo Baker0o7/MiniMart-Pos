@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -41,7 +42,7 @@ fun CreditOverviewScreen(
     currency: String = "KES",
     vm: CustomerViewModel = hiltViewModel()
 ) {
-    val state by vm.uiState.collectAsState()
+    val state by vm.uiState.collectAsStateWithLifecycle()
     // Bug fix: was filter { creditBalance > 0 } — customers with NEGATIVE balances
     // (buy-on-account, i.e. they OWE money) were completely invisible in the Credit
     // Ledger. These are the most important ones to track. Now shows ALL customers with

@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -54,14 +55,14 @@ fun MpesaPaymentsScreen(
     vm: MpesaPaymentsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val enabled by vm.trackingEnabled.collectAsState()
-    val currency by vm.currency.collectAsState()
-    val period by vm.period.collectAsState()
-    val payments by vm.payments.collectAsState()
-    val claimed by vm.claimed.collectAsState()
-    val strict by vm.strict.collectAsState()
-    val totals by vm.totals.collectAsState()
-    val check by vm.check.collectAsState()
+    val enabled by vm.trackingEnabled.collectAsStateWithLifecycle()
+    val currency by vm.currency.collectAsStateWithLifecycle()
+    val period by vm.period.collectAsStateWithLifecycle()
+    val payments by vm.payments.collectAsStateWithLifecycle()
+    val claimed by vm.claimed.collectAsStateWithLifecycle()
+    val strict by vm.strict.collectAsStateWithLifecycle()
+    val totals by vm.totals.collectAsStateWithLifecycle()
+    val check by vm.check.collectAsStateWithLifecycle()
 
     fun hasPermission() = ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED
     var permitted by remember { mutableStateOf(hasPermission()) }

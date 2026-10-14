@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -175,7 +176,7 @@ fun UserManagementScreen(
     onBack: () -> Unit,
     vm: UserManagementViewModel = hiltViewModel()
 ) {
-    val state by vm.state.collectAsState()
+    val state by vm.state.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
     var changePinForUser by remember { mutableStateOf<User?>(null) }
 

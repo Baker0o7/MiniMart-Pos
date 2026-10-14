@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.*
@@ -43,7 +44,7 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     vm: AuthViewModel = hiltViewModel()
 ) {
-    val state   = vm.uiState.collectAsState().value
+    val state   = vm.uiState.collectAsStateWithLifecycle().value
     val context = LocalContext.current
     val haptic  = androidx.compose.ui.platform.LocalHapticFeedback.current
 

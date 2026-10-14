@@ -240,6 +240,9 @@ object BackupManager {
             // Refuse files that are not SQLite databases or come from a newer app version:
             // Room's destructive-migration fallback would otherwise WIPE the data on next launch.
             validateBackup(dbFile, backupFile)?.let { return BackupResult.Error(it) }
+            // A file that merely has the right header can still be corrupt or hold no shop data;
+            // check it fully BEFORE the live database is replaced.
+            verify(backupFile)?.let { return BackupResult.Error("This backup can't be restored: $it") }
 
             // Keep a safety copy of the current database so a bad restore can be undone.
             try {

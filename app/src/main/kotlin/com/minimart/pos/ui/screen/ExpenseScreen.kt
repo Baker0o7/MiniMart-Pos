@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -58,9 +59,9 @@ private fun expenseAmount(currency: String, value: Double): String =
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseScreen(onBack: () -> Unit, vm: ExpenseViewModel = hiltViewModel()) {
-    val state by vm.uiState.collectAsState()
-    val period by vm.period.collectAsState()
-    val customRange by vm.customRange.collectAsState()
+    val state by vm.uiState.collectAsStateWithLifecycle()
+    val period by vm.period.collectAsStateWithLifecycle()
+    val customRange by vm.customRange.collectAsStateWithLifecycle()
     var showRangePicker by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableIntStateOf(0) }

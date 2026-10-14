@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -57,7 +58,7 @@ fun ReceiptScreen(
 ) {
     val context = LocalContext.current
     val scope   = rememberCoroutineScope()
-    val state   by vm.state.collectAsState()
+    val state   by vm.state.collectAsStateWithLifecycle()
     var statusMsg       by remember { mutableStateOf<String?>(null) }
     var isGeneratingPdf by remember { mutableStateOf(false) }
     var showRefundDialog by remember { mutableStateOf(false) }

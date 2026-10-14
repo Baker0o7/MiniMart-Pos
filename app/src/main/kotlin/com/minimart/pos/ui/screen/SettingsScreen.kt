@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
@@ -50,6 +51,7 @@ fun SettingsScreen(
     syncVm: SyncViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     cloudVm: com.minimart.pos.ui.viewmodel.CloudViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     integrityVm: com.minimart.pos.ui.viewmodel.IntegrityViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    ownerGate: com.minimart.pos.ui.viewmodel.OwnerGateViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     onBack: () -> Unit,
     onShifts: () -> Unit,
     onUsers: () -> Unit,
@@ -64,12 +66,12 @@ fun SettingsScreen(
     val rm      = RoleManager
 
     // Flows
-    val storeName     by settingsRepo.storeName.collectAsState("")
-    val currency      by settingsRepo.currency.collectAsState("KES")
-    val receiptFooter by settingsRepo.receiptFooter.collectAsState("")
-    val darkMode      by settingsRepo.darkMode.collectAsState(false)
-    val expiryAlertMonths by settingsRepo.expiryAlertMonths.collectAsState(1)
-    val printerName   by settingsRepo.printerName.collectAsState(null)
+    val storeName     by settingsRepo.storeName.collectAsStateWithLifecycle("")
+    val currency      by settingsRepo.currency.collectAsStateWithLifecycle("KES")
+    val receiptFooter by settingsRepo.receiptFooter.collectAsStateWithLifecycle("")
+    val darkMode      by settingsRepo.darkMode.collectAsStateWithLifecycle(false)
+    val expiryAlertMonths by settingsRepo.expiryAlertMonths.collectAsStateWithLifecycle(1)
+    val printerName   by settingsRepo.printerName.collectAsStateWithLifecycle(null)
 
     // Local edit state
     var storeNameInput by remember { mutableStateOf("") }
@@ -94,6 +96,7 @@ fun SettingsScreen(
 
     // Role restriction banner
     val isAdmin = rm.canAccessSettings(currentRole)
+    val isOwner = rm.canManageSystem(currentRole)
 
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -177,7 +180,7 @@ fun SettingsScreen(
                 }
 
                 // ── M-Pesa STK Push (Daraja API) ─────────────────────────────
-                if (isAdmin) DarajaSettingsSection(settingsRepo)
+                if (isOwner) DarajaSettingsSection(settingsRepo, ownerGate)
 
                 // ── Thermal Printer ───────────────────────────────────────────
                 if (isAdmin) {
@@ -212,8 +215,8 @@ fun SettingsScreen(
 
                 // ── Cash Drawer ───────────────────────────────────────────────
                 if (isAdmin) {
-                    val cashDrawerAddress by settingsRepo.cashDrawerAddress.collectAsState("")
-                    val cashDrawerOnSale  by settingsRepo.cashDrawerOnSale.collectAsState(true)
+                    val cashDrawerAddress by settingsRepo.cashDrawerAddress.collectAsStateWithLifecycle("")
+                    val cashDrawerOnSale  by settingsRepo.cashDrawerOnSale.collectAsStateWithLifecycle(true)
                     var testStatus by remember { mutableStateOf<String?>(null) }
                     // Local text, saved when the field loses focus: writing DataStore on every keystroke
                     // and echoing it back made typing laggy and could drop characters.
@@ -276,9 +279,9 @@ fun SettingsScreen(
 
                 // ── Shift close & customer display ─────────────────────────────
                 if (isAdmin) {
-                    val blindClose by settingsRepo.blindClose.collectAsState(true)
-                    val secondScreen by settingsRepo.customerDisplayEnabled.collectAsState(false)
-                    val kickPin by settingsRepo.cashDrawerPin.collectAsState(0)
+                    val blindClose by settingsRepo.blindClose.collectAsStateWithLifecycle(true)
+                    val secondScreen by settingsRepo.customerDisplayEnabled.collectAsStateWithLifecycle(false)
+                    val kickPin by settingsRepo.cashDrawerPin.collectAsStateWithLifecycle(0)
                     DSection("Shift close & display", Icons.Default.Tv,
                         summary = if (blindClose) "Blind close on" else "Blind close off",
                         initiallyExpanded = false) {
@@ -382,8 +385,8 @@ fun SettingsScreen(
                 AppearanceSettingsSection(settingsRepo)
 
                 // ── Multi-Device Sync (LAN) ───────────────────────────────────
-                if (isAdmin) {
-                    val syncState by syncVm.state.collectAsState()
+                if (isOwner) {
+                    val syncState by syncVm.state.collectAsStateWithLifecycle()
                     DSection("Multi-Device Sync (LAN)", Icons.Default.Sync,
                         summary = if (syncState.serverRunning) "Server running" else "Off",
                         initiallyExpanded = false) {
@@ -509,8 +512,8 @@ fun SettingsScreen(
                 }
 
                 // ── Cloud dashboard (multi-store) ─────────────────────────────
-                if (isAdmin) {
-                    val cs by cloudVm.state.collectAsState()
+                if (isOwner) {
+                    val cs by cloudVm.state.collectAsStateWithLifecycle()
                     val fieldColors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
                         focusedTextColor = Color.White, unfocusedTextColor = Color.White,
@@ -561,7 +564,7 @@ fun SettingsScreen(
                 }
 
                 // ── Data & Backup ─────────────────────────────────────────────
-                if (isAdmin) {
+                if (isOwner) {
                     DSection("Data & Backup", Icons.Default.Storage, summary = "Backup · Restore · Share", initiallyExpanded = false) {
                         var backupStatus by remember { mutableStateOf<String?>(null) }
                         var isBackingUp  by remember { mutableStateOf(false) }
@@ -615,6 +618,7 @@ fun SettingsScreen(
                                             showBackupDialog = false
                                             isBackingUp = true
                                             scope.launch {
+                                                if (!ownerGate.allow("create a backup")) { backupStatus = "Only the owner can do this"; isBackingUp = false; return@launch }
                                                 val r = com.minimart.pos.util.BackupManager.backup(context, chosen)
                                                 backupStatus = when (r) {
                                                     is com.minimart.pos.util.BackupResult.Success -> { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context); r.message }
@@ -649,9 +653,9 @@ fun SettingsScreen(
                             }
                         }
                         backupStatus?.let { Text(it, color = if ("saved" in it) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall) }
-                        val integrityRunning by integrityVm.running.collectAsState()
-                        val integrityReport by integrityVm.report.collectAsState()
-                        val integrityFailed by integrityVm.failed.collectAsState()
+                        val integrityRunning by integrityVm.running.collectAsStateWithLifecycle()
+                        val integrityReport by integrityVm.report.collectAsStateWithLifecycle()
+                        val integrityFailed by integrityVm.failed.collectAsStateWithLifecycle()
                         TextButton(onClick = { integrityVm.run() }, enabled = !integrityRunning, contentPadding = PaddingValues(0.dp)) {
                             if (integrityRunning) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = DT.Teal, strokeWidth = 2.dp)
                             else Icon(Icons.Default.FactCheck, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
@@ -738,6 +742,7 @@ fun SettingsScreen(
                                             val pw = restorePass.ifEmpty { null }
                                             pendingRestoreFile = null
                                             scope.launch {
+                                                if (!ownerGate.allow("restore a backup")) { backupStatus = "Only the owner can do this"; return@launch }
                                                 val r = com.minimart.pos.util.BackupManager.restore(context, f, pw)
                                                 backupStatus = when (r) {
                                                     is com.minimart.pos.util.BackupResult.Success -> r.message
@@ -789,8 +794,8 @@ fun SettingsScreen(
                     // is session-gated behind LoginScreen and AccessGuard), so binding
                     // biometric to "whoever is logged in right now" here is safe — it can
                     // never be set without the account's PIN having been proven first.
-                    val loggedInUserId by settingsRepo.loggedInUserId.collectAsState(initial = null)
-                    val biometricUserId by settingsRepo.biometricUserId.collectAsState(initial = null)
+                    val loggedInUserId by settingsRepo.loggedInUserId.collectAsStateWithLifecycle(initialValue = null)
+                    val biometricUserId by settingsRepo.biometricUserId.collectAsStateWithLifecycle(initialValue = null)
                     val biometricOnForThisUser = loggedInUserId != null && loggedInUserId == biometricUserId
                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {

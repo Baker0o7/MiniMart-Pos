@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -63,12 +64,12 @@ fun ProductListScreen(
     currency: String = "KES",
     vm: ProductViewModel = hiltViewModel()
 ) {
-    val products by vm.products.collectAsState()
-    val categories by vm.categories.collectAsState()
-    val lowStock by vm.lowStockProducts.collectAsState()
-    val selectedCat by vm.selectedCategory.collectAsState()
-    val searchQuery by vm.searchQuery.collectAsState()
-    val uiState by vm.uiState.collectAsState()
+    val products by vm.products.collectAsStateWithLifecycle()
+    val categories by vm.categories.collectAsStateWithLifecycle()
+    val lowStock by vm.lowStockProducts.collectAsStateWithLifecycle()
+    val selectedCat by vm.selectedCategory.collectAsStateWithLifecycle()
+    val searchQuery by vm.searchQuery.collectAsStateWithLifecycle()
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
     var editProduct by remember { mutableStateOf<Product?>(null) }
     var lowOnly by remember { mutableStateOf(false) }

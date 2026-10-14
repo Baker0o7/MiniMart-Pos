@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -34,7 +35,7 @@ fun LowStockScreen(
     onBack: () -> Unit,
     vm: ProductViewModel = hiltViewModel()
 ) {
-    val lowStock by vm.lowStockProducts.collectAsState()
+    val lowStock by vm.lowStockProducts.collectAsStateWithLifecycle()
     val context  = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {

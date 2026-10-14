@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -42,7 +43,7 @@ private fun money(v: Double) = String.format(Locale.US, "%,.0f", v)
 
 @Composable
 fun InventoryInsightsScreen(onBack: () -> Unit, vm: InventoryInsightsViewModel = hiltViewModel()) {
-    val ins by vm.insights.collectAsState()
+    val ins by vm.insights.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableStateOf(InsightTab.REORDER) }
     val context = LocalContext.current
 

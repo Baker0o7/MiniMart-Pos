@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,9 +38,9 @@ import com.minimart.pos.ui.viewmodel.ReportsViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
-    val state by vm.uiState.collectAsState()
-    val period by vm.period.collectAsState()
-    val customRange by vm.customRange.collectAsState()
+    val state by vm.uiState.collectAsStateWithLifecycle()
+    val period by vm.period.collectAsStateWithLifecycle()
+    val customRange by vm.customRange.collectAsStateWithLifecycle()
     var showRangePicker by remember { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val shareScope = rememberCoroutineScope()

@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -89,10 +90,10 @@ fun DashboardScreen(
     settingsRepo: SettingsRepository? = null,
     vm: DashboardViewModel = hiltViewModel()
 ) {
-    val state by vm.uiState.collectAsState()
+    val state by vm.uiState.collectAsStateWithLifecycle()
     val rm    = com.minimart.pos.util.RoleManager
     val hiddenActions by (settingsRepo?.hiddenActions
-        ?: kotlinx.coroutines.flow.flowOf("")).collectAsState("")
+        ?: kotlinx.coroutines.flow.flowOf("")).collectAsStateWithLifecycle("")
     var showManageActions by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
     LaunchedEffect(isRefreshing) {
@@ -183,7 +184,7 @@ fun DashboardScreen(
             item {
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 val backupWarn = remember(state.todayRevenue, state.todaySaleCount) { com.minimart.pos.util.BackupManager.warning(ctx) }
-                val refused by vm.refusedSales.collectAsState()
+                val refused by vm.refusedSales.collectAsStateWithLifecycle()
                 val warn = listOfNotNull(
                     backupWarn,
                     if (refused > 0) "$refused sale${if (refused == 1) "" else "s"} refused by the main device — open Settings → Sync to retry" else null

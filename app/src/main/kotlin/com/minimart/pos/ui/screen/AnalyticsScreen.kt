@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,8 +44,8 @@ private fun money(v: Double) = String.format(Locale.US, "%,.0f", v)
 
 @Composable
 fun AnalyticsScreen(onBack: () -> Unit, vm: AnalyticsViewModel = hiltViewModel()) {
-    val s by vm.state.collectAsState()
-    val range by vm.range.collectAsState()
+    val s by vm.state.collectAsStateWithLifecycle()
+    val range by vm.range.collectAsStateWithLifecycle()
 
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
         GradientHeader(title = "Analytics", subtitle = "Sales, profit and trends", onBack = onBack)

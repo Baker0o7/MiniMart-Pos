@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.app.Activity
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
@@ -33,7 +34,7 @@ class CustomerDisplayViewModel @Inject constructor(val hub: CustomerDisplayHub) 
 /** On-device customer view: turn the tablet around, or hold it up. Back or the ✕ returns to the till. */
 @Composable
 fun CustomerDisplayScreen(onExit: () -> Unit, vm: CustomerDisplayViewModel = hiltViewModel()) {
-    val state by vm.hub.state.collectAsState()
+    val state by vm.hub.state.collectAsStateWithLifecycle()
     val activity = LocalContext.current as? Activity
     DisposableEffect(Unit) {
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

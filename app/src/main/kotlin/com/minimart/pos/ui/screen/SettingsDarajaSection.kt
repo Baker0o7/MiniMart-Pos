@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 /** Daraja (M-Pesa STK Push) credentials box; owner/manager only (the caller checks the role). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DarajaSettingsSection(settingsRepo: SettingsRepository) {
+internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: com.minimart.pos.ui.viewmodel.OwnerGateViewModel) {
     val scope = rememberCoroutineScope()
     val initialDaraja = remember { settingsRepo.getDarajaConfig() }
     var darajaSandbox       by remember { mutableStateOf(initialDaraja.sandbox) }
@@ -119,17 +119,20 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository) {
         Spacer(Modifier.height(8.dp))
         Button(
             onClick = {
-                settingsRepo.saveDarajaConfig(
-                    com.minimart.pos.data.repository.SettingsRepository.DarajaConfig(
-                        consumerKey    = darajaConsumerKey.trim(),
-                        consumerSecret = darajaConsumerSecret.trim(),
-                        passkey        = darajaPasskey.trim(),
-                        shortcode      = darajaShortcode.trim(),
-                        sandbox        = darajaSandbox
+                scope.launch {
+                    if (!ownerGate.allow("change payment credentials")) return@launch
+                    settingsRepo.saveDarajaConfig(
+                        com.minimart.pos.data.repository.SettingsRepository.DarajaConfig(
+                            consumerKey    = darajaConsumerKey.trim(),
+                            consumerSecret = darajaConsumerSecret.trim(),
+                            passkey        = darajaPasskey.trim(),
+                            shortcode      = darajaShortcode.trim(),
+                            sandbox        = darajaSandbox
+                        )
                     )
-                )
-                darajaSaved = true
-                scope.launch { kotlinx.coroutines.delay(3000); darajaSaved = false }
+                    darajaSaved = true
+                    scope.launch { kotlinx.coroutines.delay(3000); darajaSaved = false }
+                }
             },
             modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)

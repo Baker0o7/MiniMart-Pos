@@ -21,6 +21,8 @@ object RoleManager {
     fun canManageUsers(role: UserRole?)       = role == UserRole.OWNER
     fun canManageShifts(role: UserRole?)      = role == UserRole.OWNER || role == UserRole.MANAGER
     fun canAccessSettings(role: UserRole?)    = role == UserRole.OWNER || role == UserRole.MANAGER
+    /** Payment credentials, device sync, cloud link, backup and restore: a manager could use any of these to redirect money or erase history. */
+    fun canManageSystem(role: UserRole?)      = role == UserRole.OWNER
     fun canViewInventory(role: UserRole?)     = true  // everyone can see inventory
     fun canAdjustStock(role: UserRole?)       = role == UserRole.OWNER || role == UserRole.MANAGER
     fun canApplyDiscounts(role: UserRole?)    = role == UserRole.OWNER || role == UserRole.MANAGER

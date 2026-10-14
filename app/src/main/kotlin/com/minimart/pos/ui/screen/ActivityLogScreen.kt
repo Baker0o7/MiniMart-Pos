@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -29,7 +30,7 @@ import com.minimart.pos.ui.viewmodel.ActivityLogViewModel
 /** Owner-only: who did what, newest first. */
 @Composable
 fun ActivityLogScreen(onBack: () -> Unit, vm: ActivityLogViewModel = hiltViewModel()) {
-    val s by vm.state.collectAsState()
+    val s by vm.state.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
         GradientHeader("Activity log", "Who did what", onBack) {
             HeaderPillButton("Refresh", Icons.Default.Refresh) { vm.refresh() }

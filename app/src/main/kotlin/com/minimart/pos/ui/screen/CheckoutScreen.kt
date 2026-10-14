@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -61,10 +62,10 @@ fun CheckoutScreen(
     darajaVm: DarajaViewModel = hiltViewModel(),
     mpesaCheckVm: com.minimart.pos.ui.viewmodel.MpesaCheckoutViewModel = hiltViewModel()
 ) {
-    val state       by vm.uiState.collectAsState()
-    val currency    by vm.currency.collectAsState()
-    val custState   by customerVm.uiState.collectAsState()
-    val stkState    by darajaVm.uiState.collectAsState()
+    val state       by vm.uiState.collectAsStateWithLifecycle()
+    val currency    by vm.currency.collectAsStateWithLifecycle()
+    val custState   by customerVm.uiState.collectAsStateWithLifecycle()
+    val stkState    by darajaVm.uiState.collectAsStateWithLifecycle()
 
     var selectedMethod          by remember { mutableStateOf(PaymentMethod.CASH) }
     var cashInput               by remember { mutableStateOf("") }
@@ -104,8 +105,8 @@ fun CheckoutScreen(
         }
     }
 
-    val mpesaAssessment by mpesaCheckVm.assessment.collectAsState()
-    val mpesaStrict by mpesaCheckVm.strict.collectAsState()
+    val mpesaAssessment by mpesaCheckVm.assessment.collectAsStateWithLifecycle()
+    val mpesaStrict by mpesaCheckVm.strict.collectAsStateWithLifecycle()
     LaunchedEffect(mpesaRef, state.total) { mpesaCheckVm.check(mpesaRef, state.total) }
     val stkConfirmed = stkState.phase == StkPushPhase.SUCCESS && mpesaRef.isNotBlank() && mpesaRef == stkState.mpesaReceiptNumber
 
