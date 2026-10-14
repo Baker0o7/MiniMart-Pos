@@ -25,7 +25,10 @@ data class CartUiState(
     // cashier for the weight instead of adding it as "1 unit" at a meaningless price.
     val pendingWeighProduct: Product? = null,
     // A scanned barcode matched no product: the screen offers to add it.
-    val unknownBarcode: String? = null
+    val unknownBarcode: String? = null,
+    // The line the cashier just removed, so the screen can offer Undo for a few seconds.
+    val removedItem: CartItem? = null,
+    val removedIndex: Int = 0
 ) {
     // Bug fix: these aggregate properties used Double's sumOf{} — repeated floating-
     // point addition across every cart line, which is exactly where IEEE-754 rounding
@@ -247,7 +250,7 @@ class CartViewModel @Inject constructor(
     fun updateQuantity(productId: Long, quantity: Int) {
         _uiState.update { state ->
             if (quantity <= 0) {
-                state.copy(items = state.items.filter { it.product.id != productId })
+                withoutLine(state, productId)
             } else {
                 // Bug fix: coerceAtMost(stock) could silently produce 0 when stock == 0,
                 // leaving a ghost cart line (KES 0.00) that the stepper couldn't remove.
@@ -264,7 +267,33 @@ class CartViewModel @Inject constructor(
     }
 
     fun removeFromCart(productId: Long) {
-        _uiState.update { it.copy(items = it.items.filter { item -> item.product.id != productId }) }
+        _uiState.update { withoutLine(it, productId) }
+    }
+
+    /** Removes a cart line and remembers it (and its position) for [undoRemove]. */
+    private fun withoutLine(state: CartUiState, productId: Long): CartUiState {
+        val index = state.items.indexOfFirst { it.product.id == productId }
+        if (index < 0) return state
+        return state.copy(
+            items = state.items.filterIndexed { i, _ -> i != index },
+            removedItem = state.items[index], removedIndex = index
+        )
+    }
+
+    /** Puts the last removed line back where it was (unless the same product was added again meanwhile). */
+    fun undoRemove() {
+        _uiState.update { s ->
+            val gone = s.removedItem ?: return@update s
+            if (s.items.any { it.product.id == gone.product.id }) s.copy(removedItem = null)
+            else s.copy(
+                items = s.items.toMutableList().apply { add(s.removedIndex.coerceIn(0, size), gone) },
+                removedItem = null
+            )
+        }
+    }
+
+    fun dismissUndo() {
+        _uiState.update { if (it.removedItem == null) it else it.copy(removedItem = null) }
     }
 
     fun setItemDiscount(productId: Long, discount: Double) {

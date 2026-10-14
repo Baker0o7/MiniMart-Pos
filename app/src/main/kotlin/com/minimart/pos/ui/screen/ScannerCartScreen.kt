@@ -114,6 +114,14 @@ fun ScannerCartScreen(
     // silently, so a failed scan looked like nothing had happened.
     val bannerText: String? = state.error ?: state.lastScannedProduct?.let { "Added ${it.name}" }
     val bannerIsError = state.error != null
+    // Undo for a removed line: shown for a few seconds, then it is gone for good.
+    var shownRemoved by remember { mutableStateOf("") }
+    LaunchedEffect(state.removedItem) {
+        val gone = state.removedItem ?: return@LaunchedEffect
+        shownRemoved = gone.product.name
+        kotlinx.coroutines.delay(5000)
+        vm.dismissUndo()
+    }
     var shownBanner by remember { mutableStateOf("") }
     var shownIsError by remember { mutableStateOf(false) }
     LaunchedEffect(bannerText) { if (bannerText != null) { shownBanner = bannerText; shownIsError = bannerIsError } }
@@ -192,6 +200,12 @@ fun ScannerCartScreen(
             AnimatedVisibility(visible = bannerText != null,
                 enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
                 FeedbackBanner(shownBanner, shownIsError,
+                    modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp))
+            }
+
+            AnimatedVisibility(visible = state.removedItem != null,
+                enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                UndoBar("Removed $shownRemoved", onUndo = { vm.undoRemove() },
                     modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp))
             }
 

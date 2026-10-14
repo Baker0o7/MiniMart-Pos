@@ -129,6 +129,24 @@ internal fun FeedbackBanner(message: String?, isError: Boolean, modifier: Modifi
 }
 
 
+/** A short "Removed X — UNDO" strip. */
+@androidx.compose.runtime.Composable
+internal fun UndoBar(message: String, onUndo: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+            .background(DT.Amber.copy(0.14f))
+            .padding(start = 12.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(message, color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+            maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f))
+        androidx.compose.material3.TextButton(onClick = onUndo) {
+            Text("UNDO", color = DT.Amber, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+        }
+    }
+}
+
 /** Search fields: show a Search key on the keyboard and close the keyboard when it is pressed. */
 fun searchKeyboardOptions() = androidx.compose.foundation.text.KeyboardOptions(
     imeAction = androidx.compose.ui.text.input.ImeAction.Search)
