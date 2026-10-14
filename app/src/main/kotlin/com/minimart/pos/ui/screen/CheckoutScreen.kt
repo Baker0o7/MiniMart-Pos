@@ -459,13 +459,12 @@ fun CheckoutScreen(
                                                         Spacer(Modifier.width(8.dp))
                                                         Text("Payment confirmed", color = DT.Green, fontWeight = FontWeight.Bold)
                                                     }
-                                                    if (stkState.mpesaReceiptNumber != null) {
-                                                        Text("Ref: ${stkState.mpesaReceiptNumber}", color = DT.OnSurface, fontSize = 13.sp)
-                                                    } else {
-                                                        // Safaricom's status query doesn't return the receipt code.
-                                                        Text("Type the code from the customer's M-Pesa SMS below so the sale can be reconciled.",
-                                                            color = DT.SubText, fontSize = 12.sp)
-                                                    }
+                                                    Text("Ref: ${stkState.mpesaReceiptNumber ?: ""}", color = DT.OnSurface, fontSize = 13.sp)
+                                                    // Safaricom's status query doesn't return the receipt code, so a short code
+                                                    // is made for this payment. Typing the SMS code instead links the sale to the
+                                                    // tracked payment.
+                                                    Text("Safaricom confirmed the payment. To link it to the SMS record, replace the ref below with the code from the customer's M-Pesa message.",
+                                                        color = DT.SubText, fontSize = 12.sp)
                                                 }
                                             }
                                         }

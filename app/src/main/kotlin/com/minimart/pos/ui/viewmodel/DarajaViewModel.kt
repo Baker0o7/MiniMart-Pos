@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.mpesa.DarajaApiClient
 import com.minimart.pos.mpesa.StkPushResult
+import com.minimart.pos.mpesa.StkReference
 import com.minimart.pos.mpesa.StkStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -74,7 +75,7 @@ class DarajaViewModel @Inject constructor(
                     _uiState.value = StkPushUiState(
                         StkPushPhase.SUCCESS,
                         "Payment confirmed ✓",
-                        mpesaReceiptNumber = status.mpesaReceiptNumber
+                        mpesaReceiptNumber = StkReference.forPayment(status.mpesaReceiptNumber, checkoutRequestId)
                     )
                     return
                 }

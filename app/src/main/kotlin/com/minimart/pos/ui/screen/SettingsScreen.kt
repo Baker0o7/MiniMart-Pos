@@ -69,20 +69,12 @@ fun SettingsScreen(
     val receiptFooter by settingsRepo.receiptFooter.collectAsState("")
     val darkMode      by settingsRepo.darkMode.collectAsState(false)
     val expiryAlertMonths by settingsRepo.expiryAlertMonths.collectAsState(1)
-    val mpesaPaybill  by settingsRepo.mpesaPaybill.collectAsState("")
-    val mpesaTill     by settingsRepo.mpesaTill.collectAsState("")
-    val mpesaWithdraw by settingsRepo.mpesaWithdraw.collectAsState("")
-    val mpesaName     by settingsRepo.mpesaAccountName.collectAsState("")
     val printerName   by settingsRepo.printerName.collectAsState(null)
 
     // Local edit state
     var storeNameInput by remember { mutableStateOf("") }
     var currencyInput  by remember { mutableStateOf("KES") }
     var footerInput    by remember { mutableStateOf("") }
-    var paybillInput   by remember { mutableStateOf("") }
-    var tillInput      by remember { mutableStateOf("") }
-    var withdrawInput  by remember { mutableStateOf("") }
-    var nameInput      by remember { mutableStateOf("") }
 
     var showPrinterDialog by remember { mutableStateOf(false) }
     var pairedDevices     by remember { mutableStateOf<List<BluetoothDevice>>(emptyList()) }
@@ -95,12 +87,9 @@ fun SettingsScreen(
         else printerStatus = "Allow Bluetooth access to find your printer"
     }
 
-    // Separate effects: saving the store block used to reset half-typed M-Pesa fields (and vice versa).
+    // Re-sync the editable store fields whenever the saved values change.
     LaunchedEffect(storeName, currency, receiptFooter) {
         storeNameInput = storeName; currencyInput = currency; footerInput = receiptFooter
-    }
-    LaunchedEffect(mpesaPaybill, mpesaTill, mpesaWithdraw, mpesaName) {
-        paybillInput = mpesaPaybill; tillInput = mpesaTill; withdrawInput = mpesaWithdraw; nameInput = mpesaName
     }
 
     // Role restriction banner

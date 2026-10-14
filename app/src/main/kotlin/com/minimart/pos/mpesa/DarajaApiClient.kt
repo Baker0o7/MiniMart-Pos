@@ -86,7 +86,7 @@ class DarajaApiClient @Inject constructor(
 
     // ── Password + timestamp ───────────────────────────────────────────────────
     private fun generatePasswordAndTimestamp(shortcode: String, passkey: String): Pair<String, String> {
-        val ts = SimpleDateFormat("yyyyMMddHHmmss", Locale.US).format(Date())
+        val ts = SimpleDateFormat("yyyyMMddHHmmss", Locale.US).apply { timeZone = TimeZone.getTimeZone("Africa/Nairobi") }.format(Date())
         val raw = "$shortcode$passkey$ts"
         val password = Base64.encodeToString(raw.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
         return Pair(password, ts)
