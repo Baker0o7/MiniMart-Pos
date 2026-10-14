@@ -100,7 +100,22 @@ fun MiniMartNavGraph(
     // every guarded screen (Settings, Users…) look "forbidden" for a moment; popping the back stack then
     // removed the login screen that logout had just navigated to, leaving a blank, hung screen.
     val guardBack: () -> Unit = {
-        if (authState.isLoggedIn && navController.previousBackStackEntry != null) navController.popBackStack()
+        if (authState.isLoggedIn) {
+            if (navController.previousBackStackEntry != null) navController.popBackStack()
+            // Nothing to go back to (screen restored or opened directly): land on Home, never a blank page.
+            else navController.navigate(Routes.DASHBOARD) { popUpTo(0) { inclusive = true } }
+        }
+    }
+
+    // Opening the app from Recents after Android ended its process restores the last screen
+    // (Settings, Reports...), but the signed-in user lives only in memory. Guarded screens then saw
+    // "no access", bounced back to nothing and showed a blank page — and anything unguarded was
+    // reachable without the PIN. Not signed in on any screen but the PIN screen means: go to the PIN screen.
+    val routeNow = navController.currentBackStackEntryAsState().value?.destination?.route
+    LaunchedEffect(authState.isLoggedIn, routeNow) {
+        if (!authState.isLoggedIn && routeNow != null && routeNow != Routes.LOGIN) {
+            navController.navigate(Routes.LOGIN) { popUpTo(0) { inclusive = true } }
+        }
     }
 
     // Auto-logout on session expiry
