@@ -213,33 +213,6 @@ fun ScannerCartScreen(
             val held by vm.heldCarts.collectAsStateWithLifecycle()
             var showHeld by remember { mutableStateOf(false) }
             LaunchedEffect(held.isEmpty()) { if (held.isEmpty()) showHeld = false }
-            if (state.items.isNotEmpty() || held.isNotEmpty()) {
-                Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (state.items.isNotEmpty()) {
-                        OutlinedButton(
-                            onClick = { vm.holdCurrentSale() },
-                            modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, DT.Teal.copy(0.5f))
-                        ) {
-                            Icon(Icons.Default.PauseCircle, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Hold sale", color = DT.Teal, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                    if (held.isNotEmpty()) {
-                        OutlinedButton(
-                            onClick = { showHeld = true },
-                            modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, DT.Amber.copy(0.6f))
-                        ) {
-                            Icon(Icons.Default.PlayCircle, null, tint = DT.Amber, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Held (${held.size})", color = DT.Amber, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                }
-            }
             if (showHeld) {
                 AlertDialog(
                     onDismissRequest = { showHeld = false },
@@ -391,17 +364,25 @@ fun ScannerCartScreen(
                 }
             }
 
-            // ── Cart label ────────────────────────────────────────────────────
-            if (state.items.isNotEmpty()) {
+            // ── Cart label + hold / held ──────────────────────────────────────
+            if (state.items.isNotEmpty() || held.isNotEmpty()) {
                 Row(modifier = Modifier.fillMaxWidth()
                     .padding(start = 18.dp, end = 14.dp, top = 10.dp, bottom = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text("Cart", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f))
-                    Box(modifier = Modifier.clip(RoundedCornerShape(8.dp))
-                        .background(DT.Surface2).border(1.dp, DT.Border, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)) {
-                        Text("${state.itemCount} item${if (state.itemCount != 1) "s" else ""}",
-                            color = DT.Teal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(if (state.items.isNotEmpty()) "Cart" else "", color = Color.White,
+                        fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                    if (held.isNotEmpty()) {
+                        CartChip("Held (${held.size})", Icons.Default.PlayCircle, DT.Amber) { showHeld = true }
+                    }
+                    if (state.items.isNotEmpty()) {
+                        CartChip("Hold", Icons.Default.PauseCircle, DT.Teal) { vm.holdCurrentSale() }
+                        Box(modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                            .background(DT.Surface2).border(1.dp, DT.Border, RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 6.dp)) {
+                            Text("${state.itemCount} item${if (state.itemCount != 1) "s" else ""}",
+                                color = DT.Teal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
@@ -741,4 +722,20 @@ private fun WeightDialog(product: Product, initialKg: Double, currency: String,
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
     )
+}
+
+/** Small outlined action chip used in the cart header row. */
+@Composable
+private fun CartChip(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, tint: Color, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.clip(RoundedCornerShape(10.dp))
+            .border(1.dp, tint.copy(0.55f), RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(5.dp))
+        Text(label, color = tint, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+    }
 }

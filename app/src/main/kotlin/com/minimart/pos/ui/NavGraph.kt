@@ -434,25 +434,28 @@ private fun BottomNavBar(
                 NavItem(Icons.Default.Receipt,   "Expenses",  currentRoute == Routes.EXPENSES,  onExpenses)
             }
         }
-        // Raised center scan button: teal ring around a filled disc
-        Box(modifier = Modifier.size(78.dp).align(Alignment.TopCenter).offset(y = (-6).dp)
-            .shadow(14.dp, CircleShape, ambientColor = NavSel, spotColor = NavSel)
-            .clip(CircleShape)
-            .background(Color(0xFF071815))
-            .border(2.dp, NavSel.copy(0.7f), CircleShape)
-            .padding(7.dp)
-            .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(NavSel, DT.HeaderMid)))
-            .clickable(onClick = onScan),
-            contentAlignment = Alignment.Center) {
-            Icon(Icons.Default.QrCode2, "Scan", tint = Color.White, modifier = Modifier.size(32.dp))
-            // Cart item count badge
+        // Raised center scan button: accent ring around a filled disc. The cart badge is a sibling of
+        // the disc (not inside it), otherwise the disc's circular clip cut the badge off.
+        Box(modifier = Modifier.size(78.dp).align(Alignment.TopCenter).offset(y = (-6).dp)) {
+            Box(modifier = Modifier.fillMaxSize()
+                .shadow(14.dp, CircleShape, ambientColor = NavSel, spotColor = NavSel)
+                .clip(CircleShape)
+                .background(DT.Bg)
+                .border(2.dp, NavSel.copy(0.7f), CircleShape)
+                .padding(7.dp)
+                .clip(CircleShape)
+                .background(Brush.linearGradient(listOf(DT.TealLight, NavSel)))
+                .clickable(onClick = onScan),
+                contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.QrCode2, "Scan", tint = DT.Bg, modifier = Modifier.size(32.dp))
+            }
             if (cartItemCount > 0) {
-                Box(modifier = androidx.compose.ui.Modifier.align(Alignment.TopEnd)
-                    .offset(x = 2.dp, y = (-2).dp)
-                    .size(18.dp)
+                Box(modifier = Modifier.align(Alignment.TopEnd)
+                    .offset(x = 2.dp, y = 2.dp)
+                    .size(20.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFEF5350)),
+                    .background(DT.Red)
+                    .border(1.5.dp, DT.NavSurface, CircleShape),
                     contentAlignment = Alignment.Center) {
                     androidx.compose.material3.Text(
                         text = if (cartItemCount > 9) "9+" else cartItemCount.toString(),
