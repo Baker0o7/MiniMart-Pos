@@ -209,6 +209,73 @@ fun ScannerCartScreen(
                     modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp))
             }
 
+            // ── Hold / resume parked sales ────────────────────────────────────
+            val held by vm.heldCarts.collectAsStateWithLifecycle()
+            var showHeld by remember { mutableStateOf(false) }
+            LaunchedEffect(held.isEmpty()) { if (held.isEmpty()) showHeld = false }
+            if (state.items.isNotEmpty() || held.isNotEmpty()) {
+                Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (state.items.isNotEmpty()) {
+                        OutlinedButton(
+                            onClick = { vm.holdCurrentSale() },
+                            modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, DT.Teal.copy(0.5f))
+                        ) {
+                            Icon(Icons.Default.PauseCircle, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Hold sale", color = DT.Teal, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    if (held.isNotEmpty()) {
+                        OutlinedButton(
+                            onClick = { showHeld = true },
+                            modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, DT.Amber.copy(0.6f))
+                        ) {
+                            Icon(Icons.Default.PlayCircle, null, tint = DT.Amber, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Held (${held.size})", color = DT.Amber, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            }
+            if (showHeld) {
+                AlertDialog(
+                    onDismissRequest = { showHeld = false },
+                    containerColor = DT.Surface,
+                    title = { Text("Held sales", color = Color.White, fontWeight = FontWeight.Bold) },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (state.items.isNotEmpty())
+                                Text("Hold or finish the current sale before resuming another.", color = DT.Amber, fontSize = 12.sp)
+                            held.reversed().forEach { h ->
+                                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(DT.Surface2)
+                                    .padding(start = 12.dp, top = 6.dp, bottom = 6.dp, end = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically) {
+                                    Column(Modifier.weight(1f)) {
+                                        Text(java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).format(java.util.Date(h.createdAt)) +
+                                            "  •  ${h.itemCount} item${if (h.itemCount != 1) "s" else ""}",
+                                            color = DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                        Text("$currency ${String.format(java.util.Locale.US, "%.2f", h.total)}", color = DT.SubText, fontSize = 12.sp)
+                                    }
+                                    IconButton(onClick = { vm.discardHeld(h.id) }) {
+                                        Icon(Icons.Default.Delete, "Discard held sale", tint = DT.SubText)
+                                    }
+                                    Button(
+                                        enabled = state.items.isEmpty(),
+                                        onClick = { vm.resumeHeld(h.id); showHeld = false },
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White)
+                                    ) { Text("Resume") }
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = { TextButton(onClick = { showHeld = false }) { Text("Close", color = DT.SubText) } }
+                )
+            }
+
             // ── Search bar ────────────────────────────────────────────────────
             OutlinedTextField(
                 value = searchText,

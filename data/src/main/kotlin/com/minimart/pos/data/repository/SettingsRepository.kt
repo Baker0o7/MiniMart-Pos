@@ -32,6 +32,7 @@ class SettingsRepository @Inject constructor(
         val KEY_MPESA_SMS_TRACKING = booleanPreferencesKey("mpesa_sms_tracking")
         val KEY_MPESA_STRICT = booleanPreferencesKey("mpesa_strict")
         val KEY_SYNC_SERVER = booleanPreferencesKey("sync_server_enabled")
+        val KEY_HELD_CARTS = stringPreferencesKey("held_carts")
         val KEY_ACCENT = stringPreferencesKey("accent")
         val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
         val KEY_PRINTER_NAME     = stringPreferencesKey("printer_name")
@@ -105,6 +106,10 @@ class SettingsRepository @Inject constructor(
     /** Whether this phone is meant to be the main device; the app restarts the sync server on launch if so. */
     val syncServerEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_SYNC_SERVER] ?: false }
     suspend fun setSyncServerEnabled(v: Boolean) = context.dataStore.edit { it[KEY_SYNC_SERVER] = v }
+
+    /** Parked sales as JSON; the format lives in the app module (HeldCarts). */
+    val heldCartsJson: Flow<String> = context.dataStore.data.map { it[KEY_HELD_CARTS] ?: "" }
+    suspend fun setHeldCartsJson(json: String) = context.dataStore.edit { it[KEY_HELD_CARTS] = json }
     /** When on, an M-Pesa sale needs a code that matches a payment this phone received. */
     val mpesaStrict: Flow<Boolean> = context.dataStore.data.map { it[KEY_MPESA_STRICT] ?: false }
     suspend fun setMpesaStrict(v: Boolean) = context.dataStore.edit { it[KEY_MPESA_STRICT] = v }

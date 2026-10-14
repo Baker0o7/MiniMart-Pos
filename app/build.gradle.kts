@@ -23,8 +23,8 @@ android {
         applicationId = "com.minimart.pos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 84
-        versionName = "1.16.19"
+        versionCode = 85
+        versionName = "1.16.20"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -128,6 +128,8 @@ dependencies {
     // under test (Money, CartUiState's computed properties, PluDecoder) are pure
     // Kotlin/JVM logic with no Android dependencies.
     testImplementation("junit:junit:4.13.2")
+    // org.json for JVM tests (Android's own copy is only a stub there)
+    testImplementation("org.json:json:20240303")
 
     // Encrypts sensitive DataStore/SharedPreferences values (sync pairing secrets).
     // First-party Google Jetpack library — a thin wrapper around the system Android

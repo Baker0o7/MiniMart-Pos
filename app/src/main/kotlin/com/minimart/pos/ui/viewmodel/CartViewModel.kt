@@ -10,6 +10,7 @@ import com.minimart.pos.scanner.KeyboardScanner
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -330,6 +331,92 @@ class CartViewModel @Inject constructor(
 
     fun clearCart() {
         _uiState.update { CartUiState() }
+    }
+
+    // ── Held (parked) sales ───────────────────────────────────────────────────
+    // A sale can be set aside while the next customer is served. Parked sales are saved, so they
+    // survive the app closing. Stock is NOT reserved; prices and stock are re-read when resumed.
+    private val heldMutex = kotlinx.coroutines.sync.Mutex()
+    val heldCarts: StateFlow<List<com.minimart.pos.util.HeldCart>> = settingsRepo.heldCartsJson
+        .map { com.minimart.pos.util.HeldCarts.decode(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    fun holdCurrentSale() {
+        val st = _uiState.value
+        if (st.items.isEmpty()) return
+        val now = System.currentTimeMillis()
+        val held = com.minimart.pos.util.HeldCart(
+            id = now, createdAt = now, discount = st.discount, total = st.total, itemCount = st.itemCount,
+            lines = st.items.map { com.minimart.pos.util.HeldLine(it.product.id, it.quantity, it.weightKg, it.discount) }
+        )
+        viewModelScope.launch {
+            try {
+                heldMutex.withLock {
+                    val current = com.minimart.pos.util.HeldCarts.decode(settingsRepo.heldCartsJson.first())
+                    settingsRepo.setHeldCartsJson(com.minimart.pos.util.HeldCarts.encode(
+                        com.minimart.pos.util.HeldCarts.add(current, held)))
+                }
+                // Cleared only after it is safely saved.
+                _uiState.update { CartUiState() }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) {
+                _uiState.update { it.copy(error = "Couldn't hold the sale: ${e.message}") }
+            }
+        }
+    }
+
+    fun resumeHeld(id: Long) {
+        if (_uiState.value.items.isNotEmpty()) {
+            _uiState.update { it.copy(error = "Hold or finish the current sale first") }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                heldMutex.withLock {
+                    val current = com.minimart.pos.util.HeldCarts.decode(settingsRepo.heldCartsJson.first())
+                    val held = current.firstOrNull { it.id == id } ?: return@withLock
+                    var left = 0
+                    val items = held.lines.mapNotNull { line ->
+                        val p = productRepo.getById(line.productId)
+                        if (p == null || !p.isActive) { left++; return@mapNotNull null }
+                        if (p.isWeighed) {
+                            if (line.weightKg <= 0.0) { left++; return@mapNotNull null }
+                            CartItem(
+                                product = p.copy(price = com.minimart.pos.util.PluDecoder.calculatePrice(p.pricePerKg, line.weightKg)),
+                                quantity = 1, weightKg = line.weightKg, discount = line.discount)
+                        } else {
+                            val qty = line.quantity.coerceAtMost(p.stock)
+                            if (qty <= 0) { left++; return@mapNotNull null }
+                            CartItem(product = p, quantity = qty, discount = line.discount)
+                        }
+                    }
+                    settingsRepo.setHeldCartsJson(com.minimart.pos.util.HeldCarts.encode(
+                        com.minimart.pos.util.HeldCarts.remove(current, id)))
+                    _uiState.update {
+                        CartUiState(
+                            items = items, discount = held.discount,
+                            error = if (left > 0) "$left item(s) are no longer available and were left out" else null
+                        )
+                    }
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) {
+                _uiState.update { it.copy(error = "Couldn't resume the sale: ${e.message}") }
+            }
+        }
+    }
+
+    fun discardHeld(id: Long) {
+        viewModelScope.launch {
+            try {
+                heldMutex.withLock {
+                    val current = com.minimart.pos.util.HeldCarts.decode(settingsRepo.heldCartsJson.first())
+                    settingsRepo.setHeldCartsJson(com.minimart.pos.util.HeldCarts.encode(
+                        com.minimart.pos.util.HeldCarts.remove(current, id)))
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) { }
+        }
     }
 
     fun clearError() {
