@@ -440,11 +440,14 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(100, 200, 500, 1000).forEach { amt ->
                         OutlinedButton(onClick = { amount = amt.toString() },
-                            shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f).height(40.dp),
+                            // Default button padding (24dp each side) left too little room, so "1000" wrapped digit by digit.
+                            contentPadding = PaddingValues(horizontal = 4.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, if (amount == amt.toString()) DT.Teal else DT.Border),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = if (amount == amt.toString()) DT.Teal.copy(0.15f) else Color.Transparent)) {
-                            Text("$amt", color = if (amount == amt.toString()) DT.Teal else DT.SubText, fontSize = 12.sp)
+                            Text("$amt", color = if (amount == amt.toString()) DT.Teal else DT.SubText, fontSize = 13.sp,
+                                maxLines = 1, softWrap = false)
                         }
                     }
                 }
