@@ -36,7 +36,7 @@ object EscPos {
     val DRAWER_KICK     = byteArrayOf(0x1B, 0x70, 0x00, 0x19, 0xFA.toByte()) // cash drawer
     const val LINE_CHARS = 32                               // chars per line on 80mm paper
 
-    fun text(s: String) = s.toByteArray(Charsets.UTF_8)
+    fun text(s: String) = PrinterText.ascii(s).toByteArray(Charsets.US_ASCII)
     fun divider(char: Char = '-') = text(char.toString().repeat(LINE_CHARS)) + NEWLINE
 }
 
