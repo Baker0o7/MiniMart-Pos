@@ -19,7 +19,7 @@ sealed class BackupResult {
 
 object BackupManager {
 
-    private val df = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.getDefault())
+    private val df = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.US)
 
     /** Back up the Room DB to the app's external files dir (backups/). */
     suspend fun backup(context: Context, passphrase: String? = null): BackupResult = withContext(Dispatchers.IO) {

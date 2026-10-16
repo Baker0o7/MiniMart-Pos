@@ -511,7 +511,7 @@ class CartViewModel @Inject constructor(
     }
 
     private fun buildReceiptNumber(counter: Int): String {
-        val date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
+        val date = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
         return "RCP-$date-${counter.toString().padStart(4, '0')}"
     }
 

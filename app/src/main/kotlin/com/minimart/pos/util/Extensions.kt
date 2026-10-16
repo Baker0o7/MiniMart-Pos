@@ -91,7 +91,7 @@ fun String.isValidEan13(): Boolean {
 // ─── Receipt number ───────────────────────────────────────────────────────────
 
 fun buildReceiptNumber(counter: Int, prefix: String = "RCP"): String {
-    val date = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
+    val date = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
     return "$prefix-$date-${counter.toString().padStart(4, '0')}"
 }
 
