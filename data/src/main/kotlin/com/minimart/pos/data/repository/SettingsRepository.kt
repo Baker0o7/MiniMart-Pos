@@ -230,7 +230,11 @@ class SettingsRepository @Inject constructor(
         // Fresh generation. 6-digit numeric code: easy to read off one screen and type
         // on another, while still being far too large to brute-force over a handful of
         // LAN requests (also now rate-limited server-side regardless).
-        val generated = (100000..999999).random().toString()
+        // A 6-digit code can be recovered offline from a single sniffed signed request, so new codes are 16
+        // random digits (SecureRandom: kotlin's default Random is not meant for secrets). Devices already
+        // paired with an older 6-digit code keep working unchanged.
+        val rng = java.security.SecureRandom()
+        val generated = buildString { repeat(16) { append(rng.nextInt(10)) } }
         securePrefs.edit().putString(securePrefsKeySecret, generated).apply()
         return generated
     }

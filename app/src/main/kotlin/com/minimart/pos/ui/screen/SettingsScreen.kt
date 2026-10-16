@@ -454,9 +454,9 @@ fun SettingsScreen(
                         Spacer(Modifier.height(8.dp))
                         OutlinedTextField(
                             value = syncState.peerKey,
-                            onValueChange = { syncVm.setPeerKey(it.filter(Char::isDigit).take(6)) },
+                            onValueChange = { syncVm.setPeerKey(it.filter(Char::isDigit).take(16)) },
                             label = { Text("Pairing code", color = DT.SubText) },
-                            placeholder = { Text("6-digit code shown on the server", color = DT.SubText.copy(0.5f)) },
+                            placeholder = { Text("Pairing code shown on the server", color = DT.SubText.copy(0.5f)) },
                             leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.SubText) },
                             singleLine = true, modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
