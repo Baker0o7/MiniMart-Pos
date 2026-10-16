@@ -367,8 +367,9 @@ fun AddEditProductDialog(
     val batchFocus = remember { FocusRequester() }
     val expiryFocus = remember { FocusRequester() }
 
-    val sellPrice = (if (isWeighed) pricePerKg else price).toDoubleOrNull() ?: 0.0
-    val costValue = costPrice.toDoubleOrNull() ?: 0.0
+    // "Infinity" and "NaN" parse as doubles; treat them (and absurd values) as invalid so they can't reach totals.
+    val sellPrice = (if (isWeighed) pricePerKg else price).toDoubleOrNull()?.takeIf { it.isFinite() && it < 10_000_000.0 } ?: 0.0
+    val costValue = costPrice.toDoubleOrNull()?.takeIf { it.isFinite() && it < 10_000_000.0 } ?: 0.0
     val expiryMs = parseExpiry(expiryDateStr)
     val canSave = barcode.isNotBlank() && name.isNotBlank() && sellPrice > 0.0 && expiryMs != null &&
         (!isWeighed || pluCode.isNotBlank())
@@ -567,7 +568,7 @@ fun AddEditProductDialog(
                             // (description, image, created date, active flag) are kept. It used to rebuild
                             // the product from scratch on every save.
                             val base = product ?: Product(barcode = "", name = "", price = 0.0, stock = 0)
-                            val stockValue = stock.toDoubleOrNull() ?: 0.0
+                            val stockValue = stock.toDoubleOrNull()?.takeIf { it.isFinite() && it < 1_000_000.0 } ?: 0.0
                             onSave(base.copy(
                                 barcode = barcode.trim(), sku = sku.trim(), name = name.trim(),
                                 price = sellPrice.coerceAtLeast(0.0),
