@@ -24,15 +24,16 @@ class MiniMartApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        try {
-            com.minimart.pos.worker.LowStockWorker.schedule(this)
-            com.minimart.pos.worker.ExpiryAlertWorker.schedule(this)
-            com.minimart.pos.worker.CloudUploadWorker.schedule(this)
-            com.minimart.pos.worker.AutoBackupWorker.schedule(this)
-            com.minimart.pos.worker.SyncWorker.schedule(this)
-        } catch (_: Exception) {}
         // The main device must be reachable again after a restart without anyone opening Settings.
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
+            // Starting WorkManager opens its own database; doing that here keeps it off the launch path.
+            try {
+                com.minimart.pos.worker.LowStockWorker.schedule(this@MiniMartApp)
+                com.minimart.pos.worker.ExpiryAlertWorker.schedule(this@MiniMartApp)
+                com.minimart.pos.worker.CloudUploadWorker.schedule(this@MiniMartApp)
+                com.minimart.pos.worker.AutoBackupWorker.schedule(this@MiniMartApp)
+                com.minimart.pos.worker.SyncWorker.schedule(this@MiniMartApp)
+            } catch (_: Exception) {}
             try { productRepo.warmUp() } catch (_: Exception) {}
             try { if (settings.syncServerEnabled.first()) syncServer.start() } catch (_: Exception) {}
         }
