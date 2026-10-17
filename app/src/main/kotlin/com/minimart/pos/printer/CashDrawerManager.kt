@@ -3,7 +3,9 @@ package com.minimart.pos.printer
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import android.annotation.SuppressLint
 import android.util.Log
+import com.minimart.pos.util.hasBluetoothConnectPermission
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +51,7 @@ class CashDrawerManager @Inject constructor(
      *   1. Via already-connected thermal printer (RJ11 wired to printer)
      *   2. Via a separate Bluetooth drawer at [directAddress]
      */
+    @SuppressLint("MissingPermission") // the Bluetooth branch checks hasBluetoothConnectPermission() first
     suspend fun openDrawer(directAddress: String? = null, pinOverride: Int? = null): DrawerResult =
         withContext(Dispatchers.IO) {
             try {
@@ -68,6 +71,9 @@ class CashDrawerManager @Inject constructor(
 
                 // Strategy 2 — direct Bluetooth RFCOMM
                 if (!directAddress.isNullOrBlank()) {
+                    if (!context.hasBluetoothConnectPermission()) {
+                        return@withContext DrawerResult.Error("Bluetooth permission not granted")
+                    }
                     val adapter = BluetoothAdapter.getDefaultAdapter()
                         ?: return@withContext DrawerResult.Error("No Bluetooth adapter")
                     @Suppress("DEPRECATION")

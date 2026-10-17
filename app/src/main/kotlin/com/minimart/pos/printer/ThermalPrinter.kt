@@ -5,7 +5,9 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import android.annotation.SuppressLint
 import android.util.Log
+import com.minimart.pos.util.hasBluetoothConnectPermission
 import com.minimart.pos.data.entity.CartItem
 import com.minimart.pos.data.entity.PaymentMethod
 import com.minimart.pos.data.entity.Sale
@@ -64,7 +66,11 @@ class ThermalPrinter @Inject constructor(
 
     // ── Connection ────────────────────────────────────────────────────────────
 
+    @SuppressLint("MissingPermission") // guarded by hasBluetoothConnectPermission() below
     suspend fun connect(address: String): PrintResult = withContext(Dispatchers.IO) {
+        if (!context.hasBluetoothConnectPermission()) {
+            return@withContext PrintResult.Error("Bluetooth permission not granted. Allow it in the phone's app settings.")
+        }
         try {
             disconnect()
             val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager

@@ -9,7 +9,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.annotation.SuppressLint
 import android.util.Log
+import com.minimart.pos.util.hasBluetoothConnectPermission
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,7 +63,9 @@ class BluetoothScannerManager @Inject constructor(
             try { handle(intent) } catch (e: Exception) { Log.w(TAG, "Ignoring BT event", e) }
         }
 
+        @SuppressLint("MissingPermission") // guarded by hasBluetoothConnectPermission() just below
         private fun handle(intent: Intent) {
+            if (!context.hasBluetoothConnectPermission()) return
             val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                 ?: return
             when (intent.action) {
@@ -100,7 +104,9 @@ class BluetoothScannerManager @Inject constructor(
         }
     }
 
+    @SuppressLint("MissingPermission") // guarded by hasBluetoothConnectPermission()
     fun refreshPaired() {
+        if (!context.hasBluetoothConnectPermission()) { _pairedScanners.value = emptyList(); return }
         try {
             val bonded = adapter?.bondedDevices ?: return
             val scanners = bonded
@@ -122,13 +128,16 @@ class BluetoothScannerManager @Inject constructor(
         }
     }
 
+    @SuppressLint("MissingPermission") // guarded by hasBluetoothConnectPermission()
     fun getPairedDevices(): List<BluetoothDevice> {
+        if (!context.hasBluetoothConnectPermission()) return emptyList()
         return try {
             adapter?.bondedDevices?.toList() ?: emptyList()
         } catch (_: Exception) { emptyList() }
     }
 
-    private fun isScanner(device: BluetoothDevice): Boolean = try {
+    @SuppressLint("MissingPermission") // guarded by hasBluetoothConnectPermission()
+    private fun isScanner(device: BluetoothDevice): Boolean = context.hasBluetoothConnectPermission() && try {
         val name = (device.name ?: "").lowercase()
         // HID device class = 0x0500 (Peripheral), major = 5
         val isHid = device.bluetoothClass?.majorDeviceClass == 0x0500

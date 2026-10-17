@@ -22,6 +22,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <!-- Read incoming M-Pesa confirmation SMS (only when the owner turns tracking on) -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <!-- Reading M-Pesa SMS is optional, and tablets without a phone must still be able to install the app. -->
+    <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <!-- Vibrate for scan feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Biometric -->
