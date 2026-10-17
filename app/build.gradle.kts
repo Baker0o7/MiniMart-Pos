@@ -62,6 +62,9 @@ android {
         abortOnError = true
         warningsAsErrors = false
         checkReleaseBuilds = true
+        // Print the full findings to the build log (the console otherwise shows only the first error).
+        textReport = true
+        textOutput = file("stdout")
     }
 }
 
