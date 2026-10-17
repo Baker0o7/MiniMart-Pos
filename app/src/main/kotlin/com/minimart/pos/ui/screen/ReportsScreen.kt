@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.minimart.pos.data.entity.PaymentMethod
+import com.minimart.pos.ui.components.BarChart
 import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.ReportPeriod
 import com.minimart.pos.ui.viewmodel.ReportsViewModel
@@ -194,9 +195,10 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             }
                         }
                         // Real bar chart from sale timestamps
-                        RevenueBarChart(
-                            points = chartPoints,
-                            modifier = Modifier.fillMaxWidth().height(56.dp)
+                        BarChart(
+                            chartPoints, highlight = chartPoints.indices.maxByOrNull { chartPoints[it] } ?: -1,
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            valueLabel = { v -> "${state.currency} ${String.format(java.util.Locale.US, "%,.0f", v)}" }
                         )
                     }
                 }
@@ -341,45 +343,6 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                 }
             }
             } // end else (has sales)
-        }
-    }
-}
-
-/** Bar chart built from real sale-timestamp distributions — no hardcoded data. */
-@Composable
-private fun RevenueBarChart(points: List<Float>, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        if (points.isEmpty()) return@Canvas
-        val max = points.maxOrNull()?.coerceAtLeast(0.01f) ?: return@Canvas
-        val count = points.size
-        val totalW = size.width
-        val barW = (totalW / (count * 1.6f)).coerceAtMost(totalW / count * 0.7f)
-        val gap   = (totalW - barW * count) / (count + 1).coerceAtLeast(1)
-        points.forEachIndexed { i, v ->
-            val norm = (v / max).coerceIn(0f, 1f)
-            val barH = (norm * size.height * 0.85f).coerceAtLeast(if (v > 0f) 4.dp.toPx() else 0f)
-            val x = gap + i * (barW + gap)
-            val y = size.height - barH
-            // Shadow / glow
-            drawLine(
-                color = DT.Teal.copy(alpha = 0.18f),
-                start = Offset(x + barW / 2, size.height),
-                end = Offset(x + barW / 2, y),
-                strokeWidth = barW + 6.dp.toPx(),
-                cap = StrokeCap.Round
-            )
-            // Bar
-            drawLine(
-                color = if (v > 0f) DT.Teal else DT.Border,
-                start = Offset(x + barW / 2, size.height),
-                end = Offset(x + barW / 2, y),
-                strokeWidth = barW,
-                cap = StrokeCap.Round
-            )
-            // Top dot on non-zero bars
-            if (v > 0f) {
-                drawCircle(DT.TealLight, radius = 3.dp.toPx(), center = Offset(x + barW / 2, y))
-            }
         }
     }
 }

@@ -23,8 +23,8 @@ android {
         applicationId = "com.minimart.pos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 94
-        versionName = "1.16.29"
+        versionCode = 95
+        versionName = "1.16.30"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -122,8 +122,6 @@ dependencies {
     implementation("com.google.code.gson:gson:2.10.1")
     // Argon2id PIN hashing
     implementation("com.lambdapioneer.argon2kt:argon2kt:1.4.0")
-    // Chart
-    implementation(libs.mpandroidchart)
 
     debugImplementation(libs.androidx.ui.tooling.preview)
 

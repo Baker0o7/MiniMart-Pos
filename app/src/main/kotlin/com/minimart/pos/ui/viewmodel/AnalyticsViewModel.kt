@@ -8,6 +8,10 @@ import com.minimart.pos.data.entity.Sale
 import com.minimart.pos.data.repository.ExpenseRepository
 import com.minimart.pos.data.repository.SaleRepository
 import com.minimart.pos.data.repository.SettingsRepository
+import com.minimart.pos.util.AbcResult
+import com.minimart.pos.util.BusinessInsights
+import com.minimart.pos.util.MarginReport
+import com.minimart.pos.util.ProductPerformance
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -40,7 +44,12 @@ data class AnalyticsState(
     /** Revenue per weekday, Monday first. */
     val weekday: List<Double> = List(7) { 0.0 },
     val topProducts: List<ProductSalesStat> = emptyList(),
-    val categories: List<Pair<String, Double>> = emptyList()
+    val categories: List<Pair<String, Double>> = emptyList(),
+    /** Business intelligence derived from every product's sales in the period. */
+    val abc: AbcResult? = null,
+    val margins: MarginReport? = null,
+    /** Typical takings per weekday (Monday first), when the period is long enough to tell. */
+    val typicalWeek: List<Double>? = null
 ) {
     val netProfit: Double get() = grossProfit - expenses
     /** % change vs the previous period of the same length; null when there is nothing to compare. */
@@ -110,6 +119,9 @@ class AnalyticsViewModel @Inject constructor(
             mix[s.paymentMethod] = (mix[s.paymentMethod] ?: 0.0) + s.totalAmount
         }
 
+        val performance = stats.map {
+            ProductPerformance(it.productId, it.productName, it.category, it.qty, it.revenue, it.cost, it.costedRevenue)
+        }
         return AnalyticsState(
             range = r, currency = currency, loaded = true,
             revenue = revenue, prevRevenue = prev,
@@ -126,7 +138,10 @@ class AnalyticsViewModel @Inject constructor(
             topProducts = stats.sortedByDescending { it.revenue }.take(5),
             categories = stats.groupBy { it.category.ifBlank { "General" } }
                 .map { (c, l) -> c to l.sumOf { it.revenue } }
-                .sortedByDescending { it.second }.take(6)
+                .sortedByDescending { it.second }.take(6),
+            abc = performance.let(BusinessInsights::abc),
+            margins = BusinessInsights.margins(performance),
+            typicalWeek = BusinessInsights.typicalWeek(weekday.toList(), r.days, (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) + 5) % 7)
         )
     }
 }

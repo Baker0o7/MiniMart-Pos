@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.minimart.pos.data.dao.ProductSalesStat
 import com.minimart.pos.data.entity.PaymentMethod
+import com.minimart.pos.ui.components.BarChart
 import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.AnalyticsRange
 import com.minimart.pos.ui.viewmodel.AnalyticsState
@@ -142,9 +143,11 @@ private fun AnalyticsBody(s: AnalyticsState) {
             AnalyticsCard(if (s.trendBucketDays == 1) "Daily revenue" else "Weekly revenue") {
                 val values = s.trend.map { it.revenue.toFloat() }
                 val best = values.indices.maxByOrNull { values[it] } ?: 0
-                BarChart(values, highlight = best, modifier = Modifier.fillMaxWidth().height(120.dp))
-                Spacer(Modifier.height(6.dp))
                 val fmt = SimpleDateFormat(if (s.range.days <= 7) "EEE" else "d MMM", Locale.getDefault())
+                BarChart(values, highlight = best, modifier = Modifier.fillMaxWidth().height(120.dp),
+                    labels = s.trend.map { fmt.format(Date(it.startMs)) },
+                    valueLabel = { v -> String.format(Locale.US, "%,.0f", v) })
+                Spacer(Modifier.height(6.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(fmt.format(Date(s.trend.first().startMs)), color = DT.SubText, fontSize = 10.sp)
                     Text(fmt.format(Date(s.trend.last().startMs)), color = DT.SubText, fontSize = 10.sp)
@@ -183,7 +186,9 @@ private fun AnalyticsBody(s: AnalyticsState) {
             AnalyticsCard("Busiest hours") {
                 val values = s.hourly.map { it.toFloat() }
                 val peak = values.indices.maxByOrNull { values[it] } ?: 0
-                BarChart(values, highlight = peak, modifier = Modifier.fillMaxWidth().height(80.dp))
+                BarChart(values, highlight = peak, modifier = Modifier.fillMaxWidth().height(80.dp),
+                    labels = values.indices.map { hourLabel(it) },
+                    valueLabel = { v -> "${v.toInt()} sale${if (v.toInt() != 1) "s" else ""}" })
                 Spacer(Modifier.height(6.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     listOf("12 AM", "6 AM", "12 PM", "6 PM", "11 PM").forEach {
@@ -201,7 +206,9 @@ private fun AnalyticsBody(s: AnalyticsState) {
             AnalyticsCard("Best days of the week") {
                 val values = s.weekday.map { it.toFloat() }
                 val best = values.indices.maxByOrNull { values[it] } ?: 0
-                BarChart(values, highlight = best, modifier = Modifier.fillMaxWidth().height(80.dp))
+                BarChart(values, highlight = best, modifier = Modifier.fillMaxWidth().height(80.dp),
+                    labels = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
+                    valueLabel = { v -> "$cur ${money(v.toDouble())}" })
                 Spacer(Modifier.height(6.dp))
                 Row(Modifier.fillMaxWidth()) {
                     listOf("M", "T", "W", "T", "F", "S", "S").forEach {
@@ -243,6 +250,89 @@ private fun AnalyticsBody(s: AnalyticsState) {
                 }
             }
         }
+
+        // ── Business intelligence ─────────────────────────────────────────────
+        s.abc?.let { abc -> item {
+            AnalyticsCard("Where your sales come from") {
+                Text("${abc.aCount} of your ${abc.total} selling products make ${String.format(Locale.US, "%.0f", abc.aShare * 100)}% of sales.",
+                    color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(8.dp))
+                listOf(
+                    Triple("A  Core sellers", abc.aShare, DT.Green),
+                    Triple("B  Steady sellers", abc.bShare, DT.Teal),
+                    Triple("C  Slow tail (${abc.cCount} products)", abc.cShare, DT.SubText)
+                ).forEach { (label, share, color) ->
+                    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(label, color = DT.OnSurface, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                        Text("${String.format(Locale.US, "%.0f", share * 100)}%", color = color, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Box(Modifier.fillMaxWidth().height(5.dp).clip(RoundedCornerShape(3.dp)).background(DT.Surface2)) {
+                        Box(Modifier.fillMaxWidth(share.toFloat().coerceIn(0.02f, 1f)).fillMaxHeight().clip(RoundedCornerShape(3.dp)).background(color))
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                Text("Never run out of: ${abc.aProducts.take(5).joinToString()}${if (abc.aProducts.size > 5) " …" else ""}",
+                    color = DT.SubText, fontSize = 11.sp)
+            }
+        } }
+
+        s.margins?.takeIf { it.best.isNotEmpty() || it.lossMakers.isNotEmpty() || it.thin.isNotEmpty() }?.let { m -> item {
+            AnalyticsCard("Profit by product") {
+                if (m.lossMakers.isNotEmpty()) {
+                    Text("Selling below cost", color = DT.Red, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    m.lossMakers.take(5).forEach { p ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                            Text(p.productLabel(), color = DT.OnSurface, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                            Text("$cur ${money(p.profit)}", color = DT.Red, fontSize = 12.sp)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                if (m.thin.isNotEmpty()) {
+                    Text("Thin margin (under 10%)", color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    m.thin.take(5).forEach { p ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                            Text(p.productLabel(), color = DT.OnSurface, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                            Text("${String.format(Locale.US, "%.1f", (p.margin ?: 0.0) * 100)}%", color = DT.Amber, fontSize = 12.sp)
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                if (m.best.isNotEmpty()) {
+                    Text("Biggest profit earners", color = DT.Green, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    m.best.forEach { p ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                            Text(p.productLabel(), color = DT.OnSurface, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                            Text("+$cur ${money(p.profit)}  (${String.format(Locale.US, "%.0f", (p.margin ?: 0.0) * 100)}%)", color = DT.Green, fontSize = 12.sp)
+                        }
+                    }
+                }
+                if (s.costCoverage < 0.9) {
+                    Spacer(Modifier.height(8.dp))
+                    Text("Only ${String.format(Locale.US, "%.0f", s.costCoverage * 100)}% of sales have a cost price, so this list is partial. Add cost prices to your products for the full picture.",
+                        color = DT.SubText, fontSize = 11.sp)
+                }
+            }
+        } }
+
+        s.typicalWeek?.let { week -> item {
+            AnalyticsCard("Your typical week") {
+                val total = week.sum()
+                Text("About $cur ${money(total)} a week", color = DT.OnSurface, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text("Based on the last ${s.range.days} days. Use it to plan stock and staff.", color = DT.SubText, fontSize = 11.sp)
+                Spacer(Modifier.height(8.dp))
+                BarChart(week.map { it.toFloat() }, highlight = week.indices.maxByOrNull { week[it] } ?: -1,
+                    modifier = Modifier.fillMaxWidth().height(70.dp),
+                    labels = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
+                    valueLabel = { v -> "$cur ${money(v.toDouble())}" })
+                Spacer(Modifier.height(4.dp))
+                Row(Modifier.fillMaxWidth()) {
+                    listOf("M", "T", "W", "T", "F", "S", "S").forEach {
+                        Text(it, color = DT.SubText, fontSize = 10.sp, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        } }
     }
 }
 
@@ -304,23 +394,4 @@ private fun TopProductRow(rank: Int, p: ProductSalesStat, cur: String) {
     }
 }
 
-/** Minimal bar chart: bars scale to the tallest value; [highlight] is drawn in the accent colour. */
-@Composable
-internal fun BarChart(values: List<Float>, highlight: Int, modifier: Modifier = Modifier,
-                      bar: Color = DT.Teal.copy(alpha = 0.55f), accent: Color = DT.TealLight) {
-    Canvas(modifier) {
-        if (values.isEmpty()) return@Canvas
-        val max = (values.maxOrNull() ?: 0f).coerceAtLeast(0.0001f)
-        val gap = if (values.size > 40) 1.dp.toPx() else 3.dp.toPx()
-        val w = ((size.width - gap * (values.size - 1)) / values.size).coerceAtLeast(1f)
-        values.forEachIndexed { i, v ->
-            val h = (v / max * size.height).let { if (v > 0f) it.coerceAtLeast(3.dp.toPx()) else 2.dp.toPx() }
-            drawRoundRect(
-                color = if (i == highlight && v > 0f) accent else bar,
-                topLeft = Offset(i * (w + gap), size.height - h),
-                size = Size(w, h),
-                cornerRadius = CornerRadius(minOf(w / 2, 4.dp.toPx()))
-            )
-        }
-    }
-}
+private fun com.minimart.pos.util.ProductPerformance.productLabel() = name
