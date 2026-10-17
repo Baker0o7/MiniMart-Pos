@@ -46,12 +46,14 @@ jobs:
       - name: Surface build errors as annotations
         if: failure()
         run: |
+          if [ -f lint.log ]; then
+            # GitHub caps annotations at ten per step, so join every lint error into a single one.
+            msg=$(grep -E "^/.*: Error: " lint.log | sed 's#.*/MiniMart-Pos/MiniMart-Pos/##' | sort -u | tr '\n' '|' | cut -c1-12000)
+            [ -n "$msg" ] && echo "::error title=Lint errors::${msg}"
+          fi
           # The REST API can't return raw job logs, so echo compiler/Gradle errors as annotations.
           grep -E "^e: |^w: .*Unresolved|error:|What went wrong|Execution failed|Could not|FAILED|Caused by" -A2 build.log \
             | head -60 | while IFS= read -r line; do echo "::error::${line}"; done
-          if [ -f lint.log ]; then
-            grep -E "Error:|error:|Lint found|\\.kt:[0-9]+: |\\.xml:[0-9]+: " lint.log | head -40 | while IFS= read -r line; do echo "::error::${line}"; done
-          fi
 
       - name: Upload test reports
         if: always()
