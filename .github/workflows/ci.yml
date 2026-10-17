@@ -31,17 +31,17 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      # Runs every module's tests: the financial logic in :app/:core and the Room DAOs in :data.
+      # Runs every module's tests: pure-JVM :core, the Room DAOs in :data and the app logic in :app.
       - name: Run unit tests
         run: |
           set -o pipefail
-          gradle testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee build.log
+          gradle :core:test testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee build.log
 
       # Lint errors fail the build. (Warnings are reported in the uploaded report but do not fail it.)
       - name: Lint
         run: |
           set -o pipefail
-          gradle :core:lintDebug :data:lintDebug :app:lintDebug --no-daemon --stacktrace 2>&1 | tee lint.log
+          gradle :data:lintDebug :app:lintDebug --no-daemon --stacktrace 2>&1 | tee lint.log
 
       - name: Surface build errors as annotations
         if: failure()
@@ -73,6 +73,6 @@ jobs:
           path: |
             app/build/reports/tests/testDebugUnitTest/
             data/build/reports/tests/testDebugUnitTest/
-            core/build/reports/tests/testDebugUnitTest/
+            core/build/reports/tests/test/
             */build/reports/lint-results-debug.*
           retention-days: 14
