@@ -46,11 +46,21 @@ jobs:
       - name: Surface build errors as annotations
         if: failure()
         run: |
-          if [ -f lint.log ]; then
-            # GitHub caps annotations at ten per step, so join every lint error into a single one.
-            msg=$(grep -E "^/.*: Error: " lint.log | sed 's#.*/MiniMart-Pos/MiniMart-Pos/##' | sort -u | tr '\n' '|' | cut -c1-12000)
-            [ -n "$msg" ] && echo "::error title=Lint errors::${msg}"
-          fi
+          # Lint's console output names only the first error, so read every error out of the XML reports.
+          # GitHub caps annotations at ten per step, so they go into a single annotation.
+          msg=$(python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          out = []
+          for f in glob.glob("*/build/reports/lint-results-debug.xml"):
+              for i in ET.parse(f).getroot().iter("issue"):
+                  if i.get("severity") in ("Error", "Fatal"):
+                      loc = i.find("location")
+                      where = (loc.get("file", "").split("MiniMart-Pos/MiniMart-Pos/")[-1] + ":" + loc.get("line", "?")) if loc is not None else "?"
+                      out.append(f"{where} [{i.get('id')}] {i.get('message')[:160]}")
+          print(" | ".join(sorted(set(out)))[:12000])
+          PY
+          )
+          [ -n "$msg" ] && echo "::error title=Lint errors::${msg}"
           # The REST API can't return raw job logs, so echo compiler/Gradle errors as annotations.
           grep -E "^e: |^w: .*Unresolved|error:|What went wrong|Execution failed|Could not|FAILED|Caused by" -A2 build.log \
             | head -60 | while IFS= read -r line; do echo "::error::${line}"; done
