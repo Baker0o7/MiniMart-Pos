@@ -60,9 +60,12 @@ class BusinessInsightsTest {
     }
 
     @Test fun typicalWeekAccountsForPartialWeeks() {
-        // 30 days ending on a Wednesday (index 2): Mon, Tue, Wed occur 5 times, the rest 4.
+        // 30 days = 4 full weeks + 2 extra days, which are today (Wednesday, index 2) and yesterday (Tuesday):
+        // those two weekdays occur 5 times, the others 4.
         val week = BusinessInsights.typicalWeek(List(7) { 100.0 }, 30, todayIndex = 2)!!
-        assertEquals(20.0, week[0], 1e-9)
+        assertEquals(20.0, week[1], 1e-9)
+        assertEquals(20.0, week[2], 1e-9)
+        assertEquals(25.0, week[0], 1e-9)
         assertEquals(25.0, week[3], 1e-9)
     }
 
