@@ -80,6 +80,9 @@ class SyncViewModel @Inject constructor(
         }
     }
 
+    /** New 16-digit pairing code; every till must enter it again. */
+    fun resetPairingCode() { _state.update { it.copy(mySecret = settingsRepo.rotateSyncSecret()) } }
+
     // Remembered, so the main device comes back by itself after the app or phone restarts.
     fun startServer() = viewModelScope.launch { settingsRepo.setSyncServerEnabled(true); server.start() }
     fun stopServer()  = viewModelScope.launch { settingsRepo.setSyncServerEnabled(false); server.stop() }

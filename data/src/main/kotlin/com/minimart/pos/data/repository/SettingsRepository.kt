@@ -212,6 +212,13 @@ class SettingsRepository @Inject constructor(
      * remembers (which would silently break sync until manually re-paired). */
     private val securePrefsKeySecret = "sync_pairing_secret"
 
+    /** Replaces the pairing code (for example to upgrade an old 6-digit one). Tills must then enter the new code. */
+    fun rotateSyncSecret(): String {
+        val fresh = com.minimart.pos.util.PairingCode.generate()
+        securePrefs.edit().putString(securePrefsKeySecret, fresh).apply()
+        return fresh
+    }
+
     suspend fun getOrCreateSyncSecret(): String {
         // Already migrated (or freshly generated straight into the encrypted store) —
         // fast path, no DataStore touch needed.
@@ -230,11 +237,7 @@ class SettingsRepository @Inject constructor(
         // Fresh generation. 6-digit numeric code: easy to read off one screen and type
         // on another, while still being far too large to brute-force over a handful of
         // LAN requests (also now rate-limited server-side regardless).
-        // A 6-digit code can be recovered offline from a single sniffed signed request, so new codes are 16
-        // random digits (SecureRandom: kotlin's default Random is not meant for secrets). Devices already
-        // paired with an older 6-digit code keep working unchanged.
-        val rng = java.security.SecureRandom()
-        val generated = buildString { repeat(16) { append(rng.nextInt(10)) } }
+        val generated = com.minimart.pos.util.PairingCode.generate()
         securePrefs.edit().putString(securePrefsKeySecret, generated).apply()
         return generated
     }

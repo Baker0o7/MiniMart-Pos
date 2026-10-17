@@ -1,6 +1,7 @@
 package com.minimart.pos.sync
 
 import android.util.Log
+import com.minimart.pos.util.SyncCrypto
 import com.minimart.pos.data.dao.SyncDao
 import com.minimart.pos.data.entity.SyncStatus
 import kotlinx.coroutines.Dispatchers
@@ -70,7 +71,9 @@ class SyncClient @Inject constructor(
                 authError(reply)?.let { return@withContext SyncResult.Error(it) }
                 if (reply.code != 200 || reply.body == null) return@withContext SyncResult.Error("Main device error (${reply.code})")
                 replyProblem(reply, "/apply", peerKey)?.let { return@withContext SyncResult.Error(it) }
-                val results = JSONObject(reply.body).optJSONArray("results")
+                val replyText = SyncCrypto.open(peerKey, SyncCrypto.responseAad("/apply", reply.ts.orEmpty()), reply.body)
+                    ?: return@withContext SyncResult.Error("Could not decrypt the main device's reply — check the pairing code")
+                val results = JSONObject(replyText).optJSONArray("results")
                     ?: return@withContext SyncResult.Error("Main device is running an older version — update it first")
                 val done = mutableListOf<Long>()
                 for (i in 0 until results.length()) {
@@ -100,7 +103,9 @@ class SyncClient @Inject constructor(
             val body = snap.body
             if (snap.code != 200 || body == null) return@withContext SyncResult.Error("Main device error (${snap.code})")
             replyProblem(snap, "/snapshot", peerKey)?.let { return@withContext SyncResult.Error(it) }
-            val applied = snapshots.apply(body)
+            val snapText = SyncCrypto.open(peerKey, SyncCrypto.responseAad("/snapshot", snap.ts.orEmpty()), body)
+                ?: return@withContext SyncResult.Error("Could not decrypt the main device's reply — check the pairing code")
+            val applied = snapshots.apply(snapText)
 
             // 3. Prune old synced logs (keep last 7 days)
             syncDao.pruneOldLogs(System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000L)
@@ -123,6 +128,7 @@ class SyncClient @Inject constructor(
 
     private fun authError(r: Reply): String? = when (r.code) {
         401 -> "Pairing code rejected — check the code, that both phones run the latest app, and that both clocks are correct"
+        426 -> "The main phone needs the latest app: sync is now encrypted, so both phones must be updated"
         429 -> "Too many wrong codes — wait 30 seconds and try again"
         else -> null
     }
@@ -132,14 +138,19 @@ class SyncClient @Inject constructor(
         conn.connectTimeout = TIMEOUT; conn.readTimeout = TIMEOUT * 4
         conn.requestMethod = method
         var reqTs: String? = null
+        // With a pairing code the body is encrypted, then signed, so what is signed is what is sent.
+        var wireBody = body
         syncKey?.let {
             val ts = System.currentTimeMillis()
             reqTs = ts.toString()
+            val path = URL(url).path
+            if (body != null) wireBody = SyncCrypto.seal(it, SyncCrypto.requestAad(method, path, ts.toString()), body)
+            conn.setRequestProperty("X-Sync-Enc", "1")
             conn.setRequestProperty("X-Sync-Ts", ts.toString())
-            conn.setRequestProperty("X-Sync-Sig", SyncAuth.sign(it, method, URL(url).path, body ?: "", ts))
+            conn.setRequestProperty("X-Sync-Sig", SyncAuth.sign(it, method, path, wireBody ?: "", ts))
         }
-        if (body != null) {
-            val bytes = body.toByteArray(Charsets.UTF_8)
+        if (wireBody != null) {
+            val bytes = wireBody!!.toByteArray(Charsets.UTF_8)
             conn.doOutput = true
             conn.setRequestProperty("Content-Type", "application/json")
             conn.setFixedLengthStreamingMode(bytes.size)

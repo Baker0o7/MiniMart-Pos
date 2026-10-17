@@ -3,6 +3,7 @@ package com.minimart.pos.sync
 import android.content.Context
 import android.net.wifi.WifiManager
 import android.util.Log
+import com.minimart.pos.util.SyncCrypto
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.withPermit
@@ -175,6 +176,19 @@ class SyncServer @Inject constructor(
                 // user's earlier typo doesn't count toward a future lockout.
                 failedAuthAttempts.set(0)
                 mySecretForReply = mySecret
+                // Bodies and replies travel encrypted. A request without the marker comes from an older app
+                // (or from someone who stripped it), so it is refused rather than answered in the clear.
+                if (headers["X-Sync-Enc"] != "1") {
+                    respond(writer, 426, """{"error":"Update the app on both phones: sync is now encrypted"}""")
+                    return
+                }
+                if (method == "POST") {
+                    body = SyncCrypto.open(mySecret, SyncCrypto.requestAad(method, path, headers["X-Sync-Ts"].orEmpty()), body)
+                        ?: run {
+                            respond(writer, 400, """{"error":"Could not decrypt the request"}""")
+                            return
+                        }
+                }
             }
 
             when {
@@ -221,11 +235,16 @@ class SyncServer @Inject constructor(
         val status = if (code == 200) "OK" else "Error"
         writer.println("HTTP/1.1 $code $status")
         writer.println("Content-Type: application/json")
-        if (signFor != null && signFor.first.isNotEmpty())
-            writer.println("X-Sync-Resp-Sig: " + SyncAuth.signResponse(signFor.first, signFor.second, signFor.third, body))
-        writer.println("Content-Length: ${body.toByteArray().size}")
+        // Signed replies are encrypted first, and the signature covers what is actually sent.
+        val out = if (signFor != null && signFor.first.isNotEmpty())
+            SyncCrypto.seal(signFor.first, SyncCrypto.responseAad(signFor.second, signFor.third), body) else body
+        if (signFor != null && signFor.first.isNotEmpty()) {
+            writer.println("X-Sync-Enc: 1")
+            writer.println("X-Sync-Resp-Sig: " + SyncAuth.signResponse(signFor.first, signFor.second, signFor.third, out))
+        }
+        writer.println("Content-Length: ${out.toByteArray().size}")
         writer.println()
-        writer.println(body)
+        writer.println(out)
         writer.flush()
     }
 

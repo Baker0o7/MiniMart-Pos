@@ -16,7 +16,7 @@ class SyncDaoTest : DbTestBase() {
     @Test fun theSameChangeIsRecordedOnlyOnce() = runBlocking {
         assertNotNull(db.syncDao().insertLogIfNew(log()))
         assertNull(db.syncDao().insertLogIfNew(log()))   // a retry after a dropped connection
-        assertEquals(1, db.syncDao().getPendingLogs().size + db.syncDao().countMatchingLog("till-1", SyncEntityType.SALE, 7, SyncOperation.CREATE, 1_000L) - 1)
+        assertEquals(1, db.syncDao().countMatchingLog("till-1", SyncEntityType.SALE, 7, SyncOperation.CREATE, 1_000L))
     }
 
     @Test fun changesThatDifferInAnyKeyFieldAreAllKept() = runBlocking {

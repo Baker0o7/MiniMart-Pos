@@ -427,8 +427,22 @@ fun SettingsScreen(
                                         Text("Pairing code — enter this on the other device", color = DT.Teal, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                                     }
                                     Spacer(Modifier.height(4.dp))
-                                    Text(syncState.mySecret, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold,
-                                        letterSpacing = 4.sp)
+                                    Text(com.minimart.pos.util.PairingCode.grouped(syncState.mySecret), color = Color.White, fontSize = 20.sp,
+                                        fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                                    Text("Sync between phones is encrypted with this code.", color = DT.SubText, fontSize = 11.sp)
+                                    var confirmReset by remember { mutableStateOf(false) }
+                                    TextButton(onClick = { confirmReset = true }, contentPadding = PaddingValues(0.dp)) {
+                                        Text(if (syncState.mySecret.length < com.minimart.pos.util.PairingCode.LENGTH) "Upgrade to a stronger code" else "Make a new code",
+                                            color = DT.Teal, fontSize = 12.sp)
+                                    }
+                                    if (confirmReset) AlertDialog(
+                                        onDismissRequest = { confirmReset = false },
+                                        containerColor = DT.Surface,
+                                        title = { Text("Make a new pairing code?", color = Color.White) },
+                                        text = { Text("Every till must enter the new code before it can sync again.", color = DT.SubText) },
+                                        confirmButton = { TextButton(onClick = { syncVm.resetPairingCode(); confirmReset = false }) { Text("Make new code", color = DT.Teal) } },
+                                        dismissButton = { TextButton(onClick = { confirmReset = false }) { Text("Cancel", color = DT.SubText) } }
+                                    )
                                 }
                             }
                         }

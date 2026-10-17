@@ -112,6 +112,7 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **Faster start (1.16.25):** background jobs (low-stock and expiry alerts, backups, sync) are now set up off the launch path, so the app reaches the login screen sooner on slower phones.
 - **Security (1.16.26):** new sync pairing codes are now 16 random digits made with a secure generator (the old 6-digit code could be worked out from one captured sync request on shared Wi-Fi, and was not made with a secure generator). Tills already paired keep working with their current code.
 - **Add Credit fix (1.16.27):** the 100 / 200 / 500 / 1000 quick-amount buttons in the Add Credit dialog no longer wrap their digits onto separate lines.
+- **Encrypted sync, pure-JVM core, more tests (1.16.29):** sync between phones is now encrypted end to end with the pairing code, so someone on the same Wi-Fi can no longer read sales or customers (both phones must be updated; old 6-digit codes can be upgraded in Settings). `:core` is now a pure Kotlin/JVM module, and sync parsing, remote-sale validation and duplicate-change handling have automated tests.
 - **CI hardening (1.16.28):** the data layer (Room queries, unique barcodes, stock updates, void/refund rules) now has automated tests that run on every push, and lint errors now fail the build instead of being ignored.
 - **Theming (1.16.8):** Settings → Appearance now has an accent colour (Teal, Blue, Purple, Orange, Rose) that recolours headers, buttons, the navigation bar, Home and every dark surface at once. Teal is the original look, unchanged. The old Dark Mode switch is gone because it never changed anything (every screen is dark). Menus, dialogs and pickers now use the same dark palette instead of following the phone's light/dark setting and wallpaper colours.
 - **Faster Products and Inventory (1.16.7):** the catalogue is loaded into memory when the app starts and kept up to date, so both lists show their rows on the first frame instead of opening empty. The 150 ms wait that every open of these screens used to include is gone (it now applies only while typing in the search box).
@@ -129,7 +130,7 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 
 ### 🌐 Multi-Device LAN Sync
 - No internet, no cloud — pure local WiFi sync
-- **Pairing code authentication** — 6-digit code shown on server device,
+- **Pairing code authentication** — code shown on server device (16 digits on new installs),
   required on client device, compared in constant time (not vulnerable to a
   timing side-channel), and **rate-limited** (5 failed attempts locks out
   further guesses for 30s — a 1,000,000-combination code can't be brute-forced
@@ -148,7 +149,7 @@ Built with Kotlin + Jetpack Compose 🇰🇪
   in one database transaction, so a retry (dropped connection, double-tapping
   "Sync Now") can't sell the same goods twice. A sale the main device refuses is
   rolled back, reported on the till, and quarantined (not retried forever)
-- Requests are signed (HMAC-SHA256 over time, path and body) so the pairing code never crosses the network and a captured request cannot be altered or replayed; both phones need the same app version and a roughly correct clock. Data itself is not encrypted on the LAN: use a Wi-Fi network you trust.
+- Requests are signed (HMAC-SHA256 over time, path and body) so the pairing code never crosses the network and a captured request cannot be altered or replayed; both phones need the same app version and a roughly correct clock. Request and reply bodies are also encrypted (AES-256-GCM, key derived from the pairing code), so someone on the same Wi-Fi cannot read sales, customers or balances. Use the 16-digit code (Settings → Sync → "Upgrade to a stronger code" on older installs): a short code can still be guessed offline from captured traffic.
 - Server device: toggle "Act as Sync Server", share the displayed code
 - Till: enter the main device's IP + pairing code → Sync Now
 - **Payment validation** — see Security: every sale is re-checked in the data
