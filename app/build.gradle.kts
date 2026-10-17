@@ -23,8 +23,8 @@ android {
         applicationId = "com.minimart.pos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 92
-        versionName = "1.16.27"
+        versionCode = 93
+        versionName = "1.16.28"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -58,8 +58,10 @@ android {
     }
 
     lint {
-        abortOnError = false
-        checkReleaseBuilds = false
+        // Enforced: lint errors fail CI (see .github/workflows/ci.yml) and release builds.
+        abortOnError = true
+        warningsAsErrors = false
+        checkReleaseBuilds = true
     }
 }
 

@@ -15,7 +15,16 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    lint { abortOnError = false }
+    // Lint is enforced: errors fail the build (CI runs `lintDebug`). Warnings are reported but do not fail it.
+    lint {
+        abortOnError = true
+        warningsAsErrors = false
+        checkDependencies = false
+    }
+    testOptions {
+        // Robolectric needs Android resources/manifest merged for the in-memory Room tests.
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
@@ -32,4 +41,11 @@ dependencies {
     api(libs.datastore.preferences)
     api(libs.coroutines.android)
     ksp(libs.room.compiler)
+
+    // JVM tests for the data layer: real Room (in-memory, via Robolectric) so DAO SQL and constraints are exercised.
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("androidx.test:core:1.6.1")
+    testImplementation("androidx.test.ext:junit:1.2.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
 }
