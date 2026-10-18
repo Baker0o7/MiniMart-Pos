@@ -91,6 +91,7 @@ fun DashboardScreen(
     vm: DashboardViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    CrashReportPrompt()
     val rm    = com.minimart.pos.util.RoleManager
     val hiddenActions by (settingsRepo?.hiddenActions
         ?: kotlinx.coroutines.flow.flowOf("")).collectAsStateWithLifecycle("")

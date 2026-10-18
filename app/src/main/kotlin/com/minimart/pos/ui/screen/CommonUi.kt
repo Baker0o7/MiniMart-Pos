@@ -10,10 +10,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -155,4 +161,41 @@ fun searchKeyboardOptions() = androidx.compose.foundation.text.KeyboardOptions(
 fun searchKeyboardActions(): androidx.compose.foundation.text.KeyboardActions {
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     return androidx.compose.foundation.text.KeyboardActions(onSearch = { focus.clearFocus() })
+}
+
+/**
+ * Shown once after the app closed unexpectedly. Sharing sends the saved report through whatever app the owner
+ * picks (WhatsApp, email…); nothing is sent automatically.
+ */
+@Composable
+internal fun CrashReportPrompt() {
+    val context = LocalContext.current
+    var report by remember { mutableStateOf(com.minimart.pos.util.CrashRecorder.unseen(context)) }
+    val current = report ?: return
+    AlertDialog(
+        onDismissRequest = { com.minimart.pos.util.CrashRecorder.markSeen(context, current); report = null },
+        containerColor = DT.Surface,
+        title = { Text("MiniMart closed unexpectedly", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+        text = {
+            Text("Sorry about that. Your sales and stock are safe. You can send the technical details so it can be fixed. Nothing is sent unless you tap Share.",
+                color = DT.SubText, fontSize = 13.sp)
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val text = try { current.readText() } catch (_: Exception) { "" }
+                val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(android.content.Intent.EXTRA_SUBJECT, "MiniMart POS crash report")
+                    putExtra(android.content.Intent.EXTRA_TEXT, text)
+                }
+                try { context.startActivity(android.content.Intent.createChooser(send, "Send crash details").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {}
+                com.minimart.pos.util.CrashRecorder.markSeen(context, current); report = null
+            }) { Text("Share", color = DT.Teal, fontWeight = FontWeight.Bold) }
+        },
+        dismissButton = {
+            TextButton(onClick = { com.minimart.pos.util.CrashRecorder.markSeen(context, current); report = null }) {
+                Text("Dismiss", color = DT.SubText)
+            }
+        }
+    )
 }

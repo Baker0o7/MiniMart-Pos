@@ -29,12 +29,13 @@ object PdfReceiptGenerator {
 
     private const val PAGE_WIDTH  = 400
     private const val MARGIN      = 24f
-    private val df = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
 
     fun generate(context: Context, data: ReceiptData): File {
         val dir = File(context.filesDir, "receipts").apply { mkdirs() }
         val file = File(dir, "receipt_${data.sale.id}_${System.currentTimeMillis()}.pdf")
 
+        // Built per receipt: SimpleDateFormat is not thread-safe and a shared one keeps the language it was created with.
+        val df = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         val doc  = PdfDocument()
         val lineH = 22f
         var y     = MARGIN + 10f

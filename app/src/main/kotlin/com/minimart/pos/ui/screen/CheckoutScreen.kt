@@ -916,7 +916,20 @@ private fun CustomerSearchSheet(
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Default.PeopleOutline, null, tint = DT.SubText.copy(0.4f), modifier = Modifier.size(40.dp))
                             Text("No customers found", color = DT.SubText)
-                            Text("Tap + to add one now", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
+                            if (query.isBlank()) {
+                                Text("Tap + to add one now", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
+                            } else {
+                                // What was typed becomes the new customer, so nothing has to be typed twice.
+                                val looksLikePhone = query.trim().count { it.isDigit() } >= 7
+                                OutlinedButton(onClick = {
+                                    if (looksLikePhone) { newPhone = query.trim(); newName = "" } else { newName = query.trim(); newPhone = "" }
+                                    showAddForm = true
+                                }, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Teal)) {
+                                    Icon(Icons.Default.PersonAdd, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Add \"${query.trim()}\" as a new customer", color = DT.Teal, fontSize = 13.sp)
+                                }
+                            }
                         }
                     }
                 }
