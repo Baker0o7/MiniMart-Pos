@@ -53,8 +53,13 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
     var darajaSandbox       by remember { mutableStateOf(initialDaraja.sandbox) }
     var darajaShortcode     by remember { mutableStateOf(initialDaraja.shortcode) }
     var darajaConsumerKey   by remember { mutableStateOf(initialDaraja.consumerKey) }
-    var darajaConsumerSecret by remember { mutableStateOf(initialDaraja.consumerSecret) }
-    var darajaPasskey       by remember { mutableStateOf(initialDaraja.passkey) }
+    // Saved secrets are never loaded into the screen (they could be shown with the eye icon or seen over a
+    // shoulder). The boxes start empty; leaving one empty keeps the saved value.
+    var secretSaved by remember { mutableStateOf(settingsRepo.darajaSecretsSaved()) }
+    var darajaConsumerSecret by remember { mutableStateOf("") }
+    var darajaPasskey       by remember { mutableStateOf("") }
+    var saveError           by remember { mutableStateOf<String?>(null) }
+    val secureAvailable = remember { settingsRepo.secureStorageAvailable }
     var showSecret          by remember { mutableStateOf(false) }
     var showPasskey         by remember { mutableStateOf(false) }
     var darajaSaved         by remember { mutableStateOf(false) }
@@ -90,6 +95,7 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
         OutlinedTextField(
             value = darajaConsumerSecret, onValueChange = { darajaConsumerSecret = it },
             label = { Text("Consumer Secret", color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
+            placeholder = { if (secretSaved.first) Text("Saved. Type to replace", color = DT.SubText.copy(0.6f)) },
             leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
             trailingIcon = {
                 IconButton(onClick = { showSecret = !showSecret }) {
@@ -105,6 +111,7 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
         OutlinedTextField(
             value = darajaPasskey, onValueChange = { darajaPasskey = it },
             label = { Text("Lipa na M-Pesa Passkey", color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
+            placeholder = { if (secretSaved.second) Text("Saved. Type to replace", color = DT.SubText.copy(0.6f)) },
             leadingIcon = { Icon(Icons.Default.Key, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
             trailingIcon = {
                 IconButton(onClick = { showPasskey = !showPasskey }) {
@@ -116,12 +123,15 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
             singleLine = true, modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp), colors = dColors()
         )
+        if (!secureAvailable) Text("Secure storage is unavailable on this phone, so M-Pesa keys cannot be saved safely.",
+            color = DT.Red, style = MaterialTheme.typography.labelSmall)
+        saveError?.let { Text(it, color = DT.Red, style = MaterialTheme.typography.labelSmall) }
         Spacer(Modifier.height(8.dp))
         Button(
             onClick = {
                 scope.launch {
                     if (!ownerGate.allow("change payment credentials")) return@launch
-                    settingsRepo.saveDarajaConfig(
+                    val result = settingsRepo.saveDarajaConfig(
                         com.minimart.pos.data.repository.SettingsRepository.DarajaConfig(
                             consumerKey    = darajaConsumerKey.trim(),
                             consumerSecret = darajaConsumerSecret.trim(),
@@ -130,8 +140,18 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
                             sandbox        = darajaSandbox
                         )
                     )
-                    darajaSaved = true
-                    scope.launch { kotlinx.coroutines.delay(3000); darajaSaved = false }
+                    saveError = when (result) {
+                        com.minimart.pos.data.repository.SettingsRepository.DarajaSave.SAVED -> null
+                        com.minimart.pos.data.repository.SettingsRepository.DarajaSave.NO_SECURE_STORAGE ->
+                            "This phone's secure storage is not available, so the M-Pesa keys were NOT saved. Restart the phone and try again."
+                        com.minimart.pos.data.repository.SettingsRepository.DarajaSave.FAILED -> "Could not save the M-Pesa keys. Try again."
+                    }
+                    if (result == com.minimart.pos.data.repository.SettingsRepository.DarajaSave.SAVED) {
+                        darajaConsumerSecret = ""; darajaPasskey = ""; showSecret = false; showPasskey = false
+                        secretSaved = settingsRepo.darajaSecretsSaved()
+                        darajaSaved = true
+                        scope.launch { kotlinx.coroutines.delay(3000); darajaSaved = false }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),

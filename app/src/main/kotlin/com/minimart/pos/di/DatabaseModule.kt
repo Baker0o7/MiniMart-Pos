@@ -47,16 +47,11 @@ object DatabaseModule {
     @Provides @Singleton fun providePurchasingDao(db: AppDatabase) = db.purchasingDao()
     @Provides @Singleton fun provideBatchDao(db: AppDatabase) = db.batchDao()
 
-    /** Creates an EncryptedSharedPreferences-backed store for the given file name, with
-     * a defensive fallback to plain SharedPreferences if Keystore/security-crypto setup
-     * fails for any reason on a given device. This project has twice suffered real
-     * crashes from crypto-related native-library issues (SQLCipher, attempted and
-     * reverted twice) — the app must never fail to launch over an encryption feature,
-     * so a failure here degrades to "this one file isn't encrypted" rather than
-     * crashing startup. androidx.security:security-crypto is architecturally different
-     * from SQLCipher though: it's a thin wrapper around the system Android Keystore
-     * service (already present on every device), not a bundled third-party native
-     * library — so this fallback is expected to be needed rarely, if ever. */
+    /** Creates an EncryptedSharedPreferences-backed store for the given file name. If the phone's Keystore
+     * cannot be used, the app must still start, but it must never fall back to a plain file that would hold
+     * pairing codes and M-Pesa credentials readable. The fallback is therefore an in-memory store: nothing is
+     * written to disk, values are lost on restart, and callers that need to persist a secret check for
+     * [InMemoryPrefs] and tell the user (see SettingsRepository.secureStorageAvailable). */
     private fun buildEncryptedPrefs(context: Context, fileName: String): SharedPreferences =
         try {
             val masterKey = androidx.security.crypto.MasterKey.Builder(context)
@@ -70,7 +65,8 @@ object DatabaseModule {
                 androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             )
         } catch (e: Exception) {
-            context.getSharedPreferences(fileName, Context.MODE_PRIVATE)
+            android.util.Log.e("SecureStorage", "Keystore unavailable for $fileName; using memory only", e)
+            com.minimart.pos.data.security.InMemoryPrefs()
         }
 
     // Bug fix: the remembered peer_sync_key (another device's pairing code, entered

@@ -164,6 +164,12 @@ object BackupManager {
     fun lastVerifiedBackupAt(context: Context): Long =
         context.getSharedPreferences(STATUS_PREFS, Context.MODE_PRIVATE).getLong("last_ok_at", 0L)
 
+    /** (last good backup time, last failure time, whether the latest attempt failed): what the Settings status card needs. */
+    fun healthSnapshot(context: Context): Triple<Long, Long, Boolean> {
+        val p = context.getSharedPreferences(STATUS_PREFS, Context.MODE_PRIVATE)
+        return Triple(p.getLong("last_ok_at", 0L), p.getLong("last_error_at", 0L), p.getString("last_error", null) != null)
+    }
+
     /** One line for the Settings screen. */
     fun statusText(context: Context): String {
         val p = context.getSharedPreferences(STATUS_PREFS, Context.MODE_PRIVATE)

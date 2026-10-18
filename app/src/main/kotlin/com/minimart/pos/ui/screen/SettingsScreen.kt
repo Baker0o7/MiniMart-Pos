@@ -596,9 +596,24 @@ fun SettingsScreen(
                         var isBackingUp  by remember { mutableStateOf(false) }
                         var backupFiles  by remember { mutableStateOf<List<java.io.File>>(emptyList()) }
                         var showRestore  by remember { mutableStateOf(false) }
+                        var lastBackupFile by remember { mutableStateOf<java.io.File?>(null) }
                         val backupHealth = remember(backupStatus, isBackingUp) { com.minimart.pos.util.BackupManager.statusText(context) }
-                        Text(backupHealth, color = if (backupHealth.contains("failed")) DT.Red else DT.SubText, fontSize = 12.sp)
-                        Text("A checked copy is also made automatically about once a day, keeping the latest 7.", color = DT.SubText, fontSize = 11.sp)
+                        val snap = remember(backupStatus, isBackingUp) { com.minimart.pos.util.BackupManager.healthSnapshot(context) }
+                        val nowMs = System.currentTimeMillis()
+                        val health = com.minimart.pos.util.BackupAdvice.health(snap.first, snap.second, snap.third, nowMs)
+                        val (healthColor, headline) = when (health) {
+                            com.minimart.pos.util.BackupHealth.GOOD -> DT.Green to "Backed up ${com.minimart.pos.util.BackupAdvice.ago(snap.first, nowMs)}"
+                            com.minimart.pos.util.BackupHealth.STALE -> DT.Amber to "Last backup was ${com.minimart.pos.util.BackupAdvice.ago(snap.first, nowMs)}"
+                            com.minimart.pos.util.BackupHealth.FAILED -> DT.Red to "The last backup failed"
+                            com.minimart.pos.util.BackupHealth.NONE -> DT.Amber to "No backup yet"
+                        }
+                        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(healthColor.copy(0.12f))
+                            .border(1.dp, healthColor.copy(0.4f), RoundedCornerShape(12.dp)).padding(12.dp)) {
+                            Text(headline, color = healthColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Text(backupHealth, color = DT.SubText, fontSize = 11.sp)
+                            Text("A copy is made automatically about once a day (the latest 7 are kept). Copies on this phone are lost if the phone is lost or broken, so save one somewhere else too.",
+                                color = DT.SubText, fontSize = 11.sp)
+                        }
                         Spacer(Modifier.height(8.dp))
                         // Bug fix: previously tapping a backup filename immediately restored
                         // it with NO confirmation step — a single misplaced tap could wipe
@@ -634,6 +649,13 @@ fun SettingsScreen(
                                             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                             colors = dColors(), modifier = Modifier.fillMaxWidth())
                                         if (pass.isNotEmpty()) passError?.let { Text(it, color = DT.Red, style = MaterialTheme.typography.labelSmall) }
+                                        if (pass.isNotEmpty()) {
+                                            val level = com.minimart.pos.util.BackupAdvice.passphraseStrength(pass)
+                                            Text(com.minimart.pos.util.BackupAdvice.strengthLabel(level),
+                                                color = when (level) { 3 -> DT.Green; 2 -> DT.Amber; else -> DT.Red }, style = MaterialTheme.typography.labelSmall)
+                                            Text("Write the passphrase down somewhere safe. If you forget it, this backup can never be opened.",
+                                                color = DT.Amber, style = MaterialTheme.typography.labelSmall)
+                                        }
                                     }
                                 },
                                 confirmButton = {
@@ -647,7 +669,7 @@ fun SettingsScreen(
                                                 if (!ownerGate.allow("create a backup")) { backupStatus = "Only the owner can do this"; isBackingUp = false; return@launch }
                                                 val r = com.minimart.pos.util.BackupManager.backup(context, chosen)
                                                 backupStatus = when (r) {
-                                                    is com.minimart.pos.util.BackupResult.Success -> { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context); r.message }
+                                                    is com.minimart.pos.util.BackupResult.Success -> { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context); lastBackupFile = r.file; r.message }
                                                     is com.minimart.pos.util.BackupResult.Error -> r.message
                                                 }
                                                 integrityVm.recordBackup(
@@ -679,6 +701,15 @@ fun SettingsScreen(
                             }
                         }
                         backupStatus?.let { Text(it, color = if ("saved" in it) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall) }
+                        // The moment a backup succeeds is when a copy should leave the phone.
+                        lastBackupFile?.let { f ->
+                            Button(onClick = { com.minimart.pos.util.BackupManager.shareBackup(context, f) },
+                                modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = DT.Green.copy(0.85f))) {
+                                Icon(Icons.Default.Share, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp)); Text("Save a copy off this phone", color = Color.White, fontWeight = FontWeight.Bold)
+                            }
+                        }
                         val integrityRunning by integrityVm.running.collectAsStateWithLifecycle()
                         val integrityReport by integrityVm.report.collectAsStateWithLifecycle()
                         val integrityFailed by integrityVm.failed.collectAsStateWithLifecycle()
@@ -731,7 +762,9 @@ fun SettingsScreen(
                                                 Column(Modifier.fillMaxWidth()) {
                                                     Text(f.name, color = DT.TealLight, style = MaterialTheme.typography.bodySmall,
                                                         maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                                    Text("${java.text.SimpleDateFormat("d MMM yyyy, HH:mm", java.util.Locale.getDefault()).format(java.util.Date(f.lastModified()))} · ${f.length() / 1024} KB",
+                                                    Text("${com.minimart.pos.util.BackupAdvice.ago(f.lastModified(), System.currentTimeMillis())} · " +
+                                                        "${com.minimart.pos.util.BackupAdvice.humanSize(f.length())}" +
+                                                        (if (f.name.endsWith(".mmbak")) " · Encrypted" else ""),
                                                         color = DT.SubText, fontSize = 11.sp)
                                                 }
                                             }

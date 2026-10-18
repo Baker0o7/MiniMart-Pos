@@ -282,26 +282,51 @@ class SettingsRepository @Inject constructor(
         val shortcode: String      = "",
         val sandbox: Boolean       = true
     ) {
+        /** Never prints the secrets, so a stray log line or crash report cannot leak them. */
+        override fun toString() = "DarajaConfig(shortcode=$shortcode, sandbox=$sandbox, key=***, secret=***, passkey=***)"
         val isConfigured: Boolean get() =
             consumerKey.isNotBlank() && consumerSecret.isNotBlank() &&
             passkey.isNotBlank() && shortcode.isNotBlank()
     }
 
-    fun getDarajaConfig(): DarajaConfig = DarajaConfig(
-        consumerKey    = securePrefs.getString(DarajaKeys.CONSUMER_KEY, "") ?: "",
-        consumerSecret = securePrefs.getString(DarajaKeys.CONSUMER_SECRET, "") ?: "",
-        passkey        = securePrefs.getString(DarajaKeys.PASSKEY, "") ?: "",
-        shortcode      = securePrefs.getString(DarajaKeys.SHORTCODE, "") ?: "",
-        sandbox        = securePrefs.getBoolean(DarajaKeys.SANDBOX, true)
-    )
+    /** False when the phone's Keystore could not be used, so credentials can only be held in memory. */
+    val secureStorageAvailable: Boolean get() = securePrefs !is com.minimart.pos.data.security.InMemoryPrefs
 
-    fun saveDarajaConfig(cfg: DarajaConfig) {
-        securePrefs.edit()
-            .putString(DarajaKeys.CONSUMER_KEY,    cfg.consumerKey)
-            .putString(DarajaKeys.CONSUMER_SECRET, cfg.consumerSecret)
-            .putString(DarajaKeys.PASSKEY,         cfg.passkey)
-            .putString(DarajaKeys.SHORTCODE,       cfg.shortcode)
-            .putBoolean(DarajaKeys.SANDBOX,        cfg.sandbox)
-            .apply()
+    fun getDarajaConfig(): DarajaConfig = try {
+        DarajaConfig(
+            consumerKey    = securePrefs.getString(DarajaKeys.CONSUMER_KEY, "") ?: "",
+            consumerSecret = securePrefs.getString(DarajaKeys.CONSUMER_SECRET, "") ?: "",
+            passkey        = securePrefs.getString(DarajaKeys.PASSKEY, "") ?: "",
+            shortcode      = securePrefs.getString(DarajaKeys.SHORTCODE, "") ?: "",
+            sandbox        = securePrefs.getBoolean(DarajaKeys.SANDBOX, true)
+        )
+    } catch (_: Exception) {
+        DarajaConfig()   // an unreadable store counts as "not set up" instead of crashing checkout
+    }
+
+    /** Whether a secret is already saved, so the screen can say so without ever loading the secret into the UI. */
+    fun darajaSecretsSaved(): Pair<Boolean, Boolean> = getDarajaConfig().let { it.consumerSecret.isNotBlank() to it.passkey.isNotBlank() }
+
+    /** Result of [saveDarajaConfig]. */
+    enum class DarajaSave { SAVED, NO_SECURE_STORAGE, FAILED }
+
+    /**
+     * Saves the credentials. A blank [DarajaConfig.consumerSecret] or [DarajaConfig.passkey] keeps the stored one
+     * (the screen never shows saved secrets, so blank means "unchanged"). Refuses to save at all when the
+     * phone cannot encrypt them.
+     */
+    fun saveDarajaConfig(cfg: DarajaConfig): DarajaSave {
+        if (!secureStorageAvailable) return DarajaSave.NO_SECURE_STORAGE
+        val current = getDarajaConfig()
+        val ok = try {
+            securePrefs.edit()
+                .putString(DarajaKeys.CONSUMER_KEY,    cfg.consumerKey)
+                .putString(DarajaKeys.CONSUMER_SECRET, cfg.consumerSecret.ifBlank { current.consumerSecret })
+                .putString(DarajaKeys.PASSKEY,         cfg.passkey.ifBlank { current.passkey })
+                .putString(DarajaKeys.SHORTCODE,       cfg.shortcode)
+                .putBoolean(DarajaKeys.SANDBOX,        cfg.sandbox)
+                .commit()
+        } catch (_: Exception) { false }
+        return if (ok) DarajaSave.SAVED else DarajaSave.FAILED
     }
 }
