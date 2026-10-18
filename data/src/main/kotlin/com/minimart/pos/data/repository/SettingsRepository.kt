@@ -36,6 +36,7 @@ class SettingsRepository @Inject constructor(
         val KEY_ACCENT = stringPreferencesKey("accent")
         val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
         val KEY_PRINTER_NAME     = stringPreferencesKey("printer_name")
+        val KEY_PAPER_WIDTH_MM   = intPreferencesKey("paper_width_mm")
         val KEY_RECEIPT_FOOTER   = stringPreferencesKey("receipt_footer")
         val KEY_DARK_MODE        = booleanPreferencesKey("dark_mode")
         val KEY_LOGGED_IN_USER   = longPreferencesKey("logged_in_user_id")
@@ -79,6 +80,9 @@ class SettingsRepository @Inject constructor(
 
     val printerAddress: Flow<String?>   = context.dataStore.data.map { it[KEY_PRINTER_ADDRESS] }
     val printerName: Flow<String?>      = context.dataStore.data.map { it[KEY_PRINTER_NAME] }
+    /** Receipt paper width: 58 (small printers, the default) or 80 (full-width receipts). */
+    val paperWidthMm: Flow<Int>         = context.dataStore.data.map { if ((it[KEY_PAPER_WIDTH_MM] ?: 58) >= 80) 80 else 58 }
+    suspend fun setPaperWidthMm(mm: Int) = context.dataStore.edit { it[KEY_PAPER_WIDTH_MM] = if (mm >= 80) 80 else 58 }
     val receiptFooter: Flow<String>     = context.dataStore.data.map { it[KEY_RECEIPT_FOOTER] ?: "Thank you for shopping with us!" }
     val darkMode: Flow<Boolean>         = context.dataStore.data.map { it[KEY_DARK_MODE] ?: false }
     val loggedInUserId: Flow<Long?>     = context.dataStore.data.map { it[KEY_LOGGED_IN_USER] }

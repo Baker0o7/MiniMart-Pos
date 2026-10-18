@@ -210,6 +210,18 @@ fun SettingsScreen(
                             ) { Text(if (printerName.isNullOrBlank()) "Pair" else "Change", color = Color.White, fontWeight = FontWeight.Bold) }
                         }
                         printerStatus?.let { Text(it, color = if (it.startsWith("✓")) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall) }
+                        val paperMm by settingsRepo.paperWidthMm.collectAsStateWithLifecycle(58)
+                        Spacer(Modifier.height(10.dp))
+                        Text("Paper width", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(58, 80).forEach { mm ->
+                                FilterChip(
+                                    selected = paperMm == mm,
+                                    onClick = { scope.launch { settingsRepo.setPaperWidthMm(mm) } },
+                                    label = { Text("$mm mm", fontSize = 12.sp) }
+                                )
+                            }
+                        }
                     }
                 }
 

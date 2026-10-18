@@ -36,10 +36,12 @@ object EscPos {
     val UNDERLINE_ON    = byteArrayOf(0x1B, 0x2D, 0x01)
     val UNDERLINE_OFF   = byteArrayOf(0x1B, 0x2D, 0x00)
     val DRAWER_KICK     = byteArrayOf(0x1B, 0x70, 0x00, 0x19, 0xFA.toByte()) // cash drawer
-    const val LINE_CHARS = 32                               // chars per line on 80mm paper
+    /** Characters per line: 32 on 58mm paper, 48 on 80mm. Set from the Paper width setting. */
+    @Volatile var lineChars = 32
+    fun charsForPaper(widthMm: Int) = if (widthMm >= 80) 48 else 32
 
     fun text(s: String) = PrinterText.ascii(s).toByteArray(Charsets.US_ASCII)
-    fun divider(char: Char = '-') = text(char.toString().repeat(LINE_CHARS)) + NEWLINE
+    fun divider(char: Char = '-') = text(char.toString().repeat(lineChars)) + NEWLINE
 }
 
 /** One product's barcode label job. */
@@ -258,7 +260,7 @@ class ThermalPrinter @Inject constructor(
                 if (code == null) { skipped += l.name; continue }
                 repeat(l.copies.coerceIn(1, 99)) {
                     if (printed >= MAX_LABELS_PER_JOB) return@repeat
-                    write(EscPos.ALIGN_CENTER, EscPos.BOLD_ON, EscPos.text(l.name.take(EscPos.LINE_CHARS)), EscPos.NEWLINE, EscPos.BOLD_OFF)
+                    write(EscPos.ALIGN_CENTER, EscPos.BOLD_ON, EscPos.text(l.name.take(EscPos.lineChars)), EscPos.NEWLINE, EscPos.BOLD_OFF)
                     if (showPrice) write(EscPos.FONT_MEDIUM, EscPos.text(formatMoney(l.price, currency)), EscPos.NEWLINE, EscPos.FONT_NORMAL)
                     write(
                         byteArrayOf(0x1D, 0x68, 70),   // barcode height
@@ -302,7 +304,7 @@ class ThermalPrinter @Inject constructor(
         "$currency ${String.format(java.util.Locale.US, "%.2f", amount)}"
 
     private fun padLR(left: String, right: String): String {
-        val total = EscPos.LINE_CHARS
+        val total = EscPos.lineChars
         val padding = total - left.length - right.length
         return if (padding > 0) left + " ".repeat(padding) + right
         else left.take(total - right.length - 1) + " " + right

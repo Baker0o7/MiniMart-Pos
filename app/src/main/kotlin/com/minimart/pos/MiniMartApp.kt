@@ -34,6 +34,7 @@ class MiniMartApp : Application(), Configuration.Provider {
                 com.minimart.pos.worker.AutoBackupWorker.schedule(this@MiniMartApp)
                 com.minimart.pos.worker.SyncWorker.schedule(this@MiniMartApp)
             } catch (_: Exception) {}
+            launch { settings.paperWidthMm.collect { com.minimart.pos.printer.EscPos.lineChars = com.minimart.pos.printer.EscPos.charsForPaper(it) } }
             try { productRepo.warmUp() } catch (_: Exception) {}
             try { if (settings.syncServerEnabled.first()) syncServer.start() } catch (_: Exception) {}
         }
