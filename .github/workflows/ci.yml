@@ -65,6 +65,24 @@ jobs:
           grep -E "^e: |^w: .*Unresolved|error:|What went wrong|Execution failed|Could not|FAILED|Caused by" -A2 build.log \
             | head -60 | while IFS= read -r line; do echo "::error::${line}"; done
 
+      # A one-line count of lint warnings by kind, so they stay visible without opening the report.
+      - name: Lint summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, collections, xml.etree.ElementTree as ET
+          c = collections.Counter(); where = collections.defaultdict(list)
+          for f in glob.glob("*/build/reports/lint-results-debug.xml"):
+              for i in ET.parse(f).getroot().iter("issue"):
+                  if i.get("severity") == "Warning":
+                      c[i.get("id")] += 1
+                      loc = i.find("location")
+                      if loc is not None and len(where[i.get("id")]) < 3:
+                          where[i.get("id")].append(loc.get("file", "").split("MiniMart-Pos/MiniMart-Pos/")[-1].split("/")[-1] + ":" + loc.get("line", "?"))
+          if c:
+              print("::notice title=Lint warnings::" + " | ".join(f"{k} x{v} ({', '.join(where[k])})" for k, v in c.most_common(25)))
+          PY
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
