@@ -68,7 +68,7 @@ jobs:
           )
           [ -n "$msg" ] && echo "::error title=Lint errors::${msg}"
           # The REST API can't return raw job logs, so echo compiler/Gradle errors as annotations.
-          grep -E "^e: |^w: .*Unresolved|error:|What went wrong|Execution failed|Could not|FAILED|Caused by" -A2 build.log \
+          grep -E "^e: |^w: .*Unresolved|error:|What went wrong|Execution failed|Could not|FAILED|Caused by" -A2 build.log lint.log androidtest.log 2>/dev/null \
             | head -60 | while IFS= read -r line; do echo "::error::${line}"; done
 
       # A one-line count of lint warnings by kind, so they stay visible without opening the report.
