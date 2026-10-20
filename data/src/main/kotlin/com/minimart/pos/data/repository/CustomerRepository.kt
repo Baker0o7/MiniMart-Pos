@@ -63,6 +63,7 @@ class CustomerRepository @Inject constructor(
     /** Use credit for a sale — allows negative balance (buy on account).
      * Bug fix: same atomicity gap as addCredit. */
     suspend fun useCredit(customerId: Long, amount: Double, saleId: Long): Boolean = db.withTransaction {
+        if (!amount.isFinite() || amount <= 0.0) return@withTransaction false
         val customer = dao.getCustomerById(customerId) ?: return@withTransaction false
         dao.updateBalance(customerId, -amount, purchase = amount, visit = 1)
         dao.insertCreditTx(CreditTransaction(

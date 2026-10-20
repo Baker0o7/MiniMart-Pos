@@ -46,7 +46,7 @@ class PurchasingRepository @Inject constructor(
             order.id
         }
         dao.deleteItems(id)
-        dao.insertItems(items.map { it.copy(id = 0, poId = id, receivedQty = 0.0) })
+        dao.insertItems(items.filter { it.quantity.isFinite() && it.quantity > 0.0 && it.unitCost.isFinite() && it.unitCost >= 0.0 }.map { it.copy(id = 0, poId = id, receivedQty = 0.0) })
         id
     }
 
@@ -90,9 +90,13 @@ class PurchasingRepository @Inject constructor(
         val now = System.currentTimeMillis()
         val items = dao.getItems(poId)
         items.forEach { item ->
-            val arrived = (received[item.id] ?: 0.0).coerceIn(0.0, item.remaining)
-            if (arrived <= 0.0) return@forEach
+            val raw = received[item.id] ?: 0.0
+            if (!raw.isFinite()) return@forEach
             val product = productDao.getProductById(item.productId)
+            // Counted products arrive in whole units; keep the recorded quantity equal to the stock added.
+            val limited = raw.coerceIn(0.0, item.remaining)
+            val arrived = if (product != null && !product.isWeighed) limited.roundToInt().toDouble() else limited
+            if (arrived <= 0.0) return@forEach
             if (product != null) {
                 val source = "PO #$poId"
                 val unitCost = if (item.unitCost > 0.0) item.unitCost else product.costPrice
