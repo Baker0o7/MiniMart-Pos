@@ -466,7 +466,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
     val titleFocus = remember { FocusRequester() }
 
     val amountValue = amount.toDoubleOrNull() ?: 0.0
-    val canSave = title.isNotBlank() && amountValue > 0
+    val canSave = title.isNotBlank() && amountValue > 0 && amountValue.isFinite() && amountValue < 1e9
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
