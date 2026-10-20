@@ -23,8 +23,8 @@ android {
         applicationId = "com.minimart.pos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 101
-        versionName = "1.16.36"
+        versionCode = 102
+        versionName = "1.16.37"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -52,8 +52,10 @@ android {
         abi {
             isEnable = true
             reset()
-            include("arm64-v8a")
-            isUniversalApk = false
+            // arm64 for modern phones, armeabi-v7a for the many older/budget 32-bit phones, x86_64 for
+            // emulators and Chromebooks. The universal APK works on all of them (largest download).
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = true
         }
     }
 
@@ -124,6 +126,13 @@ dependencies {
     implementation("com.lambdapioneer.argon2kt:argon2kt:1.4.0")
 
     debugImplementation(libs.androidx.ui.tooling.preview)
+
+    // Compose UI tests that run on a device/emulator (app/src/androidTest).
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Unit tests for financial calculation logic (Money, CartUiState, PluDecoder).
     // JUnit4 is the standard, long-stable test framework for local JVM unit tests

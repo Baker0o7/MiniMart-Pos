@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  LAN sync talks plain HTTP to another phone's IP address (e.g. 192.168.1.20). Android 9+ blocks
-  cleartext by default, and the policy cannot name an IP range, so it is allowed here. Every
-  internet call (M-Pesa Daraja) is an explicit https:// URL, and sync requests are authenticated
-  with the server's pairing code.
+  No cleartext HTTP anywhere. Every internet call (M-Pesa Daraja, the cloud report) is https://, and
+  only the system's trusted certificate authorities are accepted. Till-to-till sync runs on the shop's
+  own Wi-Fi over a plain socket (see LanHttp): Android's policy cannot name a private IP range, and
+  those bodies are AES-GCM encrypted and signed with the pairing code anyway.
 -->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="true" />
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
 </network-security-config>

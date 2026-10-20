@@ -17,6 +17,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.printer.ThermalPrinter
 import com.minimart.pos.scanner.KeyboardScanner
@@ -100,6 +107,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        // Phones stay upright; tablets and other large screens (600dp and wider) rotate freely.
+        // The activity handles configuration changes itself (see the manifest), so turning the
+        // device never rebuilds the screen and an open sale or dialog is not lost.
+        requestedOrientation =
+            if (resources.configuration.smallestScreenWidthDp < 600) android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            else android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         // The UI is always dark, so ask for light system-bar icons explicitly instead of letting
         // the default follow the phone's light/dark setting (dark icons on dark teal).
         enableEdgeToEdge(
@@ -119,13 +132,22 @@ class MainActivity : ComponentActivity() {
             // recomposition and could undo a pick before it had been saved.
             androidx.compose.runtime.LaunchedEffect(accentName) { com.minimart.pos.ui.theme.DT.accent = com.minimart.pos.ui.theme.AppAccent.fromName(accentName) }
             MiniMartTheme(darkTheme = darkMode) {
-                MiniMartNavGraph(
-                    settingsRepo = settingsRepo,
-                    printer = printer,
-                    darkMode = darkMode,
-                    pendingRoute = pendingRoute,
-                    onPendingRouteConsumed = { pendingRoute = null }
-                )
+                // On a wide screen the phone-style layout would stretch across the whole width; keep it
+                // to a comfortable column in the middle instead.
+                androidx.compose.foundation.layout.Box(
+                    Modifier.fillMaxSize().background(androidx.compose.material3.MaterialTheme.colorScheme.background),
+                    contentAlignment = androidx.compose.ui.Alignment.TopCenter
+                ) {
+                    androidx.compose.foundation.layout.Box(Modifier.fillMaxHeight().widthIn(max = 840.dp).fillMaxWidth()) {
+                        MiniMartNavGraph(
+                            settingsRepo = settingsRepo,
+                            printer = printer,
+                            darkMode = darkMode,
+                            pendingRoute = pendingRoute,
+                            onPendingRouteConsumed = { pendingRoute = null }
+                        )
+                    }
+                }
             }
         }
     }

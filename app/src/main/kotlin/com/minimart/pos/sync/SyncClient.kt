@@ -10,7 +10,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.net.HttpURLConnection
+import com.minimart.pos.util.LanHttp
 import java.net.URL
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -134,30 +134,23 @@ class SyncClient @Inject constructor(
     }
 
     private fun request(method: String, url: String, body: String?, syncKey: String?): Reply? = try {
-        val conn = URL(url).openConnection() as HttpURLConnection
-        conn.connectTimeout = TIMEOUT; conn.readTimeout = TIMEOUT * 4
-        conn.requestMethod = method
+        val target = URL(url)
+        val path = target.path
+        val headers = LinkedHashMap<String, String>()
         var reqTs: String? = null
         // With a pairing code the body is encrypted, then signed, so what is signed is what is sent.
         var wireBody = body
         syncKey?.let {
             val ts = System.currentTimeMillis()
             reqTs = ts.toString()
-            val path = URL(url).path
             if (body != null) wireBody = SyncCrypto.seal(it, SyncCrypto.requestAad(method, path, ts.toString()), body)
-            conn.setRequestProperty("X-Sync-Enc", "1")
-            conn.setRequestProperty("X-Sync-Ts", ts.toString())
-            conn.setRequestProperty("X-Sync-Sig", SyncAuth.sign(it, method, path, wireBody ?: "", ts))
+            headers["X-Sync-Enc"] = "1"
+            headers["X-Sync-Ts"] = ts.toString()
+            headers["X-Sync-Sig"] = SyncAuth.sign(it, method, path, wireBody ?: "", ts)
         }
-        if (wireBody != null) {
-            val bytes = wireBody!!.toByteArray(Charsets.UTF_8)
-            conn.doOutput = true
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.setFixedLengthStreamingMode(bytes.size)
-            conn.outputStream.use { it.write(bytes) }
-        }
-        val code = conn.responseCode
-        val text = (if (code in 200..299) conn.inputStream else conn.errorStream)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
-        Reply(code, text, ts = reqTs, sig = conn.getHeaderField("X-Sync-Resp-Sig"))
+        if (wireBody != null) headers["Content-Type"] = "application/json"
+        // Plain sockets, not HttpURLConnection: cleartext HTTP is blocked app-wide (network_security_config).
+        val r = LanHttp.request(target.host, target.port, method, path, headers, wireBody, TIMEOUT, TIMEOUT * 4)
+        Reply(r.code, r.body, ts = reqTs, sig = r.header("X-Sync-Resp-Sig"))
     } catch (_: Exception) { null }
 }

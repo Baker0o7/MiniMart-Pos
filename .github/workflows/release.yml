@@ -79,7 +79,8 @@ jobs:
           name: "MiniMart POS ${{ steps.version.outputs.VERSION }}"
           body: |
             ## MiniMart POS ${{ steps.version.outputs.VERSION }}
-            - arm64-v8a signed APK (direct sideload)
+            - `app-universal-release.apk` works on every phone and tablet (pick this one if unsure)
+            - Smaller per-chip APKs: `arm64-v8a` (most phones from 2017 on), `armeabi-v7a` (older 32-bit phones), `x86_64` (emulators)
             - AAB for Google Play
             Default login: username `admin` | PIN `1234`
           files: |

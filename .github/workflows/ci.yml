@@ -43,6 +43,12 @@ jobs:
           set -o pipefail
           gradle :data:lintDebug :app:lintDebug --no-daemon --stacktrace 2>&1 | tee lint.log
 
+      # The Compose UI tests need an emulator to run (see instrumented.yml); here we make sure they still build.
+      - name: Compile instrumented tests
+        run: |
+          set -o pipefail
+          gradle :app:assembleDebugAndroidTest --no-daemon --stacktrace 2>&1 | tee androidtest.log
+
       - name: Surface build errors as annotations
         if: failure()
         run: |
