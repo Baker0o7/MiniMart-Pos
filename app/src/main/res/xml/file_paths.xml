@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Only the folders the app actually shares from. The whole cache, the whole Downloads folder and
+     the whole MiniMartPOS export folder used to be exposed to any app handed a share link. -->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="exports" path="MiniMartPOS/" />
-    <cache-path name="cache" path="." />
     <files-path name="receipts" path="receipts/" />
     <files-path name="auto_backups" path="auto_backups/" />
     <external-files-path name="backups" path="backups/" />
-    <external-path name="downloads" path="Download/" />
+    <external-path name="legacy_backups" path="Download/MiniMartPOS/backups/" />
 </paths>

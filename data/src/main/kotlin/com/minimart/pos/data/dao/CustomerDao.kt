@@ -45,7 +45,7 @@ interface CustomerDao {
     @Query("SELECT * FROM credit_transactions WHERE saleId = :saleId AND type = 'CREDIT_USED'")
     suspend fun getCreditUsedForSale(saleId: Long): List<CreditTransaction>
 
-    @Query("SELECT * FROM credit_transactions WHERE customerId = :customerId ORDER BY createdAt DESC")
+    @Query("SELECT * FROM credit_transactions WHERE customerId = :customerId ORDER BY createdAt DESC LIMIT 200")
     fun getTransactions(customerId: Long): Flow<List<CreditTransaction>>
 
     @Query("SELECT COUNT(*) FROM customers")
