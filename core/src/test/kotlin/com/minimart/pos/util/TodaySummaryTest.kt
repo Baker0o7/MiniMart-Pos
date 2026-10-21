@@ -5,7 +5,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class TodaySummaryTest {
-    private fun hour(ms: Long) = (ms / 1000).toInt()
+    private fun hour(ms: Long) = ms.toInt()
 
     @Test fun splitsTakingsByHowTheyWerePaid() {
         val s = TodaySummaryBuilder.build(listOf(
