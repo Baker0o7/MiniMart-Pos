@@ -12,6 +12,9 @@ if [ "$prev" -ge 8 ] && ! grep -q "MIGRATION_${prev}_${ver}" "$db"; then
 fi
 code=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts | head -1)
 name=$(grep -oP 'versionName\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' app/build.gradle.kts | head -1)
+if [ -n "${name:-}" ] && [ -f CHANGELOG.md ] && ! grep -q "^## \[${name}\]" CHANGELOG.md; then
+  echo "::error::CHANGELOG.md has no '## [${name}]' section for this version"; fail=1
+fi
 [ -n "$code" ] || { echo "::error::versionCode missing or not a number"; fail=1; }
 [ -n "$name" ] || { echo "::error::versionName must look like 1.2.3"; fail=1; }
 if grep -rn 'String.format("' --include=*.kt app/src/main data/src/main | grep -v Locale >/dev/null; then
