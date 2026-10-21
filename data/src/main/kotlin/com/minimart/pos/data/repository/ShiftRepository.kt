@@ -33,6 +33,7 @@ class ShiftRepository @Inject constructor(
     fun getShiftsForCashier(id: Long): Flow<List<Shift>> = shiftDao.getShiftsForCashier(id)
     fun getRecentShifts(startMs: Long): Flow<List<Shift>> = shiftDao.getRecentShifts(startMs)
     suspend fun getOpenShift(cashierId: Long): Shift? = shiftDao.getOpenShift(cashierId)
+    suspend fun openShifts(): List<Shift> = shiftDao.getAllOpen()
 
     // Bug fix: no validation existed anywhere on openingFloat — a negative value would
     // corrupt expectedCash = openingFloat + cashSales in ShiftRepository.clockOut(),

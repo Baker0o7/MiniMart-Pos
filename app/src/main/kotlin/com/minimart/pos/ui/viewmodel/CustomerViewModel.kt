@@ -69,7 +69,7 @@ class CustomerViewModel @Inject constructor(
             repo.saveCustomer(customer)
             _state.update { it.copy(message = "Customer saved") }
         } catch (e: Exception) {
-            _state.update { it.copy(message = "Error: ${e.localizedMessage}") }
+            _state.update { it.copy(message = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
         }
     }
 
@@ -90,7 +90,7 @@ class CustomerViewModel @Inject constructor(
                 val draft = Customer(name = name, phone = phone)
                 onReady(draft.copy(id = repo.saveCustomer(draft)))
             } catch (e: Exception) {
-                _state.update { it.copy(message = "Error: ${e.localizedMessage}") }
+                _state.update { it.copy(message = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
             }
         }
     }

@@ -65,6 +65,12 @@ class MpesaPaymentsViewModel @Inject constructor(
         .flatMapLatest { repo.getByRange(startOf(it), Long.MAX_VALUE) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 
+    /** Messages received vs sales that name an M-Pesa code, for the selected period. */
+    val reconciliation: StateFlow<com.minimart.pos.util.MpesaReconciliation?> =
+        combine(_period, payments, claimed) { p, _, _ -> p }
+            .mapLatest { p -> runCatching { reconcileRange(repo, sales, startOf(p), Long.MAX_VALUE) }.getOrNull() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), null)
+
     /** Totals for every period at once, so the summary cards never wait on the selected chip. */
     val totals: StateFlow<Map<MpesaPeriod, MpesaTotals>> = combine(
         MpesaPeriod.entries.map { p -> combine(repo.totalSince(startOf(p)), repo.countSince(startOf(p))) { a, c -> p to MpesaTotals(a, c) } }

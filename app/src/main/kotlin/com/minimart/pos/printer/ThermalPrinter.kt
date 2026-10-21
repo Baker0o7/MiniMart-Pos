@@ -90,7 +90,7 @@ class ThermalPrinter @Inject constructor(
             PrintResult.Success
         } catch (e: Exception) {
             Log.e(TAG, "Connection failed", e)
-            PrintResult.Error("Could not connect: ${e.message}")
+            PrintResult.Error("Could not connect to the printer. Make sure it is switched on, paired in the phone's Bluetooth settings and close by, then try again.")
         }
     }
 

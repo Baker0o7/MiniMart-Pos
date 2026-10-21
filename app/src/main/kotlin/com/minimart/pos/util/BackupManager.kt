@@ -80,7 +80,7 @@ object BackupManager {
             recordSuccess(context)
             BackupResult.Success(dest, "Backup saved and checked: ${dest.name}\nUse \"Share Latest Backup\" to copy it off this device.")
         } catch (e: Exception) {
-            BackupResult.Error("Backup failed: ${e.message}")
+            BackupResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Backup"))
         }
     }
 
@@ -146,7 +146,7 @@ object BackupManager {
             BackupResult.Success(dest, "Automatic backup saved: ${dest.name}")
         } catch (e: Exception) {
             recordFailure(context, e.message ?: "unknown error")
-            BackupResult.Error("Automatic backup failed: ${e.message}")
+            BackupResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Automatic backup"))
         }
     }
 
@@ -231,7 +231,7 @@ object BackupManager {
             }
             restorePlain(context, tmp)
         } catch (e: Exception) {
-            BackupResult.Error("Restore failed: ${e.message}")
+            BackupResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Restore"))
         } finally {
             tmp.delete()
         }
@@ -279,7 +279,7 @@ object BackupManager {
 
             BackupResult.Success(dbFile, "Restore successful. Restarting app…")
         } catch (e: Exception) {
-            BackupResult.Error("Restore failed: ${e.message}")
+            BackupResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Restore"))
         }
     }
 

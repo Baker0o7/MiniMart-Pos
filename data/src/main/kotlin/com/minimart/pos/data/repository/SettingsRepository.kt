@@ -30,6 +30,7 @@ class SettingsRepository @Inject constructor(
         val KEY_BLIND_CLOSE = booleanPreferencesKey("blind_close")
         val KEY_CUSTOMER_DISPLAY = booleanPreferencesKey("customer_display_second_screen")
         val KEY_MPESA_SMS_TRACKING = booleanPreferencesKey("mpesa_sms_tracking")
+        val KEY_SETUP_DONE = booleanPreferencesKey("setup_wizard_done")
         val KEY_MPESA_STRICT = booleanPreferencesKey("mpesa_strict")
         val KEY_SYNC_SERVER = booleanPreferencesKey("sync_server_enabled")
         val KEY_HELD_CARTS = stringPreferencesKey("held_carts")
@@ -104,6 +105,10 @@ class SettingsRepository @Inject constructor(
     val cashDrawerOnSale:  Flow<Boolean> = context.dataStore.data.map { it[KEY_CASH_DRAWER_ON_SALE] ?: true }
     val mpesaSmsTracking: Flow<Boolean> = context.dataStore.data.map { it[KEY_MPESA_SMS_TRACKING] ?: false }
     suspend fun setMpesaSmsTracking(v: Boolean) = context.dataStore.edit { it[KEY_MPESA_SMS_TRACKING] = v }
+
+    /** True once the first-launch wizard was finished or skipped (never shown again). */
+    val setupWizardDone: Flow<Boolean> = context.dataStore.data.map { it[KEY_SETUP_DONE] ?: false }
+    suspend fun setSetupWizardDone() = context.dataStore.edit { it[KEY_SETUP_DONE] = true }
     /** Name of the chosen accent colour (TEAL, BLUE, …); the app maps it to a palette. */
     val accent: Flow<String> = context.dataStore.data.map { it[KEY_ACCENT] ?: "TEAL" }
     suspend fun setAccent(name: String) = context.dataStore.edit { it[KEY_ACCENT] = name }

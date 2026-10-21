@@ -68,7 +68,7 @@ class ReceiptViewModel @Inject constructor(
                 _state.update { it.copy(saleWithItems = updated, isProcessing = false,
                     successMessage = "Sale refunded. Stock restored.") }
             } catch (e: Exception) {
-                _state.update { it.copy(isProcessing = false, error = "Refund failed: ${e.message}") }
+                _state.update { it.copy(isProcessing = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Refund")) }
             }
         }
     }
@@ -83,7 +83,7 @@ class ReceiptViewModel @Inject constructor(
                 _state.update { it.copy(saleWithItems = updated, isProcessing = false,
                     successMessage = "Sale voided. Stock restored.") }
             } catch (e: Exception) {
-                _state.update { it.copy(isProcessing = false, error = "Void failed: ${e.message}") }
+                _state.update { it.copy(isProcessing = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Void")) }
             }
         }
     }

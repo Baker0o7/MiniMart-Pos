@@ -117,7 +117,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                                     com.minimart.pos.util.BusinessReportPdf.shareViaWhatsApp(
                                         context, com.minimart.pos.util.BusinessReportPdf.getShareUri(context, file), data)
                                 } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, "Could not create the report: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                                    android.widget.Toast.makeText(context, "Could not create the report. " + com.minimart.pos.util.ErrorAdvice.reason(e), android.widget.Toast.LENGTH_LONG).show()
                                 } finally {
                                     isSharing = false
                                 }

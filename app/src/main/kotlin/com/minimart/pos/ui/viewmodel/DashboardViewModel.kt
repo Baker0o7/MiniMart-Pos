@@ -330,7 +330,7 @@ class AuthViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Login failed: ${e.message}") }
+                _uiState.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Login")) }
             }
         }
     }
@@ -353,7 +353,7 @@ class AuthViewModel @Inject constructor(
                 auditLogger.log(com.minimart.pos.util.AuditEvent.PIN_CHANGED, user = user.username, detail = "Default PIN replaced")
                 _uiState.update { it.copy(mustChangePin = false, pinChangeError = null) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(pinChangeError = "Could not save PIN: ${e.message}") }
+                _uiState.update { it.copy(pinChangeError = "Could not save PIN. " + com.minimart.pos.util.ErrorAdvice.reason(e)) }
             }
         }
     }

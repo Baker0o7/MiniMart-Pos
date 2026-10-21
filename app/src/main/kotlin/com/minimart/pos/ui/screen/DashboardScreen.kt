@@ -85,6 +85,8 @@ fun DashboardScreen(
     onNavigateToLabels: () -> Unit = {},
     onNavigateToCustomerDisplay: () -> Unit = {},
     onNavigateToActivityLog: () -> Unit = {},
+    onNavigateToToday: () -> Unit = {},
+    onNavigateToHealth: () -> Unit = {},
     currentRole: UserRole? = null,
     currentUserName: String? = null,
     settingsRepo: SettingsRepository? = null,
@@ -324,6 +326,10 @@ fun DashboardScreen(
                 fun hide(id: String) { scope.launch { settingsRepo?.setHiddenActions((hidden + id).joinToString(",")) } }
 
                 val cards = buildList {
+                    if (rm.canViewReports(currentRole) && "today" !in hidden)
+                        add(DashCard_("today","Today","Takings & profit",Icons.Default.Today,Color(0xFF0B2220),GreenGlow,onNavigateToToday))
+                    if (rm.canAccessSettings(currentRole) && "health" !in hidden)
+                        add(DashCard_("health","Store health","Is all well?",Icons.Default.HealthAndSafety,Color(0xFF0B1F2C),BlueGlow,onNavigateToHealth))
                     if (rm.canViewReports(currentRole) && "reports" !in hidden)
                         add(DashCard_("reports","Reports","Sales & PDF",Icons.Default.BarChart,Color(0xFF160B2C),PurpleGlow,onNavigateToReports))
                     if (rm.canViewReports(currentRole) && "analytics" !in hidden)

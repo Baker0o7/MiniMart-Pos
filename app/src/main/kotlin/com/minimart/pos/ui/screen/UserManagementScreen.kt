@@ -108,7 +108,7 @@ class UserManagementViewModel @Inject constructor(
                     detail = "PIN changed for ${user.username}")
                 _state.update { it.copy(isLoading = false, success = "PIN updated successfully") }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = "Failed: ${e.message}") }
+                _state.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
             }
         }
     }
@@ -134,7 +134,7 @@ class UserManagementViewModel @Inject constructor(
                 // Removed users keep their row (and username), so the active-only check above can miss it.
                 _state.update { it.copy(isLoading = false, error = "Username is already used by a removed account — pick another") }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = "Failed: ${e.message}") }
+                _state.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
             }
         }
     }
@@ -160,7 +160,7 @@ class UserManagementViewModel @Inject constructor(
                     user = _state.value.currentUser?.username ?: "", detail = "Removed ${user.username}")
                 _state.update { it.copy(success = "${user.displayName} removed") }
             } catch (e: Exception) {
-                _state.update { it.copy(error = "Failed: ${e.message}") }
+                _state.update { it.copy(error = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
             }
         }
     }

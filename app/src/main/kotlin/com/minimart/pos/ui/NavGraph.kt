@@ -67,6 +67,9 @@ object Routes {
     const val LABELS = "labels"
     const val CUSTOMER_DISPLAY = "customer_display"
     const val ACTIVITY_LOG = "activity_log"
+    const val TODAY = "today"
+    const val HEALTH = "store_health"
+    const val SETUP = "setup"
     const val SUPPLIERS = "suppliers"
     const val PURCHASE_ORDER = "purchase_order/{poId}"
     fun purchaseOrder(poId: Long) = "purchase_order/$poId"
@@ -174,6 +177,17 @@ fun MiniMartNavGraph(
         }
     }
 
+    // First launch of a brand-new shop: offer the short setup wizard once, to the owner, after the PIN is set.
+    val setupVm: com.minimart.pos.ui.viewmodel.SetupViewModel = hiltViewModel()
+    var setupChecked by remember { mutableStateOf(false) }
+    LaunchedEffect(authState.isLoggedIn, authState.mustChangePin, currentRoute) {
+        if (!setupChecked && authState.isLoggedIn && !authState.mustChangePin && currentRoute == Routes.DASHBOARD) {
+            setupChecked = true
+            if (setupVm.shouldShow(authState.currentUser?.role == UserRole.OWNER))
+                navController.navigate(Routes.SETUP) { launchSingleTop = true }
+        }
+    }
+
     Scaffold(
         containerColor = NavBg,
         bottomBar = {
@@ -236,6 +250,8 @@ fun MiniMartNavGraph(
                         onNavigateToLabels       = { navController.navigate(Routes.LABELS) { launchSingleTop = true } },
                         onNavigateToCustomerDisplay = { navController.navigate(Routes.CUSTOMER_DISPLAY) { launchSingleTop = true } },
                         onNavigateToActivityLog  = { navController.navigate(Routes.ACTIVITY_LOG) { launchSingleTop = true } },
+                        onNavigateToToday        = { navController.navigate(Routes.TODAY) { launchSingleTop = true } },
+                        onNavigateToHealth       = { navController.navigate(Routes.HEALTH) { launchSingleTop = true } },
                         currentRole              = authState.currentUser?.role,
                         currentUserName          = authState.currentUser?.displayName,
                         settingsRepo             = settingsRepo
@@ -297,6 +313,36 @@ fun MiniMartNavGraph(
                         hasAccess = RoleManager.canManageUsers(authState.currentUser?.role),
                         onBack = guardBack
                     ) { ActivityLogScreen(onBack = { navController.popBackStack() }) }
+                }
+                composable(Routes.TODAY) {
+                    AccessGuard(
+                        hasAccess = RoleManager.canViewReports(authState.currentUser?.role),
+                        onBack = guardBack
+                    ) {
+                        TodayScreen(
+                            onBack = { navController.popBackStack() },
+                            onOpenHealth = { navController.navigate(Routes.HEALTH) { launchSingleTop = true } },
+                            onOpenShifts = { navController.navigate(Routes.SHIFTS) { launchSingleTop = true } }
+                        )
+                    }
+                }
+                composable(Routes.HEALTH) {
+                    AccessGuard(
+                        hasAccess = RoleManager.canAccessSettings(authState.currentUser?.role),
+                        onBack = guardBack
+                    ) {
+                        StoreHealthScreen(
+                            onBack = { navController.popBackStack() },
+                            onAction = { a -> healthTarget(a)?.let { r -> navController.navigate(r) { launchSingleTop = true } } }
+                        )
+                    }
+                }
+                composable(Routes.SETUP) {
+                    SetupWizardScreen(onFinished = { openProducts ->
+                        navController.navigate(if (openProducts) Routes.PRODUCTS else Routes.DASHBOARD) {
+                            popUpTo(Routes.SETUP) { inclusive = true }
+                        }
+                    })
                 }
                 composable(Routes.CUSTOMER_DISPLAY) {
                     CustomerDisplayScreen(onExit = { navController.popBackStack() })
@@ -378,7 +424,13 @@ fun MiniMartNavGraph(
                         onBack = guardBack
                     ) { UserManagementScreen(onBack = { navController.popBackStack() }) }
                 }
-                composable(Routes.SHIFTS)    { ShiftScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.SHIFTS)    {
+                    ShiftScreen(
+                        onBack = { navController.popBackStack() },
+                        canEndDay = RoleManager.canManageShifts(authState.currentUser?.role),
+                        onEndOfDayAction = { a -> healthTarget(a)?.let { r -> navController.navigate(r) { launchSingleTop = true } } }
+                    )
+                }
 
                 composable(Routes.SETTINGS) {
                     AccessGuard(
@@ -509,4 +561,15 @@ private fun AccessGuard(
         // Bounce back and show snackbar (handled by caller)
         LaunchedEffect(Unit) { onBack() }
     }
+}
+
+/** Where a "fix it" button from Store health or End of day should take the user; null = handled in place. */
+private fun healthTarget(a: com.minimart.pos.util.HealthAction): String? = when (a) {
+    com.minimart.pos.util.HealthAction.BACKUP, com.minimart.pos.util.HealthAction.SYNC,
+    com.minimart.pos.util.HealthAction.SETTINGS -> Routes.SETTINGS
+    com.minimart.pos.util.HealthAction.MPESA -> Routes.MPESA
+    com.minimart.pos.util.HealthAction.LOW_STOCK -> Routes.LOW_STOCK
+    com.minimart.pos.util.HealthAction.SHIFTS -> Routes.SHIFTS
+    com.minimart.pos.util.HealthAction.USERS -> Routes.USERS
+    com.minimart.pos.util.HealthAction.DATA_CHECK, com.minimart.pos.util.HealthAction.NONE -> null
 }

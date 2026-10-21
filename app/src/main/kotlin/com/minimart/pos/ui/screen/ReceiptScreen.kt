@@ -225,7 +225,7 @@ fun ReceiptScreen(
                                 val data = receiptData() ?: return@launch
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                                 statusMsg = "✓ PDF: ${file.name}"
-                            } catch (e: Exception) { statusMsg = "PDF error: ${e.message}" }
+                            } catch (e: Exception) { statusMsg = "The PDF could not be made. " + com.minimart.pos.util.ErrorAdvice.reason(e) }
                             finally { isGeneratingPdf = false }
                         }
                     }
@@ -236,7 +236,7 @@ fun ReceiptScreen(
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                                 val uri = PdfReceiptGenerator.getShareUri(context, file)
                                 PdfReceiptGenerator.shareViaWhatsApp(context, uri, storeName, money(sale?.totalAmount ?: 0.0))
-                            } catch (e: Exception) { statusMsg = "Share error: ${e.message}" }
+                            } catch (e: Exception) { statusMsg = "Sharing did not work. " + com.minimart.pos.util.ErrorAdvice.reason(e) }
                         }
                     }
                     ReceiptActionBtn(Modifier.weight(1f), Icons.Default.IosShare, "Share", DT.Teal) {
@@ -245,7 +245,7 @@ fun ReceiptScreen(
                                 val data = receiptData() ?: return@launch
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                                 PdfReceiptGenerator.shareGeneric(context, PdfReceiptGenerator.getShareUri(context, file))
-                            } catch (e: Exception) { statusMsg = "Error: ${e.message}" }
+                            } catch (e: Exception) { statusMsg = com.minimart.pos.util.ErrorAdvice.explain(e, "That") }
                         }
                     }
                 }

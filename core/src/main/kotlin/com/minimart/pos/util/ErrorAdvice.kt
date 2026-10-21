@@ -33,7 +33,7 @@ object ErrorAdvice {
                 "Could not reach the other device or the internet. Check the Wi-Fi or mobile data and try again."
             has("SocketTimeout") || has("TimeoutException") ->
                 "It took too long to answer. Check the connection and try again."
-            has("SSL") || has("Certificate") ->
+            has("javax.net.ssl") || has("CertificateException") ->
                 "A secure connection could not be set up. Check the phone's date and time are correct, then try again."
             has("SecurityException") ->
                 "The app doesn't have permission for this. Allow it in the phone's Settings > Apps > MiniMart POS > Permissions."

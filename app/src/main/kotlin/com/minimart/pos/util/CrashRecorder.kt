@@ -59,6 +59,11 @@ object CrashRecorder {
             ?.filter { timestampOf(it) > seen }?.maxByOrNull { timestampOf(it) }
     }
 
+    /** Reports recorded in the last [days] days. */
+    fun recentCount(context: Context, days: Int = 7, now: Long = System.currentTimeMillis()): Int =
+        File(context.filesDir, DIR).listFiles { f -> f.name.startsWith("crash_") }
+            ?.count { timestampOf(it) >= now - days * 24L * 60 * 60 * 1000 } ?: 0
+
     fun markSeen(context: Context, report: File) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putLong(KEY_SEEN, timestampOf(report)).apply()
     }

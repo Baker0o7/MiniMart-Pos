@@ -63,6 +63,7 @@ fun MpesaPaymentsScreen(
     val strict by vm.strict.collectAsStateWithLifecycle()
     val totals by vm.totals.collectAsStateWithLifecycle()
     val check by vm.check.collectAsStateWithLifecycle()
+    val recon by vm.reconciliation.collectAsStateWithLifecycle()
 
     fun hasPermission() = ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED
     var permitted by remember { mutableStateOf(hasPermission()) }
@@ -166,6 +167,7 @@ fun MpesaPaymentsScreen(
                             }
                         }
                     }
+                    item { ReconciliationCard(recon, currency, period.label) }
                     if (payments.isEmpty()) {
                         item {
                             Column(Modifier.fillMaxWidth().padding(vertical = 28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -183,6 +185,74 @@ fun MpesaPaymentsScreen(
         }
     }
 }
+
+/** Does the money that arrived match the sales that say they were paid by M-Pesa? */
+@Composable
+private fun ReconciliationCard(recon: com.minimart.pos.util.MpesaReconciliation?, currency: String, periodLabel: String) {
+    if (recon == null) return
+    val ok = !recon.needsAttention
+    val tone = if (ok) DT.Green else DT.Amber
+    var open by remember { mutableStateOf(false) }
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(DT.Surface)
+            .border(1.dp, tone.copy(0.6f), RoundedCornerShape(18.dp)).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(if (ok) Icons.Default.CheckCircle else Icons.Default.WarningAmber, null, tint = tone, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Reconciliation · $periodLabel", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text(
+                    if (ok) "${recon.matched.size} sale(s) matched to a payment. Nothing to fix."
+                    else "${recon.problemCount} thing(s) to check",
+                    color = tone, fontSize = 12.sp, fontWeight = FontWeight.SemiBold
+                )
+            }
+            if (!ok) TextButton(onClick = { open = !open }) { Text(if (open) "Hide" else "Show", color = DT.Teal) }
+        }
+        if (!ok && open) {
+            if (recon.unclaimedPayments.isNotEmpty()) {
+                ReconSection("Money received, no sale (${mpesaMoney(currency, recon.unclaimedTotal)})",
+                    "A customer paid but was not rung up, or the code was typed wrongly on a sale.")
+                recon.unclaimedPayments.take(8).forEach {
+                    ReconLine("${it.code} · ${it.sender.ifBlank { "unknown" }}", mpesaMoney(currency, it.amount))
+                }
+                if (recon.unclaimedPayments.size > 8) ReconNote("+${recon.unclaimedPayments.size - 8} more")
+            }
+            if (recon.unverifiedSales.isNotEmpty()) {
+                ReconSection("Sales with no payment message (${mpesaMoney(currency, recon.unverifiedTotal)})",
+                    "No message from M-Pesa was received for these codes on this phone. Check your M-Pesa balance before trusting them.")
+                recon.unverifiedSales.take(8).forEach { ReconLine("${it.receipt} · ${it.code}", mpesaMoney(currency, it.saleTotal)) }
+                if (recon.unverifiedSales.size > 8) ReconNote("+${recon.unverifiedSales.size - 8} more")
+            }
+            if (recon.mismatches.isNotEmpty()) {
+                ReconSection("Amount does not match", "The payment and the sale total differ.")
+                recon.mismatches.take(8).forEach {
+                    ReconLine("${it.sale.receipt} · sale ${mpesaMoney(currency, it.sale.saleTotal)}",
+                        "paid ${mpesaMoney(currency, it.payment.amount)}")
+                }
+            }
+            if (recon.reusedCodes.isNotEmpty()) {
+                ReconSection("Same code on several sales", "One payment can only cover one sale.")
+                recon.reusedCodes.forEach { (code, list) -> ReconLine(code, list.joinToString(", ") { it.receipt }) }
+            }
+        }
+    }
+}
+
+@Composable private fun ReconSection(title: String, hint: String) {
+    Spacer(Modifier.height(4.dp))
+    Text(title, color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+    Text(hint, color = DT.SubText, fontSize = 11.sp)
+}
+@Composable private fun ReconLine(left: String, right: String) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+        Text(left, color = DT.OnSurface, fontSize = 12.sp, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(right, color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+@Composable private fun ReconNote(text: String) = Text(text, color = DT.SubText, fontSize = 11.sp)
 
 @Composable
 private fun VerifyCard(check: MpesaCheck?, currency: String, onVerify: (String) -> Unit, onClear: () -> Unit) {

@@ -132,7 +132,7 @@ class CartViewModel @Inject constructor(
             // A lookup that threw used to leave isLoading stuck at true, and checkout() refuses to
             // run while isLoading is set — the till then looked frozen until the app was restarted.
             try { lookupBarcode(barcode) } catch (e: kotlinx.coroutines.CancellationException) { throw e }
-            catch (e: Exception) { _uiState.update { it.copy(isLoading = false, error = "Scan failed: ${e.message}") } }
+            catch (e: Exception) { _uiState.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Scan")) } }
         }
     }
 
@@ -194,7 +194,7 @@ class CartViewModel @Inject constructor(
                     else if (saved.stock > 0) { addToCart(saved); _uiState.update { it.copy(lastScannedProduct = saved) } }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(unknownBarcode = null, error = "Could not save product: ${e.message}") }
+                _uiState.update { it.copy(unknownBarcode = null, error = "Could not save product. " + com.minimart.pos.util.ErrorAdvice.reason(e)) }
             }
         }
     }
@@ -360,7 +360,7 @@ class CartViewModel @Inject constructor(
                 _uiState.update { CartUiState() }
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (e: Exception) {
-                _uiState.update { it.copy(error = "Couldn't hold the sale: ${e.message}") }
+                _uiState.update { it.copy(error = "Couldn't hold the sale. " + com.minimart.pos.util.ErrorAdvice.reason(e)) }
             }
         }
     }
@@ -401,7 +401,7 @@ class CartViewModel @Inject constructor(
                 }
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (e: Exception) {
-                _uiState.update { it.copy(error = "Couldn't resume the sale: ${e.message}") }
+                _uiState.update { it.copy(error = "Couldn't resume the sale. " + com.minimart.pos.util.ErrorAdvice.reason(e)) }
             }
         }
     }
@@ -504,8 +504,8 @@ class CartViewModel @Inject constructor(
                     detail = "Receipt #${sale.receiptNumber} • KES ${String.format(java.util.Locale.US, "%.2f", sale.totalAmount)} • ${sale.paymentMethod.name}") }
                 _checkoutResult.emit(CheckoutResult.Success(saleId, sale.changeGiven))
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Checkout failed: ${e.message}") }
-                _checkoutResult.emit(CheckoutResult.Error(e.message ?: "Unknown error"))
+                _uiState.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Checkout")) }
+                _checkoutResult.emit(CheckoutResult.Error(com.minimart.pos.util.ErrorAdvice.reason(e)))
             }
         }
     }
@@ -581,8 +581,8 @@ class CartViewModel @Inject constructor(
                 // an invalid customer ID) would silently reset isLoading with zero
                 // feedback to the cashier — the screen just sat there looking like
                 // nothing happened.
-                _uiState.update { it.copy(isLoading = false, error = e.localizedMessage) }
-                _checkoutResult.emit(CheckoutResult.Error(e.localizedMessage ?: "Split checkout failed"))
+                _uiState.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.reason(e)) }
+                _checkoutResult.emit(CheckoutResult.Error(com.minimart.pos.util.ErrorAdvice.reason(e)))
             }
         }
     }

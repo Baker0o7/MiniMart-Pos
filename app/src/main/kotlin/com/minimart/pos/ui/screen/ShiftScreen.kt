@@ -38,8 +38,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun ShiftScreen(
     onBack: () -> Unit,
+    canEndDay: Boolean = false,
+    onEndOfDayAction: (com.minimart.pos.util.HealthAction) -> Unit = {},
     vm: ShiftViewModel = hiltViewModel()
 ) {
+    var showEndOfDay by remember { mutableStateOf(false) }
     val state by vm.uiState.collectAsStateWithLifecycle()
     var showClockInDialog by remember { mutableStateOf(false) }
     var showClockOutDialog by remember { mutableStateOf(false) }
@@ -103,6 +106,20 @@ fun ShiftScreen(
                 }
             }
 
+            if (canEndDay) {
+                item {
+                    OutlinedButton(
+                        onClick = { showEndOfDay = true },
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.NightsStay, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("End of day checklist", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+
             // Feedback
             if (state.successMessage != null || state.error != null) {
                 item { FeedbackBanner(state.error ?: state.successMessage, isError = state.error != null) }
@@ -117,6 +134,8 @@ fun ShiftScreen(
             }
         }
     }
+
+    if (showEndOfDay) EndOfDayDialog(onDismiss = { showEndOfDay = false }, onAction = onEndOfDayAction)
 
     if (showClockInDialog) {
         ClockInDialog(

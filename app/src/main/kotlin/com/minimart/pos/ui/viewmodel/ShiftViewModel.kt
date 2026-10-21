@@ -94,7 +94,7 @@ class ShiftViewModel @Inject constructor(
                     detail = "Opening float ${String.format(java.util.Locale.US, "%.2f", openingFloat)}") }
                 _uiState.update { it.copy(isLoading = false, activeShift = shift, successMessage = "Shift started! Good luck ${user.displayName} 👋") }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Clock-in failed: ${e.message}") }
+                _uiState.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Clock-in")) }
             }
         }
     }
@@ -117,7 +117,7 @@ class ShiftViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false, activeShift = null, lastClosedShift = closed, successMessage = "Shift ended") }
                 if (cloudConfig.isConfigured) launch { runCatching { cloud.push() } }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Clock-out failed: ${e.message}") }
+                _uiState.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Clock-out")) }
             }
         }
     }

@@ -97,6 +97,9 @@ class SaleRepository @Inject constructor(
      * sale, and (when the SMS tracker has seen that payment) was for at least this amount.
      */
     suspend fun mpesaRefUseCount(ref: String): Int = saleDao.countCompletedWithMpesaRef(ref.trim())
+    suspend fun mpesaSalesBetween(start: Long, end: Long): List<Sale> = saleDao.mpesaSalesBetween(start, end)
+    suspend fun saleCount(): Int = saleDao.saleCount()
+    suspend fun profitBetween(start: Long, end: Long): Double = saleDao.profitBetween(start, end)
     fun claimedMpesaRefs(): kotlinx.coroutines.flow.Flow<List<String>> = saleDao.claimedMpesaRefs()
 
     private suspend fun checkPayment(sale: Sale, items: List<SaleItem>, hasCustomer: Boolean, creditAmount: Double) {

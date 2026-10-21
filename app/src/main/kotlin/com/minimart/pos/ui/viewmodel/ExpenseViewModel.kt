@@ -108,7 +108,7 @@ class ExpenseViewModel @Inject constructor(
                     else "Expense recorded")
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Failed: ${e.message}") }
+                _uiState.update { it.copy(error = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
             }
         }
     }
@@ -119,7 +119,7 @@ class ExpenseViewModel @Inject constructor(
                 expenseRepo.delete(expense)
                 _uiState.update { it.copy(successMessage = "Expense deleted") }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = "Failed: ${e.message}") }
+                _uiState.update { it.copy(error = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
             }
         }
     }

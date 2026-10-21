@@ -13,5 +13,6 @@ class MpesaPaymentRepository @Inject constructor(private val dao: MpesaPaymentDa
     fun getByRange(start: Long, end: Long): Flow<List<MpesaPayment>> = dao.getByRange(start, end)
     fun totalSince(start: Long): Flow<Double> = dao.totalSince(start)
     fun countSince(start: Long): Flow<Int> = dao.countSince(start)
+    suspend fun between(start: Long, end: Long): List<MpesaPayment> = dao.between(start, end)
     suspend fun findByCode(code: String): MpesaPayment? = dao.findByCode(code.trim())
 }

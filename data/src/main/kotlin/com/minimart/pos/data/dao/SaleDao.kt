@@ -138,6 +138,24 @@ interface SaleDao {
     @Query("UPDATE sales SET status = 'VOIDED', notes = CASE WHEN notes = '' THEN :reason ELSE notes || ' | ' || :reason END WHERE id = :saleId AND status = 'COMPLETED'")
     suspend fun voidSale(saleId: Long, reason: String): Int
 
+    /** Completed sales that carry an M-Pesa code, for matching against the messages this phone received. */
+    @Query("""
+        SELECT * FROM sales WHERE status = 'COMPLETED' AND mpesaRef IS NOT NULL AND mpesaRef != ''
+        AND createdAt >= :startMs AND createdAt < :endMs ORDER BY createdAt DESC
+    """)
+    suspend fun mpesaSalesBetween(startMs: Long, endMs: Long): List<Sale>
+
+    @Query("SELECT COUNT(*) FROM sales")
+    suspend fun saleCount(): Int
+
+    /** Profit on lines whose cost is known (sales made before batch costing have none). */
+    @Query("""
+        SELECT COALESCE(SUM(si.lineTotal - si.costTotal), 0.0) FROM sale_items si
+        JOIN sales s ON s.id = si.saleId
+        WHERE s.status = 'COMPLETED' AND s.createdAt >= :startMs AND s.createdAt < :endMs AND si.costTotal > 0
+    """)
+    suspend fun profitBetween(startMs: Long, endMs: Long): Double
+
     /** How many live (not refunded/voided) sales already claim this M-Pesa reference. */
     @Query("SELECT UPPER(mpesaRef) FROM sales WHERE mpesaRef IS NOT NULL AND mpesaRef != '' AND status = 'COMPLETED'")
     fun claimedMpesaRefs(): kotlinx.coroutines.flow.Flow<List<String>>

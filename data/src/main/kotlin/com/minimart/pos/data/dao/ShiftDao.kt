@@ -11,6 +11,9 @@ interface ShiftDao {
     @Query("SELECT * FROM shifts WHERE cashierId = :cashierId AND status = 'OPEN' LIMIT 1")
     suspend fun getOpenShift(cashierId: Long): Shift?
 
+    @Query("SELECT * FROM shifts WHERE status = 'OPEN' ORDER BY clockIn ASC")
+    suspend fun getAllOpen(): List<Shift>
+
     @Query("SELECT * FROM shifts ORDER BY clockIn DESC")
     fun getAllShifts(): Flow<List<Shift>>
 
