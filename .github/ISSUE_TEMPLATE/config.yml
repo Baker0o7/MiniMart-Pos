@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security problem
+    url: https://github.com/Baker0o7/MiniMart-Pos/security/policy
+    about: Please report vulnerabilities privately, following SECURITY.md.

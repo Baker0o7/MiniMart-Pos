@@ -5,6 +5,11 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.18.1] - 2026-10-22
+
+- **About & support:** a new section in Settings shows the version and licence, links to the project page, and has a **Copy support info** button that copies the app version, phone model and a few health facts (never sales, customers or keys) so problems are easy to report.
+- **Project polish:** issue and pull-request templates, and monthly dependency update checks, for people helping with the code.
+
 ## [1.18.0] - 2026-10-22
 
 - **Hardware check:** a new screen (open it from Store health) tests the receipt printer and cash drawer with one tap and checks Bluetooth, camera, M-Pesa SMS permission, alerts, network, storage and battery, saying in plain words what to fix.

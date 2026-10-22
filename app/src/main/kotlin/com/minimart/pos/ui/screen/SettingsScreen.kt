@@ -842,6 +842,12 @@ fun SettingsScreen(
                     }
                 }
 
+                run {
+                    val cloudState by cloudVm.state.collectAsStateWithLifecycle()
+                    val syncOn by settingsRepo.syncServerEnabled.collectAsStateWithLifecycle(false)
+                    AboutSettingsSection(syncOn = syncOn, cloudOn = cloudState.connected)
+                }
+
                 // ── Account ───────────────────────────────────────────────────
                 DSection("Account", Icons.Default.ManageAccounts) {
                     if (rm.canManageUsers(currentRole)) {

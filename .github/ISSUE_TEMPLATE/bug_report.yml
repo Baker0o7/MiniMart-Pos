@@ -1,0 +1,24 @@
+name: Bug report
+description: Something in MiniMart POS does not work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping. **Do not paste customer details, phone numbers, PINs or keys.**
+        Found a security problem? Please follow SECURITY.md instead of opening an issue.
+  - type: textarea
+    id: what
+    attributes: { label: What happened?, description: What did you expect instead? }
+    validations: { required: true }
+  - type: textarea
+    id: steps
+    attributes: { label: Steps to reproduce, placeholder: "1. Open ...\n2. Tap ...\n3. See ..." }
+  - type: textarea
+    id: info
+    attributes:
+      label: Support info
+      description: In the app, Settings -> About & support -> Copy support info, then paste it here.
+  - type: input
+    id: printer
+    attributes: { label: Printer or scanner model (if it matters) }
