@@ -131,6 +131,10 @@ class MainActivity : ComponentActivity() {
             // Only when the saved choice changes: a plain SideEffect re-applied the old value on every
             // recomposition and could undo a pick before it had been saved.
             androidx.compose.runtime.LaunchedEffect(accentName) { com.minimart.pos.ui.theme.DT.accent = com.minimart.pos.ui.theme.AppAccent.fromName(accentName) }
+            val amoled by settingsRepo.amoled.collectAsState(initial = com.minimart.pos.ui.theme.DT.amoled)
+            val highContrast by settingsRepo.highContrast.collectAsState(initial = com.minimart.pos.ui.theme.DT.highContrast)
+            androidx.compose.runtime.LaunchedEffect(amoled) { com.minimart.pos.ui.theme.DT.amoled = amoled }
+            androidx.compose.runtime.LaunchedEffect(highContrast) { com.minimart.pos.ui.theme.DT.highContrast = highContrast }
             MiniMartTheme(darkTheme = darkMode) {
                 // On a wide screen the phone-style layout would stretch across the whole width; keep it
                 // to a comfortable column in the middle instead.

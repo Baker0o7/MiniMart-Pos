@@ -28,17 +28,45 @@ class PaletteTest {
     @Test fun tealIsTheOriginalPalette() {
         val p = AppAccent.TEAL.palette
         assertEquals(Color(0xFF0A1A18), p.bg); assertEquals(Color(0xFF112420), p.surface)
-        assertEquals(Color(0xFF00897B), p.accent); assertEquals(Color(0xFFE0F2F1), p.onSurface)
+        assertEquals(Color(0xFF008376), p.accent); assertEquals(Color(0xFFE0F2F1), p.onSurface)
     }
 
-    @Test fun everyAccentIsReadable() {
+    private val modes = listOf(false to false, true to false, false to true, true to true)
+
+    @Test fun everyAccentIsReadableInEveryMode() {
+        AppAccent.entries.forEach { a -> modes.forEach { (amoled, hc) ->
+            val p = a.palette.adapt(amoled, hc)
+            val m = "${a.name} amoled=$amoled highContrast=$hc"
+            assertTrue("$m text on surface", contrast(p.onSurface, p.surface) >= 7f)
+            assertTrue("$m text on bg", contrast(p.onSurface, p.bg) >= 7f)
+            assertTrue("$m secondary text on surface", contrast(p.subText, p.surface) >= 4.5f)
+            assertTrue("$m secondary text on raised surface", contrast(p.subText, p.surface2) >= 4.5f)
+            assertTrue("$m secondary text on bg", contrast(p.subText, p.bg) >= 4.5f)
+            assertTrue("$m white on accent buttons", contrast(Color.White, p.accent) >= 4.5f)
+            assertTrue("$m accent text on bg", contrast(p.accentLight, p.bg) >= 4.5f)
+            assertTrue("$m accent text on surface", contrast(p.accentLight, p.surface) >= 4.5f)
+            assertTrue("$m nav icons on bar", contrast(p.navUnsel, p.navBg) >= 3f)
+            assertTrue("$m nav icons on raised bar", contrast(p.navUnsel, p.navSurface) >= 3f)
+        } }
+    }
+
+    @Test fun deepBlackIsDarkerAndHighContrastIsBrighter() {
         AppAccent.entries.forEach { a ->
-            val p = a.palette
-            assertTrue("${a.name} text on surface", contrast(p.onSurface, p.surface) >= 7f)
-            assertTrue("${a.name} secondary text on surface", contrast(p.subText, p.surface) >= 4.5f)
-            assertTrue("${a.name} white on accent buttons", contrast(Color.White, p.accent) >= 3f)
-            assertTrue("${a.name} accent text on bg", contrast(p.accentLight, p.bg) >= 4.5f)
+            val base = a.palette; val black = base.adapt(true, false); val hc = base.adapt(false, true)
+            assertTrue(black.bg.luminance() < base.bg.luminance())
+            assertTrue(black.surface.luminance() < base.surface.luminance())
+            assertTrue(contrast(hc.subText, hc.surface) > contrast(base.subText, base.surface))
+            assertEquals(Color.White, hc.onSurface)
+            assertEquals(base.accent, black.accent)   // the accent itself is never touched
         }
+    }
+
+    @Test fun noOptionsLeavesThePaletteUntouched() {
+        AppAccent.entries.forEach { assertEquals(it.palette, it.palette.adapt(false, false)) }
+    }
+
+    @Test fun accentsAreDistinct() {
+        assertEquals(AppAccent.entries.size, AppAccent.entries.map { it.palette.accent }.toSet().size)
     }
 
     @Test fun unknownNameFallsBackToTeal() {

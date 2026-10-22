@@ -35,6 +35,8 @@ class SettingsRepository @Inject constructor(
         val KEY_SYNC_SERVER = booleanPreferencesKey("sync_server_enabled")
         val KEY_HELD_CARTS = stringPreferencesKey("held_carts")
         val KEY_ACCENT = stringPreferencesKey("accent")
+        val KEY_AMOLED = booleanPreferencesKey("theme_amoled")
+        val KEY_HIGH_CONTRAST = booleanPreferencesKey("theme_high_contrast")
         val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
         val KEY_PRINTER_NAME     = stringPreferencesKey("printer_name")
         val KEY_PAPER_WIDTH_MM   = intPreferencesKey("paper_width_mm")
@@ -112,6 +114,12 @@ class SettingsRepository @Inject constructor(
     /** Name of the chosen accent colour (TEAL, BLUE, …); the app maps it to a palette. */
     val accent: Flow<String> = context.dataStore.data.map { it[KEY_ACCENT] ?: "TEAL" }
     suspend fun setAccent(name: String) = context.dataStore.edit { it[KEY_ACCENT] = name }
+
+    /** "Deep black" backgrounds and the high-contrast option (see Palette.adapt in the app module). */
+    val amoled: Flow<Boolean> = context.dataStore.data.map { it[KEY_AMOLED] ?: false }
+    suspend fun setAmoled(on: Boolean) = context.dataStore.edit { it[KEY_AMOLED] = on }
+    val highContrast: Flow<Boolean> = context.dataStore.data.map { it[KEY_HIGH_CONTRAST] ?: false }
+    suspend fun setHighContrast(on: Boolean) = context.dataStore.edit { it[KEY_HIGH_CONTRAST] = on }
     /** Whether this phone is meant to be the main device; the app restarts the sync server on launch if so. */
     val syncServerEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_SYNC_SERVER] ?: false }
     suspend fun setSyncServerEnabled(v: Boolean) = context.dataStore.edit { it[KEY_SYNC_SERVER] = v }

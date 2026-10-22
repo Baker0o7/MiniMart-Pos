@@ -45,15 +45,15 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /** Accent colour picker. */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 internal fun AppearanceSettingsSection(settingsRepo: SettingsRepository) {
     val scope = rememberCoroutineScope()
     DSection("Appearance", Icons.Default.Palette, summary = com.minimart.pos.ui.theme.DT.accent.label) {
-        Text("The whole app is dark. Pick the colour used for buttons, headers and highlights.",
+        Text("The app is always dark. Pick the colour used for buttons, headers and highlights, then the display options below.",
             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             com.minimart.pos.ui.theme.AppAccent.entries.forEach { a ->
                 val picked = com.minimart.pos.ui.theme.DT.accent == a
                 Box(
@@ -70,5 +70,22 @@ internal fun AppearanceSettingsSection(settingsRepo: SettingsRepository) {
                 ) { if (picked) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(22.dp)) }
             }
         }
+        Spacer(Modifier.height(14.dp))
+        ThemeSwitch("Deep black", "Near-black backgrounds. Easier on the eyes at night and saves battery on OLED screens.",
+            DT.amoled) { on -> DT.amoled = on; scope.launch { settingsRepo.setAmoled(on) } }
+        ThemeSwitch("High contrast", "Whiter text, brighter secondary text and stronger borders.",
+            DT.highContrast) { on -> DT.highContrast = on; scope.launch { settingsRepo.setHighContrast(on) } }
+    }
+}
+
+@Composable
+private fun ThemeSwitch(title: String, hint: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+            Text(hint, color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+        }
+        Spacer(Modifier.width(12.dp))
+        Switch(checked = checked, onCheckedChange = onChange)
     }
 }

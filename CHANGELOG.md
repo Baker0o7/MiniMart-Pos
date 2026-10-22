@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.17.1] - 2026-10-22
+
+- **Theme improvements:** two new accent colours (Green and Graphite); a **Deep black** option for near-black backgrounds that saves battery on OLED screens; a **High contrast** option with whiter text and stronger borders; the Teal, Blue and Orange accents are slightly deeper so white button text is easy to read; unselected bottom-bar icons are brighter; and a test now checks text, button and icon contrast for every colour and option combination. The app is still dark only.
+
 ## [1.17.0] - 2026-10-21
 
 - **Store health, Today, setup and end of day:** a **Store health** screen checks your records, backups, sync, storage, security and stock and says what to fix; an owner **Today** screen shows takings, profit, how customers paid, the busiest hour and how it compares with the same time last week; **M-Pesa reconciliation** lists payments with no sale, sales with no payment message, wrong amounts and reused codes; a first-launch **setup wizard** helps a new shop name itself and pick its printer; an **End of day checklist** (in Shifts) blocks closing while a shift is open and walks you through held sales, M-Pesa, sync, expenses, restock and a backup; failures now say what happened and what to do; and a whole-shop test suite checks stock, cost, credit, voids and M-Pesa together.
