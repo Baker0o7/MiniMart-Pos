@@ -179,7 +179,7 @@ fun CheckoutScreen(
             // ── Top bar ───────────────────────────────────────────────────────
             GradientHeader(
                 title = "Checkout",
-                subtitle = "${state.itemCount} item${if (state.itemCount != 1) "s" else ""}  •  $currency ${String.format(java.util.Locale.US, "%.2f", state.total)}",
+                subtitle = "${state.itemCount} item${if (state.itemCount != 1) "s" else ""}  •  $currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}",
                 onBack = onBack
             )
 
@@ -212,13 +212,13 @@ fun CheckoutScreen(
                             Column(Modifier.weight(1f)) {
                                 Text(item.product.name, color = Color.White, fontWeight = FontWeight.SemiBold,
                                     fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text("$currency ${String.format(java.util.Locale.US, "%.2f", item.product.price)} × ${item.quantity}",
+                                Text("$currency ${String.format(java.util.Locale.US, "%,.2f", item.product.price)} × ${item.quantity}",
                                     color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Box(Modifier.clip(RoundedCornerShape(10.dp)).background(DT.Teal.copy(0.12f))
                                 .border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(10.dp))
                                 .padding(horizontal = 10.dp, vertical = 5.dp)) {
-                                Text("$currency ${String.format(java.util.Locale.US, "%.2f", item.lineTotal)}",
+                                Text("$currency ${String.format(java.util.Locale.US, "%,.2f", item.lineTotal)}",
                                     color = DT.TealLight, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                             }
                         }
@@ -227,10 +227,10 @@ fun CheckoutScreen(
                     HorizontalDivider(color = DT.Border)
                     Spacer(Modifier.height(10.dp))
                     if (state.totalTax > 0) {
-                        SummaryLine("VAT (incl.)", "$currency ${String.format(java.util.Locale.US, "%.2f", state.totalTax)}", DT.SubText)
+                        SummaryLine("VAT (incl.)", "$currency ${String.format(java.util.Locale.US, "%,.2f", state.totalTax)}", DT.SubText)
                     }
                     if (state.totalDiscount > 0) {
-                        SummaryLine("Discount", "- $currency ${String.format(java.util.Locale.US, "%.2f", state.totalDiscount)}", DT.Amber, bold = true)
+                        SummaryLine("Discount", "- $currency ${String.format(java.util.Locale.US, "%,.2f", state.totalDiscount)}", DT.Amber, bold = true)
                     }
                     // Change pill (cash only)
                     AnimatedVisibility(visible = selectedMethod == PaymentMethod.CASH && cashAmount >= state.total && state.total > 0) {
@@ -247,7 +247,7 @@ fun CheckoutScreen(
                                 AnimatedContent(targetState = change, transitionSpec = {
                                     slideInVertically { -it } togetherWith slideOutVertically { it }
                                 }, label = "change") { ch ->
-                                    Text("$currency ${String.format(java.util.Locale.US, "%.2f", ch)}", color = DT.Green,
+                                    Text("$currency ${String.format(java.util.Locale.US, "%,.2f", ch)}", color = DT.Green,
                                         fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
                                 }
                             }
@@ -259,7 +259,7 @@ fun CheckoutScreen(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically) {
                         Text("TOTAL", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, letterSpacing = 1.sp)
-                        Text("$currency ${String.format(java.util.Locale.US, "%.2f", state.total)}", color = DT.Teal,
+                        Text("$currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}", color = DT.Teal,
                             fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
                     }
                 }
@@ -320,7 +320,7 @@ fun CheckoutScreen(
                         Text(selectedCustomer?.name ?: "", color = Color.White, fontWeight = FontWeight.SemiBold,
                             fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(listOfNotNull(selectedCustomer?.phone?.takeIf { it.isNotBlank() },
-                            "Credit: $currency ${String.format(java.util.Locale.US, "%.2f", creditBalance)}").joinToString("  •  "),
+                            "Credit: $currency ${String.format(java.util.Locale.US, "%,.2f", creditBalance)}").joinToString("  •  "),
                             color = DT.SubText, fontSize = 11.sp)
                     }
                     IconButton(onClick = {
@@ -382,7 +382,7 @@ fun CheckoutScreen(
                                 }
                             }
                             if (cashInput.isNotEmpty() && cashAmount < state.total && state.total > 0) {
-                                Text("Short by $currency ${String.format(java.util.Locale.US, "%.2f", state.total - cashAmount)}",
+                                Text("Short by $currency ${String.format(java.util.Locale.US, "%,.2f", state.total - cashAmount)}",
                                     color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                                     modifier = Modifier.padding(start = 4.dp))
                             }
@@ -504,8 +504,8 @@ fun CheckoutScreen(
                                 if (!stkConfirmed) {
                                     val a = mpesaAssessment
                                     val (msg, col) = when (a.verdict) {
-                                        com.minimart.pos.data.repository.MpesaVerdict.VERIFIED -> "Verified: $currency ${String.format(java.util.Locale.US, "%.2f", a.receivedAmount ?: 0.0)} received with this code" to DT.Green
-                                        com.minimart.pos.data.repository.MpesaVerdict.UNDERPAID -> "This payment was only $currency ${String.format(java.util.Locale.US, "%.2f", a.receivedAmount ?: 0.0)}, less than the amount due" to DT.Red
+                                        com.minimart.pos.data.repository.MpesaVerdict.VERIFIED -> "Verified: $currency ${String.format(java.util.Locale.US, "%,.2f", a.receivedAmount ?: 0.0)} received with this code" to DT.Green
+                                        com.minimart.pos.data.repository.MpesaVerdict.UNDERPAID -> "This payment was only $currency ${String.format(java.util.Locale.US, "%,.2f", a.receivedAmount ?: 0.0)}, less than the amount due" to DT.Red
                                         com.minimart.pos.data.repository.MpesaVerdict.ALREADY_USED -> "This code was already used for another sale" to DT.Red
                                         com.minimart.pos.data.repository.MpesaVerdict.BAD_FORMAT -> "Code looks wrong: letters and digits only, 6–20 characters" to DT.Red
                                         com.minimart.pos.data.repository.MpesaVerdict.NOT_RECEIVED -> "No payment with this code has arrived on this phone yet" to DT.Amber
@@ -526,7 +526,7 @@ fun CheckoutScreen(
                                             Spacer(Modifier.width(8.dp))
                                             Text("Amount due", color = DT.SubText, fontSize = 14.sp)
                                         }
-                                        Text("$currency ${String.format(java.util.Locale.US, "%.2f", state.total)}",
+                                        Text("$currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}",
                                             color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
                                     }
                                 }
@@ -558,10 +558,10 @@ fun CheckoutScreen(
                                         }
                                         HorizontalDivider(color = DT.Border.copy(0.5f))
                                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                            CreditStat("Available", "$currency ${String.format(java.util.Locale.US, "%.2f", creditBalance)}", DT.Teal)
-                                            CreditStat("Order", "$currency ${String.format(java.util.Locale.US, "%.2f", state.total)}", Color.White)
+                                            CreditStat("Available", "$currency ${String.format(java.util.Locale.US, "%,.2f", creditBalance)}", DT.Teal)
+                                            CreditStat("Order", "$currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}", Color.White)
                                             val remaining = creditBalance - state.total
-                                            CreditStat("After", "$currency ${String.format(java.util.Locale.US, "%.2f", remaining)}", if (remaining >= 0) DT.Green else DT.Red)
+                                            CreditStat("After", "$currency ${String.format(java.util.Locale.US, "%,.2f", remaining)}", if (remaining >= 0) DT.Green else DT.Red)
                                         }
                                         // Insufficient warning
                                         if (creditBalance < state.total && !useSplitPayment) {
@@ -571,8 +571,8 @@ fun CheckoutScreen(
                                                 Icon(Icons.Default.Warning, null, tint = DT.Amber, modifier = Modifier.size(16.dp))
                                                 Spacer(Modifier.width(8.dp))
                                                 Column(Modifier.weight(1f)) {
-                                                    Text("${selectedCustomer?.name ?: "Customer"} will owe $currency ${String.format(java.util.Locale.US, "%.2f", state.total - creditBalance)}", color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                                    Text("Purchase on credit — balance goes to -$currency ${String.format(java.util.Locale.US, "%.2f", state.total - creditBalance)}", color = DT.SubText, fontSize = 11.sp)
+                                                    Text("${selectedCustomer?.name ?: "Customer"} will owe $currency ${String.format(java.util.Locale.US, "%,.2f", state.total - creditBalance)}", color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                    Text("Purchase on credit — balance goes to -$currency ${String.format(java.util.Locale.US, "%,.2f", state.total - creditBalance)}", color = DT.SubText, fontSize = 11.sp)
                                                 }
                                             }
                                         }
@@ -598,7 +598,7 @@ fun CheckoutScreen(
                                 AnimatedVisibility(visible = useSplitPayment) {
                                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         OutlinedTextField(value = splitCreditInput, onValueChange = { splitCreditInput = sanitizeMoneyInput(it) },
-                                            label = { Text("Credit Amount (max $currency ${String.format(java.util.Locale.US, "%.2f", creditBalance)})", color = DT.SubText) },
+                                            label = { Text("Credit Amount (max $currency ${String.format(java.util.Locale.US, "%,.2f", creditBalance)})", color = DT.SubText) },
                                             leadingIcon = { Icon(Icons.Default.AccountBalanceWallet, null, tint = DT.Teal) },
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                             singleLine = true, modifier = Modifier.fillMaxWidth(),
@@ -612,16 +612,16 @@ fun CheckoutScreen(
                                                 .background(DT.Teal.copy(0.08f)).border(1.dp, DT.Teal.copy(0.25f), RoundedCornerShape(12.dp))
                                                 .padding(12.dp)) {
                                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                                    CreditStat("Credit used", "$currency ${String.format(java.util.Locale.US, "%.2f", splitCredit)}", DT.Teal)
-                                                    CreditStat("Cash needed", "$currency ${String.format(java.util.Locale.US, "%.2f", splitCashNeeded)}", Color.White)
+                                                    CreditStat("Credit used", "$currency ${String.format(java.util.Locale.US, "%,.2f", splitCredit)}", DT.Teal)
+                                                    CreditStat("Cash needed", "$currency ${String.format(java.util.Locale.US, "%,.2f", splitCashNeeded)}", Color.White)
                                                     val balAfter = creditBalance - splitCredit
-                                                    CreditStat("Credit left", "$currency ${String.format(java.util.Locale.US, "%.2f", balAfter)}", DT.Green)
+                                                    CreditStat("Credit left", "$currency ${String.format(java.util.Locale.US, "%,.2f", balAfter)}", DT.Green)
                                                 }
                                             }
                                         }
                                         // Cash input for split
                                         OutlinedTextField(value = cashInput, onValueChange = { cashInput = sanitizeMoneyInput(it) },
-                                            label = { Text("Cash for remaining $currency ${String.format(java.util.Locale.US, "%.2f", splitCashNeeded)}", color = DT.SubText) },
+                                            label = { Text("Cash for remaining $currency ${String.format(java.util.Locale.US, "%,.2f", splitCashNeeded)}", color = DT.SubText) },
                                             leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                             singleLine = true, modifier = Modifier.fillMaxWidth(),
@@ -950,7 +950,7 @@ private fun CustomerSearchSheet(
                             Column(Modifier.weight(1f)) {
                                 Text(cust.name, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                 if (cust.phone.isNotBlank()) Text(cust.phone, color = DT.SubText, fontSize = 12.sp)
-                                Text("${cust.visitCount} visits  •  $currency ${String.format(java.util.Locale.US, "%.0f", cust.totalPurchases)} total",
+                                Text("${cust.visitCount} visits  •  $currency ${String.format(java.util.Locale.US, "%,.0f", cust.totalPurchases)} total",
                                     color = DT.SubText, fontSize = 10.sp)
                             }
                             Column(horizontalAlignment = Alignment.End) {
@@ -973,8 +973,8 @@ private fun CustomerSearchSheet(
                                     // from "zero" — both showed the same neutral style.
                                     Text(
                                         if (cust.creditBalance < 0)
-                                            "OWES $currency ${String.format(java.util.Locale.US, "%.2f", -cust.creditBalance)}"
-                                        else "$currency ${String.format(java.util.Locale.US, "%.2f", cust.creditBalance)}",
+                                            "OWES $currency ${String.format(java.util.Locale.US, "%,.2f", -cust.creditBalance)}"
+                                        else "$currency ${String.format(java.util.Locale.US, "%,.2f", cust.creditBalance)}",
                                         color = when {
                                             cust.creditBalance > 0 -> DT.Teal
                                             cust.creditBalance < 0 -> DT.Red

@@ -74,9 +74,8 @@ class CashDrawerManager @Inject constructor(
                     if (!context.hasBluetoothConnectPermission()) {
                         return@withContext DrawerResult.Error("Bluetooth permission not granted")
                     }
-                    val adapter = BluetoothAdapter.getDefaultAdapter()
+                    val adapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as? android.bluetooth.BluetoothManager)?.adapter
                         ?: return@withContext DrawerResult.Error("No Bluetooth adapter")
-                    @Suppress("DEPRECATION")
                     val device = adapter.getRemoteDevice(directAddress)
                     val sock: BluetoothSocket = device.createRfcommSocketToServiceRecord(SPP_UUID)
                     adapter.cancelDiscovery()

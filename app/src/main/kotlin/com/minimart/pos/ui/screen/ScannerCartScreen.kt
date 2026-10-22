@@ -169,7 +169,7 @@ fun ScannerCartScreen(
                                 fontWeight = FontWeight.Bold, fontSize = 20.sp)
                             AnimatedContent(
                                 targetState = if (state.itemCount > 0)
-                                    "${state.itemCount} item${if (state.itemCount != 1) "s" else ""}  •  $currency ${String.format(java.util.Locale.US, "%.2f", state.total)}"
+                                    "${state.itemCount} item${if (state.itemCount != 1) "s" else ""}  •  $currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}"
                                 else "Scan or search items",
                                 transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
                                 label = "sub"
@@ -230,7 +230,7 @@ fun ScannerCartScreen(
                                         Text(java.text.SimpleDateFormat("HH:mm", java.util.Locale.US).format(java.util.Date(h.createdAt)) +
                                             "  •  ${h.itemCount} item${if (h.itemCount != 1) "s" else ""}",
                                             color = DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                        Text("$currency ${String.format(java.util.Locale.US, "%.2f", h.total)}", color = DT.SubText, fontSize = 12.sp)
+                                        Text("$currency ${String.format(java.util.Locale.US, "%,.2f", h.total)}", color = DT.SubText, fontSize = 12.sp)
                                     }
                                     IconButton(onClick = { vm.discardHeld(h.id) }) {
                                         Icon(Icons.Default.Delete, "Discard held sale", tint = DT.SubText)
@@ -433,7 +433,7 @@ fun ScannerCartScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text("TOTAL", color = DT.SubText, fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                            Text("$currency ${String.format(java.util.Locale.US, "%.2f", state.total)}",
+                            Text("$currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}",
                                 color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
                         }
                         // Checkout pill button
@@ -569,7 +569,7 @@ private fun CartItemCard(
                         fontSize = 15.sp, modifier = Modifier.weight(1f),
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.width(8.dp))
-                    Text("$currency ${String.format(java.util.Locale.US, "%.2f", item.lineTotal)}",
+                    Text("$currency ${String.format(java.util.Locale.US, "%,.2f", item.lineTotal)}",
                         color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
                 }
                 // Unit price line
@@ -706,7 +706,7 @@ private fun WeightDialog(product: Product, initialKg: Double, currency: String,
                         cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Price", color = DT.SubText, fontSize = 13.sp)
-                    Text("$currency ${String.format(java.util.Locale.US, "%.2f", price)}", color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                    Text("$currency ${String.format(java.util.Locale.US, "%,.2f", price)}", color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
                 }
                 // Informational only — selling is never blocked on weighed stock.
                 if (kg != null && kg > product.stockKg)

@@ -215,7 +215,7 @@ private fun ActiveShiftCard(shift: Shift, currency: String, onOpenDrawer: () -> 
             if (shift.openingFloat > 0) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Default.Money, null, tint = com.minimart.pos.ui.theme.DT.SubText, modifier = Modifier.size(18.dp))
-                    Text("Opening float: $currency ${String.format(java.util.Locale.US, "%.2f", shift.openingFloat)}", style = MaterialTheme.typography.bodySmall, color = com.minimart.pos.ui.theme.DT.SubText)
+                    Text("Opening float: $currency ${String.format(java.util.Locale.US, "%,.2f", shift.openingFloat)}", style = MaterialTheme.typography.bodySmall, color = com.minimart.pos.ui.theme.DT.SubText)
                 }
             }
             OutlinedButton(
@@ -275,7 +275,7 @@ private fun ShiftHistoryRow(shift: Shift, currency: String, onClick: () -> Unit)
                 Text(df.format(Date(shift.clockIn)), style = MaterialTheme.typography.labelSmall, color = com.minimart.pos.ui.theme.DT.SubText)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text("$currency ${String.format(java.util.Locale.US, "%.0f", shift.totalSales)}", fontWeight = FontWeight.Bold, color = com.minimart.pos.ui.theme.DT.Teal)
+                Text("$currency ${String.format(java.util.Locale.US, "%,.0f", shift.totalSales)}", fontWeight = FontWeight.Bold, color = com.minimart.pos.ui.theme.DT.Teal)
                 Text("${shift.totalTransactions} sales", style = MaterialTheme.typography.labelSmall, color = com.minimart.pos.ui.theme.DT.SubText)
             }
         }
@@ -416,23 +416,23 @@ private fun ShiftSummaryDialog(shift: Shift, currency: String, showVariance: Boo
                 shift.clockOut?.let { SummaryRow("Clock Out", df.format(Date(it))) }
                 SummaryRow("Duration", "${hours}h ${mins}m")
                 HorizontalDivider(color = DT.Border)
-                SummaryRow("Cash Sales", "$currency ${String.format(java.util.Locale.US, "%.2f", shift.totalCashSales)}")
-                SummaryRow("M-Pesa Sales", "$currency ${String.format(java.util.Locale.US, "%.2f", shift.totalMpesaSales)}")
-                if (shift.totalCardSales > 0) SummaryRow("Card Sales", "$currency ${String.format(java.util.Locale.US, "%.2f", shift.totalCardSales)}")
+                SummaryRow("Cash Sales", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.totalCashSales)}")
+                SummaryRow("M-Pesa Sales", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.totalMpesaSales)}")
+                if (shift.totalCardSales > 0) SummaryRow("Card Sales", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.totalCardSales)}")
                 HorizontalDivider(color = DT.Border)
-                SummaryRow("Total Sales", "$currency ${String.format(java.util.Locale.US, "%.2f", shift.totalSales)}", bold = true, color = DT.Teal)
+                SummaryRow("Total Sales", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.totalSales)}", bold = true, color = DT.Teal)
                 SummaryRow("Transactions", shift.totalTransactions.toString())
-                if (shift.totalDiscounts > 0) SummaryRow("Discounts Given", "$currency ${String.format(java.util.Locale.US, "%.2f", shift.totalDiscounts)}", color = ErrorRed)
+                if (shift.totalDiscounts > 0) SummaryRow("Discounts Given", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.totalDiscounts)}", color = ErrorRed)
                 HorizontalDivider(color = DT.Border)
-                SummaryRow("Opening Float", "$currency ${String.format(java.util.Locale.US, "%.2f", shift.openingFloat)}")
+                SummaryRow("Opening Float", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.openingFloat)}")
                 shift.closingFloat?.let { cf ->
-                    SummaryRow("Closing Float", "$currency ${String.format(java.util.Locale.US, "%.2f", cf)}")
+                    SummaryRow("Closing Float", "$currency ${String.format(java.util.Locale.US, "%,.2f", cf)}")
                     if (showVariance) {
-                        SummaryRow("Expected Cash", "$currency ${String.format(java.util.Locale.US, "%.2f", shift.expectedCash)}")
+                        SummaryRow("Expected Cash", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.expectedCash)}")
                         val disc = shift.cashDiscrepancy
                         SummaryRow(
                             "Discrepancy",
-                            "${if (disc >= 0) "+" else ""}$currency ${String.format(java.util.Locale.US, "%.2f", disc)}",
+                            "${if (disc >= 0) "+" else ""}$currency ${String.format(java.util.Locale.US, "%,.2f", disc)}",
                             bold = true,
                             color = when { disc > 10 -> SuccessGreen; disc < -10 -> ErrorRed; else -> Color.White }
                         )

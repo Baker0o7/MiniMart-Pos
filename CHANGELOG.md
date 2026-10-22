@@ -5,6 +5,11 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.18.4] - 2026-10-23
+
+- **Easier-to-read amounts:** big amounts now show thousands separators everywhere on screen and on PDF receipts (KES 1,250.00 instead of KES 1250.00): checkout, cart, sales history, shifts, customers and credit. Thermal printer receipts are unchanged so columns still line up.
+- **Under the hood:** the cash drawer now uses Android's current Bluetooth API instead of a deprecated one.
+
 ## [1.18.3] - 2026-10-23
 
 - **Smoother typing and selling:** Settings fields now move to the next field with the keyboard's Next key; the store name and receipt footer capitalise words and spell-check, while keys and codes are never auto-corrected; and adding a product by tapping it in the search list (or pressing Enter) now gives the same short vibration as a scan.

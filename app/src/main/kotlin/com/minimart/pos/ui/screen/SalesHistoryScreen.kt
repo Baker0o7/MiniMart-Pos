@@ -240,7 +240,7 @@ private fun SaleHistoryRow(
                         style = MaterialTheme.typography.labelSmall)
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("$currency ${String.format(java.util.Locale.US, "%.2f", sale.totalAmount)}",
+                    Text("$currency ${String.format(java.util.Locale.US, "%,.2f", sale.totalAmount)}",
                         color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Box(modifier = Modifier.clip(RoundedCornerShape(6.dp))
                         .background(statusColor.copy(0.15f))

@@ -12,7 +12,7 @@ import java.util.*
 // ─── Money formatting ─────────────────────────────────────────────────────────
 
 fun Double.formatMoney(currency: String = "KES"): String =
-    "$currency ${String.format(java.util.Locale.US, "%.2f", this)}"
+    "$currency ${String.format(java.util.Locale.US, "%,.2f", this)}"
 
 fun Double.formatMoneyCompact(currency: String = "KES"): String {
     return when {

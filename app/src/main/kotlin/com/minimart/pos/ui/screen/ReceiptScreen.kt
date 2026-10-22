@@ -173,7 +173,7 @@ fun ReceiptScreen(
                                     // CartViewModel.addWeighedItem), so price/kg is derived by dividing back.
                                     Text(
                                         (if (item.weightKg > 0) "${String.format(java.util.Locale.US, "%.3f", item.weightKg)} kg @ ${String.format(java.util.Locale.US, "%.2f", item.unitPrice / item.weightKg)}/kg"
-                                         else "${item.quantity} × ${String.format(java.util.Locale.US, "%.2f", item.unitPrice)}"),
+                                         else "${item.quantity} × ${String.format(java.util.Locale.US, "%,.2f", item.unitPrice)}"),
                                         color = DT.SubText, fontSize = 11.sp)
                                 }
                                 Text(money(item.lineTotal), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)

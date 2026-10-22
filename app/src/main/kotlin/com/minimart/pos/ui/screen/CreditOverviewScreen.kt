@@ -184,9 +184,9 @@ fun CreditOverviewScreen(
                                 // red = customer owes money (buy-on-account / negative balance)
                                 val balanceColor = if (customer.creditBalance < 0) DT.Red else DT.Green
                                 val balanceLabel = if (customer.creditBalance < 0)
-                                    "OWES $currency ${String.format(java.util.Locale.US, "%.2f", -customer.creditBalance)}"
+                                    "OWES $currency ${String.format(java.util.Locale.US, "%,.2f", -customer.creditBalance)}"
                                 else
-                                    "$currency ${String.format(java.util.Locale.US, "%.2f", customer.creditBalance)}"
+                                    "$currency ${String.format(java.util.Locale.US, "%,.2f", customer.creditBalance)}"
                                 Box(Modifier.clip(RoundedCornerShape(10.dp))
                                     .background(balanceColor.copy(0.15f))
                                     .border(1.dp, balanceColor.copy(0.4f), RoundedCornerShape(10.dp))
@@ -267,10 +267,10 @@ private fun CreditTxRow(tx: CreditTransaction, currency: String) {
             Text(df.format(Date(tx.createdAt)), color = DT.SubText, fontSize = 10.sp)
         }
         Column(horizontalAlignment = Alignment.End) {
-            Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format(java.util.Locale.US, "%.2f", tx.amount)}",
+            Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format(java.util.Locale.US, "%,.2f", tx.amount)}",
                 color = if (tx.amount > 0) DT.Green else DT.Red,
                 fontWeight = FontWeight.Bold, fontSize = 13.sp)
-            Text("Bal: $currency ${String.format(java.util.Locale.US, "%.2f", tx.balanceAfter)}", color = DT.SubText, fontSize = 10.sp)
+            Text("Bal: $currency ${String.format(java.util.Locale.US, "%,.2f", tx.balanceAfter)}", color = DT.SubText, fontSize = 10.sp)
         }
     }
 }
