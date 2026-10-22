@@ -14,8 +14,14 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
   const token = new URL(req.url).searchParams.get("t") ?? "";
   if (token.length < 32) return accepted();            // say nothing useful to guessers
+  // A genuine confirmation is a few hundred bytes; refuse anything large before reading it.
+  if (Number(req.headers.get("content-length") ?? "0") > 20000) return accepted();
   let body: unknown;
-  try { body = await req.json(); } catch { return accepted(); }
+  try {
+    const text = await req.text();
+    if (text.length > 20000) return accepted();
+    body = JSON.parse(text);
+  } catch { return accepted(); }
 
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const { error } = await supabase.rpc("mpesa_ingest", { p_token: token, p_payload: body });

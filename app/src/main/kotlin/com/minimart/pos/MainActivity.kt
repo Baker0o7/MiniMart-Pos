@@ -133,6 +133,11 @@ class MainActivity : ComponentActivity() {
             androidx.compose.runtime.LaunchedEffect(accentName) { com.minimart.pos.ui.theme.DT.accent = com.minimart.pos.ui.theme.AppAccent.fromName(accentName) }
             val amoled by settingsRepo.amoled.collectAsState(initial = com.minimart.pos.ui.theme.DT.amoled)
             val highContrast by settingsRepo.highContrast.collectAsState(initial = com.minimart.pos.ui.theme.DT.highContrast)
+            val blockShots by settingsRepo.blockScreenshots.collectAsState(initial = false)
+            androidx.compose.runtime.LaunchedEffect(blockShots) {
+                if (blockShots) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+                else window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+            }
             androidx.compose.runtime.LaunchedEffect(amoled) { com.minimart.pos.ui.theme.DT.amoled = amoled }
             androidx.compose.runtime.LaunchedEffect(highContrast) { com.minimart.pos.ui.theme.DT.highContrast = highContrast }
             MiniMartTheme(darkTheme = darkMode) {

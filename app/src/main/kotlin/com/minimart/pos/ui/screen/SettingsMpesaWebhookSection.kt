@@ -77,7 +77,10 @@ internal fun MpesaWebhookSettingsSection(vm: MpesaWebhookViewModel = hiltViewMod
                     Text("Address to register with Safaricom (Confirmation and Validation URL):", color = DT.OnSurface, style = MaterialTheme.typography.bodySmall)
                     SelectionContainer { Text(url, color = DT.TealLight, style = MaterialTheme.typography.bodySmall) }
                     OutlinedButton(onClick = {
-                        (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Webhook address", url))
+                        val clip = ClipData.newPlainText("Webhook address", url)
+                        // The address holds a secret: ask Android not to show it in the clipboard preview.
+                        clip.description.extras = android.os.PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
+                        (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
                     }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Copy address") }
                     Text("Keep this address private: anyone who has it can add payments to your list.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                 }

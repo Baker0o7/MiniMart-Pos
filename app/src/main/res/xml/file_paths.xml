@@ -5,6 +5,6 @@
     <files-path name="receipts" path="receipts/" />
     <files-path name="auto_backups" path="auto_backups/" />
     <external-files-path name="backups" path="backups/" />
-    <external-files-path name="archives" path="archives/" />
+    <files-path name="archives" path="archives/" />
     <external-path name="legacy_backups" path="Download/MiniMartPOS/backups/" />
 </paths>

@@ -71,7 +71,7 @@ class ArchiveViewModel @Inject constructor(
     }
 
     companion object {
-        /** Archives live in the app's own storage so no storage permission is needed; shared through the file provider. */
-        fun directory(context: Context): File = File(context.getExternalFilesDir(null) ?: context.filesDir, "archives")
+        /** Private app storage (never the external folder, which other apps can read on older Android); shared through the file provider. */
+        fun directory(context: Context): File = File(context.filesDir, "archives")
     }
 }

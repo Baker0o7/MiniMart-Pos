@@ -35,6 +35,7 @@ class SettingsRepository @Inject constructor(
         val KEY_SYNC_SERVER = booleanPreferencesKey("sync_server_enabled")
         val KEY_HELD_CARTS = stringPreferencesKey("held_carts")
         val KEY_ACCENT = stringPreferencesKey("accent")
+        val KEY_BLOCK_SCREENSHOTS = booleanPreferencesKey("block_screenshots")
         val KEY_AMOLED = booleanPreferencesKey("theme_amoled")
         val KEY_HIGH_CONTRAST = booleanPreferencesKey("theme_high_contrast")
         val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
@@ -114,6 +115,10 @@ class SettingsRepository @Inject constructor(
     /** Name of the chosen accent colour (TEAL, BLUE, …); the app maps it to a palette. */
     val accent: Flow<String> = context.dataStore.data.map { it[KEY_ACCENT] ?: "TEAL" }
     suspend fun setAccent(name: String) = context.dataStore.edit { it[KEY_ACCENT] = name }
+
+    /** Blocks screenshots and hides the app's preview in the recent-apps list (FLAG_SECURE). */
+    val blockScreenshots: Flow<Boolean> = context.dataStore.data.map { it[KEY_BLOCK_SCREENSHOTS] ?: false }
+    suspend fun setBlockScreenshots(on: Boolean) = context.dataStore.edit { it[KEY_BLOCK_SCREENSHOTS] = on }
 
     /** "Deep black" backgrounds and the high-contrast option (see Palette.adapt in the app module). */
     val amoled: Flow<Boolean> = context.dataStore.data.map { it[KEY_AMOLED] ?: false }
