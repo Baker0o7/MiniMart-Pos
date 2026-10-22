@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.18.3] - 2026-10-23
+
+- **Smoother typing and selling:** Settings fields now move to the next field with the keyboard's Next key; the store name and receipt footer capitalise words and spell-check, while keys and codes are never auto-corrected; and adding a product by tapping it in the search list (or pressing Enter) now gives the same short vibration as a scan.
+
 ## [1.18.2] - 2026-10-22
 
 - **Security hardening:** archive files are now kept in the app's private storage instead of the shared app folder, so other apps cannot read them on older Android versions; the instant M-Pesa address is hidden from Android's clipboard preview when copied; the M-Pesa cloud function refuses oversized requests; and a new **Block screenshots** switch (Settings → Privacy, owner only, off by default) stops screenshots and screen recording and hides the app in the recent-apps list. PIN lockout already grows with repeated mistakes.

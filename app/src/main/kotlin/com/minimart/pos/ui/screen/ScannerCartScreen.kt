@@ -138,7 +138,7 @@ fun ScannerCartScreen(
         if (q.isEmpty()) return@submit
         val first = searchResults.firstOrNull()
         val looksLikeBarcode = q.length >= 6 && q.all { it.isDigit() }
-        if (!looksLikeBarcode && first != null) vm.addToCart(first) else vm.processBarcode(q)
+        if (!looksLikeBarcode && first != null) { context.vibrateShort(); vm.addToCart(first) } else vm.processBarcode(q)
         searchText = ""; searchVm.clear()
     }
 
@@ -284,7 +284,8 @@ fun ScannerCartScreen(
                             // Weighed products can still be sold at 0 stock (the weight is what counts).
                             val soldOut = !product.isWeighed && product.stock <= 0
                             Row(modifier = Modifier.fillMaxWidth()
-                                .clickable(enabled = !soldOut) { vm.addToCart(product); searchText = ""; searchVm.clear() }
+                                
+                                .clickable(enabled = !soldOut) { context.vibrateShort(); vm.addToCart(product); searchText = ""; searchVm.clear() }
                                 .padding(horizontal = 14.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))

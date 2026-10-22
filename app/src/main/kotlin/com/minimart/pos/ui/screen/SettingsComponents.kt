@@ -93,11 +93,17 @@ internal fun DSection(
 }
 
 @Composable
-internal fun DField(value: String, onValueChange: (String) -> Unit, label: String, icon: ImageVector? = null, numeric: Boolean = false) {
+internal fun DField(value: String, onValueChange: (String) -> Unit, label: String, icon: ImageVector? = null, numeric: Boolean = false, isText: Boolean = false) {
     OutlinedTextField(value = value, onValueChange = onValueChange,
         label = { Text(label, color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
         leadingIcon = icon?.let { { Icon(it, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) } },
-        keyboardOptions = if (numeric) KeyboardOptions(keyboardType = KeyboardType.Number) else KeyboardOptions.Default,
+        // Next moves to the following field instead of closing the keyboard. Names get capital letters and spell-check;
+        // keys and codes (isText = false) get neither, so a pasted or typed key is never "corrected".
+        keyboardOptions = KeyboardOptions(
+            keyboardType = if (numeric) KeyboardType.Number else KeyboardType.Text,
+            capitalization = if (isText) androidx.compose.ui.text.input.KeyboardCapitalization.Words else androidx.compose.ui.text.input.KeyboardCapitalization.None,
+            autoCorrectEnabled = isText,
+            imeAction = androidx.compose.ui.text.input.ImeAction.Next),
         singleLine = true, modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp), colors = dColors())
 }

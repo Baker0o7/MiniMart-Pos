@@ -154,7 +154,7 @@ fun SettingsScreen(
                 // ── Store Information ─────────────────────────────────────────
                 if (isAdmin) {
                     DSection("Store Information", Icons.Default.Store) {
-                        DField(storeNameInput, { storeNameInput = it }, "Store Name")
+                        DField(storeNameInput, { storeNameInput = it }, "Store Name", isText = true)
                         Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                             Text("Currency", color = DT.OnSurface, modifier = Modifier.weight(1f))
@@ -162,7 +162,7 @@ fun SettingsScreen(
                                 modifier = Modifier.width(90.dp), shape = RoundedCornerShape(10.dp), colors = dColors())
                         }
                         Spacer(Modifier.height(8.dp))
-                        DField(footerInput, { footerInput = it }, "Receipt Footer Message")
+                        DField(footerInput, { footerInput = it }, "Receipt Footer Message", isText = true)
                         Spacer(Modifier.height(12.dp))
                         val cleanCurrency = currencyInput.trim().uppercase().take(5)
                         val storeDirty = storeNameInput.trim() != storeName || cleanCurrency != currency || footerInput.trim() != receiptFooter
