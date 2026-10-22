@@ -589,6 +589,8 @@ fun SettingsScreen(
                     }
                 }
 
+                if (isOwner) MpesaWebhookSettingsSection()
+
                 if (isOwner) ArchiveSettingsSection(ownerGate)
 
                 // ── Data & Backup ─────────────────────────────────────────────

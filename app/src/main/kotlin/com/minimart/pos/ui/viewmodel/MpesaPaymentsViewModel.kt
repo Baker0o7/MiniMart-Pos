@@ -30,8 +30,12 @@ sealed interface MpesaCheck {
 class MpesaPaymentsViewModel @Inject constructor(
     private val repo: MpesaPaymentRepository,
     private val settings: SettingsRepository,
-    private val sales: com.minimart.pos.data.repository.SaleRepository
+    private val sales: com.minimart.pos.data.repository.SaleRepository,
+    private val webhook: com.minimart.pos.cloud.MpesaWebhookClient
 ) : ViewModel() {
+
+    // Opening the list fetches anything Safaricom has pushed since the last check (no-op when instant M-Pesa is off).
+    init { viewModelScope.launch { if (webhook.enabled) webhook.pull() } }
 
     /** Codes already used on a completed sale; anything else received is unclaimed. */
     val claimed: StateFlow<Set<String>> = sales.claimedMpesaRefs().map { it.toSet() }

@@ -1,6 +1,13 @@
 package com.minimart.pos.ui
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertWidthIsAtLeast
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import com.minimart.pos.ui.screen.GradientHeader
+import com.minimart.pos.ui.screen.HeaderPillButton
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -55,5 +62,13 @@ class ComponentsUiTest {
         compose.onNodeWithContentDescription("Bar chart, 3 bars", substring = true).assertIsDisplayed()
         compose.onNodeWithContentDescription("Highest: Tue", substring = true).assertIsDisplayed()
     }
-}
 
+    @Test fun headerButtonsMeetTheMinimumTouchSize() {
+        compose.setContent {
+            MiniMartTheme { GradientHeader("Reports", "Today", onBack = {}) { HeaderPillButton("Refresh list", Icons.Default.Refresh) {} } }
+        }
+        compose.onNodeWithContentDescription("Back").assertHasClickAction()
+        compose.onNodeWithContentDescription("Refresh list").assertHasClickAction()
+            .assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
+    }
+}

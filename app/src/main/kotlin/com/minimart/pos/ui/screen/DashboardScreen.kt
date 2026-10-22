@@ -514,8 +514,10 @@ private fun DashAlert(icon: ImageVector, glow: Color, bg: Color,
 
 @Composable
 private fun BoxScope.DashBadge(onRemove: () -> Unit) {
-    // 32dp touch target around a 20dp visual badge.
-    Box(Modifier.align(Alignment.TopEnd).size(32.dp).clickable(onClick = onRemove), contentAlignment = Alignment.Center) {
+    // 48dp touch target around a 20dp visual badge.
+    Box(Modifier.align(Alignment.TopEnd).size(48.dp)
+        .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Hide this card", onClick = onRemove),
+        contentAlignment = Alignment.Center) {
         Box(Modifier.size(20.dp).clip(CircleShape).background(RedGlow), contentAlignment = Alignment.Center) {
             Icon(Icons.Default.Close, "Hide card", tint = White, modifier = Modifier.size(12.dp))
         }

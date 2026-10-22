@@ -8,6 +8,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,15 +59,15 @@ internal fun AppearanceSettingsSection(settingsRepo: SettingsRepository) {
             com.minimart.pos.ui.theme.AppAccent.entries.forEach { a ->
                 val picked = com.minimart.pos.ui.theme.DT.accent == a
                 Box(
-                    Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                    Modifier.size(48.dp).clip(androidx.compose.foundation.shape.CircleShape)
                         .background(a.palette.accent)
                         .border(if (picked) 3.dp else 1.dp, if (picked) Color.White else DT.Border,
                             androidx.compose.foundation.shape.CircleShape)
-                        .clickable {
+                        .selectable(selected = picked, role = androidx.compose.ui.semantics.Role.RadioButton) {
                             com.minimart.pos.ui.theme.DT.accent = a            // instant
                             scope.launch { settingsRepo.setAccent(a.name) }   // remembered
                         }
-                        .semantics { contentDescription = a.label + if (picked) ", selected" else "" },
+                        .semantics { contentDescription = a.label + " colour" },
                     contentAlignment = Alignment.Center
                 ) { if (picked) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(22.dp)) }
             }
@@ -80,12 +82,15 @@ internal fun AppearanceSettingsSection(settingsRepo: SettingsRepository) {
 
 @Composable
 private fun ThemeSwitch(title: String, hint: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    // The whole row toggles and reads as one labelled switch, so a screen reader announces "Deep black, switch, off".
+    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(vertical = 4.dp)
+        .toggleable(value = checked, role = androidx.compose.ui.semantics.Role.Switch, onValueChange = onChange),
+        verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
             Text(hint, color = DT.SubText, style = MaterialTheme.typography.bodySmall)
         }
         Spacer(Modifier.width(12.dp))
-        Switch(checked = checked, onCheckedChange = onChange)
+        Switch(checked = checked, onCheckedChange = null)
     }
 }

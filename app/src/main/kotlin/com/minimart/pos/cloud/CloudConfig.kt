@@ -23,6 +23,11 @@ class CloudConfig @Inject constructor(@SecurePrefs private val prefs: SharedPref
         get() = prefs.getLong("cloud_last_push", 0L)
         set(v) { prefs.edit().putLong("cloud_last_push", v).apply() }
 
+    /** Secret part of this store's M-Pesa webhook address. Empty when instant M-Pesa is off. */
+    var mpesaWebhookToken: String
+        get() = prefs.getString("cloud_mpesa_token", "") ?: ""
+        set(v) { prefs.edit().putString("cloud_mpesa_token", v.trim()).apply() }
+
     /** Identifies this store in the cloud; generated once. */
     val storeId: String
         get() = prefs.getString("cloud_store_id", null)
@@ -38,6 +43,6 @@ class CloudConfig @Inject constructor(@SecurePrefs private val prefs: SharedPref
     val isConfigured: Boolean get() = registered && url.startsWith("https://") && anonKey.isNotBlank()
 
     fun disconnect() {
-        prefs.edit().remove("cloud_registered").remove("cloud_last_push").remove("cloud_store_id").remove("cloud_store_secret").apply()
+        prefs.edit().remove("cloud_registered").remove("cloud_last_push").remove("cloud_store_id").remove("cloud_store_secret").remove("cloud_mpesa_token").apply()
     }
 }

@@ -44,6 +44,7 @@ fun CustomerDisplayScreen(onExit: () -> Unit, vm: CustomerDisplayViewModel = hil
     Box(Modifier.fillMaxSize()) {
         CustomerDisplayContent(state)
         Icon(Icons.Default.Close, "Exit customer view", tint = Color.White.copy(0.5f),
-            modifier = Modifier.align(Alignment.TopEnd).padding(14.dp).size(28.dp).clickable(onClick = onExit))
+            modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(48.dp).padding(10.dp)
+                .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onExit))
     }
 }

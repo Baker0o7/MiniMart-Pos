@@ -7,6 +7,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -505,7 +506,7 @@ private fun BottomNavBar(
                 .padding(7.dp)
                 .clip(CircleShape)
                 .background(Brush.linearGradient(listOf(DT.TealLight, NavSel)))
-                .clickable(onClick = onScan),
+                .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Scan a barcode", onClick = onScan),
                 contentAlignment = Alignment.Center) {
                 Icon(Icons.Default.QrCode2, "Scan", tint = DT.Bg, modifier = Modifier.size(32.dp))
             }
@@ -540,7 +541,8 @@ private fun RowScope.NavItem(icon: ImageVector, label: String, selected: Boolean
     Column(
         modifier = Modifier.weight(1f).fillMaxHeight()
             .clip(RoundedCornerShape(12.dp))
-            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick),
+            .selectable(selected = selected, role = androidx.compose.ui.semantics.Role.Tab,
+                indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {

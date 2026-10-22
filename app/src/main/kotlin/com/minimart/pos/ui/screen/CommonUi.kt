@@ -25,6 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -82,9 +86,9 @@ internal fun GradientHeader(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
-                modifier = Modifier.size(42.dp).clip(CircleShape)
+                modifier = Modifier.size(48.dp).clip(CircleShape)
                     .background(Color.White.copy(0.18f))
-                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onBack),
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Go back", onClick = onBack),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White, modifier = Modifier.size(20.dp))
@@ -92,7 +96,8 @@ internal fun GradientHeader(
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(title, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.semantics { heading() })
                 if (subtitle != null) {
                     Text(subtitle, color = Color.White.copy(0.78f), fontSize = 12.sp,
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -107,9 +112,9 @@ internal fun GradientHeader(
 @Composable
 internal fun HeaderPillButton(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
     Box(
-        modifier = Modifier.size(42.dp).clip(CircleShape)
+        modifier = Modifier.size(48.dp).clip(CircleShape)
             .background(Color.White.copy(0.2f))
-            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick),
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = label, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(icon, label, tint = Color.White, modifier = Modifier.size(22.dp))
@@ -124,7 +129,9 @@ internal fun FeedbackBanner(message: String?, isError: Boolean, modifier: Modifi
     Row(
         modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
             .background(tint.copy(0.14f))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+            // Read out when it appears, so a screen-reader user hears the result of what they just did.
+            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(if (isError) Icons.Default.ErrorOutline else Icons.Default.CheckCircle, null,
@@ -141,7 +148,8 @@ internal fun UndoBar(message: String, onUndo: () -> Unit, modifier: Modifier = M
     Row(
         modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
             .background(DT.Amber.copy(0.14f))
-            .padding(start = 12.dp, end = 4.dp),
+            .padding(start = 12.dp, end = 4.dp)
+            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(message, color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,

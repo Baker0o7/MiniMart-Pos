@@ -4,7 +4,9 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -64,14 +66,18 @@ internal fun DSection(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     .clickable(
                         indication = null,
-                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-                    ) { expanded = !expanded },
+                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                        role = androidx.compose.ui.semantics.Role.Button,
+                        onClickLabel = if (expanded) "Collapse $title" else "Expand $title"
+                    ) { expanded = !expanded }
+                    .semantics(mergeDescendants = true) { stateDescription = if (expanded) "Expanded" else "Collapsed" },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(icon, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(title, color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(title, color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp,
+                        modifier = Modifier.semantics { heading() })
                     if (!expanded && summary != null) {
                         Text(summary, color = DT.SubText, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
