@@ -53,7 +53,7 @@ object ArchivePolicy {
 
     fun fileName(nowMs: Long, zone: ZoneId = ZoneId.systemDefault()): String {
         val d = Instant.ofEpochMilli(nowMs).atZone(zone)
-        return "minimart-sales-archive-%04d%02d%02d-%02d%02d.csv.gz".format(d.year, d.monthValue, d.dayOfMonth, d.hour, d.minute)
+        return String.format(java.util.Locale.ROOT, "minimart-sales-archive-%04d%02d%02d-%02d%02d.csv.gz", d.year, d.monthValue, d.dayOfMonth, d.hour, d.minute)
     }
 
     fun describe(plan: ArchivePlan, zone: ZoneId = ZoneId.systemDefault()): String {

@@ -5,6 +5,14 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.18.0] - 2026-10-22
+
+- **Hardware check:** a new screen (open it from Store health) tests the receipt printer and cash drawer with one tap and checks Bluetooth, camera, M-Pesa SMS permission, alerts, network, storage and battery, saying in plain words what to fix.
+- **Archive old sales:** in Settings (owner only) you can move sales older than 1, 2 or 3 years into a compressed file you keep. The file is written and checked first; only then are the sales removed from the phone. Weekly housekeeping also clears old, already-delivered sync records.
+- **Instant M-Pesa (webhook):** payments can now reach the phone through your own Supabase project as soon as Safaricom reports them, even if the SMS never arrives. Needs a one-time setup (see docs/MPESA_WEBHOOK.md) and has not been tried against live Safaricom yet; SMS tracking keeps working alongside it.
+- **Accessibility:** larger touch targets, screen-reader roles for buttons, tabs, switches and colour choices, headings, expandable sections that say whether they are open, and error or success messages that are read out when they appear.
+- **More tests and documentation:** tests for credit balances, M-Pesa payments, archiving, the hardware check and the webhook; new architecture notes and assistant guidance for people working on the code.
+
 ## [1.17.1] - 2026-10-22
 
 - **Theme improvements:** two new accent colours (Green and Graphite); a **Deep black** option for near-black backgrounds that saves battery on OLED screens; a **High contrast** option with whiter text and stronger borders; the Teal, Blue and Orange accents are slightly deeper so white button text is easy to read; unselected bottom-bar icons are brighter; and a test now checks text, button and icon contrast for every colour and option combination. The app is still dark only.

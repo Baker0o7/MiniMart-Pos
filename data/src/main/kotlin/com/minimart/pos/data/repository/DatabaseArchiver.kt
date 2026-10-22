@@ -53,7 +53,8 @@ class DatabaseArchiver @Inject constructor(private val db: AppDatabase) {
         var salesWritten = 0; var itemsWritten = 0
         try {
             FileOutputStream(tmp).use { fos ->
-                OutputStreamWriter(GZIPOutputStream(fos), Charsets.UTF_8).use { w ->
+                val gz = GZIPOutputStream(fos)
+                OutputStreamWriter(gz, Charsets.UTF_8).use { w ->
                     w.write(ArchivePolicy.CSV_HEADER); w.write("\n")
                     var lastSale = -1L
                     db.query(SimpleSQLiteQuery("""
@@ -80,9 +81,9 @@ class DatabaseArchiver @Inject constructor(private val db: AppDatabase) {
                             w.write(ArchivePolicy.csvRow(row)); w.write("\n")
                         }
                     }
-                    w.flush()
+                    // Finish the compressed stream and force it to disk BEFORE the streams close (closing releases the file).
+                    w.flush(); gz.finish(); fos.flush(); fos.fd.sync()
                 }
-                fos.fd.sync()
             }
             if (salesWritten != plan.sales || itemsWritten != plan.items)
                 throw ArchiveException("The archive did not match the database (sales $salesWritten of ${plan.sales}). Nothing was deleted.")

@@ -193,6 +193,11 @@ Built with Kotlin + Jetpack Compose 🇰🇪
   from the MPESA sender ID. Texts from ordinary numbers (forwarded or typed fakes) are ignored
 - This is a separate payments ledger; it does not create sales, so it never double-counts a sale rung up at the till
 
+### 🔧 Hardware check, archiving and instant M-Pesa
+- **Hardware check** (from Store health): printer, cash drawer, camera, Bluetooth, SMS, notifications, network, storage and battery, with one-tap test print and test drawer.
+- **Archive old sales** (Settings, owner only): sales older than 1, 2 or 3 years are written to a compressed file you keep, checked, and only then removed, so the app stays fast. Weekly housekeeping trims delivered sync records.
+- **Instant M-Pesa (webhook)**: payments reach the phone through your own cloud project even if the SMS never arrives. See [docs/MPESA_WEBHOOK.md](docs/MPESA_WEBHOOK.md).
+
 ### ☁️ Multi-Store Cloud Dashboard
 See every store in one web page: sales totals and 30-day trend, low-stock and expiry alerts, estimated profit and expenses, and shift / Z-report status (with cash variance). Uses **your own free Supabase project**; nothing goes through anyone else's server.
 
@@ -441,6 +446,7 @@ SIGNING_STORE_PASSWORD = android
 
 - Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 - Found a security problem? Please follow [SECURITY.md](SECURITY.md) and do not open a public issue.
+- Working on the code (or using an AI assistant)? Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [CLAUDE.md](CLAUDE.md). Instant M-Pesa setup is in [docs/MPESA_WEBHOOK.md](docs/MPESA_WEBHOOK.md).
 - MiniMart POS is open source under the [Apache License 2.0](LICENSE). Third-party libraries keep their own licenses.
 
 ---
