@@ -69,6 +69,7 @@ object Routes {
     const val ACTIVITY_LOG = "activity_log"
     const val TODAY = "today"
     const val HEALTH = "store_health"
+    const val HARDWARE = "hardware"
     const val SETUP = "setup"
     const val SUPPLIERS = "suppliers"
     const val PURCHASE_ORDER = "purchase_order/{poId}"
@@ -333,9 +334,16 @@ fun MiniMartNavGraph(
                     ) {
                         StoreHealthScreen(
                             onBack = { navController.popBackStack() },
-                            onAction = { a -> healthTarget(a)?.let { r -> navController.navigate(r) { launchSingleTop = true } } }
+                            onAction = { a -> healthTarget(a)?.let { r -> navController.navigate(r) { launchSingleTop = true } } },
+                            onOpenHardware = { navController.navigate(Routes.HARDWARE) { launchSingleTop = true } }
                         )
                     }
+                }
+                composable(Routes.HARDWARE) {
+                    AccessGuard(
+                        hasAccess = RoleManager.canAccessSettings(authState.currentUser?.role),
+                        onBack = guardBack
+                    ) { HardwareScreen(onBack = { navController.popBackStack() }) }
                 }
                 composable(Routes.SETUP) {
                     SetupWizardScreen(onFinished = { openProducts ->

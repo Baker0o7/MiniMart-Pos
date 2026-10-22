@@ -589,6 +589,8 @@ fun SettingsScreen(
                     }
                 }
 
+                if (isOwner) ArchiveSettingsSection(ownerGate)
+
                 // ── Data & Backup ─────────────────────────────────────────────
                 if (isOwner) {
                     DSection("Data & Backup", Icons.Default.Storage, summary = "Backup · Restore · Share", initiallyExpanded = false) {

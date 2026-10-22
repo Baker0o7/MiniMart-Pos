@@ -53,6 +53,7 @@ internal fun actionLabel(a: HealthAction): String? = when (a) {
 fun StoreHealthScreen(
     onBack: () -> Unit,
     onAction: (HealthAction) -> Unit,
+    onOpenHardware: () -> Unit = {},
     vm: StoreHealthViewModel = hiltViewModel()
 ) {
     val s by vm.state.collectAsStateWithLifecycle()
@@ -74,6 +75,12 @@ fun StoreHealthScreen(
                         HealthAction.NONE -> {}
                         else -> onAction(c.action)
                     }
+                }
+            }
+            item {
+                OutlinedButton(onClick = onOpenHardware, shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, DT.Border), modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                    Text("Check printer, scanner and phone", color = DT.TealLight, fontWeight = FontWeight.Bold)
                 }
             }
             item {
