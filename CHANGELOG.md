@@ -9,6 +9,10 @@ Every release is published, with its signed APKs, on the [Releases page](https:/
 
 - **Security hardening:** archive files are now kept in the app's private storage instead of the shared app folder, so other apps cannot read them on older Android versions; the instant M-Pesa address is hidden from Android's clipboard preview when copied; the M-Pesa cloud function refuses oversized requests; and a new **Block screenshots** switch (Settings → Privacy, owner only, off by default) stops screenshots and screen recording and hides the app in the recent-apps list. PIN lockout already grows with repeated mistakes.
 
+## [1.18.2] - 2026-10-22
+
+- **Security hardening:** archive files are now kept in the app's private storage (not a folder other apps may read on older Android) and are only shared when you choose to; the instant M-Pesa address is hidden from Android's clipboard preview when copied; the M-Pesa webhook function refuses oversized requests; and a new **Privacy** setting (owner only) can block screenshots and screen recording and hide the app in the recent-apps list. It is off by default so you can still screenshot for support.
+
 ## [1.18.1] - 2026-10-22
 
 - **About & support:** a new section in Settings shows the version and licence, links to the project page, and has a **Copy support info** button that copies the app version, phone model and a few health facts (never sales, customers or keys) so problems are easy to report.
