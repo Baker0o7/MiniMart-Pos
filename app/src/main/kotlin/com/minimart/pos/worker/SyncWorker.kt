@@ -35,6 +35,7 @@ class SyncWorker @AssistedInject constructor(
         val ip = device.peerIp()
         val key = device.peerKey()
         if (ip.isBlank() || key.isBlank()) return Result.success()   // not a paired till
+        if (!com.minimart.pos.util.PairingCode.isStrong(key)) return Result.success()   // old short code: needs re-pairing
         return try {
             when (val r = client.sync(ip, device.id(), key)) {
                 is SyncResult.Success -> Result.success()

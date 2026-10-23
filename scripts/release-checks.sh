@@ -10,6 +10,9 @@ prev=$((ver-1))
 if [ "$prev" -ge 8 ] && ! grep -q "MIGRATION_${prev}_${ver}" "$db"; then
   echo "::error::Database is version $ver but MIGRATION_${prev}_${ver} is missing"; fail=1
 fi
+if [ ! -s gradle/wrapper/gradle-wrapper.jar ]; then
+  echo "::error::gradle/wrapper/gradle-wrapper.jar is missing (it is committed on purpose; do not git-ignore it)"; fail=1
+fi
 code=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts | head -1)
 name=$(grep -oP 'versionName\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' app/build.gradle.kts | head -1)
 if [ -n "${name:-}" ] && [ -f CHANGELOG.md ] && ! grep -q "^## \[${name}\]" CHANGELOG.md; then

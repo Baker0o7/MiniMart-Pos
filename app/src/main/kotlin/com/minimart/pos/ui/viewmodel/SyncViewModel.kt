@@ -93,8 +93,9 @@ class SyncViewModel @Inject constructor(
     }
 
     fun setPeerKey(key: String) {
-        prefs.edit().putString("peer_sync_key", key).apply()
-        _state.update { it.copy(peerKey = key) }
+        val digits = com.minimart.pos.util.PairingCode.normalize(key).take(com.minimart.pos.util.PairingCode.LENGTH)
+        prefs.edit().putString("peer_sync_key", digits).apply()
+        _state.update { it.copy(peerKey = digits) }
     }
 
     /** Puts refused sales back in the queue and tries again; the main device repeats its reasons if it still refuses. */
@@ -109,6 +110,9 @@ class SyncViewModel @Inject constructor(
         val key = _state.value.peerKey
         if (ip.isBlank()) { _state.update { it.copy(lastResult = "Enter server IP first") }; return@launch }
         if (key.isBlank()) { _state.update { it.copy(lastResult = "Enter the server's pairing code first") }; return@launch }
+        if (!com.minimart.pos.util.PairingCode.isStrong(key)) {
+            _state.update { it.copy(lastResult = "Pairing code must be the full 16 digits shown on the main device") }; return@launch
+        }
         _state.update { it.copy(isSyncing = true, lastResult = null) }
         val result = client.sync(ip, _state.value.deviceId, key)
         if (result is SyncResult.Success) prefs.edit().putLong("last_sync_at", System.currentTimeMillis()).apply()

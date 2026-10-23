@@ -5,6 +5,13 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.18.6] - 2026-10-24
+
+- **Pairing is stricter:** the main device only ever uses a full 16-digit pairing code that is not a simple pattern. If an older, shorter code is found it is replaced with a new one, and tills must enter the new code once (Settings shows it on the main device). Tills now ask for all 16 digits before trying to sync, and spaces or dashes you type are ignored.
+- **Safer after a restart:** the main device now remembers the sync requests it has already accepted, even if the app is closed or the phone restarts, so a recorded request cannot be replayed afterwards.
+- **Activity log can no longer be quietly trimmed:** the newest entry is also remembered in protected storage and in the cloud summary, so deleting the latest lines now shows a warning on the Activity log screen.
+- **Under the hood:** the build tool (Gradle wrapper) is now stored with the code and checked on every build; more automatic tests for sync signing, payment checks and stock costing.
+
 ## [1.18.5] - 2026-10-23
 
 - **Performance and security tidy-up:** release builds no longer write debug or info messages to the phone's system log (a little faster, and nothing chatty can leak); two unused queries that would have loaded every sale into memory at once were removed so they cannot be used by mistake. Checked and left as they were: notification links already can only open the inventory screen after sign-in, and database indexes already cover the busy queries.

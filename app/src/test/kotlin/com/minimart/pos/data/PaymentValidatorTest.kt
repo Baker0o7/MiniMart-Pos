@@ -106,4 +106,61 @@ class PaymentValidatorTest {
         val s = sale(total = 90.0, paid = 90.0, cash = 90.0)
         assertNull(PaymentValidator.validate(s, listOf(weighed), 0.0, false))
     }
+
+    @Test fun `overpaying in cash needs the right change`() {
+        assertNull(PaymentValidator.validate(sale(paid = 500.0, change = 300.0), listOf(item()), 0.0, false))
+        assertNotNull(PaymentValidator.validate(sale(paid = 500.0, change = 250.0), listOf(item()), 0.0, false))
+    }
+
+    @Test fun `a zero quantity or invalid line is rejected`() {
+        assertNotNull(PaymentValidator.validate(sale(), listOf(item(qty = 0, total = 0.0), item()), 0.0, false))
+        assertNotNull(PaymentValidator.validate(sale(), listOf(item(price = Double.NaN)), 0.0, false))
+        assertNotNull(PaymentValidator.validate(sale(), listOf(item(price = 100.0, qty = 1, discount = 150.0, total = -50.0), item()), 0.0, false))
+    }
+
+    @Test fun `one cent of rounding is tolerated but fifty cents is not`() {
+        val lines = listOf(item(price = 33.33, qty = 3, total = 99.99))
+        assertNull(PaymentValidator.validate(sale(total = 99.99, paid = 99.99, cash = 99.99), lines, 0.0, false))
+        assertNotNull(PaymentValidator.validate(sale(total = 99.49, paid = 99.49, cash = 99.49), lines, 0.0, false))
+    }
+
+    @Test fun `card sales are fully paid with no cash recorded`() {
+        assertNull(PaymentValidator.validate(sale(method = PaymentMethod.CARD, cash = 0.0), listOf(item()), 0.0, false))
+        assertNotNull(PaymentValidator.validate(sale(method = PaymentMethod.CARD, cash = 50.0), listOf(item()), 0.0, false))
+        assertNotNull(PaymentValidator.validate(sale(method = PaymentMethod.CARD, paid = 100.0, cash = 0.0), listOf(item()), 0.0, false))
+    }
+
+    @Test fun `a valid split payment passes and bad splits fail`() {
+        val mixed = sale(method = PaymentMethod.MIXED, cash = 100.0)
+        assertNull(PaymentValidator.validate(mixed, listOf(item()), 100.0, true))
+        assertNotNull(PaymentValidator.validate(mixed, listOf(item()), 100.0, false))
+        assertNotNull(PaymentValidator.validate(mixed, listOf(item()), 250.0, true))
+        assertNotNull(PaymentValidator.validate(mixed, listOf(item()), 0.0, true))
+        assertNotNull(PaymentValidator.validate(sale(method = PaymentMethod.MIXED, cash = 20.0), listOf(item()), 100.0, true))
+    }
+
+    @Test fun `credit amount must be a real number`() {
+        val credit = sale(method = PaymentMethod.CREDIT, paid = 0.0, cash = 0.0)
+        assertNull(PaymentValidator.validate(credit, listOf(item()), 200.0, true))
+        assertNotNull(PaymentValidator.validate(credit, listOf(item()), Double.POSITIVE_INFINITY, true))
+        assertNotNull(PaymentValidator.validate(credit, listOf(item()), -1.0, true))
+        assertNotNull(PaymentValidator.validate(credit, listOf(item()), 150.0, true))
+    }
+
+    @Test fun `mpesa reference rules`() {
+        val m = sale(method = PaymentMethod.MPESA, cash = 0.0)
+        assertNull(PaymentValidator.validate(m.copy(mpesaRef = "QGH7XYZ123"), listOf(item()), 0.0, false))
+        assertNull(PaymentValidator.validate(m.copy(mpesaRef = "   "), listOf(item()), 0.0, false))
+        assertNotNull(PaymentValidator.validate(m.copy(mpesaRef = "abc123"), listOf(item()), 0.0, false))
+        assertNotNull(PaymentValidator.validate(m.copy(mpesaRef = "AB12"), listOf(item()), 0.0, false))
+        assertNotNull(PaymentValidator.validate(m.copy(mpesaRef = "AB12 CD34; DROP"), listOf(item()), 0.0, false))
+        assertTrue(PaymentValidator.isWellFormedMpesaRef("ABCDEF"))
+        assertFalse(PaymentValidator.isWellFormedMpesaRef("ABCDE"))
+        assertFalse(PaymentValidator.isWellFormedMpesaRef("A".repeat(21)))
+    }
+
+    @Test fun `the error names the expected total`() {
+        val msg = PaymentValidator.validate(sale(total = 150.0, paid = 150.0, cash = 150.0), listOf(item()), 0.0, false)
+        assertTrue(msg!!.contains("200.00"))
+    }
 }

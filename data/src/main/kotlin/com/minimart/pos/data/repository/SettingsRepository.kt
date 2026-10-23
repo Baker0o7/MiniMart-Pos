@@ -235,6 +235,10 @@ class SettingsRepository @Inject constructor(
     private val securePrefsKeySecret = "sync_pairing_secret"
 
     /** Replaces the pairing code (for example to upgrade an old 6-digit one). Tills must then enter the new code. */
+    /** The stored code, or null when there is none or it is not strong (nothing is generated). */
+    fun currentSyncSecretIsStrong(): Boolean =
+        com.minimart.pos.util.PairingCode.isStrong(securePrefs.getString(securePrefsKeySecret, null).orEmpty())
+
     fun rotateSyncSecret(): String {
         val fresh = com.minimart.pos.util.PairingCode.generate()
         securePrefs.edit().putString(securePrefsKeySecret, fresh).apply()
@@ -244,17 +248,22 @@ class SettingsRepository @Inject constructor(
     suspend fun getOrCreateSyncSecret(): String {
         // Already migrated (or freshly generated straight into the encrypted store) —
         // fast path, no DataStore touch needed.
-        securePrefs.getString(securePrefsKeySecret, null)?.let { if (it.isNotBlank()) return it }
+        // Only a strong code is ever used; a short or guessable one left by an old version is replaced.
+        securePrefs.getString(securePrefsKeySecret, null)?.let {
+            if (com.minimart.pos.util.PairingCode.isStrong(it)) return it
+            if (it.isNotBlank()) return rotateSyncSecret()
+        }
 
         // Migration: an existing plaintext secret from before this fix — move it into
         // the encrypted store, then clear the plaintext copy, preserving the exact
         // same value so already-paired devices don't break.
         val legacyPlaintext = context.dataStore.data.map { it[KEY_SYNC_SECRET] }.first()
-        if (!legacyPlaintext.isNullOrBlank()) {
+        if (!legacyPlaintext.isNullOrBlank() && com.minimart.pos.util.PairingCode.isStrong(legacyPlaintext)) {
             securePrefs.edit().putString(securePrefsKeySecret, legacyPlaintext).apply()
             context.dataStore.edit { it.remove(KEY_SYNC_SECRET) }
             return legacyPlaintext
         }
+        if (!legacyPlaintext.isNullOrBlank()) context.dataStore.edit { it.remove(KEY_SYNC_SECRET) }
 
         // Fresh generation. 6-digit numeric code: easy to read off one screen and type
         // on another, while still being far too large to brute-force over a handful of

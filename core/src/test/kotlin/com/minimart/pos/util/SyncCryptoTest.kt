@@ -61,3 +61,14 @@ class SyncCryptoTest {
         assertEquals("1234 5678 9012 3456", PairingCode.grouped("1234567890123456"))
     }
 }
+
+class PairingCodeStrengthTest {
+    @Test fun generatedCodesAreStrong() = repeat(200) { assertTrue(PairingCode.isStrong(PairingCode.generate())) }
+    @Test fun shortOrNonDigitRejected() {
+        listOf("123456", "", "12345678901234a6", "1234 5678 9012 3456", "12345678901234567").forEach { assertFalse(it, PairingCode.isStrong(it)) }
+    }
+    @Test fun guessableRejected() {
+        listOf("0000000000000000", "1234567890123456", "9876543210987654", "1212121212121212").forEach { assertFalse(it, PairingCode.isStrong(it)) }
+    }
+    @Test fun normalizeStripsSeparators() = assertEquals("1234567890123456", PairingCode.normalize("1234 5678-9012 3456"))
+}

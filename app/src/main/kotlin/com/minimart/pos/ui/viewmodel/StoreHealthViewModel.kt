@@ -95,7 +95,7 @@ class StoreHealthViewModel @Inject constructor(
         val peerSet = !prefs.getString("peer_ip", "").isNullOrBlank()
         val serverOn = runCatching { settings.syncServerEnabled.first() }.getOrDefault(false)
         val configured = peerSet || serverOn
-        val weak = configured && runCatching { settings.getOrCreateSyncSecret().length < 16 }.getOrDefault(false)
+        val weak = configured && runCatching { !com.minimart.pos.util.PairingCode.isStrong(settings.getOrCreateSyncSecret()) }.getOrDefault(false)
 
         val reconciliation = runCatching { reconcileRange(mpesa, sales, todayStartMs(), Long.MAX_VALUE) }.getOrNull()
         val defaultPin = runCatching { users.getAllUsers().first().any { pinHasher.verify("1234", it.pinHash) } }.getOrDefault(false)

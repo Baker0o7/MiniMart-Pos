@@ -18,6 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Fails if the committed Gradle wrapper jar is not an official Gradle release.
+      - uses: gradle/actions/wrapper-validation@v4
+
       - name: Release checks
         run: bash scripts/release-checks.sh
 

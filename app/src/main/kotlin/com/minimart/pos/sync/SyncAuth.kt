@@ -1,7 +1,8 @@
 package com.minimart.pos.sync
 
 import java.security.MessageDigest
-import java.util.concurrent.ConcurrentHashMap
+import com.minimart.pos.util.ReplayCache
+import java.io.File
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -9,7 +10,13 @@ import javax.crypto.spec.SecretKeySpec
 object SyncAuth {
     const val MAX_SKEW_MS = 5 * 60_000L
 
-    private val seen = ConcurrentHashMap<String, Long>()   // signature -> expiry, blocks replays
+    // Signatures already accepted. Memory-only until [usePersistentCache] is called, so a restart
+    // of the main device does not reopen a replay window for requests captured a minute earlier.
+    @Volatile private var cache = ReplayCache()
+
+    fun usePersistentCache(file: File) { cache.flush(); cache = ReplayCache(file = file) }
+    fun flushCache() = cache.flush()
+    internal fun resetCacheForTest() { cache = ReplayCache() }
 
     fun sign(secret: String, method: String, path: String, body: String, timestamp: Long): String {
         val bodyHash = hex(MessageDigest.getInstance("SHA-256").digest(body.toByteArray(Charsets.UTF_8)))
@@ -25,8 +32,7 @@ object SyncAuth {
         val expected = sign(secret, method, path, body, ts)
         if (!MessageDigest.isEqual(expected.toByteArray(Charsets.UTF_8), signature.lowercase().toByteArray(Charsets.UTF_8))) return false
         // Each valid signature works once (within the time window).
-        seen.entries.removeIf { it.value < now }
-        return seen.putIfAbsent(expected, ts + MAX_SKEW_MS) == null
+        return cache.accept(expected, ts + MAX_SKEW_MS, now)
     }
 
     /**

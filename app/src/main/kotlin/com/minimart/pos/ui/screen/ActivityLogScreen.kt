@@ -45,7 +45,8 @@ fun ActivityLogScreen(onBack: () -> Unit, vm: ActivityLogViewModel = hiltViewMod
             ) {
                 Text(
                     if (good) "Log intact · ${c.entries} protected entries"
-                    else "Log was altered: the record breaks at line ${c.brokenAtLine}. Entries before it are still trustworthy.",
+                    else c.anchorProblem?.let { "$it Entries you can still see may be incomplete." }
+                        ?: "Log was altered: the record breaks at line ${c.brokenAtLine}. Entries before it are still trustworthy.",
                     color = if (good) DT.Green else DT.Red, fontSize = 12.sp, fontWeight = FontWeight.SemiBold
                 )
             }

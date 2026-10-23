@@ -57,7 +57,28 @@ object SyncCrypto {
 object PairingCode {
     const val LENGTH = 16
 
-    fun generate(random: SecureRandom = SecureRandom()): String = buildString { repeat(LENGTH) { append(random.nextInt(10)) } }
+    /** Draws again in the rare case a random code looks guessable, so a generated code is always [isStrong]. */
+    fun generate(random: SecureRandom = SecureRandom()): String {
+        while (true) {
+            val code = buildString { repeat(LENGTH) { append(random.nextInt(10)) } }
+            if (isStrong(code)) return code
+        }
+    }
+
+    /**
+     * True only for a code the app could have generated or a person could safely type: exactly
+     * [LENGTH] digits, at least 6 different ones, and not a simple run like 0123456789012345.
+     * Enforced in code so a short or guessable code can never be stored as the sync secret.
+     */
+    fun isStrong(code: String): Boolean {
+        if (code.length != LENGTH || !code.all { it in '0'..'9' }) return false
+        if (code.toSet().size < 6) return false
+        val diffs = code.zipWithNext { a, b -> (b - a + 10) % 10 }.toSet()
+        return !(diffs.size == 1 && (diffs.first() == 1 || diffs.first() == 9 || diffs.first() == 0))
+    }
+
+    /** Strips spaces and dashes people type between groups. */
+    fun normalize(input: String): String = input.filter { it.isDigit() }
 
     /** "1234567890123456" -> "1234 5678 9012 3456" for reading aloud or off a screen. */
     fun grouped(code: String): String = code.chunked(4).joinToString(" ")

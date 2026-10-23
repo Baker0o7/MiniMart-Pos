@@ -50,6 +50,8 @@ class SyncServer @Inject constructor(
     val isRunning: StateFlow<Boolean> = _isRunning
 
     fun start() {
+        // Kept outside backups: a restored copy would carry stale entries from another day.
+        SyncAuth.usePersistentCache(java.io.File(context.noBackupFilesDir, "sync-replay.cache"))
         // A second start() while the first is still binding would fail with "address in use" and its
         // finally block would then report the healthy first server as stopped.
         if (_isRunning.value || serverJob?.isActive == true) return
@@ -77,6 +79,7 @@ class SyncServer @Inject constructor(
     }
 
     fun stop() {
+        SyncAuth.flushCache()
         _isRunning.value = false
         serverSocket?.close()
         serverSocket = null

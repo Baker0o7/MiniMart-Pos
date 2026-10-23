@@ -26,20 +26,23 @@ enum class AuditEvent {
 }
 
 /** Result of walking the log's hash chain. [brokenAtLine] is 1-based within the current file. */
-data class AuditCheck(val entries: Int, val ok: Boolean, val brokenAtLine: Int? = null)
+data class AuditCheck(val entries: Int, val ok: Boolean, val brokenAtLine: Int? = null, val anchorProblem: String? = null)
 
 /**
  * Append-only activity log. Every line carries a short hash of (previous hash + the line), so a line
  * that is edited or removed from the middle breaks the chain and [verify] reports where. (Deleting
- * only the newest lines cannot be detected on the phone itself.) The signed-in user is attached
+ * only the newest lines is caught by the anchor: the newest hash and line count are kept in
+ * encrypted preferences and checked in [verify].) The signed-in user is attached
  * automatically through [actor].
  */
 @Singleton
 class AuditLogger @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    @com.minimart.pos.di.SecurePrefs private val anchorPrefs: android.content.SharedPreferences
 ) {
     companion object {
         private const val GENESIS = "genesis"
+        private const val ANCHOR_KEY = "audit_anchor"
         private const val ROTATE_AT_LINES = 5000
         private val HASH_SUFFIX = Regex(" \\| h=([0-9a-f]{16})$")
 
@@ -107,6 +110,7 @@ class AuditLogger @Inject constructor(
                 logFile.appendText("$body | h=$h\n")
                 lastHash = h
                 lineCount++
+                saveAnchor()
                 Log.i("AUDIT", event.name)  // details stay in the private log file, not logcat
                 if (lineCount >= ROTATE_AT_LINES) rotate()
             } catch (_: Exception) {}
@@ -122,7 +126,12 @@ class AuditLogger @Inject constructor(
     } }
 
     fun verify(): AuditCheck = run { flush(); synchronized(lock) {
-        try { verifyLines(logFile.readLines()) } catch (_: Exception) { AuditCheck(0, true) }
+        try {
+            val lines = logFile.readLines()
+            val chain = verifyLines(lines)
+            val problem = anchorProblem(lines)
+            if (problem == null) chain else chain.copy(ok = false, anchorProblem = problem)
+        } catch (_: Exception) { AuditCheck(0, true) }
     } }
 
     private fun ensureState() {
@@ -147,5 +156,21 @@ class AuditLogger @Inject constructor(
         logFile.appendText("$body | h=$h\n")
         lastHash = h
         lineCount = 1
+        saveAnchor()
     }
+
+    private fun saveAnchor() {
+        val h = lastHash ?: return
+        try { anchorPrefs.edit().putString(ANCHOR_KEY, AuditAnchor(lineCount, h).encode()).apply() } catch (_: Exception) {}
+    }
+
+    /** Plain-language problem if the newest entries were deleted or the log no longer matches its anchor. */
+    private fun anchorProblem(lines: List<String>): String? {
+        val anchor = AuditAnchor.decode(anchorPrefs.getString(ANCHOR_KEY, null)) ?: return null
+        val atLine = lines.getOrNull(anchor.lines - 1)?.let { HASH_SUFFIX.find(it)?.groupValues?.get(1) }
+        return AuditAnchor.check(anchor, lines.size, atLine)
+    }
+
+    /** The latest anchor as text, for the cloud copy; null before the first entry. */
+    fun anchorText(): String? = anchorPrefs.getString(ANCHOR_KEY, null)
 }

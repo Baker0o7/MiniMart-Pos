@@ -27,7 +27,8 @@ class CloudSnapshotBuilder @Inject constructor(
     private val products: ProductRepository,
     private val shifts: ShiftRepository,
     private val customers: CustomerRepository,
-    private val settings: SettingsRepository
+    private val settings: SettingsRepository,
+    private val audit: com.minimart.pos.util.AuditLogger
 ) {
     companion object { const val DAYS = 30 }
 
@@ -122,6 +123,8 @@ class CloudSnapshotBuilder @Inject constructor(
                 .put("retailValue", prods.sumOf { (if (it.isWeighed) it.stockKg * it.pricePerKg else it.stock * it.price) })
                 .put("lowStock", lowStock).put("expiring", expiring))
             .put("shifts", shiftArr)
+            // Newest activity-log hash and entry count (no content): a copy outside the phone that proves the log was not trimmed.
+            .put("auditAnchor", audit.anchorText() ?: JSONObject.NULL)
             .put("customerCredit", customers.getTotalCreditOutstanding().first() ?: 0.0)
     }
 }
