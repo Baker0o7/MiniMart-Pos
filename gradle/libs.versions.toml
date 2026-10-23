@@ -60,8 +60,8 @@ camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "
 coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 # WorkManager
 work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
-hilt-work = { group = "androidx.hilt", name = "hilt-work", version = "1.2.0" }
-hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version = "1.2.0" }
+hilt-work = { group = "androidx.hilt", name = "hilt-work", version = "1.4.0" }
+hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version = "1.4.0" }
 # Splash
 splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 # Coil (image loading)
