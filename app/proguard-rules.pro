@@ -50,3 +50,11 @@
 -keepattributes *Annotation*
 -dontwarn kotlin.**
 -dontwarn kotlinx.**
+
+# ── Release hardening ─────────────────────────────────────────────────────────
+# Drop verbose/debug/info logging from release builds: faster, and nothing chatty can leak into the system log.
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+}

@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.18.5] - 2026-10-23
+
+- **Performance and security tidy-up:** release builds no longer write debug or info messages to the phone's system log (a little faster, and nothing chatty can leak); two unused queries that would have loaded every sale into memory at once were removed so they cannot be used by mistake. Checked and left as they were: notification links already can only open the inventory screen after sign-in, and database indexes already cover the busy queries.
+
 ## [1.18.4] - 2026-10-23
 
 - **Easier-to-read amounts:** big amounts now show thousands separators everywhere on screen and on PDF receipts (KES 1,250.00 instead of KES 1250.00): checkout, cart, sales history, shifts, customers and credit. Thermal printer receipts are unchanged so columns still line up.

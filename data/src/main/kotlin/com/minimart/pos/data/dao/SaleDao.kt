@@ -9,10 +9,6 @@ import kotlinx.coroutines.flow.Flow
 interface SaleDao {
 
     @Transaction
-    @Query("SELECT * FROM sales ORDER BY createdAt DESC")
-    fun getAllSalesWithItems(): Flow<List<SaleWithItems>>
-
-    @Transaction
     @Query("SELECT * FROM sales WHERE id = :saleId LIMIT 1")
     suspend fun getSaleWithItems(saleId: Long): SaleWithItems?
 
@@ -102,10 +98,6 @@ interface SaleDao {
         LIMIT 100
     """)
     fun searchSales(query: String): Flow<List<SaleWithItems>>
-
-    @Transaction
-    @Query("SELECT * FROM sales WHERE status = 'COMPLETED' ORDER BY createdAt DESC")
-    fun getCompletedSales(): Flow<List<SaleWithItems>>
 
     /** Paged Sales History: COMPLETED sales only; a blank [query] matches everything. */
     @Transaction

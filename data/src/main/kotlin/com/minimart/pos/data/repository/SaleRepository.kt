@@ -21,7 +21,6 @@ class SaleRepository @Inject constructor(
     private val batches: BatchRepository,
     private val db: AppDatabase
 ) {
-    fun getAllSalesWithItems(): Flow<List<SaleWithItems>> = saleDao.getAllSalesWithItems()
     fun getSalesToday(startMs: Long): Flow<List<Sale>> = saleDao.getSalesToday(startMs)
     fun getTotalRevenueToday(startMs: Long): Flow<Double?> = saleDao.getTotalRevenueToday(startMs)
     fun getTotalRevenueBetween(start: Long, end: Long): Flow<Double?> = saleDao.getTotalRevenueBetween(start, end)
@@ -171,7 +170,6 @@ class SaleRepository @Inject constructor(
         saleDao.findByReceiptAndTime(receiptNumber, createdAt)
 
     fun searchSales(query: String) = saleDao.searchSales(query)
-    fun getCompletedSales() = saleDao.getCompletedSales()
 
     /** Refund a COMPLETED sale: marks it refunded, restores stock and gives back any customer
      * credit it used — all in one transaction. Does nothing if the sale was already refunded
