@@ -80,9 +80,9 @@ Compose screen  ->  ViewModel (Hilt)  ->  Repository (in :data)  ->  DAO / Room
 | Where | Runs on | Covers |
 |---|---|---|
 | `core/src/test` | plain JVM | all `:core` rules |
-| `data/src/test` | Robolectric + in-memory Room | DAOs, repositories, archiver, whole-shop scenarios (`EndToEndShopTest`) |
+| `data/src/test` | Robolectric + in-memory Room | DAOs, repositories, archiver, whole-shop scenarios (`EndToEndShopTest`), a year of trading with timing limits and index checks (`LargeDataTest`) |
 | `app/src/test` | JVM | printer text, theme contrast, view-model state, parsers |
-| `app/src/androidTest` | emulator (`instrumented.yml`) | Compose UI tests |
+| `app/src/androidTest` | emulator (`instrumented.yml`) | Compose UI tests (components, Home quick-action tiles) |
 
 ## Where to look
 

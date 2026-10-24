@@ -40,6 +40,14 @@ jobs:
           set -o pipefail
           gradle :core:test testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee build.log
 
+      # Timings of the large-database tests (data/build/perf-report.txt) on the run summary, so a slow creep shows.
+      - name: Performance report
+        if: always()
+        run: |
+          if [ -f data/build/perf-report.txt ]; then
+            { echo "### Large-data timings (CI machine, not a phone)"; cat data/build/perf-report.txt; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       # Lint errors fail the build. (Warnings are reported in the uploaded report but do not fail it.)
       - name: Lint
         run: |

@@ -473,7 +473,7 @@ private fun DashActionCard(title: String, icon: ImageVector, bg: Color, glow: Co
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun QuickActionGrid(
+internal fun QuickActionGrid(
     cards: List<DashCard_>, savedOrder: String, editing: Boolean,
     onHide: (String) -> Unit, onSaveOrder: (String) -> Unit
 ) {

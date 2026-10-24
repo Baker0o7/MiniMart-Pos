@@ -1,0 +1,27 @@
+name: Welcome
+
+# A friendly first reply for someone's first issue or pull request, with the three links they need.
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            Thanks for opening your first issue on MiniMart POS! A maintainer will reply as soon as possible.
+            It helps to include the app version (Settings > About & support > Copy support info) and what you expected to happen.
+            Please blur customer names, phone numbers and M-Pesa codes in screenshots. Security problems should go through SECURITY.md, not a public issue.
+          pr-message: |
+            Thanks for your first pull request! Please check the boxes in the template, make sure CI passes, and read CONTRIBUTING.md if you have not yet.
+            Small, focused changes with a test are the quickest to review.

@@ -436,6 +436,7 @@ Actions tab, or push a `v*` tag). The version comes from `versionName` in
 
 - Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 - Found a security problem? Please follow [SECURITY.md](SECURITY.md) and do not open a public issue.
+- Looking for somewhere to start? See the [roadmap and good first contributions](docs/ROADMAP.md). Need help? [SUPPORT.md](SUPPORT.md). Libraries and updates: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
 - Working on the code (or using an AI assistant)? Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [CLAUDE.md](CLAUDE.md). Instant M-Pesa setup is in [docs/MPESA_WEBHOOK.md](docs/MPESA_WEBHOOK.md).
 - MiniMart POS is open source under the [Apache License 2.0](LICENSE). Third-party libraries keep their own licenses.
 

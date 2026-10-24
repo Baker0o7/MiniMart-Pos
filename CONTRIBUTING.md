@@ -10,6 +10,8 @@ By contributing you agree that your contribution is licensed under the [Apache L
 - **Report a security problem** privately. Follow [SECURITY.md](SECURITY.md); never open a public issue for it.
 - **Send a fix or feature** as a pull request (see [Pull request process](#pull-request-process)). For anything bigger than a small fix, open an issue first so we can agree on the approach before you spend time on it.
 - **Improve the docs**, wording on screen, or translations of plain-language messages.
+- **Pick a good first contribution** from the [roadmap](docs/ROADMAP.md): small tasks with a clear "done". Comment on the issue (or open one) so two people do not do the same thing.
+- **Review pull requests and try releases** on a real phone: telling us what confused you is a contribution.
 
 ## Project layout
 
@@ -78,6 +80,7 @@ Release builds are signed by the **Build & Release** workflow using repository s
 - **Every bug fix gets a test** that fails without the fix. Every new rule in `:core` or `:data` gets tests.
 - Put pure logic in `:core` and test it with JUnit. Put database behaviour in `:data` tests (they use a real in-memory Room database). Use whole-shop scenarios (`EndToEndShopTest`) when several pieces must agree.
 - Compose UI tests live in `app/src/androidTest`. They are compiled on every push and run on an emulator by the **UI tests (emulator)** workflow.
+- Large-data behaviour is covered by `LargeDataTest` (a year of sales; timings appear on the CI run summary). If you change a query, check that it still uses an index there.
 - Tests must be deterministic: no real clocks, network or sleeping where a parameter will do.
 
 ## Pull request process
@@ -101,4 +104,4 @@ A short imperative summary (about 70 characters), then a blank line and, if usef
 
 ## Questions
 
-Open an issue labelled **question**. There are no silly questions about a codebase this size.
+Open an issue labelled **question** (see also [SUPPORT.md](SUPPORT.md)). There are no silly questions about a codebase this size.

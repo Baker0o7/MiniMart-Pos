@@ -1,0 +1,17 @@
+name: Dependency review
+
+# On every pull request: blocks a change that adds or upgrades to a library with a known serious
+# vulnerability, and shows licence changes. Needs no secrets.
+on: pull_request
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
