@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.18.7] - 2026-10-24
+
+- **Stronger storage for secrets:** M-Pesa keys, pairing codes and cloud settings are now encrypted with a key kept inside the phone's secure chip/Keystore, using our own small, tested code instead of an alpha-stage library. Your existing saved values are carried over automatically the first time you open the app, so nothing needs to be re-entered. If a phone's Keystore cannot be used, secrets are held in memory only (as before) and Store health says so.
+
 ## [1.18.6] - 2026-10-24
 
 - **Pairing is stricter:** the main device only ever uses a full 16-digit pairing code that is not a simple pattern. If an older, shorter code is found it is replaced with a new one, and tills must enter the new code once (Settings shows it on the main device). Tills now ask for all 16 digits before trying to sync, and spaces or dashes you type are ignored.

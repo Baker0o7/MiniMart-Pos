@@ -114,8 +114,8 @@ Built with Kotlin + Jetpack Compose 🇰🇪
   further guesses for 30s — a 1,000,000-combination code can't be brute-forced
   at LAN speed)
 - **Pairing secrets encrypted at rest** — both this device's own code and any
-  remembered peer code are stored via Android Keystore-backed
-  EncryptedSharedPreferences, not plaintext
+  remembered peer code are stored encrypted with AES-256-GCM using a key held
+  in the Android Keystore, not plaintext
 - **Real replication, main-device model** — one device is the *main device*
   (acts as server). Each till sends the sales, refunds and voids it made to the
   main device, which validates and applies them (stock, customer credit), then
@@ -347,7 +347,7 @@ gradle :core:test testDebugUnitTest
 | Database | Room 2.6 (SQLite v13), Android FBE at rest |
 | Money | Custom `Money` value class (Long cents) for checkout-critical math |
 | PIN Security | Argon2id (argon2-kt 1.4.0) |
-| Sensitive Storage | Jetpack Security (`EncryptedSharedPreferences`, Keystore-backed) |
+| Sensitive Storage | AES-256-GCM with an Android Keystore key (`KeystorePrefs`) |
 | Camera | CameraX + ML Kit Barcode |
 | Sync | Custom HTTP server/client over LAN WiFi, pairing-code authenticated |
 | Background | WorkManager (low-stock + expiry alerts) |

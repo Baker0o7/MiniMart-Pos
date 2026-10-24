@@ -290,7 +290,7 @@ class SettingsRepository @Inject constructor(
     }
 
     // ── Daraja (M-Pesa STK Push) credentials ──────────────────────────────────
-    // Stored in EncryptedSharedPreferences (Keystore-backed AES-256-GCM), not
+    // Stored in KeystorePrefs (Keystore-backed AES-256-GCM), not
     // DataStore, because these are live API credentials — Consumer Secret and
     // Passkey in particular — that must never appear in a plaintext file, even
     // one scoped to this app's private data directory.

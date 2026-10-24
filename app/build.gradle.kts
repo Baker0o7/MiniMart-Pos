@@ -23,8 +23,8 @@ android {
         applicationId = "com.minimart.pos"
         minSdk = 26
         targetSdk = 35
-        versionCode = 111
-        versionName = "1.18.6"
+        versionCode = 112
+        versionName = "1.18.7"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -143,8 +143,8 @@ dependencies {
     // org.json for JVM tests (Android's own copy is only a stub there)
     testImplementation("org.json:json:20240303")
 
-    // Encrypts sensitive DataStore/SharedPreferences values (sync pairing secrets).
-    // First-party Google Jetpack library — a thin wrapper around the system Android
-    // Keystore service, not a bundled third-party native library like SQLCipher.
+    // MIGRATION ONLY: reads the old EncryptedSharedPreferences files once (LegacySecurePrefsMigrator).
+    // New secrets use KeystorePrefs (AES-256-GCM, Android Keystore). Delete this line and the migrator
+    // once most phones have updated.
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 }

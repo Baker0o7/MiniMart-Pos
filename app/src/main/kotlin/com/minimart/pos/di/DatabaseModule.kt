@@ -47,23 +47,22 @@ object DatabaseModule {
     @Provides @Singleton fun providePurchasingDao(db: AppDatabase) = db.purchasingDao()
     @Provides @Singleton fun provideBatchDao(db: AppDatabase) = db.batchDao()
 
-    /** Creates an EncryptedSharedPreferences-backed store for the given file name. If the phone's Keystore
-     * cannot be used, the app must still start, but it must never fall back to a plain file that would hold
-     * pairing codes and M-Pesa credentials readable. The fallback is therefore an in-memory store: nothing is
-     * written to disk, values are lost on restart, and callers that need to persist a secret check for
-     * [InMemoryPrefs] and tell the user (see SettingsRepository.secureStorageAvailable). */
-    private fun buildEncryptedPrefs(context: Context, fileName: String): SharedPreferences =
+    /** Creates the encrypted store for [fileName]: AES-256-GCM with a key held in the Android Keystore
+     * ([KeystorePrefs]). If the phone's Keystore cannot be used, the app must still start, but it must never
+     * fall back to a plain file that would hold pairing codes and M-Pesa credentials readable. The fallback is
+     * therefore an in-memory store: nothing is written to disk, values are lost on restart, and callers that
+     * need to persist a secret check for [InMemoryPrefs] and tell the user (see
+     * SettingsRepository.secureStorageAvailable). Values from the older androidx.security file
+     * [legacyName] are carried over once, then that file is deleted. */
+    private fun buildSecurePrefs(context: Context, fileName: String, legacyName: String): SharedPreferences =
         try {
-            val masterKey = androidx.security.crypto.MasterKey.Builder(context)
-                .setKeyScheme(androidx.security.crypto.MasterKey.KeyScheme.AES256_GCM)
-                .build()
-            androidx.security.crypto.EncryptedSharedPreferences.create(
-                context,
-                fileName,
-                masterKey,
-                androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
+            val box = com.minimart.pos.util.AesGcmBox(com.minimart.pos.data.security.KeystoreKey.getOrCreate("minimart_prefs_key_v2"))
+            // Some phones create a Keystore key fine but fail when using it; find out now, not at the first sale.
+            check(box.open("selftest", box.seal("selftest", byteArrayOf(1, 2, 3)))?.size == 3) { "Keystore self-test failed" }
+            val prefs = com.minimart.pos.data.security.KeystorePrefs(
+                context.getSharedPreferences(fileName, Context.MODE_PRIVATE), box, fileName)
+            LegacySecurePrefsMigrator.migrate(context, legacyName, prefs)
+            prefs
         } catch (e: Exception) {
             android.util.Log.e("SecureStorage", "Keystore unavailable for $fileName; using memory only", e)
             com.minimart.pos.data.security.InMemoryPrefs()
@@ -73,12 +72,12 @@ object DatabaseModule {
     // when this device acts as a sync CLIENT) was stored in a plain, unencrypted
     // SharedPreferences file — a plaintext copy of a security credential, despite the
     // server side of that same credential already being hardened with rate limiting
-    // and constant-time comparison. EncryptedSharedPreferences.create() returns a
+    // and constant-time comparison. The encrypted store is a
     // standard SharedPreferences-compatible object, so this was a drop-in swap — zero
     // changes needed to SyncViewModel's actual read/write code.
     @Provides @Singleton
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences =
-        buildEncryptedPrefs(context, "minimart_sync_prefs")
+        buildSecurePrefs(context, "minimart_sync_prefs_v2", "minimart_sync_prefs")
 
     // Bug fix: this device's OWN sync pairing secret (shown when acting as a sync
     // server) was stored in plaintext Preferences DataStore. Preferences DataStore has
@@ -89,5 +88,5 @@ object DatabaseModule {
     // don't suddenly get a mismatched secret and silently break sync).
     @Provides @Singleton @SecurePrefs
     fun provideSecurePreferences(@ApplicationContext context: Context): SharedPreferences =
-        buildEncryptedPrefs(context, "minimart_secure_prefs")
+        buildSecurePrefs(context, "minimart_secure_prefs_v2", "minimart_secure_prefs")
 }

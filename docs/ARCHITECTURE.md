@@ -20,7 +20,7 @@ ViewModels only gather facts and show results.
 ```
 Compose screen  ->  ViewModel (Hilt)  ->  Repository (in :data)  ->  DAO / Room
       ^                   |                       |
-      |                   +-- :core rules         +-- DataStore, EncryptedSharedPreferences
+      |                   +-- :core rules         +-- DataStore, KeystorePrefs
       +-- StateFlow state
 ```
 
@@ -69,7 +69,7 @@ Compose screen  ->  ViewModel (Hilt)  ->  Repository (in :data)  ->  DAO / Room
 
 ## Security model
 
-* Secrets (Daraja keys, sync secret, cloud secret) live in `EncryptedSharedPreferences`; if the keystore is
+* Secrets (Daraja keys, sync secret, cloud secret) live in `KeystorePrefs` (AES-256-GCM, Android Keystore key); if the keystore is
   unavailable the app uses in-memory preferences (fail closed) rather than plain files.
 * PINs are hashed with Argon2id; owner-only actions go through `PermissionGuard` / `OwnerGateViewModel`.
 * The activity log is hash-chained (`AuditLogger`). `FileProvider` only exposes the folders in `res/xml/file_paths.xml`.
