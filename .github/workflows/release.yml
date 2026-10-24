@@ -4,6 +4,11 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      allow_temporary_key:
+        description: 'Sign with a throwaway key (phones with an earlier release must uninstall first). Only if you accept that.'
+        type: boolean
+        default: false
 
 env:
   JAVA_VERSION: '17'
@@ -38,8 +43,10 @@ jobs:
         run: gradle testDebugUnitTest --no-daemon
 
       # The same keystore every release, so each APK can update the one already on a shop's phone.
-      # There is deliberately no fallback: without the secrets the release stops here.
+      # There is deliberately no silent fallback: without the secrets the release stops here, unless
+      # whoever starts the run explicitly ticks "allow_temporary_key".
       - name: Restore release keystore
+        if: ${{ inputs.allow_temporary_key != true }}
         env:
           SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
@@ -53,19 +60,31 @@ jobs:
           done
           echo "$SIGNING_KEYSTORE_BASE64" | base64 -d > app/minimart-release.jks
           keytool -list -keystore app/minimart-release.jks -storepass "$SIGNING_STORE_PASSWORD" -alias "$SIGNING_KEY_ALIAS" > /dev/null
+          {
+            echo "SIGNING_STORE_PASSWORD=$SIGNING_STORE_PASSWORD"
+            echo "SIGNING_KEY_ALIAS=$SIGNING_KEY_ALIAS"
+            echo "SIGNING_KEY_PASSWORD=$SIGNING_KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+
+      - name: Generate temporary keystore (explicitly requested)
+        if: ${{ inputs.allow_temporary_key == true }}
+        run: |
+          echo "::warning::Signing with a THROWAWAY key. Phones with an earlier release must uninstall before installing this one."
+          PASS=$(openssl rand -hex 24)
+          echo "::add-mask::$PASS"
+          keytool -genkeypair -keystore app/minimart-release.jks -alias minimart \
+            -keyalg RSA -keysize 2048 -validity 10000 -storepass "$PASS" -keypass "$PASS" \
+            -dname "CN=MiniMart POS,OU=Mobile,O=MiniMart,L=Mombasa,ST=Coast,C=KE"
+          {
+            echo "SIGNING_STORE_PASSWORD=$PASS"
+            echo "SIGNING_KEY_ALIAS=minimart"
+            echo "SIGNING_KEY_PASSWORD=$PASS"
+          } >> "$GITHUB_ENV"
 
       - name: Build signed release APK
-        env:
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
         run: gradle assembleRelease --no-daemon
 
       - name: Build signed release AAB
-        env:
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
-          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
         run: gradle bundleRelease --no-daemon
 
       - name: Get version
