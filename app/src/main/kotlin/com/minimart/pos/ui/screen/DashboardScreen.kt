@@ -325,7 +325,7 @@ fun DashboardScreen(
 
             item { Spacer(Modifier.height(if (showManageActions) 4.dp else 12.dp)) }
             if (showManageActions) item {
-                Text("Hold a tile, then drag it to move it. Tap the red × to hide it.", color = Sub, fontSize = 12.sp,
+                Text("Hold and drag a tile to move it. Tap the red × to hide it.", color = Sub, fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp))
             }
 
@@ -450,8 +450,10 @@ private fun DashActionCard(title: String, icon: ImageVector, bg: Color, glow: Co
         .clip(RoundedCornerShape(16.dp))
         .background(Brush.verticalGradient(listOf(bg, Bg)))
         .border(if (editing) 1.5.dp else 1.dp, glow.copy(if (editing) 0.9f else 0.5f), RoundedCornerShape(16.dp))
-        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null,
-            interactionSource = interactionSource, onClick = { if (!editing) onClick() })
+        // While editing there is no click handler at all: a clickable would swallow the touch before the
+        // long-press-and-drag on the tile can see it, which is why dragging did nothing.
+        .then(if (editing) Modifier else Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button,
+            indication = null, interactionSource = interactionSource, onClick = onClick))
         .padding(horizontal = 4.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -490,7 +492,8 @@ internal fun QuickActionGrid(
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val gap = 8.dp
         val cols = if (maxWidth >= 600.dp) 6 else 4
-        val tileWidth = (maxWidth - gap * (cols - 1)) / cols
+        // A little slack: with exact division the fourth tile can miss by a rounding error and wrap to a new row.
+        val tileWidth = (maxWidth - gap * (cols - 1) - 2.dp) / cols
         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap),
             verticalArrangement = Arrangement.spacedBy(gap), maxItemsInEachRow = cols) {
             order.mapNotNull { id -> cards.firstOrNull { it.id == id } }.forEach { c ->
