@@ -88,7 +88,7 @@ class LabelPrintViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(printing = true, message = null) }
             val r = try { printer.printLabels(jobs, s.showPrice, s.currency) }
-                    catch (e: Exception) { PrintResult.Error(e.message ?: "Print failed") }
+                    catch (e: Exception) { PrintResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Printing")) }
             _state.update {
                 when (r) {
                     is PrintResult.Success -> it.copy(printing = false, printerConnected = true, message = "Printed ${jobs.sumOf { j -> j.copies }} label(s)", isError = false)

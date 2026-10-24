@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.18.8] - 2026-10-24
+
+- **Clearer error messages:** when something fails (opening a receipt, saving a product or supplier, the data check, hardware tests, label printing, sending to the printer, or an M-Pesa request) the app now says what went wrong and what to do about it, in plain words, instead of showing a technical message such as "failed to connect to /192.168.1.5".
+
 ## [1.18.7] - 2026-10-24
 
 - **Stronger storage for secrets:** M-Pesa keys, pairing codes and cloud settings are now encrypted with a key kept inside the phone's secure chip/Keystore, using our own small, tested code instead of an alpha-stage library. Your existing saved values are carried over automatically the first time you open the app, so nothing needs to be re-entered. If a phone's Keystore cannot be used, secrets are held in memory only (as before) and Store health says so.

@@ -106,7 +106,7 @@ class HardwareViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(testing = name) }
             try { body() } catch (e: Exception) {
-                val failed = TestOutcome.Failed(e.localizedMessage ?: "The test could not run.")
+                val failed = TestOutcome.Failed(com.minimart.pos.util.ErrorAdvice.explain(e, "The test"))
                 if (name == "printer") printerTest = failed else drawerTest = failed
             }
             _state.update { it.copy(testing = null) }

@@ -111,14 +111,14 @@ class PurchasingViewModel @Inject constructor(
                 repo.saveSupplier(s.copy(name = name, phone = s.phone.trim(), email = s.email.trim(),
                     address = s.address.trim(), notes = s.notes.trim()))
                 say("Saved $name")
-            } catch (e: Exception) { say(e.message ?: "Could not save supplier", true) }
+            } catch (e: Exception) { say(com.minimart.pos.util.ErrorAdvice.explain(e, "Saving the supplier"), true) }
         }
     }
 
     fun deactivateSupplier(id: Long) {
         viewModelScope.launch {
             try { repo.deactivateSupplier(id); say("Supplier removed") }
-            catch (e: Exception) { say(e.message ?: "Could not remove supplier", true) }
+            catch (e: Exception) { say(com.minimart.pos.util.ErrorAdvice.explain(e, "Removing the supplier"), true) }
         }
     }
 
@@ -139,7 +139,7 @@ class PurchasingViewModel @Inject constructor(
                         added++
                     }
                 say(if (added == 0) "No new suppliers found" else "Imported $added supplier${if (added == 1) "" else "s"}")
-            } catch (e: Exception) { say(e.message ?: "Import failed", true) }
+            } catch (e: Exception) { say(com.minimart.pos.util.ErrorAdvice.explain(e, "Importing suppliers"), true) }
         }
     }
 }
@@ -323,7 +323,7 @@ class PurchaseOrderEditorViewModel @Inject constructor(
                 if (id != 0L && !finish) load(id)
                 if (success != null) say(success)
                 if (finish) _state.update { it.copy(finished = true) }
-            } catch (e: Exception) { say(e.message ?: "Something went wrong", true) }
+            } catch (e: Exception) { say(com.minimart.pos.util.ErrorAdvice.explain(e, "That"), true) }
         }
     }
 

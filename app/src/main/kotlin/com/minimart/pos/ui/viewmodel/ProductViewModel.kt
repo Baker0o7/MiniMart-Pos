@@ -115,7 +115,7 @@ class ProductViewModel @Inject constructor(
             } catch (e: android.database.sqlite.SQLiteConstraintException) {
                 _uiState.update { it.copy(isLoading = false, error = "Barcode already exists (it may belong to a deleted product)") }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = e.message) }
+                _uiState.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Saving the product")) }
             }
         }
     }

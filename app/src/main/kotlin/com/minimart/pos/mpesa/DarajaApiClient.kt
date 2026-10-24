@@ -155,7 +155,7 @@ class DarajaApiClient @Inject constructor(
             throw e   // cashier pressed Cancel — don't turn it into an error result
         } catch (e: Exception) {
             Log.e(TAG, "initiateStkPush error", e)
-            StkPushResult.Error(e.message ?: "Network error")
+            StkPushResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "The M-Pesa request"))
         }
     }
 
@@ -213,7 +213,7 @@ class DarajaApiClient @Inject constructor(
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "queryStkStatus error", e)
-            StkStatus.Error(e.message ?: "Network error")
+            StkStatus.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Checking the M-Pesa payment"))
         }
     }
 }

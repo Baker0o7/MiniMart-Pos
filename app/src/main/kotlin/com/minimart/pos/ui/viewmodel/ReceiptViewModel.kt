@@ -53,7 +53,7 @@ class ReceiptViewModel @Inject constructor(
                 val cashier = sale?.sale?.cashierId?.let { runCatching { userRepo.getUserById(it)?.displayName }.getOrNull() }
                 _state.update { it.copy(saleWithItems = sale, isLoading = false, cashierName = cashier) }
             } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false, error = e.message) }
+                _state.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Opening the receipt")) }
             }
         }
     }

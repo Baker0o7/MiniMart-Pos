@@ -39,7 +39,7 @@ class IntegrityViewModel @Inject constructor(
                     detail = if (r.ok) "Manual check: ${r.salesChecked} sales, no problems"
                              else "Manual check: ${r.issues.size} problem(s) — ${r.issues.take(3).joinToString("; ")}") }
             } catch (e: Exception) {
-                _failed.value = e.message ?: "Check could not run"
+                _failed.value = com.minimart.pos.util.ErrorAdvice.explain(e, "The data check")
             } finally { _running.value = false }
         }
     }

@@ -109,7 +109,7 @@ class ThermalPrinter @Inject constructor(
     /** Send raw bytes — used by CashDrawerManager for ESC/POS drawer kick */
     suspend fun sendRaw(bytes: ByteArray): PrintResult = withContext(Dispatchers.IO) {
         try { write(bytes); PrintResult.Success }
-        catch (e: Exception) { PrintResult.Error(e.localizedMessage ?: "Send failed") }
+        catch (e: Exception) { PrintResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Sending to the printer")) }
     }
 
     // ── Low-level write ───────────────────────────────────────────────────────
