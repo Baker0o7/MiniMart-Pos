@@ -11,7 +11,7 @@ gradle assembleDebug
 gradle :app:assembleDebugAndroidTest     # UI tests must still compile (they run on an emulator in CI)
 bash scripts/release-checks.sh           # migration present, version + CHANGELOG entry, Locale in String.format
 ```
-The Gradle wrapper jar is not committed; use Gradle 8.7. Package: `com.minimart.pos`.
+The Gradle wrapper jar is committed on purpose (CI validates it); Gradle 8.7. Package: `com.minimart.pos`.
 
 ## Modules
 `:core` pure Kotlin, no Android imports (business rules + tests). `:data` Room, repositories, settings. `:app` UI, Hilt,

@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.19.0] - 2026-10-25
+
+- **Smaller Home tiles you can rearrange:** the Quick Actions tiles are now compact, four across on a phone (six on a tablet), so more fit on the screen without scrolling. Tap **Edit**, then hold a tile and drag it where you want it; the other tiles move out of the way and your order is remembered. Tap the red × to hide a tile, and "Restore hidden cards" brings them back. While editing, tapping a tile no longer opens it by accident. The one-line descriptions under each name were dropped to make room.
+
 ## [1.18.9] - 2026-10-24
 
 - **Easier for everyone to use:** eleven buttons that only showed a picture (clear search, call or WhatsApp a supplier, show or hide a key, edit a customer, change or remove a user, search) now have a spoken name for screen readers such as TalkBack; about 40 tappable rows and chips are now announced as buttons; and the small delete and call buttons are now a full finger-sized 48 dp, so they are harder to miss or hit by accident.

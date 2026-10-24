@@ -30,6 +30,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -60,7 +64,7 @@ private val RedGlow     = Color(0xFFEF5350)
 private val White       = Color.White
 private val Sub: Color get() = DT.SubText
 
-private data class DashCard_(
+internal data class DashCard_(
     val id: String, val title: String, val sub: String,
     val icon: ImageVector, val bg: Color, val glow: Color, val action: () -> Unit
 )
@@ -96,6 +100,8 @@ fun DashboardScreen(
     CrashReportPrompt()
     val rm    = com.minimart.pos.util.RoleManager
     val hiddenActions by (settingsRepo?.hiddenActions
+        ?: kotlinx.coroutines.flow.flowOf("")).collectAsStateWithLifecycle("")
+    val savedActionOrder by (settingsRepo?.actionOrder
         ?: kotlinx.coroutines.flow.flowOf("")).collectAsStateWithLifecycle("")
     var showManageActions by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
@@ -317,7 +323,11 @@ fun DashboardScreen(
                 }
             }
 
-            item { Spacer(Modifier.height(12.dp)) }
+            item { Spacer(Modifier.height(if (showManageActions) 4.dp else 12.dp)) }
+            if (showManageActions) item {
+                Text("Hold a tile, then drag it to move it. Tap the red × to hide it.", color = Sub, fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp))
+            }
 
             // ── Cards grid ────────────────────────────────────────────────────
             item {
@@ -353,17 +363,11 @@ fun DashboardScreen(
 
                 Column(Modifier.padding(horizontal = 16.dp).animateContentSize(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    cards.chunked(3).forEach { row ->
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            row.forEach { c ->
-                                Box(Modifier.weight(1f)) {
-                                    DashActionCard(c.title, c.sub, c.icon, c.bg, c.glow, c.action)
-                                    if (showManageActions) DashBadge { hide(c.id) }
-                                }
-                            }
-                            repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
-                        }
-                    }
+                    QuickActionGrid(
+                        cards = cards, savedOrder = savedActionOrder, editing = showManageActions,
+                        onHide = { hide(it) },
+                        onSaveOrder = { scope.launch { settingsRepo?.setActionOrder(it) } }
+                    )
                     val hidden2 = hiddenActions.split(",").filter { it.isNotBlank() }.toSet()
                     if (hidden2.isNotEmpty()) {
                         val restoreScope = rememberCoroutineScope()
@@ -431,37 +435,99 @@ fun DashboardScreen(
     }
 }
 
+/** One compact quick-action tile: icon over a one-line label. Four across on a phone. */
 @Composable
-private fun DashActionCard(title: String, sub: String, icon: ImageVector,
-    bg: Color, glow: Color, onClick: () -> Unit) {
+private fun DashActionCard(title: String, icon: ImageVector, bg: Color, glow: Color,
+    editing: Boolean, dragging: Boolean, onClick: () -> Unit) {
     // A press-scale animation gives the tap visible feedback during the screen transition.
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.95f else 1f, label = "cardPress")
+    val scale by animateFloatAsState(if (dragging) 1.08f else if (isPressed) 0.95f else 1f, label = "cardPress")
 
-    // Height follows the content (with a floor) instead of a fixed aspect ratio: on phones with a
-    // large font setting the fixed ratio clipped the subtitle at the bottom of the card.
     Box(modifier = Modifier.fillMaxWidth()
-        .defaultMinSize(minHeight = 104.dp)
-        .graphicsLayer { scaleX = scale; scaleY = scale }
-        .clip(RoundedCornerShape(20.dp))
+        .defaultMinSize(minHeight = 82.dp)
+        .graphicsLayer { scaleX = scale; scaleY = scale; alpha = if (dragging) 0.85f else 1f }
+        .clip(RoundedCornerShape(16.dp))
         .background(Brush.verticalGradient(listOf(bg, Bg)))
-        .border(1.5.dp, glow.copy(0.5f), RoundedCornerShape(20.dp))
-        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = interactionSource, onClick = onClick)
-        .padding(start = 11.dp, end = 8.dp, top = 11.dp, bottom = 11.dp)) {
-        Column(Modifier.fillMaxWidth()) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                Box(modifier = Modifier.size(42.dp).clip(RoundedCornerShape(13.dp))
-                    .background(glow.copy(0.22f)), contentAlignment = Alignment.Center) {
-                    Icon(icon, null, tint = glow, modifier = Modifier.size(23.dp))
-                }
-                Spacer(Modifier.weight(1f))
-                Icon(Icons.Default.ChevronRight, null, tint = White.copy(0.75f), modifier = Modifier.size(20.dp).padding(top = 2.dp))
+        .border(if (editing) 1.5.dp else 1.dp, glow.copy(if (editing) 0.9f else 0.5f), RoundedCornerShape(16.dp))
+        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null,
+            interactionSource = interactionSource, onClick = { if (!editing) onClick() })
+        .padding(horizontal = 4.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center) {
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(11.dp))
+                .background(glow.copy(0.22f)), contentAlignment = Alignment.Center) {
+                Icon(icon, null, tint = glow, modifier = Modifier.size(20.dp))
             }
-            Spacer(Modifier.height(10.dp))
-            Text(title, color = White, fontWeight = FontWeight.Bold, fontSize = 12.5.sp, lineHeight = 16.sp,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(sub, color = Sub, fontSize = 10.sp, lineHeight = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(7.dp))
+            Text(title, color = White, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, lineHeight = 14.sp,
+                textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+/**
+ * The tiles in the owner's order. In edit mode a tile can be held and dragged: as the finger passes over
+ * another tile the two trade places, and the new order is saved when the finger lifts. All tiles sit in one
+ * FlowRow (not separate rows) so a tile keeps its drag while it moves to another row.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun QuickActionGrid(
+    cards: List<DashCard_>, savedOrder: String, editing: Boolean,
+    onHide: (String) -> Unit, onSaveOrder: (String) -> Unit
+) {
+    var draft by remember { mutableStateOf<List<String>?>(null) }
+    LaunchedEffect(savedOrder) { draft = null }   // the saved copy has caught up
+    val ids = cards.map { it.id }
+    val order = com.minimart.pos.util.ActionOrder.apply(ids, draft ?: com.minimart.pos.util.ActionOrder.parse(savedOrder))
+    val orderNow = rememberUpdatedState(order)
+    val savedNow = rememberUpdatedState(savedOrder)
+    val bounds = remember { HashMap<String, androidx.compose.ui.geometry.Rect>() }
+    var dragId by remember { mutableStateOf<String?>(null) }
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val gap = 8.dp
+        val cols = if (maxWidth >= 600.dp) 6 else 4
+        val tileWidth = (maxWidth - gap * (cols - 1)) / cols
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap),
+            verticalArrangement = Arrangement.spacedBy(gap), maxItemsInEachRow = cols) {
+            order.mapNotNull { id -> cards.firstOrNull { it.id == id } }.forEach { c ->
+                key(c.id) {
+                    Box(Modifier.width(tileWidth)
+                        .onGloballyPositioned { bounds[c.id] = it.boundsInRoot() }
+                        .pointerInput(c.id, editing) {
+                            if (!editing) return@pointerInput
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = {
+                                    dragId = c.id
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                },
+                                onDrag = { change, _ ->
+                                    change.consume()
+                                    val mine = bounds[c.id]
+                                    if (mine != null) {
+                                        val finger = mine.topLeft + change.position
+                                        val current = orderNow.value
+                                        val over = current.firstOrNull { it != c.id && bounds[it]?.contains(finger) == true }
+                                        if (over != null) draft = com.minimart.pos.util.ActionOrder.moveTo(current, c.id, over)
+                                    }
+                                },
+                                onDragEnd = {
+                                    dragId = null
+                                    onSaveOrder(com.minimart.pos.util.ActionOrder.encode(com.minimart.pos.util.ActionOrder.merge(
+                                        orderNow.value, com.minimart.pos.util.ActionOrder.parse(savedNow.value))))
+                                },
+                                onDragCancel = { dragId = null }
+                            )
+                        }
+                    ) {
+                        DashActionCard(c.title, c.icon, c.bg, c.glow, editing, dragId == c.id, c.action)
+                        if (editing) DashBadge { onHide(c.id) }
+                    }
+                }
+            }
         }
     }
 }
@@ -514,8 +580,8 @@ private fun DashAlert(icon: ImageVector, glow: Color, bg: Color,
 
 @Composable
 private fun BoxScope.DashBadge(onRemove: () -> Unit) {
-    // 48dp touch target around a 20dp visual badge.
-    Box(Modifier.align(Alignment.TopEnd).size(48.dp)
+    // 48dp touch target around a 20dp visual badge, nudged into the corner so most of the tile stays free to drag.
+    Box(Modifier.align(Alignment.TopEnd).offset(x = 10.dp, y = (-10).dp).size(48.dp)
         .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Hide this card", onClick = onRemove),
         contentAlignment = Alignment.Center) {
         Box(Modifier.size(20.dp).clip(CircleShape).background(RedGlow), contentAlignment = Alignment.Center) {
