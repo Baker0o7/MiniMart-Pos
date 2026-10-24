@@ -37,7 +37,7 @@ workers, printer, sync. Put new rules in `:core` and test them there.
 ## Releasing
 Bump `versionCode`/`versionName` in `app/build.gradle.kts`, add a `## [x.y.z] - date` section at the top of
 `CHANGELOG.md` (plain language, what changed for the shop), run `scripts/release-checks.sh`, push to `main`, wait for CI,
-then run the *Build & Release* workflow. Release notes live in the changelog, not the README.
+then run the *Build & Release* workflow (it signs with the keystore in repository secrets: see `docs/RELEASE_SIGNING.md`). Release notes live in the changelog, not the README.
 
 ## Style
 Short KDoc on non-obvious classes saying *why*; plain-language user-facing strings (shop owners, not engineers);

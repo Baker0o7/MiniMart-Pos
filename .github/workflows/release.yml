@@ -37,29 +37,35 @@ jobs:
       - name: Run unit tests (gate the release)
         run: gradle testDebugUnitTest --no-daemon
 
-      - name: Generate keystore
+      # The same keystore every release, so each APK can update the one already on a shop's phone.
+      # There is deliberately no fallback: without the secrets the release stops here.
+      - name: Restore release keystore
+        env:
+          SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
-          keytool -genkey -v \
-            -keystore app/minimart-release.jks \
-            -alias minimart \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass android \
-            -keypass android \
-            -dname "CN=MiniMart POS,OU=Mobile,O=MiniMart,L=Mombasa,ST=Coast,C=KE"
-          ls -lh app/minimart-release.jks
+          for v in SIGNING_KEYSTORE_BASE64 SIGNING_STORE_PASSWORD SIGNING_KEY_ALIAS SIGNING_KEY_PASSWORD; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Repository secret $v is not set. See docs/RELEASE_SIGNING.md."; exit 1
+            fi
+          done
+          echo "$SIGNING_KEYSTORE_BASE64" | base64 -d > app/minimart-release.jks
+          keytool -list -keystore app/minimart-release.jks -storepass "$SIGNING_STORE_PASSWORD" -alias "$SIGNING_KEY_ALIAS" > /dev/null
 
       - name: Build signed release APK
         env:
-          SIGNING_KEY_ALIAS: minimart
-          SIGNING_KEY_PASSWORD: android
-          SIGNING_STORE_PASSWORD: android
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
         run: gradle assembleRelease --no-daemon
 
       - name: Build signed release AAB
         env:
-          SIGNING_KEY_ALIAS: minimart
-          SIGNING_KEY_PASSWORD: android
-          SIGNING_STORE_PASSWORD: android
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
         run: gradle bundleRelease --no-daemon
 
       - name: Get version

@@ -12,10 +12,23 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile     = file("minimart-release.jks")
-            storePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: "android"
-            keyAlias      = System.getenv("SIGNING_KEY_ALIAS")      ?: "minimart"
-            keyPassword   = System.getenv("SIGNING_KEY_PASSWORD")   ?: "android"
+            // No default passwords: the release keystore and its secrets come from the environment
+            // (GitHub Actions secrets in CI, see docs/RELEASE_SIGNING.md). Debug builds never need them.
+            storeFile     = file(System.getenv("SIGNING_KEYSTORE_PATH") ?: "minimart-release.jks")
+            storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+            keyAlias      = System.getenv("SIGNING_KEY_ALIAS")
+            keyPassword   = System.getenv("SIGNING_KEY_PASSWORD")
+        }
+    }
+
+    // Building a release without the signing secrets must fail loudly, not sign with a throwaway key.
+    gradle.taskGraph.whenReady {
+        val wantsRelease = allTasks.any { it.project == project && it.name in setOf("assembleRelease", "bundleRelease", "packageRelease") }
+        if (wantsRelease) {
+            val missing = listOf("SIGNING_STORE_PASSWORD", "SIGNING_KEY_ALIAS", "SIGNING_KEY_PASSWORD").filter { System.getenv(it).isNullOrBlank() }
+            if (missing.isNotEmpty()) throw GradleException("Release signing needs ${missing.joinToString()} (see docs/RELEASE_SIGNING.md)")
+            if (!file(System.getenv("SIGNING_KEYSTORE_PATH") ?: "minimart-release.jks").exists())
+                throw GradleException("Release keystore not found (see docs/RELEASE_SIGNING.md)")
         }
     }
 

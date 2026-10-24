@@ -432,16 +432,6 @@ Actions tab, or push a `v*` tag). The version comes from `versionName` in
 
 ---
 
-## ⚙️ CI/CD Signing Secrets
-
-```
-SIGNING_KEY_ALIAS      = minimart
-SIGNING_KEY_PASSWORD   = android
-SIGNING_STORE_PASSWORD = android
-```
-
----
-
 ## 🤝 Contributing, security and license
 
 - Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
