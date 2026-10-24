@@ -160,7 +160,7 @@ fun MpesaPaymentsScreen(
                                     Modifier.height(36.dp).clip(RoundedCornerShape(18.dp))
                                         .background(if (sel) DT.Teal else DT.Surface)
                                         .border(1.dp, if (sel) DT.Teal else DT.Border, RoundedCornerShape(18.dp))
-                                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { vm.setPeriod(p) }
+                                        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { vm.setPeriod(p) }
                                         .padding(horizontal = 16.dp),
                                     contentAlignment = Alignment.Center
                                 ) { Text(p.label, color = if (sel) Color.White else DT.SubText, fontSize = 13.sp, fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium) }

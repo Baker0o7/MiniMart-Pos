@@ -372,7 +372,7 @@ fun CheckoutScreen(
                                     Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
                                         .background(if (picked) DT.Teal else DT.Surface)
                                         .border(1.dp, if (picked) DT.Teal else DT.Border, RoundedCornerShape(12.dp))
-                                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { cashInput = value }
+                                        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { cashInput = value }
                                         .padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
                                         Text(label,
                                             color = if (picked) Color.White else DT.SubText,
@@ -582,7 +582,7 @@ fun CheckoutScreen(
                                 // Split payment toggle
                                 Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
                                     .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(14.dp))
-                                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { useSplitPayment = !useSplitPayment; splitCreditInput = "" }
+                                    .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { useSplitPayment = !useSplitPayment; splitCreditInput = "" }
                                     .padding(14.dp),
                                     verticalAlignment = Alignment.CenterVertically) {
                                     Icon(if (useSplitPayment) Icons.Default.CheckBox else Icons.Default.CheckBoxOutlineBlank,
@@ -833,7 +833,7 @@ private fun CustomerSearchSheet(
                 // Quick add new
                 Box(modifier = Modifier.size(36.dp).clip(CircleShape)
                     .background(DT.Teal)
-                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) {
                         showAddForm = !showAddForm; newName = ""; newPhone = ""
                     },
                     contentAlignment = Alignment.Center) {
@@ -896,7 +896,7 @@ private fun CustomerSearchSheet(
                 placeholder = { Text("Search by name or phone", color = DT.SubText) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Default.Close, null, tint = DT.SubText, modifier = Modifier.size(16.dp)) }
+                    Icon(Icons.Default.Close, "Clear search", tint = DT.SubText, modifier = Modifier.size(16.dp)) }
                 },
                 singleLine = true, modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = searchKeyboardOptions(), keyboardActions = searchKeyboardActions(),
@@ -937,7 +937,7 @@ private fun CustomerSearchSheet(
                     Box(modifier = Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
                         .background(DT.Surface2).border(1.dp, DT.Border, RoundedCornerShape(14.dp))
-                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onSelect(cust) }
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { onSelect(cust) }
                         .padding(12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(42.dp).clip(CircleShape)
@@ -1037,7 +1037,7 @@ private fun PayTile(modifier: Modifier, label: String, icon: ImageVector, active
             else -> Brush.verticalGradient(listOf(DT.Surface2, DT.Surface))
         })
         .border(1.5.dp, when { active -> DT.TealLight; accent != null -> accent.copy(0.8f); else -> DT.Teal.copy(0.35f) }, shape)
-        .clickable(enabled = enabled, indication = null, interactionSource = source) {
+        .clickable(role = androidx.compose.ui.semantics.Role.Button, enabled = enabled, indication = null, interactionSource = source) {
             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
             onClick()
         },

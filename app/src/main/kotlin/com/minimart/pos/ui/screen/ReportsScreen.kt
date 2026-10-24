@@ -141,7 +141,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             modifier = Modifier.clip(RoundedCornerShape(20.dp))
                                 .background(if (sel) DT.Teal else DT.Surface)
                                 .border(1.dp, if (sel) DT.Teal else DT.Border, RoundedCornerShape(20.dp))
-                                .clickable(
+                                .clickable(role = androidx.compose.ui.semantics.Role.Button, 
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() }
                                 ) { if (p == ReportPeriod.CUSTOM) showRangePicker = true else vm.setPeriod(p) }

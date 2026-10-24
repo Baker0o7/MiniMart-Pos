@@ -61,7 +61,7 @@ fun AnalyticsScreen(onBack: () -> Unit, vm: AnalyticsViewModel = hiltViewModel()
                     Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
                         .background(if (picked) DT.Teal else DT.Surface)
                         .border(1.dp, if (picked) DT.Teal else DT.Border, RoundedCornerShape(12.dp))
-                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { vm.setRange(r) }
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { vm.setRange(r) }
                         .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {

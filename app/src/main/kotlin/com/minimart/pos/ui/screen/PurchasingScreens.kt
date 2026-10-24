@@ -81,7 +81,7 @@ private fun PoButton(label: String, onClick: () -> Unit, modifier: Modifier = Mo
     Box(
         modifier = modifier.height(46.dp).clip(RoundedCornerShape(14.dp))
             .then(if (filled) Modifier.background(color) else Modifier.border(1.dp, color.copy(0.6f), RoundedCornerShape(14.dp)))
-            .clickable(onClick = onClick),
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Text(label, color = if (filled) Color.White else color, fontWeight = FontWeight.Bold, fontSize = 14.sp,
@@ -344,7 +344,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                 Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(14.dp)).padding(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(l.name, color = DT.OnSurface, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        if (s.editable) IconButton(onClick = { vm.removeLine(i) }, modifier = Modifier.size(32.dp)) {
+                        if (s.editable) IconButton(onClick = { vm.removeLine(i) }, modifier = Modifier.size(48.dp)) {
                             Icon(Icons.Default.Close, "Remove ${l.name}", tint = DT.Red, modifier = Modifier.size(18.dp))
                         }
                     }

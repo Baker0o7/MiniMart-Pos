@@ -156,7 +156,7 @@ fun ScannerCartScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(modifier = Modifier.size(42.dp).clip(CircleShape)
                             .background(Color.White.copy(0.18f))
-                            .clickable(indication = null,
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null,
                                 interactionSource = remember { MutableInteractionSource() },
                                 onClick = onBack),
                             contentAlignment = Alignment.Center) {
@@ -183,7 +183,7 @@ fun ScannerCartScreen(
                                 if (state.items.isNotEmpty()) Color.White.copy(0.18f)
                                 else Color.Transparent
                             )
-                            .clickable(
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button, 
                                 enabled = state.items.isNotEmpty(),
                                 indication = null,
                                 interactionSource = remember { MutableInteractionSource() }
@@ -258,7 +258,7 @@ fun ScannerCartScreen(
                 trailingIcon = {
                     if (searchText.isNotEmpty())
                         IconButton(onClick = { submitSearch() }) {
-                            Icon(Icons.AutoMirrored.Filled.Send, null, tint = DT.Teal, modifier = Modifier.size(20.dp))
+                            Icon(Icons.AutoMirrored.Filled.Send, "Search", tint = DT.Teal, modifier = Modifier.size(20.dp))
                         }
                 },
                 singleLine = true,
@@ -285,7 +285,7 @@ fun ScannerCartScreen(
                             val soldOut = !product.isWeighed && product.stock <= 0
                             Row(modifier = Modifier.fillMaxWidth()
                                 
-                                .clickable(enabled = !soldOut) { context.vibrateShort(); vm.addToCart(product); searchText = ""; searchVm.clear() }
+                                .clickable(role = androidx.compose.ui.semantics.Role.Button, enabled = !soldOut) { context.vibrateShort(); vm.addToCart(product); searchText = ""; searchVm.clear() }
                                 .padding(horizontal = 14.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))
@@ -459,7 +459,7 @@ fun ScannerCartScreen(
                             .clip(RoundedCornerShape(16.dp))
                             .background(if (continuousScan) DT.Teal else DT.Surface2)
                             .border(1.dp, if (continuousScan) DT.Teal else DT.Border, RoundedCornerShape(16.dp))
-                            .clickable(indication = null,
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null,
                                 interactionSource = remember { MutableInteractionSource() }) { continuousScan = !continuousScan },
                             contentAlignment = Alignment.Center) {
                             Icon(Icons.Default.AllInclusive, null,
@@ -470,7 +470,7 @@ fun ScannerCartScreen(
                         Box(modifier = Modifier.weight(1f).height(56.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(if (showScanner) DT.Red else DT.Teal)
-                            .clickable(indication = null,
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null,
                                 interactionSource = remember { MutableInteractionSource() }) {
                                 if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
                                 else showScanner = !showScanner
@@ -584,7 +584,7 @@ private fun CartItemCard(
                         Row(modifier = Modifier.clip(RoundedCornerShape(50.dp))
                             .background(DT.Teal.copy(0.15f))
                             .border(1.dp, DT.Teal.copy(0.35f), RoundedCornerShape(50.dp))
-                            .clickable(onClick = onEditWeight)
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onEditWeight)
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Edit, null, tint = DT.Teal, modifier = Modifier.size(14.dp))
@@ -605,7 +605,7 @@ private fun CartItemCard(
                                     fontWeight = FontWeight.ExtraBold, fontSize = 16.sp,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.widthIn(min = 32.dp)
-                                        .clickable(indication = null,
+                                        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null,
                                             interactionSource = remember { MutableInteractionSource() },
                                             onClick = onEditQty)
                                         .padding(vertical = 8.dp))
@@ -620,7 +620,7 @@ private fun CartItemCard(
                     // Quiet remove button — a solid red disc on every row was the loudest thing on screen
                     Box(modifier = Modifier.size(38.dp).clip(CircleShape)
                         .background(DT.Red.copy(0.14f))
-                        .clickable(indication = null,
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null,
                             interactionSource = remember { MutableInteractionSource() },
                             onClick = onRemove),
                         contentAlignment = Alignment.Center) {
@@ -731,7 +731,7 @@ private fun CartChip(label: String, icon: androidx.compose.ui.graphics.vector.Im
     Row(
         modifier = Modifier.clip(RoundedCornerShape(10.dp))
             .border(1.dp, tint.copy(0.55f), RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick)
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

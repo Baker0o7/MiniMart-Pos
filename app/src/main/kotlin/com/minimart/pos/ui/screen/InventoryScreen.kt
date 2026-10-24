@@ -223,7 +223,7 @@ private fun CategoryChip(label: String, selected: Boolean, accent: Color = DT.Te
         modifier = Modifier.height(38.dp).clip(shape)
             .background(if (selected) accent else DT.Surface2)
             .border(1.dp, if (selected) accent else DT.Border, shape)
-            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -284,7 +284,7 @@ private fun InventoryRow(
             if (product.supplierPhone.isNotBlank()) ActionBtn("Call", DT.Teal, onCallSupplier)
             Spacer(Modifier.weight(1f))
             if (canEdit) {
-                IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.size(40.dp)) {
+                IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.size(48.dp)) {
                     Icon(Icons.Default.Delete, "Delete ${product.name}", tint = DT.Red.copy(0.85f), modifier = Modifier.size(20.dp))
                 }
             }
@@ -323,7 +323,7 @@ private fun ActionBtn(label: String, textColor: Color, onClick: () -> Unit) {
         modifier = Modifier.height(36.dp).clip(shape)
             .background(DT.Surface2)
             .border(1.dp, textColor.copy(0.3f), shape)
-            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center
     ) {

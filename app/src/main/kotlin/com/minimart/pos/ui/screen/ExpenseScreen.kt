@@ -149,7 +149,7 @@ private fun ExpenseChip(label: String, selected: Boolean, onClick: () -> Unit) {
         modifier = Modifier.height(38.dp).clip(shape)
             .background(if (selected) DT.Teal else DT.Surface)
             .border(1.dp, if (selected) DT.Teal else DT.Border, shape)
-            .clickable(
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, 
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() },
                 onClick = onClick
@@ -445,7 +445,7 @@ private fun ExpenseRow(expense: Expense, currency: String, time: String, onDelet
         }
         Spacer(Modifier.width(8.dp))
         Text(expenseAmount(currency, expense.amount), color = DT.Red, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-        IconButton(onClick = onDelete, modifier = Modifier.size(40.dp)) {
+        IconButton(onClick = onDelete, modifier = Modifier.size(48.dp)) {
             Icon(Icons.Default.Delete, "Delete ${expense.title}", tint = DT.Red.copy(0.8f), modifier = Modifier.size(18.dp))
         }
     }

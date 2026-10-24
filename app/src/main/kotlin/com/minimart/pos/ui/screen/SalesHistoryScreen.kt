@@ -134,7 +134,7 @@ fun SalesHistoryScreen(
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (query.isNotEmpty()) IconButton(onClick = { vm.setQuery("") }) {
-                        Icon(Icons.Default.Close, null, tint = DT.SubText, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Close, "Clear search", tint = DT.SubText, modifier = Modifier.size(18.dp))
                     }
                 },
                 singleLine = true,
@@ -228,7 +228,7 @@ private fun SaleHistoryRow(
             .clip(RoundedCornerShape(14.dp))
             .background(DT.Surface)
             .border(1.dp, DT.Border, RoundedCornerShape(14.dp))
-            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
             .padding(14.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {

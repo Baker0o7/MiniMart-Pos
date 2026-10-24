@@ -99,7 +99,7 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
             leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
             trailingIcon = {
                 IconButton(onClick = { showSecret = !showSecret }) {
-                    Icon(if (showSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility, null, tint = DT.SubText)
+                    Icon(if (showSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility, if (showSecret) "Hide secret" else "Show secret", tint = DT.SubText)
                 }
             },
             visualTransformation = if (showSecret) androidx.compose.ui.text.input.VisualTransformation.None
@@ -115,7 +115,7 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
             leadingIcon = { Icon(Icons.Default.Key, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
             trailingIcon = {
                 IconButton(onClick = { showPasskey = !showPasskey }) {
-                    Icon(if (showPasskey) Icons.Default.VisibilityOff else Icons.Default.Visibility, null, tint = DT.SubText)
+                    Icon(if (showPasskey) Icons.Default.VisibilityOff else Icons.Default.Visibility, if (showPasskey) "Hide passkey" else "Show passkey", tint = DT.SubText)
                 }
             },
             visualTransformation = if (showPasskey) androidx.compose.ui.text.input.VisualTransformation.None

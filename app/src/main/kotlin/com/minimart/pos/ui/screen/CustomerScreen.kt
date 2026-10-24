@@ -91,7 +91,7 @@ fun CustomerScreen(
                 trailingIcon = {
                     if (state.query.isNotEmpty()) {
                         IconButton(onClick = { vm.setQuery("") }) {
-                            Icon(Icons.Default.Close, null, tint = DT.SubText, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Close, "Clear search", tint = DT.SubText, modifier = Modifier.size(16.dp))
                         }
                     }
                 },
@@ -182,7 +182,7 @@ private fun CustomerCard(customer: Customer, currency: String, onSelect: () -> U
         .clip(RoundedCornerShape(18.dp))
         .background(Brush.horizontalGradient(listOf(DT.Surface, DT.Surface2)))
         .border(1.dp, DT.Border, RoundedCornerShape(18.dp))
-        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onSelect)
+        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onSelect)
         .padding(14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             // Avatar circle
@@ -224,7 +224,7 @@ private fun CustomerCard(customer: Customer, currency: String, onSelect: () -> U
                 }
                 Box(modifier = Modifier.size(30.dp).clip(CircleShape)
                     .background(DT.Teal.copy(0.15f))
-                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onAddCredit),
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onAddCredit),
                     contentAlignment = Alignment.Center) {
                     Icon(Icons.Default.Add, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                 }
@@ -286,7 +286,7 @@ private fun CustomerDetailSheet(
                         if (customer.phone.isNotBlank()) Text(customer.phone, color = DT.SubText)
                         if (customer.email.isNotBlank()) Text(customer.email, color = DT.SubText, fontSize = 12.sp)
                     }
-                    IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, null, tint = DT.Teal) }
+                    IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "Edit customer", tint = DT.Teal) }
                     IconButton(onClick = { showDeleteConfirm = true }) { Icon(Icons.Default.Delete, "Delete customer", tint = DT.Red) }
                 }
             }

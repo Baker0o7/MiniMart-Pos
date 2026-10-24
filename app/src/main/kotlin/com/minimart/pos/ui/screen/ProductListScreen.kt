@@ -199,7 +199,7 @@ private fun DarkFilterChip(label: String, selected: Boolean, accent: Color = DT.
             .clip(RoundedCornerShape(20.dp))
             .background(if (selected) accent else DT.Surface2)
             .border(1.dp, if (selected) accent else DT.Border, RoundedCornerShape(20.dp))
-            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onClick() }
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { onClick() }
             .padding(horizontal = 14.dp, vertical = 8.dp)
     ) {
         Text(label, color = if (selected) Color.White else DT.SubText,
@@ -231,7 +231,7 @@ private fun ProductRow(product: Product, currency: String, canEdit: Boolean, onE
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
             .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(16.dp))
             // Read-only for roles that can't edit prices — the edit/delete icons used to be shown to everyone.
-            .then(if (canEdit) Modifier.clickable(onClick = onEdit) else Modifier)
+            .then(if (canEdit) Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onEdit) else Modifier)
     ) {
         Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(DT.TealDim),
@@ -258,7 +258,7 @@ private fun ProductRow(product: Product, currency: String, canEdit: Boolean, onE
                 StockPill(product)
             }
             if (canEdit) {
-                IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.size(48.dp)) {
                     Icon(Icons.Default.Delete, "Delete product", tint = DT.Red.copy(0.85f), modifier = Modifier.size(20.dp))
                 }
             }
@@ -452,7 +452,7 @@ fun AddEditProductDialog(
                     // Sold by weight: fruit, grain, meat... priced per kg and weighed at the till or on a scale
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DT.Surface2)
-                            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) {
                                 isWeighed = !isWeighed
                                 if (isWeighed && unit == "pcs") unit = "kg"
                                 if (!isWeighed && unit == "kg") unit = "pcs"
@@ -513,7 +513,7 @@ fun AddEditProductDialog(
                                 val picked = category.equals(c, ignoreCase = true)
                                 Box(Modifier.clip(RoundedCornerShape(16.dp))
                                     .background(if (picked) DT.Teal else DT.Surface2)
-                                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { category = c }
+                                    .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { category = c }
                                     .padding(horizontal = 12.dp, vertical = 6.dp)) {
                                     Text(c, color = if (picked) Color.White else DT.SubText, fontSize = 12.sp)
                                 }

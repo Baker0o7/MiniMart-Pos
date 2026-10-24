@@ -309,13 +309,13 @@ private fun DarkUserRow(user: User, isMe: Boolean, onChangePin: () -> Unit, onRe
                 Text("@${user.username} • ${user.role.name}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
             }
             // Change PIN
-            IconButton(onClick = onChangePin, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Default.Lock, null, tint = DT.TealLight, modifier = Modifier.size(18.dp))
+            IconButton(onClick = onChangePin, modifier = Modifier.size(48.dp)) {
+                Icon(Icons.Default.Lock, "Change PIN", tint = DT.TealLight, modifier = Modifier.size(18.dp))
             }
             // Remove (not for self)
             if (onRemove != null) {
-                IconButton(onClick = { showConfirm = true }, modifier = Modifier.size(36.dp)) {
-                    Icon(Icons.Default.Delete, null, tint = DT.Red, modifier = Modifier.size(18.dp))
+                IconButton(onClick = { showConfirm = true }, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Default.Delete, "Remove user", tint = DT.Red, modifier = Modifier.size(18.dp))
                 }
             }
         }

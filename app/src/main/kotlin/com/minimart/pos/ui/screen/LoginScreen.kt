@@ -250,7 +250,7 @@ fun LoginScreen(
                                 .clip(RoundedCornerShape(18.dp))
                                 .background(keyBrush)
                                 .border(1.2.dp, keyBorder.copy(0.8f), RoundedCornerShape(18.dp))
-                                .clickable(enabled = !lockedOut,
+                                .clickable(role = androidx.compose.ui.semantics.Role.Button, enabled = !lockedOut,
                                     indication = null, interactionSource = remember { MutableInteractionSource() }) {
                                     haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                                     when (key) {
@@ -283,7 +283,7 @@ fun LoginScreen(
                     Box(modifier = Modifier.size(48.dp).clip(CircleShape)
                         .background(glassLo)
                         .border(1.dp, glassBd, CircleShape)
-                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { launchBiometric() },
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { launchBiometric() },
                         contentAlignment = Alignment.Center) {
                         Icon(Icons.Default.Fingerprint, null, tint = emerald, modifier = Modifier.size(26.dp))
                     }

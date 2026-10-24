@@ -184,13 +184,13 @@ private fun LowStockCard(
                     if (product.supplierPhone.isNotBlank()) {
                         // Call button
                         IconButton(onClick = { onCall(product.supplierPhone) },
-                            modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(DT.TealDim)) {
-                            Icon(Icons.Default.Phone, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
+                            modifier = Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(DT.TealDim)) {
+                            Icon(Icons.Default.Phone, "Call supplier", tint = DT.Teal, modifier = Modifier.size(18.dp))
                         }
                         // WhatsApp button
                         IconButton(onClick = { onWhatsApp(product.supplierPhone) },
-                            modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF25D366).copy(0.15f))) {
-                            Icon(Icons.AutoMirrored.Filled.Chat, null, tint = Color(0xFF25D366), modifier = Modifier.size(18.dp))
+                            modifier = Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF25D366).copy(0.15f))) {
+                            Icon(Icons.AutoMirrored.Filled.Chat, "Message supplier on WhatsApp", tint = Color(0xFF25D366), modifier = Modifier.size(18.dp))
                         }
                     }
                 }

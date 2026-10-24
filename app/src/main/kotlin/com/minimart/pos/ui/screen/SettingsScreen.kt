@@ -377,7 +377,7 @@ fun SettingsScreen(
                                     .background(if (selected) DT.Teal else DT.Bg)
                                     .border(1.dp, if (selected) DT.Teal else DT.Border, RoundedCornerShape(12.dp))
                                     // Shop-wide setting: the cashier notice says settings are the manager's to change.
-                                    .clickable(enabled = isAdmin) { scope.launch { settingsRepo.setExpiryAlertMonths(months) } }
+                                    .clickable(role = androidx.compose.ui.semantics.Role.Button, enabled = isAdmin) { scope.launch { settingsRepo.setExpiryAlertMonths(months) } }
                                     .padding(vertical = 12.dp),
                                 contentAlignment = Alignment.Center
                             ) {

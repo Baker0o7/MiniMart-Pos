@@ -374,7 +374,7 @@ private fun ReceiptActionBtn(modifier: Modifier, icon: androidx.compose.ui.graph
     label: String, color: Color, isLoading: Boolean = false, onClick: () -> Unit) {
     Box(modifier = modifier.height(44.dp).clip(RoundedCornerShape(12.dp))
         .background(color.copy(0.12f)).border(1.dp, color.copy(0.3f), RoundedCornerShape(12.dp))
-        .clickable(enabled = !isLoading, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick),
+        .clickable(role = androidx.compose.ui.semantics.Role.Button, enabled = !isLoading, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick),
         contentAlignment = Alignment.Center) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (isLoading) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = color, strokeWidth = 2.dp)

@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.18.9] - 2026-10-24
+
+- **Easier for everyone to use:** eleven buttons that only showed a picture (clear search, call or WhatsApp a supplier, show or hide a key, edit a customer, change or remove a user, search) now have a spoken name for screen readers such as TalkBack; about 40 tappable rows and chips are now announced as buttons; and the small delete and call buttons are now a full finger-sized 48 dp, so they are harder to miss or hit by accident.
+
 ## [1.18.8] - 2026-10-24
 
 - **Clearer error messages:** when something fails (opening a receipt, saving a product or supplier, the data check, hardware tests, label printing, sending to the printer, or an M-Pesa request) the app now says what went wrong and what to do about it, in plain words, instead of showing a technical message such as "failed to connect to /192.168.1.5".

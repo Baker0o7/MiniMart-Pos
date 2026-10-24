@@ -102,7 +102,7 @@ fun InventoryInsightsScreen(onBack: () -> Unit, vm: InventoryInsightsViewModel =
                             Modifier.clip(RoundedCornerShape(20.dp))
                                 .background(if (picked) DT.Teal else DT.Surface)
                                 .border(1.dp, if (picked) DT.Teal else DT.Border, RoundedCornerShape(20.dp))
-                                .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { tab = t }
+                                .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { tab = t }
                                 .padding(horizontal = 14.dp, vertical = 8.dp)
                         ) {
                             Text(t.label + count, color = if (picked) Color.White else DT.SubText, fontSize = 13.sp,

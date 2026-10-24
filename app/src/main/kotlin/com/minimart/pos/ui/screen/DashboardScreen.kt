@@ -175,7 +175,7 @@ fun DashboardScreen(
                         Box(modifier = Modifier.size(42.dp).clip(CircleShape)
                             .background(DT.Chip)
                             .border(1.5.dp, TealGlow.copy(0.45f), CircleShape)
-                            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onNavigateToSettings() },
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { onNavigateToSettings() },
                             contentAlignment = Alignment.Center) {
                             Icon(Icons.Default.Settings, "Settings", tint = DT.Glow, modifier = Modifier.size(23.dp))
                         }
@@ -196,7 +196,7 @@ fun DashboardScreen(
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 10.dp)
                         .clip(RoundedCornerShape(14.dp)).background(AmberGlow.copy(0.14f))
                         .border(1.dp, AmberGlow.copy(0.6f), RoundedCornerShape(14.dp))
-                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onNavigateToSettings() }
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { onNavigateToSettings() }
                         .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Warning, null, tint = AmberGlow, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(10.dp))
@@ -303,7 +303,7 @@ fun DashboardScreen(
                     Box(modifier = Modifier.clip(RoundedCornerShape(16.dp))
                         .background(if (showManageActions) DT.Teal else DT.Chip)
                         .border(1.dp, if (showManageActions) DT.Teal else TealGlow.copy(0.5f), RoundedCornerShape(16.dp))
-                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showManageActions = !showManageActions }
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { showManageActions = !showManageActions }
                         .padding(horizontal = 16.dp, vertical = 11.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(if (showManageActions) Icons.Default.Check else Icons.Default.Tune,
@@ -447,7 +447,7 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector,
         .clip(RoundedCornerShape(20.dp))
         .background(Brush.verticalGradient(listOf(bg, Bg)))
         .border(1.5.dp, glow.copy(0.5f), RoundedCornerShape(20.dp))
-        .clickable(indication = null, interactionSource = interactionSource, onClick = onClick)
+        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = interactionSource, onClick = onClick)
         .padding(start = 11.dp, end = 8.dp, top = 11.dp, bottom = 11.dp)) {
         Column(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
@@ -471,7 +471,7 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector,
 private fun SummaryStat(icon: ImageVector, glow: Color, label: String, value: String,
     onClick: () -> Unit, interaction: MutableInteractionSource) {
     Row(modifier = Modifier.fillMaxWidth()
-        .clickable(indication = null, interactionSource = interaction, onClick = onClick),
+        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = interaction, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(glow.copy(0.3f)),
             contentAlignment = Alignment.Center) {
@@ -504,7 +504,7 @@ private fun DashAlert(icon: ImageVector, glow: Color, bg: Color,
                 Text(sub, color = Sub, fontSize = 11.sp)
             }
             Box(modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(glow.copy(0.15f))
-                .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = action)
+                .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = action)
                 .padding(horizontal = 12.dp, vertical = 7.dp)) {
                 Text("View", color = glow, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }

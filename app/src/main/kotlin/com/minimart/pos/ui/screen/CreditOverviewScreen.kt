@@ -159,7 +159,7 @@ fun CreditOverviewScreen(
                         .background(Brush.horizontalGradient(listOf(DT.Surface, DT.Surface2)))
                         .border(1.dp, if (isExpanded) DT.Teal.copy(0.4f) else DT.Border,
                             RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 0.dp, bottomEnd = 0.dp))
-                        .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) {
                             expandedId = if (isExpanded) null else customer.id
                         }.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -196,7 +196,7 @@ fun CreditOverviewScreen(
                                 }
                                 // Add credit button
                                 Box(Modifier.size(28.dp).clip(CircleShape).background(DT.Teal.copy(0.15f))
-                                    .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showAddCreditDialog = customer },
+                                    .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { showAddCreditDialog = customer },
                                     contentAlignment = Alignment.Center) {
                                     Icon(Icons.Default.Add, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                                 }
