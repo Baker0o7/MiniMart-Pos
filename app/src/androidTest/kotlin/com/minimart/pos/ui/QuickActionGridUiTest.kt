@@ -33,7 +33,7 @@ class QuickActionGridUiTest {
 
     private fun show(editing: Boolean, saved: String = "", hidden: MutableList<String> = mutableListOf(), order: MutableList<String> = mutableListOf()) =
         compose.setContent {
-            MiniMartTheme { QuickActionGrid(cards(), saved, editing, onHide = { hidden += it }, onSaveOrder = { order += it }) }
+            MiniMartTheme { QuickActionGrid(cards(), saved, editing, onHide = { hidden += it }, onSaveOrder = { order += it }, onStartEditing = {}) }
         }
 
     @Test fun tappingATileOpensIt() {
@@ -46,6 +46,15 @@ class QuickActionGridUiTest {
         show(editing = false, saved = "history,today")
         val left = { t: String -> compose.onNodeWithText(t).fetchSemanticsNode().positionInRoot.x }
         assertTrue(left("History") < left("Today"))
+    }
+
+    @Test fun tapOneTileThenAnotherMovesIt() {
+        val order = mutableListOf<String>()
+        show(editing = true, order = order)
+        compose.onNodeWithText("Today").performClick()      // pick up
+        compose.onNodeWithText("History").performClick()    // put down in History's place
+        assertEquals(listOf("history,today"), order)
+        assertTrue(opened.isEmpty())
     }
 
     @Test fun whileEditingATapDoesNotOpenTheTile() {

@@ -33,7 +33,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -325,7 +329,7 @@ fun DashboardScreen(
 
             item { Spacer(Modifier.height(if (showManageActions) 4.dp else 12.dp)) }
             if (showManageActions) item {
-                Text("Hold and drag a tile to move it. Tap the red × to hide it.", color = Sub, fontSize = 12.sp,
+                Text("Drag a tile to move it, or tap one and then tap where it should go. The red × hides a tile.", color = Sub, fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp))
             }
 
@@ -366,7 +370,8 @@ fun DashboardScreen(
                     QuickActionGrid(
                         cards = cards, savedOrder = savedActionOrder, editing = showManageActions,
                         onHide = { hide(it) },
-                        onSaveOrder = { scope.launch { settingsRepo?.setActionOrder(it) } }
+                        onSaveOrder = { scope.launch { settingsRepo?.setActionOrder(it) } },
+                        onStartEditing = { showManageActions = true }
                     )
                     val hidden2 = hiddenActions.split(",").filter { it.isNotBlank() }.toSet()
                     if (hidden2.isNotEmpty()) {
@@ -375,7 +380,7 @@ fun DashboardScreen(
                             modifier = Modifier.fillMaxWidth()) {
                             Icon(Icons.Default.Restore, null, tint = DT.Teal, modifier = Modifier.size(15.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Restore hidden cards", color = DT.Teal, fontSize = 12.sp)
+                            Text("Restore ${hidden2.size} hidden tile${if (hidden2.size == 1) "" else "s"}", color = DT.Teal, fontSize = 12.sp)
                         }
                     }
                 }
@@ -436,24 +441,32 @@ fun DashboardScreen(
 }
 
 /** One compact quick-action tile: icon over a one-line label. Four across on a phone. */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun DashActionCard(title: String, icon: ImageVector, bg: Color, glow: Color,
-    editing: Boolean, dragging: Boolean, onClick: () -> Unit) {
+private fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: Color, glow: Color,
+    editing: Boolean, dragging: Boolean, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
     // A press-scale animation gives the tap visible feedback during the screen transition.
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (dragging) 1.08f else if (isPressed) 0.95f else 1f, label = "cardPress")
+    val lifted = dragging || selected
+    val scale by animateFloatAsState(if (lifted) 1.08f else if (isPressed) 0.95f else 1f, label = "cardPress")
 
     Box(modifier = Modifier.fillMaxWidth()
         .defaultMinSize(minHeight = 82.dp)
         .graphicsLayer { scaleX = scale; scaleY = scale; alpha = if (dragging) 0.85f else 1f }
         .clip(RoundedCornerShape(16.dp))
-        .background(Brush.verticalGradient(listOf(bg, Bg)))
-        .border(if (editing) 1.5.dp else 1.dp, glow.copy(if (editing) 0.9f else 0.5f), RoundedCornerShape(16.dp))
-        // While editing there is no click handler at all: a clickable would swallow the touch before the
-        // long-press-and-drag on the tile can see it, which is why dragging did nothing.
-        .then(if (editing) Modifier else Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button,
-            indication = null, interactionSource = interactionSource, onClick = onClick))
+        .background(Brush.verticalGradient(listOf(if (selected) glow.copy(0.28f) else bg, Bg)))
+        .border(if (lifted) 2.5.dp else if (editing) 1.5.dp else 1.dp,
+            glow.copy(if (lifted) 1f else if (editing) 0.9f else 0.5f), RoundedCornerShape(16.dp))
+        // TalkBack reads the short description we no longer show on screen.
+        .semantics { contentDescription = if (sub.isBlank()) title else "$title. $sub" }
+        // While editing there is no click handler here: the grid handles taps (pick up / put down) and
+        // drags itself, and a clickable would swallow the touch first. Outside editing, a long press
+        // opens Edit, so the feature can be found without hunting for the button.
+        .then(if (editing) Modifier else Modifier.combinedClickable(
+            role = androidx.compose.ui.semantics.Role.Button, indication = null,
+            interactionSource = interactionSource, onClick = onClick,
+            onLongClickLabel = "Rearrange tiles", onLongClick = onLongClick))
         .padding(horizontal = 4.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -469,25 +482,36 @@ private fun DashActionCard(title: String, icon: ImageVector, bg: Color, glow: Co
 }
 
 /**
- * The tiles in the owner's order. In edit mode a tile can be held and dragged: as the finger passes over
- * another tile the two trade places, and the new order is saved when the finger lifts. All tiles sit in one
- * FlowRow (not separate rows) so a tile keeps its drag while it moves to another row.
+ * The tiles in the owner's order. In edit mode there are two ways to move one, because a drag is easy to
+ * get wrong on a small tile: **drag** it straight away and drop it on another tile (they trade places as
+ * the finger passes over), or **tap** a tile to pick it up and tap where it should go. The new order is
+ * saved when the finger lifts or the second tap lands. All tiles sit in one FlowRow (not separate rows)
+ * so a tile keeps its drag while it moves to another row.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun QuickActionGrid(
     cards: List<DashCard_>, savedOrder: String, editing: Boolean,
-    onHide: (String) -> Unit, onSaveOrder: (String) -> Unit
+    onHide: (String) -> Unit, onSaveOrder: (String) -> Unit, onStartEditing: () -> Unit = {}
 ) {
+    val ao = com.minimart.pos.util.ActionOrder
     var draft by remember { mutableStateOf<List<String>?>(null) }
     LaunchedEffect(savedOrder) { draft = null }   // the saved copy has caught up
     val ids = cards.map { it.id }
-    val order = com.minimart.pos.util.ActionOrder.apply(ids, draft ?: com.minimart.pos.util.ActionOrder.parse(savedOrder))
+    val order = ao.apply(ids, draft ?: ao.parse(savedOrder))
     val orderNow = rememberUpdatedState(order)
     val savedNow = rememberUpdatedState(savedOrder)
     val bounds = remember { HashMap<String, androidx.compose.ui.geometry.Rect>() }
     var dragId by remember { mutableStateOf<String?>(null) }
+    var pickedId by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(editing) { if (!editing) { pickedId = null; dragId = null } }
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val tick = { haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress) }
+
+    fun save(newOrder: List<String>) {
+        draft = newOrder
+        onSaveOrder(ao.encode(ao.merge(newOrder, ao.parse(savedNow.value))))
+    }
 
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val gap = 8.dp
@@ -500,13 +524,23 @@ internal fun QuickActionGrid(
                 key(c.id) {
                     Box(Modifier.width(tileWidth)
                         .onGloballyPositioned { bounds[c.id] = it.boundsInRoot() }
+                        // Tap: pick this tile up, or put the picked one down in this place.
                         .pointerInput(c.id, editing) {
                             if (!editing) return@pointerInput
-                            detectDragGesturesAfterLongPress(
-                                onDragStart = {
-                                    dragId = c.id
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                },
+                            detectTapGestures(onTap = {
+                                val picked = pickedId
+                                when {
+                                    picked == null -> { pickedId = c.id; tick() }
+                                    picked == c.id -> pickedId = null
+                                    else -> { save(ao.moveTo(orderNow.value, picked, c.id)); pickedId = null; tick() }
+                                }
+                            })
+                        }
+                        // Drag: starts as soon as the finger moves, so no waiting for a long press.
+                        .pointerInput(c.id, editing) {
+                            if (!editing) return@pointerInput
+                            detectDragGestures(
+                                onDragStart = { dragId = c.id; pickedId = null; tick() },
                                 onDrag = { change, _ ->
                                     change.consume()
                                     val mine = bounds[c.id]
@@ -514,19 +548,20 @@ internal fun QuickActionGrid(
                                         val finger = mine.topLeft + change.position
                                         val current = orderNow.value
                                         val over = current.firstOrNull { it != c.id && bounds[it]?.contains(finger) == true }
-                                        if (over != null) draft = com.minimart.pos.util.ActionOrder.moveTo(current, c.id, over)
+                                        if (over != null) draft = ao.moveTo(current, c.id, over)
                                     }
                                 },
                                 onDragEnd = {
                                     dragId = null
-                                    onSaveOrder(com.minimart.pos.util.ActionOrder.encode(com.minimart.pos.util.ActionOrder.merge(
-                                        orderNow.value, com.minimart.pos.util.ActionOrder.parse(savedNow.value))))
+                                    onSaveOrder(ao.encode(ao.merge(orderNow.value, ao.parse(savedNow.value))))
                                 },
                                 onDragCancel = { dragId = null }
                             )
                         }
                     ) {
-                        DashActionCard(c.title, c.icon, c.bg, c.glow, editing, dragId == c.id, c.action)
+                        DashActionCard(c.title, c.sub, c.icon, c.bg, c.glow, editing,
+                            dragging = dragId == c.id, selected = pickedId == c.id,
+                            onClick = c.action, onLongClick = onStartEditing)
                         if (editing) DashBadge { onHide(c.id) }
                     }
                 }

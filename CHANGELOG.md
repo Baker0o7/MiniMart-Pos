@@ -5,6 +5,11 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.19.2] - 2026-10-26
+
+- **Rearranging Home tiles, two ways:** in Edit mode you can now drag a tile straight away (no waiting for a long press), or tap one tile to pick it up and tap the place it should go. The picked tile is highlighted and the phone gives a small tap. A long press on any tile opens Edit, so you do not have to hunt for the button.
+- **Clearer:** the hint explains both ways, "Restore hidden tiles" now says how many are hidden, and screen readers still announce each tile's description even though it is no longer shown on screen.
+
 ## [1.19.1] - 2026-10-25
 
 - **Home tiles fixed:** the Quick Actions tiles now really fit four across (they were wrapping to three), so all of them fit in four rows. Dragging a tile to rearrange them now works: in Edit mode, hold a tile for a moment, then drag it over another one.
