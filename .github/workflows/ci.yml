@@ -78,6 +78,19 @@ jobs:
           PY
           )
           [ -n "$msg" ] && echo "::error title=Lint errors::${msg}"
+          # Gradle's "What went wrong" block in full (long lists such as AAR-metadata problems are cut off otherwise).
+          python3 - <<'PY'
+          import glob
+          for f in ("build.log", "lint.log", "androidtest.log"):
+              try: lines = open(f, errors="replace").read().splitlines()
+              except OSError: continue
+              for i, l in enumerate(lines):
+                  if l.startswith("* What went wrong"):
+                      block = [x.rstrip() for x in lines[i + 1:i + 90] if not x.startswith("* Try")]
+                      body = "%0A".join(block).replace("\r", "")
+                      print(f"::error title=Gradle ({f})::{body}")
+                      break
+          PY
           # The REST API can't return raw job logs, so echo compiler/Gradle errors as annotations.
           grep -E "^e: |^w: .*Unresolved|error:|What went wrong|Execution failed|Could not|FAILED|Caused by" -A2 build.log lint.log androidtest.log 2>/dev/null \
             | head -60 | while IFS= read -r line; do echo "::error::${line}"; done
