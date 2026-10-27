@@ -159,5 +159,5 @@ dependencies {
     // MIGRATION ONLY: reads the old EncryptedSharedPreferences files once (LegacySecurePrefsMigrator).
     // New secrets use KeystorePrefs (AES-256-GCM, Android Keystore). Delete this line and the migrator
     // once most phones have updated.
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("androidx.security:security-crypto:1.1.0")
 }
