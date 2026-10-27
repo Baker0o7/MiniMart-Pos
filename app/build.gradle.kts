@@ -6,6 +6,16 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Hilt 2.59 reads class metadata with kotlin-metadata-jvm 2.3, which refuses what Kotlin 2.4 writes ("Provided
+// Metadata instance has version 2.4.0"). Keep that one library on the Kotlin version we compile with.
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin" && requested.name == "kotlin-metadata-jvm") {
+            useVersion(libs.versions.kotlin.get())
+        }
+    }
+}
+
 android {
     namespace = "com.minimart.pos"
     compileSdk = 37
