@@ -14,7 +14,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
+    kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
     // Lint is enforced: errors fail the build (CI runs `lintDebug`). Warnings are reported but do not fail it.
     lint {
         abortOnError = true
