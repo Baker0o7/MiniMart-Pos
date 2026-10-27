@@ -8,7 +8,7 @@ plugins {
 // :data — Room database, DAOs, entities and repositories (everything under com.minimart.pos.data).
 android {
     namespace = "com.minimart.pos.data"
-    compileSdk = 35
+    compileSdk = 37
     defaultConfig { minSdk = 26 }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.minimart.pos"
-    compileSdk = 35
+    compileSdk = 37
 
     signingConfigs {
         create("release") {
