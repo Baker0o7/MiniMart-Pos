@@ -241,7 +241,7 @@ private fun CustomerDetailSheet(
     customer: Customer, currency: String, transactions: List<CreditTransaction>,
     onDismiss: () -> Unit, onAddCredit: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit
 ) {
-    val df = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
+    val df = SimpleDateFormat("dd/MM HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale)
     var showDeleteConfirm by remember { mutableStateOf(false) }
     if (showDeleteConfirm) {
         AlertDialog(

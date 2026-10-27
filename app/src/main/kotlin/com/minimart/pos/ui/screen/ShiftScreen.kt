@@ -181,8 +181,8 @@ fun ShiftScreen(
 
 @Composable
 private fun ActiveShiftCard(shift: Shift, currency: String, onOpenDrawer: () -> Unit, onClockOut: () -> Unit) {
-    val df = SimpleDateFormat("HH:mm", Locale.getDefault())
-    val dfFull = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
+    val df = SimpleDateFormat("HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale)
+    val dfFull = SimpleDateFormat("dd/MM HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale)
     // Re-read the clock every 30s so the elapsed time doesn't freeze while the screen is open.
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
@@ -247,7 +247,7 @@ private fun ActiveShiftCard(shift: Shift, currency: String, onOpenDrawer: () -> 
 @Composable
 private fun ShiftHistoryRow(shift: Shift, currency: String, onClick: () -> Unit) {
     val DT = com.minimart.pos.ui.theme.DT
-    val df = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
+    val df = SimpleDateFormat("dd/MM HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale)
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -395,7 +395,7 @@ private fun ClockOutDialog(currency: String, blind: Boolean, onOpenDrawer: () ->
 @Composable
 private fun ShiftSummaryDialog(shift: Shift, currency: String, showVariance: Boolean, onPrint: () -> Unit, onShare: () -> Unit, onDismiss: () -> Unit) {
     val DT = com.minimart.pos.ui.theme.DT
-    val df = SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault())
+    val df = SimpleDateFormat("dd/MM/yy HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale)
     val durationMs = (shift.clockOut ?: System.currentTimeMillis()) - shift.clockIn
     val hours = durationMs / 3600000; val mins = (durationMs % 3600000) / 60000
 

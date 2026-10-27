@@ -75,7 +75,7 @@ fun ReceiptScreen(
 
     val sale  = state.saleWithItems?.sale
     val items = state.saleWithItems?.items ?: emptyList()
-    val df    = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    val df    = SimpleDateFormat("dd/MM/yyyy HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale)
 
     // Bounce animation
     var visible by remember { mutableStateOf(false) }

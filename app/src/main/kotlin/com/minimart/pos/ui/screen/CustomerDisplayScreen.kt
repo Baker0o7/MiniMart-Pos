@@ -35,7 +35,7 @@ class CustomerDisplayViewModel @Inject constructor(val hub: CustomerDisplayHub) 
 @Composable
 fun CustomerDisplayScreen(onExit: () -> Unit, vm: CustomerDisplayViewModel = hiltViewModel()) {
     val state by vm.hub.state.collectAsStateWithLifecycle()
-    val activity = LocalContext.current as? Activity
+    val activity = androidx.activity.compose.LocalActivity.current
     DisposableEffect(Unit) {
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         onDispose { activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }

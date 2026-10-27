@@ -162,7 +162,7 @@ private fun LowStockCard(
                 val expiryColor = if (daysLeft < 0) DT.Red else if (daysLeft <= 7) DT.Amber else DT.SubText
                 val label = if (daysLeft < 0) "⚠ Expired! ${-daysLeft} days ago"
                     else if (daysLeft == 0) "⚠ Expires today!"
-                    else "Exp: ${java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date(product.expiryDate))} (${daysLeft}d)"
+                    else "Exp: ${java.text.SimpleDateFormat("dd/MM/yyyy", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(java.util.Date(product.expiryDate))} (${daysLeft}d)"
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Default.CalendarToday, null, tint = expiryColor, modifier = Modifier.size(14.dp))
                     Text(label, color = expiryColor, style = MaterialTheme.typography.labelSmall, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)

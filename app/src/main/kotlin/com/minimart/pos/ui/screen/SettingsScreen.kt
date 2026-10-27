@@ -518,7 +518,7 @@ fun SettingsScreen(
                         }
                         if (syncState.lastSyncAt > 0L) {
                             Spacer(Modifier.height(4.dp))
-                            Text("Last synced " + java.text.SimpleDateFormat("d MMM, HH:mm", java.util.Locale.getDefault()).format(java.util.Date(syncState.lastSyncAt)),
+                            Text("Last synced " + java.text.SimpleDateFormat("d MMM, HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(java.util.Date(syncState.lastSyncAt)),
                                 color = DT.SubText, fontSize = 11.sp)
                         }
                         if (syncState.conflictCount > 0) {
@@ -566,7 +566,7 @@ fun SettingsScreen(
                                 else Text("Connect & upload", color = Color.White, fontSize = 13.sp)
                             }
                         } else {
-                            Text(if (cs.lastPushAt > 0) "Last upload: " + java.text.SimpleDateFormat("d MMM, HH:mm", java.util.Locale.getDefault()).format(java.util.Date(cs.lastPushAt)) else "Not uploaded yet",
+                            Text(if (cs.lastPushAt > 0) "Last upload: " + java.text.SimpleDateFormat("d MMM, HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(java.util.Date(cs.lastPushAt)) else "Not uploaded yet",
                                 color = Color.White, fontSize = 12.sp)
                             Spacer(Modifier.height(4.dp))
                             Text("Uploads automatically every few hours and when a shift is closed.", color = DT.SubText, fontSize = 11.sp)

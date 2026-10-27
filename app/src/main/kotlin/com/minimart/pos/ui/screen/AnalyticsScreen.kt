@@ -143,7 +143,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
             AnalyticsCard(if (s.trendBucketDays == 1) "Daily revenue" else "Weekly revenue") {
                 val values = s.trend.map { it.revenue.toFloat() }
                 val best = values.indices.maxByOrNull { values[it] } ?: 0
-                val fmt = SimpleDateFormat(if (s.range.days <= 7) "EEE" else "d MMM", Locale.getDefault())
+                val fmt = SimpleDateFormat(if (s.range.days <= 7) "EEE" else "d MMM", androidx.compose.ui.text.intl.Locale.current.platformLocale)
                 BarChart(values, highlight = best, modifier = Modifier.fillMaxWidth().height(120.dp),
                     labels = s.trend.map { fmt.format(Date(it.startMs)) },
                     valueLabel = { v -> String.format(Locale.US, "%,.0f", v) })
@@ -153,7 +153,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     Text(fmt.format(Date(s.trend.last().startMs)), color = DT.SubText, fontSize = 10.sp)
                 }
                 Spacer(Modifier.height(6.dp))
-                val d = SimpleDateFormat("EEE d MMM", Locale.getDefault()).format(Date(s.trend[best].startMs))
+                val d = SimpleDateFormat("EEE d MMM", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(Date(s.trend[best].startMs))
                 Text("Best ${if (s.trendBucketDays == 1) "day" else "week from"}: $d • $cur ${money(values[best].toDouble())}",
                     color = DT.OnSurface, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }

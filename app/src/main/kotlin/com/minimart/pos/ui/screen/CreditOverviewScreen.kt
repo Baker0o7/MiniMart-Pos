@@ -249,7 +249,7 @@ fun CreditOverviewScreen(
 
 @Composable
 private fun CreditTxRow(tx: CreditTransaction, currency: String) {
-    val df = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
+    val df = SimpleDateFormat("dd/MM HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale)
     Row(modifier = Modifier.fillMaxWidth()
         .clip(RoundedCornerShape(10.dp)).background(DT.Bg)
         .border(1.dp, DT.Border, RoundedCornerShape(10.dp)).padding(10.dp),
