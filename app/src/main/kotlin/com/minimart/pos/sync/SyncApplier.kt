@@ -77,14 +77,28 @@ class SyncApplier @Inject constructor(
                 val rev = SyncPayloads.parseReversal(payload)
                 val local = saleRepo.findSale(rev.receiptNumber, rev.createdAt)
                     ?: throw IllegalStateException("Sale ${rev.receiptNumber} was never received")
-                if (local.status == SaleStatus.COMPLETED) {
-                    if (rev.status == SaleStatus.REFUNDED) saleRepo.refundSale(local.id, rev.reason)
-                    else saleRepo.voidSale(local.id, rev.reason)
-                    runCatching {
+                val outcome = com.minimart.pos.util.ConflictMerge.resolveReversal(
+                    local.status == SaleStatus.COMPLETED, local.status.name, rev.status.name)
+                when (outcome) {
+                    com.minimart.pos.util.ConflictMerge.ReversalOutcome.APPLY -> {
+                        if (rev.status == SaleStatus.REFUNDED) saleRepo.refundSale(local.id, rev.reason)
+                        else saleRepo.voidSale(local.id, rev.reason)
+                        runCatching {
+                            audit.log(
+                                if (rev.status == SaleStatus.REFUNDED) com.minimart.pos.util.AuditEvent.SALE_REFUNDED else com.minimart.pos.util.AuditEvent.SALE_VOIDED,
+                                user = "till sync",
+                                detail = "Sale ${rev.receiptNumber} total ${String.format(java.util.Locale.US, "%.2f", local.totalAmount)} · reason: ${rev.reason.ifBlank { "none given" }}"
+                            )
+                        }
+                    }
+                    com.minimart.pos.util.ConflictMerge.ReversalOutcome.ALREADY_DONE -> Unit
+                    // Two tills reversed the same sale in different ways. The first stands (money is never returned
+                    // twice); the owner is told so the shop can check which one was right.
+                    com.minimart.pos.util.ConflictMerge.ReversalOutcome.CONFLICT -> runCatching {
                         audit.log(
-                            if (rev.status == SaleStatus.REFUNDED) com.minimart.pos.util.AuditEvent.SALE_REFUNDED else com.minimart.pos.util.AuditEvent.SALE_VOIDED,
+                            com.minimart.pos.util.AuditEvent.SYNC_CONFLICT,
                             user = "till sync",
-                            detail = "Sale ${rev.receiptNumber} total ${String.format(java.util.Locale.US, "%.2f", local.totalAmount)} · reason: ${rev.reason.ifBlank { "none given" }}"
+                            detail = "Sale ${rev.receiptNumber} was already ${local.status.name.lowercase()} here; a till also ${rev.status.name.lowercase()} it (reason: ${rev.reason.ifBlank { "none given" }}). Kept: ${local.status.name.lowercase()}."
                         )
                     }
                 }
