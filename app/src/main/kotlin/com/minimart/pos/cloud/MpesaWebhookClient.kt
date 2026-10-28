@@ -1,9 +1,7 @@
 package com.minimart.pos.cloud
 
-import com.minimart.pos.data.entity.MpesaPayment
 import com.minimart.pos.data.repository.MpesaPaymentRepository
 import com.minimart.pos.util.ErrorAdvice
-import com.minimart.pos.util.InboxPayment
 import com.minimart.pos.util.MpesaWebhook
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -61,27 +59,12 @@ class MpesaWebhookClient @Inject constructor(
                 val auth = JSONObject().put("p_store_id", config.storeId).put("p_secret", config.storeSecret)
                 val (code, text) = post("claim_mpesa_payments", auth)
                 if (code !in 200..299) return@withContext WebhookResult.Failed(serverMessage(text, code))
-                val rows = JSONArray(text)
-                var recorded = 0; var duplicates = 0; var rejected = 0
-                val done = JSONArray()
-                for (i in 0 until rows.length()) {
-                    val r = rows.getJSONObject(i)
-                    val id = r.getLong("id")
-                    val clean = MpesaWebhook.sanitize(
-                        InboxPayment(id, r.optString("code"), r.optDouble("amount", Double.NaN), r.optString("name"),
-                            r.optString("phone"), r.optLong("paidAtMs")), nowMs)
-                    if (clean == null) { rejected++; done.put(id); continue }   // never valid: do not fetch it forever
-                    val isNew = payments.record(MpesaPayment(
-                        code = clean.code, amount = clean.amount, senderName = clean.name, senderPhone = clean.phone,
-                        receivedAt = clean.paidAtMs, rawMessage = "Instant M-Pesa (Daraja): ${clean.code}"))
-                    if (isNew) recorded++ else duplicates++
-                    done.put(id)
-                }
-                if (done.length() > 0) {
-                    val (ackCode, ackText) = post("ack_mpesa_payments", JSONObject(auth.toString()).put("p_ids", done))
+                val outcome = com.minimart.pos.data.repository.MpesaInboxSync(payments).process(text, nowMs)
+                if (outcome.ackIds.isNotEmpty()) {
+                    val (ackCode, ackText) = post("ack_mpesa_payments", JSONObject(auth.toString()).put("p_ids", JSONArray(outcome.ackIds)))
                     if (ackCode !in 200..299) return@withContext WebhookResult.Failed(serverMessage(ackText, ackCode))
                 }
-                WebhookResult.Pulled(recorded, duplicates, rejected)
+                WebhookResult.Pulled(outcome.recorded, outcome.duplicates, outcome.rejected)
             } catch (e: Exception) { WebhookResult.Failed(ErrorAdvice.explain(e, "Fetching M-Pesa payments")) }
         }
     }
