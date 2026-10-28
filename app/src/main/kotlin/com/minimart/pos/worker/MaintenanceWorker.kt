@@ -1,5 +1,6 @@
 package com.minimart.pos.worker
 
+import com.minimart.pos.util.RetryPolicy
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
@@ -20,7 +21,7 @@ class MaintenanceWorker @AssistedInject constructor(
         archiver.routineMaintenance()
         Result.success()
     } catch (_: Exception) {
-        if (runAttemptCount < 2) Result.retry() else Result.success()
+        if (RetryPolicy.QUICK.shouldRetry(runAttemptCount)) Result.retry() else Result.success()
     }
 
     companion object {

@@ -1,5 +1,6 @@
 package com.minimart.pos.worker
 
+import com.minimart.pos.util.RetryPolicy
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
@@ -21,10 +22,10 @@ class MpesaWebhookWorker @AssistedInject constructor(
         if (!client.enabled) return Result.success()
         return try {
             when (client.pull()) {
-                is WebhookResult.Failed -> if (runAttemptCount < 2) Result.retry() else Result.success()
+                is WebhookResult.Failed -> if (RetryPolicy.QUICK.shouldRetry(runAttemptCount)) Result.retry() else Result.success()
                 else -> Result.success()
             }
-        } catch (_: Exception) { if (runAttemptCount < 2) Result.retry() else Result.success() }
+        } catch (_: Exception) { if (RetryPolicy.QUICK.shouldRetry(runAttemptCount)) Result.retry() else Result.success() }
     }
 
     companion object {

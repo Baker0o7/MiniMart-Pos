@@ -1,5 +1,6 @@
 package com.minimart.pos.worker
 
+import com.minimart.pos.util.RetryPolicy
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
@@ -35,7 +36,7 @@ class AutoBackupWorker @AssistedInject constructor(
             is BackupResult.Success -> { runCatching { audit.log(AuditEvent.BACKUP_CREATED, user = "system", detail = r.file.name) }; Result.success() }
             is BackupResult.Error -> {
                 runCatching { audit.log(AuditEvent.BACKUP_FAILED, user = "system", detail = r.message) }
-                if (runAttemptCount < 2) Result.retry() else Result.success()   // tomorrow's run tries again
+                if (RetryPolicy.QUICK.shouldRetry(runAttemptCount)) Result.retry() else Result.success()   // tomorrow's run tries again
             }
         }
 

@@ -1,5 +1,6 @@
 package com.minimart.pos.worker
 
+import com.minimart.pos.util.RetryPolicy
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
@@ -44,10 +45,10 @@ class SyncWorker @AssistedInject constructor(
                     if (r.message.contains("Pairing code", true) || r.message.contains("Too many", true) ||
                         r.message.contains("update the app", true) || r.message.contains("did not come from", true) ||
                         r.message.contains("Wi-Fi address", true)) Result.success()
-                    else if (runAttemptCount < 6) Result.retry() else Result.success()
+                    else if (RetryPolicy.SYNC.shouldRetry(runAttemptCount)) Result.retry() else Result.success()
             }
         } catch (_: Exception) {
-            if (runAttemptCount < 6) Result.retry() else Result.success()
+            if (RetryPolicy.SYNC.shouldRetry(runAttemptCount)) Result.retry() else Result.success()
         }
     }
 

@@ -1,5 +1,6 @@
 package com.minimart.pos.worker
 
+import com.minimart.pos.util.RetryPolicy
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
@@ -24,10 +25,10 @@ class CloudUploadWorker @AssistedInject constructor(
         return try {
             when (reporter.push()) {
                 CloudResult.Ok -> Result.success()
-                is CloudResult.Failed -> if (runAttemptCount < 3) Result.retry() else Result.success()
+                is CloudResult.Failed -> if (RetryPolicy.CLOUD.shouldRetry(runAttemptCount)) Result.retry() else Result.success()
             }
         } catch (_: Exception) {
-            if (runAttemptCount < 3) Result.retry() else Result.success()
+            if (RetryPolicy.CLOUD.shouldRetry(runAttemptCount)) Result.retry() else Result.success()
         }
     }
 
