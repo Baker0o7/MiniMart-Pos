@@ -149,13 +149,17 @@ jobs:
             -storepass "$PASS" -keypass "$PASS" -dname "CN=CI smoke test"
           export SIGNING_STORE_PASSWORD="$PASS" SIGNING_KEY_PASSWORD="$PASS" SIGNING_KEY_ALIAS=ci
           gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee release.log
+          # The Play bundle is a separate task with its own failure modes; the release workflow builds it too.
+          gradle bundleRelease --no-daemon --stacktrace 2>&1 | tee bundle.log
       - name: Surface release build errors
         if: failure()
         run: |
           python3 - <<'PY'
-          lines = open("release.log", errors="replace").read().splitlines()
-          for i, l in enumerate(lines):
-              if l.startswith("* What went wrong"):
-                  print("::error title=Release build::" + "%0A".join(x.rstrip() for x in lines[i + 1:i + 60]))
-                  break
+          for f in ("release.log", "bundle.log"):
+              try: lines = open(f, errors="replace").read().splitlines()
+              except OSError: continue
+              for i, l in enumerate(lines):
+                  if l.startswith("* What went wrong"):
+                      print(f"::error title=Release build ({f})::" + "%0A".join(x.rstrip() for x in lines[i + 1:i + 60]))
+                      break
           PY
