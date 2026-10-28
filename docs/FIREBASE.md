@@ -4,7 +4,7 @@ MiniMart POS can send crash reports (Crashlytics) and speed timings (Performance
 
 * **Off by default, twice over.** The manifest disables collection, and the app only turns it on after the shop owner
   switches on *Settings > Privacy > Send crash and speed reports*. Analytics is disabled outright.
-* **Not built in until you add your file.** Create a Firebase project, register the Android app `com.minimart.pos`,
+* **Not built in until you add your file.** Create a Firebase project, register the Android apps `com.minimart.pos` **and** `com.minimart.pos.debug` (debug builds use that name; the build fails with "No matching client found" otherwise),
   download `google-services.json` into `app/` and build. Without that file the Firebase plugins are not applied and
   the calls do nothing. (The file holds identifiers, not secrets, but keep it out of public forks if you prefer.)
 * **What is sent when on:** the stack trace, phone model, Android version, app version, and named timings such as
