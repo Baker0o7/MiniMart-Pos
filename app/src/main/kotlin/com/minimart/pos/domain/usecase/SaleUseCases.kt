@@ -23,7 +23,9 @@ class CompleteSaleUseCase @Inject constructor(
         purchaseAmount: Double = 0.0
     ): Long {
         require(items.isNotEmpty()) { "Cannot complete a sale with no items" }
-        val saleId = saleRepo.completeSale(sale, items, customerId, creditAmount, purchaseAmount)
+        val saleId = com.minimart.pos.util.Telemetry.timed("complete_sale") {
+            saleRepo.completeSale(sale, items, customerId, creditAmount, purchaseAmount)
+        }
         // Queue it for the main device; a sync problem must never undo or fail the sale.
         runCatching { syncEnqueuer.saleCreated(saleId, customerId, creditAmount, purchaseAmount) }
         return saleId

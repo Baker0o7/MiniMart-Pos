@@ -37,6 +37,7 @@ class SettingsRepository @Inject constructor(
         val KEY_HELD_CARTS = stringPreferencesKey("held_carts")
         val KEY_ACCENT = stringPreferencesKey("accent")
         val KEY_BLOCK_SCREENSHOTS = booleanPreferencesKey("block_screenshots")
+        val KEY_TELEMETRY = booleanPreferencesKey("telemetry_opt_in")
         val KEY_AMOLED = booleanPreferencesKey("theme_amoled")
         val KEY_HIGH_CONTRAST = booleanPreferencesKey("theme_high_contrast")
         val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
@@ -124,6 +125,10 @@ class SettingsRepository @Inject constructor(
     /** Blocks screenshots and hides the app's preview in the recent-apps list (FLAG_SECURE). */
     val blockScreenshots: Flow<Boolean> = context.dataStore.data.map { it[KEY_BLOCK_SCREENSHOTS] ?: false }
     suspend fun setBlockScreenshots(on: Boolean) = context.dataStore.edit { it[KEY_BLOCK_SCREENSHOTS] = on }
+
+    /** Owner agreed to send crash and speed reports to the developer. Off until they switch it on. */
+    val telemetryOptIn: Flow<Boolean> = context.dataStore.data.map { it[KEY_TELEMETRY] ?: false }
+    suspend fun setTelemetryOptIn(on: Boolean) = context.dataStore.edit { it[KEY_TELEMETRY] = on }
 
     /** "Deep black" backgrounds and the high-contrast option (see Palette.adapt in the app module). */
     val amoled: Flow<Boolean> = context.dataStore.data.map { it[KEY_AMOLED] ?: false }

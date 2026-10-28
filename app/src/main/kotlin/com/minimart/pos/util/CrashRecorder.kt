@@ -12,8 +12,8 @@ import java.util.Locale
 
 /**
  * Keeps a local note of why the app last closed unexpectedly, so the owner can send it over instead of
- * describing "it just closed". Nothing is uploaded: the report is a small text file in the app's private
- * folder, and it only leaves the phone if the owner taps Share.
+ * describing "it just closed". This file is never uploaded by us: it is a small text file in the app's private
+ * folder, and it only leaves the phone if the owner taps Share. (Separate, opt-in Firebase reports: see [Telemetry].)
  */
 object CrashRecorder {
     private const val DIR = "crash_reports"

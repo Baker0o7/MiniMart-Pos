@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
     val on by settingsRepo.blockScreenshots.collectAsState(initial = false)
+    val reports by settingsRepo.telemetryOptIn.collectAsState(initial = false)
     val scope = rememberCoroutineScope()
     DSection("Privacy", Icons.Default.VisibilityOff, summary = if (on) "Screenshots blocked" else "Screenshots allowed", initiallyExpanded = false) {
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
@@ -31,6 +32,20 @@ internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
             }
             Spacer(Modifier.width(12.dp))
             Switch(checked = on, onCheckedChange = null)
+        }
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
+            .toggleable(value = reports, role = Role.Switch) { v ->
+                scope.launch { settingsRepo.setTelemetryOptIn(v) }
+                com.minimart.pos.util.Telemetry.apply(v)
+            },
+            verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Send crash and speed reports", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+                Text("Off by default. When on, the app sends the developer a report if it crashes, and how long things like completing a sale take, so problems get fixed sooner. Reports contain the phone model, Android version and the error. They never contain sales, customers, prices or PINs.",
+                    color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+            }
+            Spacer(Modifier.width(12.dp))
+            Switch(checked = reports, onCheckedChange = null)
         }
     }
 }

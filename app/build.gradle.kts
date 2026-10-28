@@ -6,6 +6,15 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Opt-in crash and performance reports (Firebase). Without app/google-services.json (your own Firebase project's
+// file, see docs/FIREBASE.md) none of this is applied and the app behaves as before; even with it, nothing is
+// sent until the owner switches it on in Settings > Privacy.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+    apply(plugin = "com.google.firebase.crashlytics")
+    apply(plugin = "com.google.firebase.firebase-perf")
+}
+
 // Hilt 2.59 reads class metadata with kotlin-metadata-jvm 2.3, which refuses what Kotlin 2.4 writes ("Provided
 // Metadata instance has version 2.4.0"). Keep that one library on the Kotlin version we compile with.
 configurations.configureEach {
@@ -151,6 +160,12 @@ dependencies {
     implementation("com.lambdapioneer.argon2kt:argon2kt:1.4.0")
 
     debugImplementation(libs.androidx.ui.tooling.preview)
+
+    // Firebase Crashlytics + Performance Monitoring. Collection is switched off in the manifest and only
+    // enabled by Telemetry.apply() after the owner opts in.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.perf)
 
     // Compose UI tests that run on a device/emulator (app/src/androidTest).
     androidTestImplementation(platform(libs.androidx.compose.bom))
