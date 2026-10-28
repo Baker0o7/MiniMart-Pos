@@ -5,6 +5,12 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.21.0] - 2026-10-29
+
+- **Optional crash and speed reports:** Settings > Privacy has a new switch, "Send crash and speed reports". It is off by default and nothing is sent unless you turn it on. (It only works in builds made with the developer's Firebase file.)
+- **Till sync conflicts:** if two tills refund and void the same sale in different ways, the first one stands, money is not returned twice, and the Activity Log now says what happened.
+- **Behind the scenes:** more automatic tests for payments, checkout and the database upgrade path.
+
 ## [1.20.0] - 2026-10-28
 
 - **Safer M-Pesa payments:** a payment that arrives twice (by SMS and by the till link, or because the phone retried) is now recorded once, even if the code is typed in capitals or with spaces.
