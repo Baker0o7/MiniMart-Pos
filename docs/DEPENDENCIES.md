@@ -30,6 +30,14 @@ MiniMart POS handles money and shop data, so libraries are added slowly and kept
 Pick a Kotlin version, then the KSP release built for it (`<kotlin>-<ksp>`), and the Compose BOM that supports it.
 Change the three versions in `gradle/libs.versions.toml` in one pull request and run the full build and tests.
 
+Two build workarounds to know about (both are in the build files with a comment):
+
+* `gradle.properties` sets `android.builtInKotlin=false` and `android.newDsl=false`: AGP 9 opts in to its own Kotlin
+  support and new DSL, which this project has not moved to yet. Remove them when the plugins are migrated.
+* `app/build.gradle.kts` forces `kotlin-metadata-jvm` to the Kotlin version, because Hilt otherwise reads Kotlin 2.4
+  classes with an older metadata reader and fails ("Provided Metadata instance has version 2.4.0").
+* Compose BOM 2026 needs `compileSdk 37`; `targetSdk` stays 35 until the behaviour changes of newer Android are checked.
+
 ## Watch list
 
 * `androidx.security:security-crypto` is kept for **one purpose only**: reading secrets saved by versions before 1.18.7

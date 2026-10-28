@@ -18,6 +18,9 @@ name=$(grep -oP 'versionName\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' app/build.gradle.k
 if [ -n "${name:-}" ] && [ -f CHANGELOG.md ] && ! grep -q "^## \[${name}\]" CHANGELOG.md; then
   echo "::error::CHANGELOG.md has no '## [${name}]' section for this version"; fail=1
 fi
+if [ -n "${name:-}" ] && awk -v v="## [${name}]" 'index($0,v)==1{f=1;next} /^## \[/{f=0} f' CHANGELOG.md | grep -q "TODO:"; then
+  echo "::error::CHANGELOG.md entry for ${name} still has a TODO placeholder"; fail=1
+fi
 [ -n "$code" ] || { echo "::error::versionCode missing or not a number"; fail=1; }
 [ -n "$name" ] || { echo "::error::versionName must look like 1.2.3"; fail=1; }
 if grep -rn 'String.format("' --include=*.kt app/src/main data/src/main | grep -v Locale >/dev/null; then

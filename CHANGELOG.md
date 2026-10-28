@@ -5,6 +5,13 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.20.0] - 2026-10-28
+
+- **Safer M-Pesa payments:** a payment that arrives twice (by SMS and by the till link, or because the phone retried) is now recorded once, even if the code is typed in capitals or with spaces.
+- **Steadier background work:** syncing, backups and the cloud upload now retry the same way when the network drops, and give up quietly until the next round instead of losing data.
+- **Checkout:** the rule for when "Complete sale" turns on (cash covers the total, M-Pesa checked, customer chosen for credit) is now tested, so it cannot drift.
+- **Behind the scenes:** the app is rebuilt on current Android tools and libraries (newer Android, Kotlin and Compose). Nothing should look different; please report anything that does.
+
 ## [1.19.2] - 2026-10-26
 
 - **Rearranging Home tiles, two ways:** in Edit mode you can now drag a tile straight away (no waiting for a long press), or tap one tile to pick it up and tap the place it should go. The picked tile is highlighted and the phone gives a small tap. A long press on any tile opens Edit, so you do not have to hunt for the button.

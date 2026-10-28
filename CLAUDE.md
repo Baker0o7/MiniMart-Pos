@@ -11,7 +11,7 @@ gradle assembleDebug
 gradle :app:assembleDebugAndroidTest     # UI tests must still compile (they run on an emulator in CI)
 bash scripts/release-checks.sh           # migration present, version + CHANGELOG entry, Locale in String.format
 ```
-The Gradle wrapper jar is committed on purpose (CI validates it); Gradle 8.7. Package: `com.minimart.pos`.
+The Gradle wrapper jar is committed on purpose (CI validates it); Gradle 9.6.0 (AGP 9.4, Kotlin 2.4). Package: `com.minimart.pos`.
 
 ## Modules
 `:core` pure Kotlin, no Android imports (business rules + tests). `:data` Room, repositories, settings. `:app` UI, Hilt,
@@ -35,8 +35,8 @@ workers, printer, sync. Put new rules in `:core` and test them there.
 * Colours: only the `DT` palette. The app is dark only on purpose (hard-coded `Color.White` text is used widely).
 
 ## Releasing
-Bump `versionCode`/`versionName` in `app/build.gradle.kts`, add a `## [x.y.z] - date` section at the top of
-`CHANGELOG.md` (plain language, what changed for the shop), run `scripts/release-checks.sh`, push to `main`, wait for CI,
+Run `scripts/bump-version.sh x.y.z` (raises `versionCode`, sets `versionName`, adds a `## [x.y.z] - date` stub at the top of
+`CHANGELOG.md`), replace the TODO with plain language about what changed for the shop, run `scripts/release-checks.sh`, push to `main`, wait for CI,
 then run the *Build & Release* workflow (it signs with the keystore in repository secrets: see `docs/RELEASE_SIGNING.md`). Release notes live in the changelog, not the README.
 
 ## Style
