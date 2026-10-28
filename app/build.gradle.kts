@@ -73,7 +73,8 @@ android {
 
     splits {
         abi {
-            isEnable = true
+            // Off only for the Play bundle (-PabiSplits=false): AGP 9 refuses to build an AAB with per-ABI APKs on.
+            isEnable = providers.gradleProperty("abiSplits").orNull != "false"
             reset()
             // arm64 for modern phones, armeabi-v7a for the many older/budget 32-bit phones, x86_64 for
             // emulators and Chromebooks. The universal APK works on all of them (largest download).

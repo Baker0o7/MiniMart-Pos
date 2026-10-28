@@ -81,11 +81,12 @@ jobs:
             echo "SIGNING_KEY_PASSWORD=$PASS"
           } >> "$GITHUB_ENV"
 
+      # The bundle first and without per-ABI APKs (AGP 9 refuses to build both in one go), then the APKs.
+      - name: Build signed release AAB
+        run: gradle bundleRelease -PabiSplits=false --no-daemon
+
       - name: Build signed release APK
         run: gradle assembleRelease --no-daemon
-
-      - name: Build signed release AAB
-        run: gradle bundleRelease --no-daemon
 
       - name: Get version
         id: version

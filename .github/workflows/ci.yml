@@ -148,9 +148,9 @@ jobs:
           keytool -genkeypair -keystore app/minimart-release.jks -alias ci -keyalg RSA -keysize 2048 -validity 2 \
             -storepass "$PASS" -keypass "$PASS" -dname "CN=CI smoke test"
           export SIGNING_STORE_PASSWORD="$PASS" SIGNING_KEY_PASSWORD="$PASS" SIGNING_KEY_ALIAS=ci
+          # The Play bundle is built first and without per-ABI APKs (AGP 9 refuses to mix them), as release.yml does.
+          gradle bundleRelease -PabiSplits=false --no-daemon --stacktrace 2>&1 | tee bundle.log
           gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee release.log
-          # The Play bundle is a separate task with its own failure modes; the release workflow builds it too.
-          gradle bundleRelease --no-daemon --stacktrace 2>&1 | tee bundle.log
       - name: Surface release build errors
         if: failure()
         run: |
