@@ -24,6 +24,7 @@ android {
     testOptions {
         // Robolectric needs Android resources/manifest merged for the in-memory Room tests.
         unitTests.isIncludeAndroidResources = true
+        unitTests.all { it.useJUnitPlatform() }
     }
 }
 
@@ -46,6 +47,12 @@ dependencies {
 
     // JVM tests for the data layer: real Room (in-memory, via Robolectric) so DAO SQL and constraints are exercised.
     testImplementation("junit:junit:4.13.2")
+    // JUnit 5 (Jupiter) for new tests; the vintage engine keeps the older JUnit 4 tests (and Robolectric's runner) working.
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.vintage)
+    testRuntimeOnly(libs.junit.launcher)
+    testImplementation(libs.turbine)
     testImplementation("org.robolectric:robolectric:4.14.1")
     testImplementation("androidx.test:core:1.6.1")
     testImplementation("androidx.test.ext:junit:1.2.1")

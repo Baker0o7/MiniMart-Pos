@@ -1,4 +1,6 @@
 [versions]
+junit5 = "5.11.4"
+turbine = "1.2.0"
 appcompat = "1.7.0"
 biometric = "1.2.0-alpha05"
 sqlcipher = "4.5.4"
@@ -24,6 +26,11 @@ coil = "2.7.0"
 accompanistPermissions = "0.36.0"
 
 [libraries]
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit5" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-vintage = { module = "org.junit.vintage:junit-vintage-engine" }
+junit-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }

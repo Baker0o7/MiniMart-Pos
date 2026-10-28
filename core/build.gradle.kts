@@ -19,4 +19,11 @@ dependencies {
     // @Qualifier / @Inject annotations (the Hilt-generated code lives in the Android modules).
     api("javax.inject:javax.inject:1")
     testImplementation("junit:junit:4.13.2")
+    // JUnit 5 (Jupiter) for new tests; the vintage engine keeps the older JUnit 4 tests (and Robolectric's runner) working.
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.vintage)
+    testRuntimeOnly(libs.junit.launcher)
 }
+
+tasks.test { useJUnitPlatform() }

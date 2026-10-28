@@ -2,8 +2,8 @@ package com.minimart.pos.util
 
 import com.minimart.pos.util.CheckoutRules.Kind
 import com.minimart.pos.util.CheckoutRules.canComplete
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 
 class CheckoutRulesTest {
     @Test fun `empty or zero total can never be completed`() {

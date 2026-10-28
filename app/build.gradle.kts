@@ -70,6 +70,7 @@ android {
     }
     kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
     buildFeatures { compose = true; buildConfig = true }
+    testOptions { unitTests.all { it.useJUnitPlatform() } }
 
     splits {
         abi {
@@ -164,6 +165,13 @@ dependencies {
     // under test (Money, CartUiState's computed properties, PluDecoder) are pure
     // Kotlin/JVM logic with no Android dependencies.
     testImplementation("junit:junit:4.13.2")
+    // JUnit 5 (Jupiter) for new tests; the vintage engine keeps the older JUnit 4 tests (and Robolectric's runner) working.
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.vintage)
+    testRuntimeOnly(libs.junit.launcher)
+    testImplementation(libs.turbine)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
     // org.json for JVM tests (Android's own copy is only a stub there)
     testImplementation("org.json:json:20240303")
 
