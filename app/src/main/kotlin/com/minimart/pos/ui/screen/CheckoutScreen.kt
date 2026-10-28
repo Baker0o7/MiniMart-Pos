@@ -110,16 +110,19 @@ fun CheckoutScreen(
     LaunchedEffect(mpesaRef, state.total) { mpesaCheckVm.check(mpesaRef, state.total) }
     val stkConfirmed = stkState.phase == StkPushPhase.SUCCESS && mpesaRef.isNotBlank() && mpesaRef == stkState.mpesaReceiptNumber
 
-    val canComplete = when {
-        state.total <= 0 -> false
-        useSplitPayment  -> selectedCustomer != null && splitCredit > 0 && cashAmount >= splitCashNeeded
-        else -> when (selectedMethod) {
-            PaymentMethod.CASH   -> cashAmount >= state.total
-            PaymentMethod.MPESA  -> !stkInFlight && (stkConfirmed || (!mpesaAssessment.isBlocking && (!mpesaStrict || mpesaAssessment.passesStrict)))
-            PaymentMethod.CREDIT -> selectedCustomer != null && state.total > 0
-            else                 -> true
-        }
-    }
+    val canComplete = com.minimart.pos.util.CheckoutRules.canComplete(
+        total = state.total,
+        kind = when (selectedMethod) {
+            PaymentMethod.CASH -> com.minimart.pos.util.CheckoutRules.Kind.CASH
+            PaymentMethod.MPESA -> com.minimart.pos.util.CheckoutRules.Kind.MPESA
+            PaymentMethod.CREDIT -> com.minimart.pos.util.CheckoutRules.Kind.CREDIT
+            else -> com.minimart.pos.util.CheckoutRules.Kind.OTHER
+        },
+        cashGiven = cashAmount,
+        hasCustomer = selectedCustomer != null,
+        mpesaAccepted = !stkInFlight && (stkConfirmed || (!mpesaAssessment.isBlocking && (!mpesaStrict || mpesaAssessment.passesStrict))),
+        split = if (useSplitPayment) splitCredit else null
+    )
 
     val checkoutContext = androidx.compose.ui.platform.LocalContext.current
     // Bug fix: this collector only ever branched on `is CheckoutResult.Success` — a
