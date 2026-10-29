@@ -452,7 +452,7 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
                     }
                 }
                 OutlinedTextField(value = notes, onValueChange = { notes = it },
-                    label = { Text("Notes (optional)", color = DT.SubText) }, singleLine = true,
+                    label = { Text("Notes (optional)", color = DT.SubText) }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
                         focusedTextColor = Color.White, unfocusedTextColor = Color.White,

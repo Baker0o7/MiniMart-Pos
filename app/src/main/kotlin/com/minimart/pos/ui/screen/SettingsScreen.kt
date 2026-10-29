@@ -158,7 +158,7 @@ fun SettingsScreen(
                         Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                             Text("Currency", color = DT.OnSurface, modifier = Modifier.weight(1f))
-                            OutlinedTextField(currencyInput, { currencyInput = it }, singleLine = true,
+                            OutlinedTextField(currencyInput, { currencyInput = it }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
                                 modifier = Modifier.width(90.dp), shape = RoundedCornerShape(10.dp), colors = dColors())
                         }
                         Spacer(Modifier.height(8.dp))
@@ -256,7 +256,7 @@ fun SettingsScreen(
                         OutlinedTextField(value = drawerInput, onValueChange = { drawerInput = it },
                             label = { Text("Direct BT Drawer Address (optional)", color = DT.SubText) },
                             placeholder = { Text("00:11:22:33:44:55", color = DT.SubText.copy(0.5f)) },
-                            singleLine = true,
+                            singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
                             modifier = Modifier.fillMaxWidth().onFocusChanged { f ->
                                 if (f.isFocused) drawerTouched = true
                                 else if (drawerTouched && drawerInput.trim() != cashDrawerAddress) {
@@ -472,7 +472,7 @@ fun SettingsScreen(
                             label = { Text("Server IP address", color = DT.SubText) },
                             placeholder = { Text("e.g. 192.168.1.100", color = DT.SubText.copy(0.5f)) },
                             leadingIcon = { Icon(Icons.Default.Wifi, null, tint = DT.SubText) },
-                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Next), modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
                                 focusedTextColor = Color.White, unfocusedTextColor = Color.White,
@@ -484,7 +484,7 @@ fun SettingsScreen(
                             label = { Text("Pairing code", color = DT.SubText) },
                             placeholder = { Text("Pairing code shown on the server", color = DT.SubText.copy(0.5f)) },
                             leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.SubText) },
-                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
                                 focusedTextColor = Color.White, unfocusedTextColor = Color.White,
@@ -552,13 +552,13 @@ fun SettingsScreen(
                         Spacer(Modifier.height(10.dp))
                         if (!cs.connected) {
                             OutlinedTextField(cs.url, cloudVm::setUrl, label = { Text("Project URL (https://…supabase.co)") },
-                                singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
+                                singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Next), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
                             Spacer(Modifier.height(8.dp))
                             OutlinedTextField(cs.anonKey, cloudVm::setAnonKey, label = { Text("Anon (public) key") },
-                                singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
+                                singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
                             Spacer(Modifier.height(8.dp))
                             OutlinedTextField(cs.setupCode, cloudVm::setSetupCode, label = { Text("Setup code") },
-                                singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
+                                singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
                             Spacer(Modifier.height(10.dp))
                             Button(onClick = { cloudVm.connect() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.Surface2)) {
@@ -648,10 +648,10 @@ fun SettingsScreen(
                                         Text("Add a passphrase to encrypt the backup (recommended if you share or upload it). " +
                                             "Leave blank for an unencrypted backup. An encrypted backup cannot be opened without its passphrase.",
                                             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
-                                        OutlinedTextField(pass, { pass = it }, label = { Text("Passphrase (optional)") }, singleLine = true,
+                                        OutlinedTextField(pass, { pass = it }, label = { Text("Passphrase (optional)") }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
                                             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                             colors = dColors(), modifier = Modifier.fillMaxWidth())
-                                        if (pass.isNotEmpty()) OutlinedTextField(pass2, { pass2 = it }, label = { Text("Repeat passphrase") }, singleLine = true,
+                                        if (pass.isNotEmpty()) OutlinedTextField(pass2, { pass2 = it }, label = { Text("Repeat passphrase") }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
                                             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                             colors = dColors(), modifier = Modifier.fillMaxWidth())
                                         if (pass.isNotEmpty()) passError?.let { Text(it, color = DT.Red, style = MaterialTheme.typography.labelSmall) }
@@ -795,7 +795,7 @@ fun SettingsScreen(
                                 text = {
                                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                         Text("\"${f.name}\" will replace ALL current data — every sale, product, and customer added since this backup was made will be lost. This cannot be undone. The app will restart.", color = DT.SubText)
-                                        if (encrypted) OutlinedTextField(restorePass, { restorePass = it }, label = { Text("Backup passphrase") }, singleLine = true,
+                                        if (encrypted) OutlinedTextField(restorePass, { restorePass = it }, label = { Text("Backup passphrase") }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
                                             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                             colors = dColors(), modifier = Modifier.fillMaxWidth())
                                     }

@@ -44,7 +44,7 @@ fun SetupWizardScreen(onFinished: (openProducts: Boolean) -> Unit, vm: SetupView
             0 -> {
                 Text("What is your shop called?", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Text("It appears on receipts and reports.", color = DT.SubText, fontSize = 13.sp)
-                OutlinedTextField(name, { name = it.take(60) }, label = { Text("Shop name") }, singleLine = true,
+                OutlinedTextField(name, { name = it.take(60) }, label = { Text("Shop name") }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words, imeAction = androidx.compose.ui.text.input.ImeAction.Next),
                     modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
                 Text("Currency", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -155,7 +155,7 @@ fun LoginScreen(
                             modifier = Modifier.padding(start = 6.dp))
                         OutlinedTextField(value = username, onValueChange = { username = it },
                             leadingIcon = { Icon(Icons.Default.Person, null, tint = emerald) },
-                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(autoCorrectEnabled = false, capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.None, imeAction = androidx.compose.ui.text.input.ImeAction.Next), modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(50),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = emerald, unfocusedBorderColor = glassBd,

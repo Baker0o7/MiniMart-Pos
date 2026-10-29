@@ -10,6 +10,21 @@ prev=$((ver-1))
 if [ "$prev" -ge 8 ] && ! grep -q "MIGRATION_${prev}_${ver}" "$db"; then
   echo "::error::Database is version $ver but MIGRATION_${prev}_${ver} is missing"; fail=1
 fi
+manifest=app/src/main/AndroidManifest.xml
+# Only these components may be reachable by other apps. A new exported component is a new door: add it here on purpose.
+exported=$(python3 - "$manifest" <<'PYEOF'
+import re, sys
+s = open(sys.argv[1]).read()
+names = re.findall(r'<(?:activity|receiver|service|provider)\b[^>]*?android:name="([^"]+)"[^>]*?android:exported="true"', s, re.S)
+print(" ".join(sorted(names)))
+PYEOF
+)
+if [ "$exported" != ".MainActivity .mpesa.MpesaSmsReceiver" ]; then
+  echo "::error::Exported components changed (found: ${exported:-none}). Review before releasing; see docs/SECURITY.md"; fail=1
+fi
+if grep -qE 'android:debuggable="true"|usesCleartextTraffic="true"' "$manifest"; then
+  echo "::error::Manifest allows debugging or cleartext traffic"; fail=1
+fi
 if [ ! -s gradle/wrapper/gradle-wrapper.jar ]; then
   echo "::error::gradle/wrapper/gradle-wrapper.jar is missing (it is committed on purpose; do not git-ignore it)"; fail=1
 fi

@@ -107,6 +107,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        // Other apps' floating windows cannot sit over (and tap through) the PIN pad or payment buttons.
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) window.setHideOverlayWindows(true)
         // Phones stay upright; tablets and other large screens (600dp and wider) rotate freely.
         // The activity handles configuration changes itself (see the manifest), so turning the
         // device never rebuilds the screen and an open sale or dialog is not lost.

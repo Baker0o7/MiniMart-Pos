@@ -104,7 +104,7 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
             },
             visualTransformation = if (showSecret) androidx.compose.ui.text.input.VisualTransformation.None
                                    else androidx.compose.ui.text.input.PasswordVisualTransformation(),
-            singleLine = true, modifier = Modifier.fillMaxWidth(),
+            singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp), colors = dColors()
         )
         Spacer(Modifier.height(4.dp))
@@ -120,7 +120,7 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
             },
             visualTransformation = if (showPasskey) androidx.compose.ui.text.input.VisualTransformation.None
                                    else androidx.compose.ui.text.input.PasswordVisualTransformation(),
-            singleLine = true, modifier = Modifier.fillMaxWidth(),
+            singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp), colors = dColors()
         )
         if (!secureAvailable) Text("Secure storage is unavailable on this phone, so M-Pesa keys cannot be saved safely.",

@@ -35,7 +35,7 @@ fun LabelPrintScreen(onBack: () -> Unit, vm: LabelPrintViewModel = hiltViewModel
         FeedbackBanner(s.message, s.isError, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 
         OutlinedTextField(
-            value = s.query, onValueChange = vm::setQuery, singleLine = true,
+            value = s.query, onValueChange = vm::setQuery, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
             label = { Text("Search products", fontSize = 12.sp) },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
             shape = RoundedCornerShape(12.dp),

@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Android 12+ backup / device-transfer rules. Only the shop database and plain settings are
      included; the encrypted credential files (Daraja keys, sync secrets) stay on this device
-     because their Keystore keys cannot move to another phone anyway. -->
+     because their Keystore keys cannot move to another phone anyway.
+     Cloud backup is skipped on phones that cannot encrypt it (no screen lock), so shop data never goes to the
+     cloud in the clear. -->
 <data-extraction-rules>
-    <cloud-backup>
+    <cloud-backup disableIfNoEncryptionCapabilities="true">
         <include domain="database" path="minimart_pos.db" />
         <include domain="sharedpref" path="minimart_settings.preferences_pb" />
     </cloud-backup>

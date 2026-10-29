@@ -334,7 +334,7 @@ internal fun ReasonDialog(title: String, subtitle: String, color: Color,
                 Text(subtitle, color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                 OutlinedTextField(value = reason, onValueChange = { reason = it },
                     label = { Text("Reason (required)", color = DT.SubText) },
-                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences, imeAction = androidx.compose.ui.text.input.ImeAction.Done), modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = color, unfocusedBorderColor = DT.Border,

@@ -497,7 +497,7 @@ fun CheckoutScreen(
                                 OutlinedTextField(value = mpesaRef, onValueChange = { mpesaRef = it.uppercase() },
                                     label = { Text("M-Pesa Ref (optional)", color = DT.SubText) },
                                     leadingIcon = { Icon(Icons.Default.ConfirmationNumber, null, tint = DT.SubText) },
-                                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Done), modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(14.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
@@ -854,7 +854,7 @@ private fun CustomerSearchSheet(
                         OutlinedTextField(value = newName, onValueChange = { newName = it },
                             label = { Text("Full Name *", color = DT.SubText) },
                             leadingIcon = { Icon(Icons.Default.Person, null, tint = DT.SubText) },
-                            singleLine = true, modifier = Modifier.fillMaxWidth(),
+                            singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words, imeAction = androidx.compose.ui.text.input.ImeAction.Next), modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
