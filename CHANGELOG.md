@@ -5,6 +5,11 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.21.1] - 2026-10-29
+
+- **Safer screens:** on Android 12 and newer, other apps' floating windows are hidden while MiniMart is open, so nothing can sit over the PIN pad or payment buttons. Cloud backup is now skipped on phones without a screen lock, because it could not be encrypted.
+- **Better keyboards:** passwords, keys and codes use the private keyboard (no suggestions), M-Pesa references and currency use capital letters, names start each word with a capital, and search fields have a Search key.
+
 ## [1.21.0] - 2026-10-29
 
 - **Optional crash and speed reports:** Settings > Privacy has a new switch, "Send crash and speed reports". It is off by default and nothing is sent unless you turn it on. (It only works in builds made with the developer's Firebase file.)
