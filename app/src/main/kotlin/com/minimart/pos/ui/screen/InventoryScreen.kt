@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -162,20 +163,37 @@ fun InventoryScreen(
                         }
                     )
                 }
-                if (shown.isEmpty() && (lowOnly || searchQuery.isNotBlank())) {
+                if (shown.isEmpty()) {
                     item {
-                        Box(Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Default.Inventory2, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.4f))
-                                Spacer(Modifier.height(8.dp))
+                        val filtering = lowOnly || searchQuery.isNotBlank() || selectedCat != null
+                        Box(Modifier.fillMaxWidth().padding(top = 48.dp, start = 24.dp, end = 24.dp), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Icon(Icons.Default.Inventory2, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.6f))
                                 Text(
                                     when {
                                         lowOnly && searchQuery.isBlank() -> "Nothing is running low"
                                         searchQuery.isNotBlank() -> "No results for \"$searchQuery\""
+                                        selectedCat != null -> "Nothing in this category yet"
                                         else -> "No products yet"
                                     },
-                                    color = DT.SubText
+                                    color = DT.OnSurface, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center
                                 )
+                                if (filtering) {
+                                    TextButton(onClick = { vm.setSearchQuery(""); vm.setCategory(null); lowOnly = false },
+                                        modifier = Modifier.heightIn(min = 48.dp)) { Text("Clear filters", color = DT.Teal) }
+                                } else {
+                                    Text("Add the things you sell, with their price and how many you have, and they will show up here and at the till.",
+                                        color = DT.SubText, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                                    if (canEditPrices) {
+                                        Button(onClick = { editProduct = null; showAddDialog = true },
+                                            modifier = Modifier.heightIn(min = 48.dp), shape = RoundedCornerShape(12.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White)) {
+                                            Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
+                                            Spacer(Modifier.width(6.dp))
+                                            Text("Add your first product", fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
