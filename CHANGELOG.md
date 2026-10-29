@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.21.2] - 2026-10-29
+
+- **New Sale screen:** the infinity button is now a labelled **Multi-scan** switch (keeps the camera open after each item), and the hints on an empty cart are easier to read.
+
 ## [1.21.1] - 2026-10-29
 
 - **Safer screens:** on Android 12 and newer, other apps' floating windows are hidden while MiniMart is open, so nothing can sit over the PIN pad or payment buttons. Cloud backup is now skipped on phones without a screen lock, because it could not be encrypted.
