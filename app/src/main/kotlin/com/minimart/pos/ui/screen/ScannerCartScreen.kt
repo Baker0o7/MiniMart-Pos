@@ -1,5 +1,8 @@
 package com.minimart.pos.ui.screen
 
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
@@ -410,12 +413,12 @@ fun ScannerCartScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Icon(Icons.Default.ShoppingCart, null,
                             modifier = Modifier.size(64.dp), tint = DT.SubText.copy(0.25f))
-                        Text("Cart is empty", color = DT.SubText.copy(0.7f),
+                        Text("Cart is empty", color = DT.SubText,
                             fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                         Text("Scan a barcode, or search by name or barcode above",
-                            color = DT.SubText.copy(0.6f), fontSize = 12.sp, textAlign = TextAlign.Center)
+                            color = DT.SubText.copy(0.9f), fontSize = 13.sp, textAlign = TextAlign.Center)
                         Text("Tap a quantity to type it, e.g. 24 cans",
-                            color = DT.SubText.copy(0.4f), fontSize = 11.sp, textAlign = TextAlign.Center)
+                            color = DT.SubText.copy(0.8f), fontSize = 12.sp, textAlign = TextAlign.Center)
                     }
                 }
             }
@@ -454,17 +457,25 @@ fun ScannerCartScreen(
                     Row(modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically) {
-                        // ∞ tile
-                        Box(modifier = Modifier.size(56.dp)
+                        // Keep-scanning switch: labelled, because an infinity sign alone does not say what it does.
+                        Box(modifier = Modifier.width(76.dp).height(56.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .background(if (continuousScan) DT.Teal else DT.Surface2)
                             .border(1.dp, if (continuousScan) DT.Teal else DT.Border, RoundedCornerShape(16.dp))
-                            .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null,
+                            .semantics(mergeDescendants = true) {
+                                contentDescription = "Keep scanning after each item"
+                                stateDescription = if (continuousScan) "On" else "Off"
+                            }
+                            .clickable(role = androidx.compose.ui.semantics.Role.Switch, indication = null,
                                 interactionSource = remember { MutableInteractionSource() }) { continuousScan = !continuousScan },
                             contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.AllInclusive, null,
-                                tint = if (continuousScan) Color.White else DT.SubText,
-                                modifier = Modifier.size(24.dp))
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.AllInclusive, null,
+                                    tint = if (continuousScan) Color.White else DT.SubText,
+                                    modifier = Modifier.size(22.dp))
+                                Text("Multi-scan", fontSize = 11.sp, maxLines = 1, softWrap = false,
+                                    color = if (continuousScan) Color.White else DT.SubText)
+                            }
                         }
                         // Scan pill
                         Box(modifier = Modifier.weight(1f).height(56.dp)
