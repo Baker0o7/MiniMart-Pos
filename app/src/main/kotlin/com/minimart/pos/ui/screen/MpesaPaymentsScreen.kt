@@ -115,7 +115,7 @@ fun MpesaPaymentsScreen(
                                     else if (hasPermission()) { permitted = true; vm.setTracking(true) }
                                     else launcher.launch(Manifest.permission.RECEIVE_SMS)
                                 },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border)
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f))
                             )
                         }
                     }
@@ -133,7 +133,7 @@ fun MpesaPaymentsScreen(
                             }
                             Spacer(Modifier.width(10.dp))
                             Switch(checked = strict, onCheckedChange = { vm.setStrict(it) },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border))
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
                         }
                     }
 

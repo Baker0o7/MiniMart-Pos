@@ -249,7 +249,7 @@ fun SettingsScreen(
                                 Text("Auto-opens when cash payment completes", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Switch(checked = cashDrawerOnSale, onCheckedChange = { scope.launch { settingsRepo.setCashDrawerOnSale(it) } },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border))
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
                         }
                         Spacer(Modifier.height(10.dp))
                         // Direct BT drawer address (optional)
@@ -303,7 +303,7 @@ fun SettingsScreen(
                                 Text("Cashiers count the till without seeing the expected cash. Managers and owners see the variance on the Z-report.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Switch(checked = blindClose, onCheckedChange = { scope.launch { settingsRepo.setBlindClose(it) } },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border))
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
                         }
                         Spacer(Modifier.height(12.dp))
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -312,7 +312,7 @@ fun SettingsScreen(
                                 Text("Shows the live cart on an attached HDMI or dual-screen display. The Customer tile on Home also works full-screen on this device.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Switch(checked = secondScreen, onCheckedChange = { scope.launch { settingsRepo.setCustomerDisplayEnabled(it) } },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border))
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
                         }
                         Spacer(Modifier.height(12.dp))
                         Text("Drawer kick pin", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
@@ -420,7 +420,7 @@ fun SettingsScreen(
                             Switch(
                                 checked = syncState.serverRunning,
                                 onCheckedChange = { if (it) syncVm.startServer() else syncVm.stopServer() },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border)
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f))
                             )
                         }
 
@@ -882,7 +882,7 @@ fun SettingsScreen(
                                     else settingsRepo.clearBiometricUser()
                                 }
                             },
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border)
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f))
                         )
                     }
                     HDivider()
