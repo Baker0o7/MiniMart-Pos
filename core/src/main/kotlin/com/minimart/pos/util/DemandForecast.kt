@@ -56,7 +56,7 @@ object DemandForecast {
         var empty: Int? = null
         for ((d, units) in out.withIndex()) {
             left -= units
-            if (left <= 0.0) { empty = d + 1; break }
+            if (left <= 1e-6) { empty = d + 1; break }   // tolerance: 4 x 4.9999999 must still count as 20
         }
         return Forecast(out, out.average(), empty, confidence(n))
     }
