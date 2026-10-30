@@ -206,6 +206,11 @@ private fun ReorderRow(r: InsightRow) = RowCard {
             maxLines = 1, overflow = TextOverflow.Ellipsis)
         val cover = r.daysCover?.let { if (it < 1) "under a day left" else "~${it.toInt()} days left" } ?: "not selling lately"
         Text("Have ${plainNumber(r.onHand)} ${unitOf(r)} • $cover", color = if (r.onHand <= 0) DT.Red else DT.Amber, fontSize = 11.sp)
+        r.emptyInDays?.takeIf { r.onHand > 0 }?.let { d ->
+            val day = java.text.SimpleDateFormat("EEE d MMM", Locale.getDefault()).format(Date(System.currentTimeMillis() + d * 86_400_000L))
+            Text("Forecast: runs out around $day" + if (r.forecastConfidence < 0.5) " (rough, little history)" else "",
+                color = DT.SubText, fontSize = 11.sp)
+        }
         if (r.product.supplierName.isNotBlank())
             Text(r.product.supplierName, color = DT.SubText, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }

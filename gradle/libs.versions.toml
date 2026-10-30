@@ -1,4 +1,5 @@
 [versions]
+leakcanary = "2.14"
 firebaseBom = "35.1.0"
 googleServices = "4.5.0"
 firebaseCrashlyticsPlugin = "3.0.8"
@@ -30,6 +31,7 @@ coil = "2.7.0"
 accompanistPermissions = "0.36.0"
 
 [libraries]
+leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 firebase-perf = { module = "com.google.firebase:firebase-perf" }

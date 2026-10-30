@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
     val on by settingsRepo.blockScreenshots.collectAsState(initial = false)
     val reports by settingsRepo.telemetryOptIn.collectAsState(initial = false)
+    val kiosk by settingsRepo.kioskMode.collectAsState(initial = false)
     val scope = rememberCoroutineScope()
     DSection("Privacy", Icons.Default.VisibilityOff, summary = if (on) "Screenshots blocked" else "Screenshots allowed", initiallyExpanded = false) {
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
@@ -46,6 +47,17 @@ internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
             }
             Spacer(Modifier.width(12.dp))
             Switch(checked = reports, onCheckedChange = null)
+        }
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
+            .toggleable(value = kiosk, role = Role.Switch) { v -> scope.launch { settingsRepo.setKioskMode(v) } },
+            verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Kiosk mode", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+                Text("Locks the phone or tablet to MiniMart and keeps the screen on, so staff cannot wander off into other apps. Android asks you to confirm once. To leave it, switch this off here, or hold Back and Overview together.",
+                    color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+            }
+            Spacer(Modifier.width(12.dp))
+            Switch(checked = kiosk, onCheckedChange = null)
         }
     }
 }

@@ -160,6 +160,8 @@ dependencies {
     implementation("com.lambdapioneer.argon2kt:argon2kt:1.4.0")
 
     debugImplementation(libs.androidx.ui.tooling.preview)
+    // Memory-leak detector: debug builds only (never in the release APK), it installs itself.
+    debugImplementation(libs.leakcanary)
 
     // Firebase Crashlytics + Performance Monitoring. Collection is switched off in the manifest and only
     // enabled by Telemetry.apply() after the owner opts in.

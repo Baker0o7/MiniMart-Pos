@@ -71,6 +71,16 @@ interface SaleDao {
     """)
     fun getProductSalesStats(startMs: Long, endMs: Long = Long.MAX_VALUE): Flow<List<ProductSalesStat>>
 
+    /** Units sold per product per local day (completed sales), for demand forecasting. [offsetMs] is the phone's UTC offset. */
+    @Query("""
+        SELECT si.productId AS productId, ((s.createdAt + :offsetMs) / 86400000) AS day,
+               SUM(CASE WHEN si.weightKg > 0 THEN si.weightKg ELSE si.quantity END) AS qty
+        FROM sale_items si INNER JOIN sales s ON si.saleId = s.id
+        WHERE s.createdAt >= :startMs AND s.status = 'COMPLETED'
+        GROUP BY si.productId, day
+    """)
+    fun getDailyProductUnits(startMs: Long, offsetMs: Long): Flow<List<DailyProductUnits>>
+
     /** When each product last sold (completed sales), for spotting dead stock. */
     @Query("""
         SELECT si.productId AS productId, MAX(s.createdAt) AS lastSoldAt
@@ -171,6 +181,8 @@ interface SaleDao {
         return saleId
     }
 }
+
+data class DailyProductUnits(val productId: Long, val day: Long, val qty: Double)
 
 data class ProductSalesStat(
     val productId: Long,

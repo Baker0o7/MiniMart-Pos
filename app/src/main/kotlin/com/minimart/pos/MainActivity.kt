@@ -140,6 +140,18 @@ class MainActivity : ComponentActivity() {
                 if (blockShots) window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
                 else window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
             }
+            val kiosk by settingsRepo.kioskMode.collectAsState(initial = false)
+            androidx.compose.runtime.LaunchedEffect(kiosk) {
+                // Screen pinning: Android asks once to confirm, and staff cannot leave the app without the owner's help.
+                // The screen also stays awake so the till is always ready.
+                if (kiosk) {
+                    window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    runCatching { startLockTask() }
+                } else {
+                    window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    runCatching { stopLockTask() }
+                }
+            }
             androidx.compose.runtime.LaunchedEffect(amoled) { com.minimart.pos.ui.theme.DT.amoled = amoled }
             androidx.compose.runtime.LaunchedEffect(highContrast) { com.minimart.pos.ui.theme.DT.highContrast = highContrast }
             MiniMartTheme(darkTheme = darkMode) {

@@ -29,6 +29,7 @@ class SaleRepository @Inject constructor(
         saleDao.getTopSellingProducts(startMs, endMs)
     fun getProductSalesStats(startMs: Long, endMs: Long = Long.MAX_VALUE) = saleDao.getProductSalesStats(startMs, endMs)
     fun getLastSoldTimes() = saleDao.getLastSoldTimes()
+    fun getDailyProductUnits(startMs: Long, offsetMs: Long) = saleDao.getDailyProductUnits(startMs, offsetMs)
     fun getSalesByDateRange(start: Long, end: Long): Flow<List<Sale>> = saleDao.getSalesByDateRange(start, end)
     fun getCompletedSalesByDateRange(start: Long, end: Long): Flow<List<Sale>> = saleDao.getCompletedSalesByDateRange(start, end)
 
