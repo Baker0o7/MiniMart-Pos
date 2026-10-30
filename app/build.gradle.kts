@@ -52,6 +52,12 @@ android {
     }
 
     defaultConfig {
+    // Hosted backend (cloud/multitenant_setup.sql). Set `minimart.cloudUrl` and `minimart.cloudAnonKey` in gradle.properties
+    // or the CLOUD_URL / CLOUD_ANON_KEY environment variables; the anon key is public by design. Left empty, the
+    // app asks owners for their own Supabase project instead, exactly as before.
+        fun cfg(prop: String, env: String) = (providers.gradleProperty(prop).orNull ?: System.getenv(env) ?: "").trim().replace("\"", "")
+        buildConfigField("String", "CLOUD_URL", "\"${cfg("minimart.cloudUrl", "CLOUD_URL")}\"")
+        buildConfigField("String", "CLOUD_ANON_KEY", "\"${cfg("minimart.cloudAnonKey", "CLOUD_ANON_KEY")}\"")
         applicationId = "com.minimart.pos"
         minSdk = 26
         targetSdk = 35

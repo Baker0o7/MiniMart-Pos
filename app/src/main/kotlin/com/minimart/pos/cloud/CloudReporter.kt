@@ -29,11 +29,13 @@ class CloudReporter @Inject constructor(
     suspend fun register(setupCode: String): CloudResult = withContext(Dispatchers.IO) {
         if (!config.url.startsWith("https://")) return@withContext CloudResult.Failed("The project URL must start with https://")
         if (config.anonKey.isBlank()) return@withContext CloudResult.Failed("Enter the project's anon key")
-        if (setupCode.isBlank()) return@withContext CloudResult.Failed("Enter the setup code from your SQL script")
+        if (setupCode.isBlank()) return@withContext CloudResult.Failed(
+            if (config.usesHosted) "Enter the code from your dashboard (Add a shop)" else "Enter the setup code from your SQL script")
         val name = try { settings.storeName.first() } catch (_: Exception) { "Store" }
-        val body = JSONObject().put("p_setup_code", setupCode.trim()).put("p_store_id", config.storeId)
+        val hosted = config.usesHosted
+        val body = JSONObject().put(if (hosted) "p_code" else "p_setup_code", setupCode.trim()).put("p_store_id", config.storeId)
             .put("p_name", name).put("p_secret", config.storeSecret)
-        when (val r = rpc("register_store", body)) {
+        when (val r = rpc(if (hosted) "register_store_with_code" else "register_store", body)) {
             is CloudResult.Ok -> { config.registered = true; CloudResult.Ok }
             // Registering twice (e.g. after an interrupted first try) is fine.
             is CloudResult.Failed -> if (r.message.contains("already registered", true)) { config.registered = true; CloudResult.Ok } else r

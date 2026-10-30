@@ -28,13 +28,16 @@ svg text{fill:var(--sub);font-size:10px}
 <body>
 <div class="wrap">
 <div id="login" class="card" hidden>
-  <h1>MiniMart Dashboard</h1><p class="sub small">Sign in with the owner account you created in Supabase.</p>
-  <input id="url" placeholder="Project URL (https://xxxx.supabase.co)" autocomplete="off">
-  <input id="key" placeholder="Anon (public) key" autocomplete="off">
+  <h1>MiniMart Dashboard</h1><p class="sub small" id="lhelp">Sign in with the owner account you created in Supabase.</p>
+  <div id="own"><input id="url" placeholder="Project URL (https://xxxx.supabase.co)" autocomplete="off">
+  <input id="key" placeholder="Anon (public) key" autocomplete="off"></div>
   <input id="email" type="email" placeholder="Email" autocomplete="username">
   <input id="pass" type="password" placeholder="Password" autocomplete="current-password">
   <button id="go" style="width:100%">Sign in</button>
-  <p id="lerr" class="bad small"></p>
+  <div id="hostedActions" hidden style="display:flex;gap:8px;margin-top:8px">
+    <button class="ghost" id="signup" style="flex:1">Create account</button>
+    <button class="ghost" id="forgot" style="flex:1">Forgot password</button></div>
+  <p id="lerr" class="bad small"></p><p id="linfo" class="ok small"></p>
 </div>
 <div id="app" hidden>
   <div class="bar"><h1>MiniMart Dashboard</h1><span class="sp"></span>
@@ -45,8 +48,9 @@ svg text{fill:var(--sub);font-size:10px}
   <div class="card" id="storesCard"><h2>Stores</h2><div id="stores"></div>
     <details style="margin-top:12px"><summary class="small">Manage stores</summary>
       <div id="manage" style="margin-top:8px"></div>
-      <p class="small sub" style="margin-top:10px">Removing a store deletes its uploaded data and key. To add or re-add a store, make a new setup code, then enter it in that store's app (Settings → Cloud dashboard).</p>
+      <p class="small sub" style="margin-top:10px">Removing a store deletes its uploaded data and key. <span id="addHelp">To add or re-add a store, make a new setup code, then enter it in that store's app (Settings → Cloud dashboard).</span></p>
       <button class="ghost" id="rotate">Make a new setup code</button><div id="newcode" class="small" style="margin-top:8px;word-break:break-all"></div>
+      <div id="acct" hidden style="margin-top:14px"><button class="ghost" id="delacct">Delete my account and all data</button></div>
     </details></div>
   <div class="two">
     <div class="card"><h2>Payment mix (30 days)</h2><div id="mix"></div></div>
@@ -58,19 +62,26 @@ svg text{fill:var(--sub);font-size:10px}
   <div class="card"><h2>Voids &amp; refunds (30 days)</h2><div id="vr"></div></div>
 </div>
 </div>
+<script src="config.js" onerror="void 0"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ls={get:k=>{try{return localStorage.getItem(k)||""}catch(e){return ""}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
-let sb=null,rows=[];
+let sb=null,rows=[],myStores=[];
+const HOSTED=!!(window.MINIMART_CLOUD&&/^https:\/\//.test(window.MINIMART_CLOUD.url||"")&&(window.MINIMART_CLOUD.key||""));
+const cfg=()=>HOSTED?{url:window.MINIMART_CLOUD.url.replace(/\/+$/,""),key:window.MINIMART_CLOUD.key}:{url:ls.get("mm_url"),key:ls.get("mm_key")};
 const fmt=n=>Math.round(n||0).toLocaleString();
 const dt=ms=>ms?new Date(ms).toLocaleString([], {day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"-";
 const ago=ms=>{const h=(Date.now()-ms)/36e5;return h<1?Math.max(1,Math.round(h*60))+" min ago":h<48?Math.round(h)+" h ago":Math.round(h/24)+" d ago"};
 
-function showLogin(){ $("login").hidden=false;$("app").hidden=true;$("url").value=ls.get("mm_url");$("key").value=ls.get("mm_key"); }
+function showLogin(){
+  $("login").hidden=false;$("app").hidden=true;
+  if(HOSTED){$("own").hidden=true;$("hostedActions").hidden=false;$("lhelp").textContent="Sign in, or create a free account to see all your shops in one place."}
+  else{$("url").value=ls.get("mm_url");$("key").value=ls.get("mm_key")}
+}
 async function start(){
-  const url=ls.get("mm_url"),key=ls.get("mm_key");
+  const {url,key}=cfg();
   if(!url||!key||!window.supabase) return showLogin();
   sb=supabase.createClient(url,key);
   const {data}=await sb.auth.getSession();
@@ -78,18 +89,45 @@ async function start(){
   $("login").hidden=true;$("app").hidden=false;load();
 }
 $("go").onclick=async()=>{
-  const url=$("url").value.trim().replace(/\/+$/,""),key=$("key").value.trim();
-  $("lerr").textContent="";
+  const url=HOSTED?cfg().url:$("url").value.trim().replace(/\/+$/,""),key=HOSTED?cfg().key:$("key").value.trim();
+  $("lerr").textContent="";$("linfo").textContent="";
   if(!url.startsWith("https://")||!key){$("lerr").textContent="Enter the project URL and anon key.";return}
-  ls.set("mm_url",url);ls.set("mm_key",key);
+  if(!HOSTED){ls.set("mm_url",url);ls.set("mm_key",key)}
   sb=supabase.createClient(url,key);
   const {error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("pass").value});
   if(error){$("lerr").textContent=error.message;return}
   $("pass").value="";start();
 };
+$("signup").onclick=async()=>{
+  $("lerr").textContent="";$("linfo").textContent="";
+  const email=$("email").value.trim(),pw=$("pass").value;
+  if(!email||pw.length<8){$("lerr").textContent="Enter your email and a password of at least 8 characters.";return}
+  sb=supabase.createClient(cfg().url,cfg().key);
+  const {data,error}=await sb.auth.signUp({email,password:pw});
+  if(error){$("lerr").textContent=error.message;return}
+  $("pass").value="";
+  if(data.session) start(); else $("linfo").textContent="Check your email and tap the confirmation link, then sign in here.";
+};
+$("forgot").onclick=async()=>{
+  $("lerr").textContent="";$("linfo").textContent="";
+  const email=$("email").value.trim(); if(!email){$("lerr").textContent="Enter your email first.";return}
+  sb=supabase.createClient(cfg().url,cfg().key);
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href.split("#")[0]});
+  if(error)$("lerr").textContent=error.message;else $("linfo").textContent="If that email has an account, a reset link is on its way.";
+};
+$("delacct").onclick=async()=>{
+  if(!confirm("Delete your account and ALL shops and uploaded data? This cannot be undone. The phones keep their own data."))return;
+  const {error}=await sb.rpc("owner_delete_account"); if(error){alert(error.message);return}
+  await sb.auth.signOut();showLogin();
+};
 $("out").onclick=async()=>{await sb.auth.signOut();showLogin()};
 $("refresh").onclick=load;
 $("rotate").onclick=async()=>{
+  if(HOSTED){
+    const {data,error}=await sb.rpc("owner_create_link_code");
+    $("newcode").innerHTML=error?'<span class="bad">'+esc(error.message)+'</span>':'Type this code into the shop\'s app (Settings → Cloud dashboard). It works once and expires in 30 minutes:<br><b style="font-size:22px;letter-spacing:.1em">'+esc(data)+'</b>';
+    return;
+  }
   if(!confirm("Make a new setup code? The old one stops working for new stores. Stores already connected are not affected."))return;
   const {data,error}=await sb.rpc("owner_rotate_setup_code");
   $("newcode").innerHTML=error?'<span class="bad">'+esc(error.message.includes("owner_rotate")?"Run the latest cloud/supabase_setup.sql first.":error.message)+'</span>':'New setup code (shown once — copy it now):<br><b>'+esc(data)+'</b>';
@@ -97,6 +135,11 @@ $("rotate").onclick=async()=>{
 $("store").onchange=render;
 
 async function load(){
+  if(HOSTED){
+    $("rotate").textContent="Add a shop (get a code)";$("acct").hidden=false;
+    $("addHelp").textContent="To connect a shop: press “Add a shop”, then type the code into that shop's app (Settings → Cloud dashboard).";
+    const r=await sb.rpc("owner_my_stores"); myStores=r.error?[]:(r.data||[]);
+  }
   const {data,error}=await sb.from("store_snapshots").select("store_id,store_name,payload,pushed_at").order("store_name");
   if(error){if(/jwt|expired|not authenticated/i.test(error.message)){await sb.auth.signOut();return showLogin()}$("kpis").innerHTML='<div class="card bad">'+esc(error.message)+'</div>';return}
   rows=data||[];
@@ -110,7 +153,9 @@ const sum=(arr,f)=>arr.reduce((a,x)=>a+(+f(x)||0),0);
 
 function render(){
   const rs=sel(), cur=(rs[0]?.payload?.currency)||"KES";
-  if(!rows.length){$("kpis").innerHTML='<div class="card empty">No stores have uploaded yet. In each store\'s app: Settings → Cloud dashboard → Connect & upload.</div>';return}
+  if(!rows.length){$("kpis").innerHTML='<div class="card empty">'+(HOSTED?'No shops yet. Open “Manage stores” below, press “Add a shop”, then type the code into the shop\'s app (Settings → Cloud dashboard).':'No stores have uploaded yet. In each store\'s app: Settings → Cloud dashboard → Connect & upload.')+'</div>';
+    $("manage").innerHTML=myStores.map(m=>'<div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0;gap:8px"><span>'+esc(m.name)+' <span class="sub small">(waiting for first upload)</span></span><button class="ghost" data-del="'+esc(m.id)+'" data-name="'+esc(m.name)+'">Remove</button></div>').join("");
+    bindDeletes();return}
   const stale=rs.filter(r=>Date.now()-new Date(r.pushed_at)>864e5);
   $("stale").innerHTML=stale.length?'<div class="card warn">No upload in over 24h from: '+stale.map(r=>esc(r.store_name)+" ("+ago(new Date(r.pushed_at))+")").join(", ")+'</div>':"";
   const today=new Date();const key=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
@@ -136,12 +181,7 @@ function render(){
     tile("Stock value (cost)",fmt(sum(rs,r=>r.payload.stock?.costValue)),fmt(sum(rs,r=>r.payload.stock?.productCount))+" products");
   chart(days,agg);
   $("manage").innerHTML=rows.map(r=>'<div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0;gap:8px"><span>'+esc(r.store_name)+'</span><button class="ghost" data-del="'+esc(r.store_id)+'" data-name="'+esc(r.store_name)+'">Remove</button></div>').join("")||'<div class="empty">No stores.</div>';
-  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{
-    if(!confirm('Remove "'+b.dataset.name+'" and all of its uploaded data from the cloud? The phone keeps its own data.'))return;
-    const {error}=await sb.rpc("owner_delete_store",{p_store_id:b.dataset.del});
-    if(error){alert(error.message.includes("owner_delete_store")?"Run the latest cloud/supabase_setup.sql first.":error.message);return}
-    load();
-  });
+  bindDeletes();
   $("stores").innerHTML='<table><tr><th>Store</th><th class="n">Today</th><th class="n">7d</th><th class="n">30d</th><th class="n">Low stock</th><th>Last upload</th></tr>'+
     rows.map(r=>{const m={};(r.payload.daily||[]).forEach(x=>m[x.day]=x.revenue);
       const s=n=>days.slice(-n).reduce((a,d)=>a+(m[d]||0),0);const old=Date.now()-new Date(r.pushed_at)>864e5;
@@ -162,6 +202,14 @@ function render(){
   $("vr").innerHTML='<table><tr><td>Voided sales</td><td class="n">'+fmt(tot.voids)+' · '+fmt(tot.voidTotal)+'</td></tr><tr><td>Refunds</td><td class="n">'+fmt(tot.refunds)+' · '+fmt(tot.refundTotal)+'</td></tr><tr><td>Discounts given</td><td class="n">'+fmt(tot.discounts)+'</td></tr></table>';
 }
 
+function bindDeletes(){
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{
+    if(!confirm('Remove "'+b.dataset.name+'" and all of its uploaded data from the cloud? The phone keeps its own data.'))return;
+    const {error}=await sb.rpc("owner_delete_store",{p_store_id:b.dataset.del});
+    if(error){alert(error.message.includes("owner_delete_store")?"Run the latest cloud SQL first.":error.message);return}
+    load();
+  });
+}
 function chart(days,agg){
   const W=1000,H=200,P=24,max=Math.max(1,...days.map(d=>agg[d].revenue));
   const bw=(W-P*2)/days.length;

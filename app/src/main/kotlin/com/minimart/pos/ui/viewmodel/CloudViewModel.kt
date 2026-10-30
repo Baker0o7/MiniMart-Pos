@@ -14,6 +14,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class CloudUiState(
+    /** The operator's hosted backend is used: owners only type a code from the web dashboard. */
+    val hosted: Boolean = false,
     val url: String = "",
     val anonKey: String = "",
     val setupCode: String = "",
@@ -31,7 +33,7 @@ class CloudViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
-        CloudUiState(url = config.url, anonKey = config.anonKey, connected = config.isConfigured, lastPushAt = config.lastPushAt)
+        CloudUiState(hosted = config.usesHosted, url = config.url, anonKey = config.anonKey, connected = config.isConfigured, lastPushAt = config.lastPushAt)
     )
     val state: StateFlow<CloudUiState> = _state.asStateFlow()
 
@@ -43,12 +45,11 @@ class CloudViewModel @Inject constructor(
         val s = _state.value
         val url = s.url.trim().trimEnd('/')
         when {
-            !url.startsWith("https://") -> return fail("Project URL must start with https://")
-            s.anonKey.isBlank() -> return fail("Enter the project's anon (public) key")
-            s.setupCode.isBlank() -> return fail("Enter the setup code you put in the SQL script")
+            !config.usesHosted && !url.startsWith("https://") -> return fail("Project URL must start with https://")
+            !config.usesHosted && s.anonKey.isBlank() -> return fail("Enter the project's anon (public) key")
+            s.setupCode.isBlank() -> return fail(if (config.usesHosted) "Enter the code from your dashboard (Add a shop)" else "Enter the setup code you put in the SQL script")
         }
-        config.url = url
-        config.anonKey = s.anonKey
+        if (!config.usesHosted) { config.url = url; config.anonKey = s.anonKey }
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
             when (val r = reporter.register(s.setupCode.trim())) {

@@ -10,11 +10,21 @@ import javax.inject.Singleton
 /** Connection details for the owner's own Supabase project; kept in encrypted preferences. */
 @Singleton
 class CloudConfig @Inject constructor(@SecurePrefs private val prefs: SharedPreferences) {
+    /** The operator's hosted backend is built into this app (see app/build.gradle.kts), so owners need no project of their own. */
+    val hostedAvailable: Boolean get() = com.minimart.pos.BuildConfig.CLOUD_URL.startsWith("https://") && com.minimart.pos.BuildConfig.CLOUD_ANON_KEY.isNotBlank()
+
+    /** Hosted mode unless this phone was already connected to an owner's own project (they keep working as before). */
+    val usesHosted: Boolean get() {
+        if (!hostedAvailable) return false
+        val saved = prefs.getString("cloud_url", "") ?: ""
+        return !registered || saved.isBlank() || saved.trimEnd('/') == com.minimart.pos.BuildConfig.CLOUD_URL.trimEnd('/')
+    }
+
     var url: String
-        get() = prefs.getString("cloud_url", "") ?: ""
+        get() = if (usesHosted) com.minimart.pos.BuildConfig.CLOUD_URL.trim().trimEnd('/') else (prefs.getString("cloud_url", "") ?: "")
         set(v) { prefs.edit().putString("cloud_url", v.trim().trimEnd('/')).apply() }
     var anonKey: String
-        get() = prefs.getString("cloud_anon_key", "") ?: ""
+        get() = if (usesHosted) com.minimart.pos.BuildConfig.CLOUD_ANON_KEY else (prefs.getString("cloud_anon_key", "") ?: "")
         set(v) { prefs.edit().putString("cloud_anon_key", v.trim()).apply() }
     var registered: Boolean
         get() = prefs.getBoolean("cloud_registered", false)
