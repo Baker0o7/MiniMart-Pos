@@ -5,6 +5,13 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.22.0] - 2026-10-30
+
+- **Stock forecast:** Stock Insights now shows when each product is likely to run out ("runs out around Tue 3 Nov"), using the last four weeks of sales and busy days such as Saturdays. Suggested order amounts use it once a product has about two weeks of sales.
+- **Kiosk mode:** Settings > Privacy has a new switch that locks the device to MiniMart and keeps the screen on, for a till staff share. Android asks you to confirm once.
+- **Easier to read:** the empty Inventory screen now explains what to do and has an "Add your first product" button, and switches that are off now show clearly.
+- **New Sale screen:** the infinity button is now a labelled Multi-scan switch.
+
 ## [1.21.2] - 2026-10-29
 
 - **New Sale screen:** the infinity button is now a labelled **Multi-scan** switch (keeps the camera open after each item), and the hints on an empty cart are easier to read.
