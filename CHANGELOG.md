@@ -5,6 +5,12 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.23.0] - 2026-10-31
+
+- **No sale is lost when the phone is offline or crashes.** A sale, refund or void is now saved together with its entry in the sync queue, so the main device always hears about it.
+- **Amounts are exact to the cent.** The first time you open this version, every stored amount is tidied to the exact cent. Totals for sales, profit, expenses, M-Pesa and credit are added up exactly, and credit balances no longer drift by tiny fractions.
+- Your data is kept. This update changes the database (version 17), so make a backup first if you want to be extra safe.
+
 ## [1.22.0] - 2026-10-30
 
 - **Stock forecast:** Stock Insights now shows when each product is likely to run out ("runs out around Tue 3 Nov"), using the last four weeks of sales and busy days such as Saturdays. Suggested order amounts use it once a product has about two weeks of sales.
