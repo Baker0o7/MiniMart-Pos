@@ -35,7 +35,7 @@ class SaleSyncAtomicityTest : DbTestBase() {
         unitPrice = 50.0, quantity = 2, lineTotal = 100.0)
 
     private fun log(id: Long) = SyncLog(entityType = SyncEntityType.SALE, entityId = id,
-        operation = SyncOperation.INSERT, deviceId = "till-2", payload = "{}")
+        operation = SyncOperation.CREATE, deviceId = "till-2", payload = "{}")
 
     private suspend fun stock(pid: Long) = db.productDao().getProductById(pid)?.stock
 
