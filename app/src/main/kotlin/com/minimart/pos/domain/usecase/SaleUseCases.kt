@@ -23,11 +23,14 @@ class CompleteSaleUseCase @Inject constructor(
         purchaseAmount: Double = 0.0
     ): Long {
         require(items.isNotEmpty()) { "Cannot complete a sale with no items" }
+        // The sync record is written in the same transaction as the sale: either both are saved or neither,
+        // so a crash or a dead battery can never leave a sale that the main device will not hear about.
         val saleId = com.minimart.pos.util.Telemetry.timed("complete_sale") {
-            saleRepo.completeSale(sale, items, customerId, creditAmount, purchaseAmount)
+            saleRepo.completeSale(sale, items, customerId, creditAmount, purchaseAmount) { id ->
+                syncEnqueuer.queueSaleCreated(id, customerId, creditAmount, purchaseAmount)
+            }
         }
-        // Queue it for the main device; a sync problem must never undo or fail the sale.
-        runCatching { syncEnqueuer.saleCreated(saleId, customerId, creditAmount, purchaseAmount) }
+        syncEnqueuer.kick()
         return saleId
     }
 }
@@ -43,11 +46,13 @@ class RefundSaleUseCase @Inject constructor(
         if (!guard.allow("refund a sale", com.minimart.pos.util.RoleManager::canVoidSales))
             throw com.minimart.pos.util.PermissionDeniedException("refund sales")
         val before = saleRepo.getSaleWithItems(saleId)?.sale
-        saleRepo.refundSale(saleId, reason.trim())
+        saleRepo.refundSale(saleId, reason.trim()) { s ->
+            syncEnqueuer.queueSaleReversed(s, com.minimart.pos.data.entity.SaleStatus.REFUNDED, reason.trim())
+        }
+        syncEnqueuer.kick()
         if (before != null && before.status == com.minimart.pos.data.entity.SaleStatus.COMPLETED) {
             runCatching { audit.log(com.minimart.pos.util.AuditEvent.SALE_REFUNDED,
                 detail = "Sale #$saleId total ${String.format(java.util.Locale.US, "%.2f", before.totalAmount)} · reason: ${reason.trim().ifBlank { "none given" }}") }
-            runCatching { syncEnqueuer.saleReversed(before, com.minimart.pos.data.entity.SaleStatus.REFUNDED, reason.trim()) }
         }
     }
 }
@@ -63,11 +68,13 @@ class VoidSaleUseCase @Inject constructor(
         if (!guard.allow("void a sale", com.minimart.pos.util.RoleManager::canVoidSales))
             throw com.minimart.pos.util.PermissionDeniedException("void sales")
         val before = saleRepo.getSaleWithItems(saleId)?.sale
-        saleRepo.voidSale(saleId, reason.trim())
+        saleRepo.voidSale(saleId, reason.trim()) { s ->
+            syncEnqueuer.queueSaleReversed(s, com.minimart.pos.data.entity.SaleStatus.VOIDED, reason.trim())
+        }
+        syncEnqueuer.kick()
         if (before != null && before.status == com.minimart.pos.data.entity.SaleStatus.COMPLETED) {
             runCatching { audit.log(com.minimart.pos.util.AuditEvent.SALE_VOIDED,
                 detail = "Sale #$saleId total ${String.format(java.util.Locale.US, "%.2f", before.totalAmount)} · reason: ${reason.trim().ifBlank { "none given" }}") }
-            runCatching { syncEnqueuer.saleReversed(before, com.minimart.pos.data.entity.SaleStatus.VOIDED, reason.trim()) }
         }
     }
 }

@@ -26,7 +26,8 @@ class SyncEnqueuer @Inject constructor(
     private val device: DeviceIdProvider,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) {
-    suspend fun saleCreated(saleId: Long, customerId: Long?, creditAmount: Double, purchaseAmount: Double) {
+    /** Writes the sync record only. Call it inside the sale's own transaction, then [kick] once that has committed. */
+    suspend fun queueSaleCreated(saleId: Long, customerId: Long?, creditAmount: Double, purchaseAmount: Double) {
         if (!device.isPaired()) return
         val sw = saleRepo.getSaleWithItems(saleId) ?: return
         val customer = customerId?.let { customerRepo.getById(it) }
@@ -38,15 +39,17 @@ class SyncEnqueuer @Inject constructor(
             entityType = SyncEntityType.SALE, entityId = saleId, operation = SyncOperation.CREATE,
             deviceId = device.id(), payload = payload.toString()
         ))
-        com.minimart.pos.worker.SyncWorker.kick(context)
     }
 
-    suspend fun saleReversed(sale: Sale, status: SaleStatus, reason: String) {
+    /** Writes the sync record for a refund or void only (same rule as [queueSaleCreated]). */
+    suspend fun queueSaleReversed(sale: Sale, status: SaleStatus, reason: String) {
         if (!device.isPaired()) return
         syncDao.insertLog(SyncLog(
             entityType = SyncEntityType.SALE, entityId = sale.id, operation = SyncOperation.UPDATE,
             deviceId = device.id(), payload = SyncPayloads.saleReversed(sale, status, reason).toString()
         ))
-        com.minimart.pos.worker.SyncWorker.kick(context)
     }
+
+    /** Asks WorkManager to send what is queued. Safe to fail: the periodic job picks it up anyway. */
+    fun kick() { runCatching { com.minimart.pos.worker.SyncWorker.kick(context) } }
 }

@@ -58,7 +58,9 @@ class SaleRepository @Inject constructor(
         items: List<SaleItem>,
         customerId: Long? = null,
         creditAmount: Double = 0.0,
-        purchaseAmount: Double = 0.0
+        purchaseAmount: Double = 0.0,
+        /** Runs inside the same transaction, after the sale is saved: used to queue it for sync so a crash can never save a sale that is not queued. */
+        inSameTransaction: suspend (saleId: Long) -> Unit = {}
     ): Long = db.withTransaction {
         checkPayment(sale, items, customerId != null, creditAmount)
         // Cost the goods from the oldest batches first; the cost is stored on each line.
@@ -88,6 +90,7 @@ class SaleRepository @Inject constructor(
                 customerRepository.recordPurchase(customerId, purchaseAmount, saleId)
             }
         }
+        inSameTransaction(saleId)
         saleId
     }
 
@@ -175,12 +178,14 @@ class SaleRepository @Inject constructor(
     /** Refund a COMPLETED sale: marks it refunded, restores stock and gives back any customer
      * credit it used — all in one transaction. Does nothing if the sale was already refunded
      * or voided (previously a second refund/void restored the stock again). */
-    suspend fun refundSale(saleId: Long, reason: String): Unit = reverseSale(saleId, reason, refund = true)
+    suspend fun refundSale(saleId: Long, reason: String, inSameTransaction: suspend (Sale) -> Unit = {}): Unit =
+        reverseSale(saleId, reason, refund = true, inSameTransaction)
 
     /** Void a COMPLETED sale: same guarantees as [refundSale]. */
-    suspend fun voidSale(saleId: Long, reason: String): Unit = reverseSale(saleId, reason, refund = false)
+    suspend fun voidSale(saleId: Long, reason: String, inSameTransaction: suspend (Sale) -> Unit = {}): Unit =
+        reverseSale(saleId, reason, refund = false, inSameTransaction)
 
-    private suspend fun reverseSale(saleId: Long, reason: String, refund: Boolean): Unit = db.withTransaction<Unit> {
+    private suspend fun reverseSale(saleId: Long, reason: String, refund: Boolean, inSameTransaction: suspend (Sale) -> Unit): Unit = db.withTransaction<Unit> {
         val saleWithItems = saleDao.getSaleWithItems(saleId) ?: return@withTransaction
         if (saleWithItems.sale.status != SaleStatus.COMPLETED) return@withTransaction
         val changed = if (refund) saleDao.refundSale(saleId, reason) else saleDao.voidSale(saleId, reason)
@@ -191,5 +196,6 @@ class SaleRepository @Inject constructor(
         }
         customerRepository.reverseCreditForSale(saleId, reason)
         batches.restoreForSale(saleId)
+        inSameTransaction(saleWithItems.sale)
     }
 }
