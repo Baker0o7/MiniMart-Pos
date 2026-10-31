@@ -19,7 +19,7 @@ interface MpesaPaymentDao {
     @Query("SELECT * FROM mpesa_payments WHERE receivedAt >= :start AND receivedAt < :end ORDER BY receivedAt DESC")
     suspend fun between(start: Long, end: Long): List<MpesaPayment>
 
-    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM mpesa_payments WHERE receivedAt >= :start")
+    @Query("SELECT ROUND(COALESCE(SUM(amount), 0.0), 2) FROM mpesa_payments WHERE receivedAt >= :start")
     fun totalSince(start: Long): Flow<Double>
 
     @Query("SELECT COUNT(*) FROM mpesa_payments WHERE receivedAt >= :start")

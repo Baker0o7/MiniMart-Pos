@@ -32,17 +32,17 @@ interface SaleDao {
     @Query("SELECT * FROM sales WHERE createdAt >= :startMs ORDER BY createdAt DESC")
     fun getSalesToday(startMs: Long): Flow<List<Sale>>
 
-    @Query("SELECT SUM(totalAmount) FROM sales WHERE createdAt >= :startMs AND status = 'COMPLETED'")
+    @Query("SELECT ROUND(SUM(totalAmount), 2) FROM sales WHERE createdAt >= :startMs AND status = 'COMPLETED'")
     fun getTotalRevenueToday(startMs: Long): Flow<Double?>
 
-    @Query("SELECT SUM(totalAmount) FROM sales WHERE createdAt >= :startMs AND createdAt < :endMs AND status = 'COMPLETED'")
+    @Query("SELECT ROUND(SUM(totalAmount), 2) FROM sales WHERE createdAt >= :startMs AND createdAt < :endMs AND status = 'COMPLETED'")
     fun getTotalRevenueBetween(startMs: Long, endMs: Long): Flow<Double?>
 
     @Query("SELECT COUNT(*) FROM sales WHERE createdAt >= :startMs AND status = 'COMPLETED'")
     fun getSaleCountToday(startMs: Long): Flow<Int>
 
     @Query("""
-        SELECT si.productId, si.productName, SUM(si.quantity) as totalQty, SUM(si.lineTotal) as totalRevenue
+        SELECT si.productId, si.productName, SUM(si.quantity) as totalQty, ROUND(SUM(si.lineTotal), 2) as totalRevenue
         FROM sale_items si 
         INNER JOIN sales s ON si.saleId = s.id
         WHERE s.createdAt >= :startMs AND s.createdAt <= :endMs AND s.status = 'COMPLETED'
@@ -59,10 +59,10 @@ interface SaleDao {
                si.productName AS productName,
                COALESCE(p.category, 'General') AS category,
                COALESCE(SUM(CASE WHEN si.weightKg > 0 THEN si.weightKg ELSE si.quantity END), 0.0) AS qty,
-               COALESCE(SUM(si.lineTotal), 0.0) AS revenue,
-               COALESCE(SUM(CASE WHEN si.costTotal > 0 THEN si.costTotal
-                                 ELSE (CASE WHEN si.weightKg > 0 THEN si.weightKg ELSE si.quantity END) * COALESCE(p.costPrice, 0.0) END), 0.0) AS cost,
-               COALESCE(SUM(CASE WHEN si.costTotal > 0 OR COALESCE(p.costPrice, 0.0) > 0 THEN si.lineTotal ELSE 0.0 END), 0.0) AS costedRevenue
+               ROUND(COALESCE(SUM(si.lineTotal), 0.0), 2) AS revenue,
+               ROUND(COALESCE(SUM(CASE WHEN si.costTotal > 0 THEN si.costTotal
+                                 ELSE (CASE WHEN si.weightKg > 0 THEN si.weightKg ELSE si.quantity END) * COALESCE(p.costPrice, 0.0) END), 0.0), 2) AS cost,
+               ROUND(COALESCE(SUM(CASE WHEN si.costTotal > 0 OR COALESCE(p.costPrice, 0.0) > 0 THEN si.lineTotal ELSE 0.0 END), 0.0), 2) AS costedRevenue
         FROM sale_items si
         INNER JOIN sales s ON si.saleId = s.id
         LEFT JOIN products p ON p.id = si.productId
@@ -124,7 +124,7 @@ interface SaleDao {
     /** Record count and revenue for the same filter as [pagedCompletedSales] (computed in SQL,
      *  so the totals stay correct even though only one page is loaded at a time). */
     @Query("""
-        SELECT COUNT(*) AS count, COALESCE(SUM(totalAmount), 0.0) AS total FROM sales
+        SELECT COUNT(*) AS count, ROUND(COALESCE(SUM(totalAmount), 0.0), 2) AS total FROM sales
         WHERE status = 'COMPLETED' AND (:query = ''
            OR receiptNumber LIKE '%' || :query || '%'
            OR notes LIKE '%' || :query || '%'
@@ -152,7 +152,7 @@ interface SaleDao {
 
     /** Profit on lines whose cost is known (sales made before batch costing have none). */
     @Query("""
-        SELECT COALESCE(SUM(si.lineTotal - si.costTotal), 0.0) FROM sale_items si
+        SELECT ROUND(COALESCE(SUM(si.lineTotal - si.costTotal), 0.0), 2) FROM sale_items si
         JOIN sales s ON s.id = si.saleId
         WHERE s.status = 'COMPLETED' AND s.createdAt >= :startMs AND s.createdAt < :endMs AND si.costTotal > 0
     """)

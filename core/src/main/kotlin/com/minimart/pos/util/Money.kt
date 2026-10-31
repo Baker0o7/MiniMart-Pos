@@ -75,4 +75,7 @@ value class Money private constructor(val cents: Long) : Comparable<Money> {
 }
 
 /** Convenience: sum a list of Money values. */
+/** This amount rounded to a whole number of cents (12.3400000001 -> 12.34). Use before storing money as a Double. */
+fun Double.roundedToCents(): Double = Money.fromDouble(this).toDouble()
+
 fun Iterable<Money>.sum(): Money = fold(Money.ZERO) { acc, m -> acc + m }

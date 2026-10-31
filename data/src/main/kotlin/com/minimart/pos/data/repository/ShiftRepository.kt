@@ -1,5 +1,6 @@
 package com.minimart.pos.data.repository
 
+import com.minimart.pos.util.roundedToCents
 import com.minimart.pos.data.dao.ShiftDao
 import com.minimart.pos.data.entity.PaymentMethod
 import com.minimart.pos.data.entity.Sale
@@ -105,8 +106,8 @@ class ShiftRepository @Inject constructor(
         // every completed sale's value regardless of how it was paid; expectedCash (the
         // till count) is the one that correctly stays cash-method-specific.
         val totalSales = completed.sumOf { it.totalAmount }
-        val expectedCash = shift.openingFloat + cashSales
-        val discrepancy = safeClosingFloat - expectedCash
+        val expectedCash = (shift.openingFloat + cashSales).roundedToCents()
+        val discrepancy = (safeClosingFloat - expectedCash).roundedToCents()
 
         val closed = shift.copy(
             clockOut        = System.currentTimeMillis(),

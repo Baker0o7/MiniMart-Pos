@@ -33,6 +33,6 @@ interface BatchDao {
     fun recentBatches(productId: Long, limit: Int = 20): Flow<List<StockBatch>>
 
     /** Money tied up in batches that still have stock. */
-    @Query("SELECT COALESCE(SUM(remaining * unitCost), 0.0) FROM stock_batches WHERE remaining > 0.000001")
+    @Query("SELECT ROUND(COALESCE(SUM(remaining * unitCost), 0.0), 2) FROM stock_batches WHERE remaining > 0.000001")
     fun batchStockValue(): Flow<Double>
 }

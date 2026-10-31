@@ -4,6 +4,7 @@ import com.minimart.pos.data.dao.ExpenseDao
 import com.minimart.pos.data.entity.Expense
 import com.minimart.pos.data.entity.ExpenseCategory
 import kotlinx.coroutines.flow.Flow
+import com.minimart.pos.util.roundedToCents
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -14,7 +15,7 @@ class ExpenseRepository @Inject constructor(private val dao: ExpenseDao) {
     fun getTotalExpenses(start: Long, end: Long): Flow<Double?> = dao.getTotalExpenses(start, end)
     fun getTotalExpensesToday(startMs: Long): Flow<Double?> = dao.getTotalExpensesToday(startMs)
     fun getByCategory(cat: ExpenseCategory): Flow<List<Expense>> = dao.getExpensesByCategory(cat)
-    suspend fun insert(expense: Expense): Long = dao.insertExpense(expense)
-    suspend fun update(expense: Expense) = dao.updateExpense(expense)
+    suspend fun insert(expense: Expense): Long = dao.insertExpense(expense.copy(amount = expense.amount.roundedToCents()))
+    suspend fun update(expense: Expense) = dao.updateExpense(expense.copy(amount = expense.amount.roundedToCents()))
     suspend fun delete(expense: Expense) = dao.deleteExpense(expense)
 }

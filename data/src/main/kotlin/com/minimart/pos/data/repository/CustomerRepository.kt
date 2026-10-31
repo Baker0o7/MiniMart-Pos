@@ -1,5 +1,6 @@
 package com.minimart.pos.data.repository
 
+import com.minimart.pos.util.roundedToCents
 import androidx.room.withTransaction
 import com.minimart.pos.data.dao.CustomerDao
 import com.minimart.pos.data.db.AppDatabase
@@ -53,9 +54,9 @@ class CustomerRepository @Inject constructor(
         val customer = dao.getCustomerById(customerId) ?: return@withTransaction false
         dao.updateBalance(customerId, amount)
         dao.insertCreditTx(CreditTransaction(
-            customerId = customerId, amount = amount,
+            customerId = customerId, amount = amount.roundedToCents(),
             type = CreditTxType.CREDIT_ADDED, notes = notes,
-            balanceAfter = customer.creditBalance + amount
+            balanceAfter = (customer.creditBalance + amount).roundedToCents()
         ))
         true
     }
@@ -69,7 +70,7 @@ class CustomerRepository @Inject constructor(
         dao.insertCreditTx(CreditTransaction(
             customerId = customerId, amount = -amount,
             type = CreditTxType.CREDIT_USED, saleId = saleId,
-            balanceAfter = customer.creditBalance - amount,
+            balanceAfter = (customer.creditBalance - amount).roundedToCents(),
             notes = "Sale #$saleId"
         ))
         true
@@ -86,7 +87,7 @@ class CustomerRepository @Inject constructor(
             dao.insertCreditTx(CreditTransaction(
                 customerId = tx.customerId, amount = used,
                 type = CreditTxType.REFUND, saleId = saleId,
-                balanceAfter = customer.creditBalance + used,
+                balanceAfter = (customer.creditBalance + used).roundedToCents(),
                 notes = "Sale #$saleId $reason"
             ))
         }

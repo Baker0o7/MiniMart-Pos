@@ -13,7 +13,7 @@ import javax.inject.Inject
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class, MpesaPayment::class,
         Supplier::class, PurchaseOrder::class, PurchaseOrderItem::class,
         com.minimart.pos.data.entity.StockBatch::class, com.minimart.pos.data.entity.SaleItemCost::class],
-    version = 16,
+    version = 17,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -135,7 +135,32 @@ object AppMigrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
+    /** v16 → v17: every stored amount becomes an exact whole number of cents (12.3400000001 → 12.34).
+     *  Older versions added Double sums that drifted by fractions of a cent; this removes that drift once.
+     *  Per-unit costs are left alone because a unit cost may legitimately have more than two decimals. */
+    val MIGRATION_16_17 = object : androidx.room.migration.Migration(16, 17) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            MONEY_COLUMNS.forEach { (table, columns) ->
+                columns.forEach { col -> db.execSQL("UPDATE `$table` SET `$col` = ROUND(`$col`, 2) WHERE `$col` IS NOT NULL") }
+            }
+        }
+    }
+
+    /** Whole-amount money columns (not per-unit costs). Used by [MIGRATION_16_17] and its test. */
+    val MONEY_COLUMNS: List<Pair<String, List<String>>> = listOf(
+        "products" to listOf("price", "pricePerKg"),
+        "sales" to listOf("subtotal", "taxAmount", "discountAmount", "totalAmount", "amountPaid", "changeGiven", "cashPortion"),
+        "sale_items" to listOf("unitPrice", "discountAmount", "taxAmount", "lineTotal", "costTotal"),
+        "customers" to listOf("creditBalance", "totalPurchases"),
+        "credit_transactions" to listOf("amount", "balanceAfter"),
+        "expenses" to listOf("amount"),
+        "mpesa_payments" to listOf("amount"),
+        "purchase_orders" to listOf("amountPaid"),
+        "shifts" to listOf("openingFloat", "closingFloat", "totalCashSales", "totalMpesaSales", "totalCardSales",
+            "totalSales", "totalDiscounts", "expectedCash", "cashDiscrepancy")
+    )
+
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17)
 }
 
 class AppTypeConverters {

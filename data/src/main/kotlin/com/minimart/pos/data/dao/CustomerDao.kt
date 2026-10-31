@@ -35,7 +35,7 @@ interface CustomerDao {
     @Delete
     suspend fun deleteCustomer(customer: Customer)
 
-    @Query("UPDATE customers SET creditBalance = creditBalance + :amount, totalPurchases = totalPurchases + :purchase, visitCount = visitCount + :visit WHERE id = :id")
+    @Query("UPDATE customers SET creditBalance = ROUND(creditBalance + :amount, 2), totalPurchases = ROUND(totalPurchases + :purchase, 2), visitCount = visitCount + :visit WHERE id = :id")
     suspend fun updateBalance(id: Long, amount: Double, purchase: Double = 0.0, visit: Int = 0)
 
     // Credit transactions
@@ -63,6 +63,6 @@ interface CustomerDao {
     // amount — matching the "Owed to Shop" terminology already used in
     // CreditOverviewScreen. (This DAO method is currently unused by any screen, but
     // left correct so it can't silently reintroduce the bug if wired up later.)
-    @Query("SELECT -SUM(creditBalance) FROM customers WHERE creditBalance < 0")
+    @Query("SELECT ROUND(-SUM(creditBalance), 2) FROM customers WHERE creditBalance < 0")
     fun getTotalCreditOutstanding(): Flow<Double?>
 }

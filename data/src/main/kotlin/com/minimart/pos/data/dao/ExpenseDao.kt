@@ -14,13 +14,13 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE createdAt >= :startMs AND createdAt <= :endMs ORDER BY createdAt DESC")
     fun getExpensesByDateRange(startMs: Long, endMs: Long): Flow<List<Expense>>
 
-    @Query("SELECT SUM(amount) FROM expenses WHERE createdAt >= :startMs AND createdAt <= :endMs")
+    @Query("SELECT ROUND(SUM(amount), 2) FROM expenses WHERE createdAt >= :startMs AND createdAt <= :endMs")
     fun getTotalExpenses(startMs: Long, endMs: Long): Flow<Double?>
 
     @Query("SELECT * FROM expenses WHERE category = :category ORDER BY createdAt DESC")
     fun getExpensesByCategory(category: ExpenseCategory): Flow<List<Expense>>
 
-    @Query("SELECT SUM(amount) FROM expenses WHERE createdAt >= :startMs")
+    @Query("SELECT ROUND(SUM(amount), 2) FROM expenses WHERE createdAt >= :startMs")
     fun getTotalExpensesToday(startMs: Long): Flow<Double?>
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
