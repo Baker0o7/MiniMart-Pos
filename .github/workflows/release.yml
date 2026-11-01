@@ -73,7 +73,8 @@ jobs:
           {
             echo "SIGNING_STORE_PASSWORD=$SIGNING_STORE_PASSWORD"
             echo "SIGNING_KEY_ALIAS=$SIGNING_KEY_ALIAS"
-            echo "SIGNING_KEY_PASSWORD=$SIGNING_KEY_PASSWORD"
+            # The release keystore is PKCS12, which has a single password for store and key.
+            echo "SIGNING_KEY_PASSWORD=$SIGNING_STORE_PASSWORD"
           } >> "$GITHUB_ENV"
 
       - name: Generate temporary keystore (explicitly requested)
