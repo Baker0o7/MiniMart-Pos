@@ -265,7 +265,7 @@ private fun SaleHistoryRow(
                 Box(modifier = Modifier.clip(RoundedCornerShape(6.dp))
                     .background(pmColor.copy(0.15f))
                     .padding(horizontal = 6.dp, vertical = 1.dp)) {
-                    Text(pmLabel, color = pmColor, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                    Text(pmLabel, color = pmColor, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                 }
                 if (!sale.mpesaRef.isNullOrBlank()) {
                     Text("•  Ref: ${sale.mpesaRef}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)

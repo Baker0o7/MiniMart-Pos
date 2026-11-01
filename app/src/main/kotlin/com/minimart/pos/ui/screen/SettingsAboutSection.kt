@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -26,7 +27,7 @@ import com.minimart.pos.util.SupportInfo
 @Composable
 internal fun AboutSettingsSection(syncOn: Boolean, cloudOn: Boolean, webhook: MpesaWebhookViewModel = androidx.hilt.navigation.compose.hiltViewModel()) {
     val context = LocalContext.current
-    val instantMpesaOn = webhook.state.collectAsState().value.enabled
+    val instantMpesaOn = webhook.state.collectAsStateWithLifecycle().value.enabled
     var copied by remember { mutableStateOf(false) }
     DSection("About & support", Icons.Default.Info, summary = "Version ${BuildConfig.VERSION_NAME}", initiallyExpanded = false) {
         Text("MiniMart POS ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)

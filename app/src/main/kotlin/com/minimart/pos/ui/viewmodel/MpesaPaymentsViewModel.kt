@@ -35,7 +35,7 @@ class MpesaPaymentsViewModel @Inject constructor(
 ) : ViewModel() {
 
     // Opening the list fetches anything Safaricom has pushed since the last check (no-op when instant M-Pesa is off).
-    init { viewModelScope.launch { if (webhook.enabled) webhook.pull() } }
+    init { viewModelScope.launch { runCatching { if (webhook.enabled) webhook.pull() } } }  // offline or a bad reply must not crash the screen
 
     /** Codes already used on a completed sale; anything else received is unclaimed. */
     val claimed: StateFlow<Set<String>> = sales.claimedMpesaRefs().map { it.toSet() }

@@ -135,7 +135,7 @@ fun PurchaseOrdersScreen(
                     Column(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(DT.Surface)
                             .border(1.dp, DT.Border, RoundedCornerShape(16.dp))
-                            .clickable { onOpenOrder(row.order.id) }.padding(14.dp)
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button) { onOpenOrder(row.order.id) }.padding(14.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(poLabel(row.order.id), color = DT.TealLight, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
@@ -174,7 +174,7 @@ fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewMode
             if (state.importableSuppliers > 0) item {
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DT.Teal.copy(0.14f))
-                        .clickable { vm.importFromProducts() }.padding(14.dp),
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button) { vm.importFromProducts() }.padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(Icons.Default.Download, null, tint = DT.TealLight)
@@ -191,7 +191,7 @@ fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewMode
                 Column(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(DT.Surface)
                         .border(1.dp, DT.Border, RoundedCornerShape(16.dp))
-                        .clickable { editing = s }.padding(14.dp)
+                        .clickable(role = androidx.compose.ui.semantics.Role.Button) { editing = s }.padding(14.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -302,7 +302,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                     Box {
                         Row(
                             Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DT.Surface)
-                                .border(1.dp, DT.Border, RoundedCornerShape(14.dp)).clickable { open = true }.padding(14.dp),
+                                .border(1.dp, DT.Border, RoundedCornerShape(14.dp)).clickable(role = androidx.compose.ui.semantics.Role.Button) { open = true }.padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(Icons.Default.Store, null, tint = DT.TealLight)
@@ -421,7 +421,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                         if (l.remaining > 0) PoField(entries[i].orEmpty(), { entries[i] = sanitizeDecimalInput(it, if (l.weighed) 3 else 0, 6) },
                             "${l.name} (of ${plainNumber(l.remaining, 3)})", Modifier.fillMaxWidth(), KeyboardType.Decimal)
                     }
-                    Row(Modifier.fillMaxWidth().clickable { updateCosts = !updateCosts }, verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { updateCosts = !updateCosts }, verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = updateCosts, onCheckedChange = { updateCosts = it })
                         Text("Update product cost prices", color = DT.OnSurface, fontSize = 13.sp)
                     }
@@ -492,7 +492,7 @@ private fun ProductPickerDialog(s: PoEditorState, onPick: (com.minimart.pos.data
                 Spacer(Modifier.height(8.dp))
                 LazyColumn(Modifier.heightIn(max = 320.dp)) {
                     items(matches, key = { it.id }) { p ->
-                        Text(p.name, color = DT.OnSurface, modifier = Modifier.fillMaxWidth().clickable { onPick(p) }.padding(vertical = 12.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(p.name, color = DT.OnSurface, modifier = Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { onPick(p) }.padding(vertical = 12.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }

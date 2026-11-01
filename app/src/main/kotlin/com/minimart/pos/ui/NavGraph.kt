@@ -520,9 +520,9 @@ private fun BottomNavBar(
                     contentAlignment = Alignment.Center) {
                     androidx.compose.material3.Text(
                         text = if (cartItemCount > 9) "9+" else cartItemCount.toString(),
-                        color = Color.White, fontSize = 9.sp,
+                        color = Color.White, fontSize = 11.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        lineHeight = 9.sp
+                        lineHeight = 12.sp
                     )
                 }
             }

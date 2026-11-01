@@ -103,12 +103,23 @@ class CustomerViewModel @Inject constructor(
             _state.update { it.copy(message = "${current.name} has a credit balance of ${String.format(java.util.Locale.US, "%.2f", current.creditBalance)} — settle it before deleting") }
             return@launch
         }
-        repo.deleteCustomer(customer)
-        _state.update { it.copy(message = "Customer deleted") }
+        try {
+            repo.deleteCustomer(customer)
+            _state.update { it.copy(message = "Customer deleted") }
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e
+        } catch (e: Exception) {
+            _state.update { it.copy(message = com.minimart.pos.util.ErrorAdvice.explain(e, "Deleting the customer")) }
+        }
     }
 
     fun addCredit(customerId: Long, amount: Double, notes: String = "", currency: String = "KES") = viewModelScope.launch {
-        val ok = repo.addCredit(customerId, amount, notes)
+        val ok = try {
+            repo.addCredit(customerId, amount, notes)
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e
+        } catch (e: Exception) {
+            _state.update { it.copy(message = com.minimart.pos.util.ErrorAdvice.explain(e, "Adding the credit")) }
+            return@launch
+        }
         if (ok) {
             // Bug fix: was hardcoded "KES" in this success message regardless of the
             // app's configurable currency setting.

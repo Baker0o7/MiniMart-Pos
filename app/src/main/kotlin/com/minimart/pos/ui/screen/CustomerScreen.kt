@@ -344,7 +344,7 @@ private fun CustomerDetailSheet(
                             Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format(java.util.Locale.US, "%,.2f", tx.amount)}",
                                 color = if (tx.amount > 0) DT.Green else DT.Red, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                             Text("Bal: $currency ${String.format(java.util.Locale.US, "%,.2f", tx.balanceAfter)}",
-                                color = DT.SubText, fontSize = 10.sp)
+                                color = DT.SubText, fontSize = 11.sp)
                         }
                     }
                 }
@@ -362,7 +362,7 @@ private fun StatChip(modifier: Modifier, label: String, value: String, color: Co
         .background(color.copy(0.08f)).border(1.dp, color.copy(0.25f), RoundedCornerShape(14.dp))
         .padding(horizontal = 10.dp, vertical = 10.dp)) {
         Column {
-            Text(label, color = DT.SubText, fontSize = 10.sp)
+            Text(label, color = DT.SubText, fontSize = 11.sp)
             Spacer(Modifier.height(3.dp))
             Text(value, color = color, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
         }

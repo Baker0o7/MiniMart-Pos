@@ -67,7 +67,8 @@ class HardwareViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(loading = it.checks.isEmpty()) }
-            val inputs = withContext(Dispatchers.IO) { gather() }
+            val inputs = try { withContext(Dispatchers.IO) { gather() } } catch (e: kotlinx.coroutines.CancellationException) { throw e
+            } catch (e: Exception) { _state.update { it.copy(loading = false) }; return@launch }
             val checks = HardwareDiagnostics.evaluate(inputs)
             _state.update {
                 it.copy(loading = false, checks = checks, overall = HardwareDiagnostics.overall(checks),

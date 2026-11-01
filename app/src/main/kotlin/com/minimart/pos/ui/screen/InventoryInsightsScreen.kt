@@ -215,9 +215,9 @@ private fun ReorderRow(r: InsightRow) = RowCard {
             Text(r.product.supplierName, color = DT.SubText, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
     Column(horizontalAlignment = Alignment.End) {
-        Text("Order", color = DT.SubText, fontSize = 10.sp)
+        Text("Order", color = DT.SubText, fontSize = 11.sp)
         Text("${r.suggestedQty}", color = DT.TealLight, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
-        if (r.orderCost > 0) Text("≈ ${money(r.orderCost)}", color = DT.SubText, fontSize = 10.sp)
+        if (r.orderCost > 0) Text("≈ ${money(r.orderCost)}", color = DT.SubText, fontSize = 11.sp)
     }
 }
 
@@ -232,7 +232,7 @@ private fun DeadRow(r: InsightRow, currency: String) = RowCard {
     Column(horizontalAlignment = Alignment.End) {
         val v = if (r.costValue > 0) r.costValue else r.retailValue
         Text("$currency ${money(v)}", color = DT.Amber, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-        Text(if (r.costValue > 0) "at cost" else "at retail", color = DT.SubText, fontSize = 10.sp)
+        Text(if (r.costValue > 0) "at cost" else "at retail", color = DT.SubText, fontSize = 11.sp)
     }
 }
 
@@ -245,6 +245,6 @@ private fun FastRow(r: InsightRow) = RowCard {
     }
     Column(horizontalAlignment = Alignment.End) {
         Text(plainNumber(r.sold30), color = DT.Green, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-        Text("sold (30d)", color = DT.SubText, fontSize = 10.sp)
+        Text("sold (30d)", color = DT.SubText, fontSize = 11.sp)
     }
 }

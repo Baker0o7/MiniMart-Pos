@@ -221,7 +221,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             }
                             Text("${state.currency} ${String.format(java.util.Locale.US, "%,.2f", state.averageBasket)}",
                                 color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
-                            Text("per transaction", color = DT.SubText, fontSize = 10.sp)
+                            Text("per transaction", color = DT.SubText, fontSize = 11.sp)
                         }
                     }
                     // Unique days with sales
@@ -241,7 +241,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                                 Text("Active Days", color = DT.SubText, fontSize = 11.sp)
                             }
                             Text("$activeDays", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
-                            Text("with sales", color = DT.SubText, fontSize = 10.sp)
+                            Text("with sales", color = DT.SubText, fontSize = 11.sp)
                         }
                     }
                 }

@@ -100,7 +100,13 @@ class SyncViewModel @Inject constructor(
 
     /** Puts refused sales back in the queue and tries again; the main device repeats its reasons if it still refuses. */
     fun retryRefused() = viewModelScope.launch {
-        syncDao.retryConflicts()
+        try {
+            syncDao.retryConflicts()
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e
+        } catch (e: Exception) {
+            _state.update { it.copy(lastResult = "✗ " + com.minimart.pos.util.ErrorAdvice.explain(e, "Retrying the refused sales")) }
+            return@launch
+        }
         syncNow()
     }
 
@@ -114,7 +120,14 @@ class SyncViewModel @Inject constructor(
             _state.update { it.copy(lastResult = "Pairing code must be the full 16 digits shown on the main device") }; return@launch
         }
         _state.update { it.copy(isSyncing = true, lastResult = null) }
-        val result = client.sync(ip, _state.value.deviceId, key)
+        // A failure here must never leave the button stuck on "Syncing…".
+        val result = try {
+            client.sync(ip, _state.value.deviceId, key)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            _state.update { it.copy(isSyncing = false) }; throw e
+        } catch (e: Exception) {
+            SyncResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Syncing"))
+        }
         if (result is SyncResult.Success) prefs.edit().putLong("last_sync_at", System.currentTimeMillis()).apply()
         _state.update { it.copy(
             isSyncing  = false,

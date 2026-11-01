@@ -556,7 +556,7 @@ fun CheckoutScreen(
                                             }
                                             // Visit count badge
                                             Box(Modifier.clip(RoundedCornerShape(8.dp)).background(DT.Surface2).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                                                Text("${selectedCustomer?.visitCount ?: 0} visits", color = DT.SubText, fontSize = 10.sp)
+                                                Text("${selectedCustomer?.visitCount ?: 0} visits", color = DT.SubText, fontSize = 11.sp)
                                             }
                                         }
                                         HorizontalDivider(color = DT.Border.copy(0.5f))
@@ -954,7 +954,7 @@ private fun CustomerSearchSheet(
                                 Text(cust.name, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                 if (cust.phone.isNotBlank()) Text(cust.phone, color = DT.SubText, fontSize = 12.sp)
                                 Text("${cust.visitCount} visits  •  $currency ${String.format(java.util.Locale.US, "%,.0f", cust.totalPurchases)} total",
-                                    color = DT.SubText, fontSize = 10.sp)
+                                    color = DT.SubText, fontSize = 11.sp)
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Box(Modifier.clip(RoundedCornerShape(8.dp))
@@ -1007,7 +1007,7 @@ private fun SummaryLine(label: String, value: String, color: Color, bold: Boolea
 @Composable
 private fun CreditStat(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, color = DT.SubText, fontSize = 9.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        Text(label, color = DT.SubText, fontSize = 11.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         Spacer(Modifier.height(3.dp))
         Text(value, color = color, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
     }

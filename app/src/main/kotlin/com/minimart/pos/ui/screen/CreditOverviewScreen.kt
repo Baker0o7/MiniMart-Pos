@@ -102,7 +102,7 @@ fun CreditOverviewScreen(
                             Spacer(Modifier.height(4.dp))
                             Text("$currency ${String.format(java.util.Locale.US, "%,.2f", totalOwed)}",
                                 color = DT.Red, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
-                            Text("$debtors customer${if (debtors != 1) "s" else ""}", color = DT.SubText, fontSize = 10.sp)
+                            Text("$debtors customer${if (debtors != 1) "s" else ""}", color = DT.SubText, fontSize = 11.sp)
                         }
                     }
                     // All customers stats
@@ -118,7 +118,7 @@ fun CreditOverviewScreen(
                             Spacer(Modifier.height(4.dp))
                             Text(state.customers.size.toString(),
                                 color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
-                            Text("$currency ${String.format(java.util.Locale.US, "%,.0f", state.customers.sumOf { it.totalPurchases })} total spent", color = DT.SubText, fontSize = 10.sp)
+                            Text("$currency ${String.format(java.util.Locale.US, "%,.0f", state.customers.sumOf { it.totalPurchases })} total spent", color = DT.SubText, fontSize = 11.sp)
                         }
                     }
                 }
@@ -177,7 +177,7 @@ fun CreditOverviewScreen(
                                 if (customer.phone.isNotBlank())
                                     Text(customer.phone, color = DT.SubText, fontSize = 12.sp)
                                 Text("${customer.visitCount} visits  •  Total spent $currency ${String.format(java.util.Locale.US, "%,.0f", customer.totalPurchases)}",
-                                    color = DT.SubText, fontSize = 10.sp)
+                                    color = DT.SubText, fontSize = 11.sp)
                             }
                             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 // Credit balance badge — green = customer has credit wallet,
@@ -263,14 +263,14 @@ private fun CreditTxRow(tx: CreditTransaction, currency: String) {
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Text(tx.type.name.replace("_", " "), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            if (tx.notes.isNotBlank()) Text(tx.notes, color = DT.SubText, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(df.format(Date(tx.createdAt)), color = DT.SubText, fontSize = 10.sp)
+            if (tx.notes.isNotBlank()) Text(tx.notes, color = DT.SubText, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(df.format(Date(tx.createdAt)), color = DT.SubText, fontSize = 11.sp)
         }
         Column(horizontalAlignment = Alignment.End) {
             Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format(java.util.Locale.US, "%,.2f", tx.amount)}",
                 color = if (tx.amount > 0) DT.Green else DT.Red,
                 fontWeight = FontWeight.Bold, fontSize = 13.sp)
-            Text("Bal: $currency ${String.format(java.util.Locale.US, "%,.2f", tx.balanceAfter)}", color = DT.SubText, fontSize = 10.sp)
+            Text("Bal: $currency ${String.format(java.util.Locale.US, "%,.2f", tx.balanceAfter)}", color = DT.SubText, fontSize = 11.sp)
         }
     }
 }

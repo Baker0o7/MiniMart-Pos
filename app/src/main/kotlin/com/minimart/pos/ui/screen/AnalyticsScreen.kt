@@ -104,22 +104,22 @@ private fun AnalyticsBody(s: AnalyticsState) {
                         s.revenueChangePct?.let { pct ->
                             val up = pct >= 0
                             Text("${if (up) "▲" else "▼"} ${String.format(Locale.US, "%.0f", kotlin.math.abs(pct))}% vs previous ${s.range.days} days",
-                                color = if (up) DT.Green else DT.Red, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                                color = if (up) DT.Green else DT.Red, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                     KpiTile("Sales", s.transactions.toString(), DT.OnSurface, Modifier.weight(1f)) {
-                        Text("avg basket $cur ${money(s.avgBasket)}", color = DT.SubText, fontSize = 10.sp)
+                        Text("avg basket $cur ${money(s.avgBasket)}", color = DT.SubText, fontSize = 11.sp)
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     KpiTile("Gross profit", "$cur ${money(s.grossProfit)}",
                         if (s.grossProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f)) {
                         val margin = if (s.revenue > 0) s.grossProfit / s.revenue * 100 else 0.0
-                        Text("${String.format(Locale.US, "%.0f", margin)}% margin", color = DT.SubText, fontSize = 10.sp)
+                        Text("${String.format(Locale.US, "%.0f", margin)}% margin", color = DT.SubText, fontSize = 11.sp)
                     }
                     KpiTile("Net profit", "$cur ${money(s.netProfit)}",
                         if (s.netProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f)) {
-                        Text("after $cur ${money(s.expenses)} expenses", color = DT.SubText, fontSize = 10.sp)
+                        Text("after $cur ${money(s.expenses)} expenses", color = DT.SubText, fontSize = 11.sp)
                     }
                 }
                 if (s.costCoverage < 0.9) {
@@ -149,8 +149,8 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     valueLabel = { v -> String.format(Locale.US, "%,.0f", v) })
                 Spacer(Modifier.height(6.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(fmt.format(Date(s.trend.first().startMs)), color = DT.SubText, fontSize = 10.sp)
-                    Text(fmt.format(Date(s.trend.last().startMs)), color = DT.SubText, fontSize = 10.sp)
+                    Text(fmt.format(Date(s.trend.first().startMs)), color = DT.SubText, fontSize = 11.sp)
+                    Text(fmt.format(Date(s.trend.last().startMs)), color = DT.SubText, fontSize = 11.sp)
                 }
                 Spacer(Modifier.height(6.dp))
                 val d = SimpleDateFormat("EEE d MMM", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(Date(s.trend[best].startMs))
@@ -192,7 +192,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                 Spacer(Modifier.height(6.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     listOf("12 AM", "6 AM", "12 PM", "6 PM", "11 PM").forEach {
-                        Text(it, color = DT.SubText, fontSize = 10.sp)
+                        Text(it, color = DT.SubText, fontSize = 11.sp)
                     }
                 }
                 Spacer(Modifier.height(6.dp))
@@ -212,7 +212,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                 Spacer(Modifier.height(6.dp))
                 Row(Modifier.fillMaxWidth()) {
                     listOf("M", "T", "W", "T", "F", "S", "S").forEach {
-                        Text(it, color = DT.SubText, fontSize = 10.sp, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+                        Text(it, color = DT.SubText, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
                     }
                 }
                 Spacer(Modifier.height(6.dp))
@@ -328,7 +328,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                 Spacer(Modifier.height(4.dp))
                 Row(Modifier.fillMaxWidth()) {
                     listOf("M", "T", "W", "T", "F", "S", "S").forEach {
-                        Text(it, color = DT.SubText, fontSize = 10.sp, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+                        Text(it, color = DT.SubText, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -389,7 +389,7 @@ private fun TopProductRow(rank: Int, p: ProductSalesStat, cur: String) {
         Column(horizontalAlignment = Alignment.End) {
             Text("$cur ${money(p.revenue)}", color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             if (p.costedRevenue > 0)
-                Text("+${money(p.revenue - p.cost)} profit", color = DT.Green, fontSize = 10.sp)
+                Text("+${money(p.revenue - p.cost)} profit", color = DT.Green, fontSize = 11.sp)
         }
     }
 }

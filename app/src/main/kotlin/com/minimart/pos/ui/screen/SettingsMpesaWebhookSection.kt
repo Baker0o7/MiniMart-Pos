@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -63,7 +64,7 @@ class MpesaWebhookViewModel @Inject constructor(private val client: MpesaWebhook
 /** Owner-only: instant M-Pesa payments through Safaricom's Daraja C2B confirmation, via the owner's own Supabase project. */
 @Composable
 internal fun MpesaWebhookSettingsSection(vm: MpesaWebhookViewModel = hiltViewModel()) {
-    val s by vm.state.collectAsState()
+    val s by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     DSection("Instant M-Pesa (webhook)", Icons.Default.Bolt, summary = if (s.enabled) "On" else "Off", initiallyExpanded = false) {
         Text("Safaricom tells your cloud project about each payment the moment it happens, and this phone picks it up within about 15 minutes, or at once when you open the M-Pesa list. It works even if the phone was off or had no SMS. Needs the Cloud dashboard connected and a Daraja C2B account (see cloud/mpesa_webhook.sql and the README).",

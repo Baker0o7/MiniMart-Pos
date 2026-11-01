@@ -158,11 +158,11 @@ private fun Hours(sum: TodaySummary) {
             description = if (peak == null) "No sales yet today" else "Sales by hour. Busiest hour ${hourLabel(peak)}"
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("12 AM", color = DT.SubText, fontSize = 10.sp)
-            Text("6 AM", color = DT.SubText, fontSize = 10.sp)
-            Text("12 PM", color = DT.SubText, fontSize = 10.sp)
-            Text("6 PM", color = DT.SubText, fontSize = 10.sp)
-            Text("11 PM", color = DT.SubText, fontSize = 10.sp)
+            Text("12 AM", color = DT.SubText, fontSize = 11.sp)
+            Text("6 AM", color = DT.SubText, fontSize = 11.sp)
+            Text("12 PM", color = DT.SubText, fontSize = 11.sp)
+            Text("6 PM", color = DT.SubText, fontSize = 11.sp)
+            Text("11 PM", color = DT.SubText, fontSize = 11.sp)
         }
     }
 }
