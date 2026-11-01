@@ -58,8 +58,12 @@ jobs:
               echo "::error::Repository secret $v is not set. See docs/RELEASE_SIGNING.md."; exit 1
             fi
           done
-          echo "$SIGNING_KEYSTORE_BASE64" | base64 -d > app/minimart-release.jks
-          keytool -list -keystore app/minimart-release.jks -storepass "$SIGNING_STORE_PASSWORD" -alias "$SIGNING_KEY_ALIAS" > /dev/null
+          if ! echo "$SIGNING_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > app/minimart-release.jks 2>/dev/null; then
+            echo "::error::SIGNING_KEYSTORE_BASE64 is not valid base64 (length ${#SIGNING_KEYSTORE_BASE64}; the real value is about 5736 characters). Paste the whole single line from keystore-base64.txt."; exit 1
+          fi
+          if ! keytool -list -keystore app/minimart-release.jks -storepass "$SIGNING_STORE_PASSWORD" -alias "$SIGNING_KEY_ALIAS" > /dev/null 2>&1; then
+            echo "::error::The keystore did not open with these secrets. Check SIGNING_STORE_PASSWORD, SIGNING_KEY_ALIAS (minimart) and that SIGNING_KEYSTORE_BASE64 is complete (decoded size $(stat -c %s app/minimart-release.jks) bytes; expected 4300)."; exit 1
+          fi
           {
             echo "SIGNING_STORE_PASSWORD=$SIGNING_STORE_PASSWORD"
             echo "SIGNING_KEY_ALIAS=$SIGNING_KEY_ALIAS"
