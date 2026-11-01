@@ -53,6 +53,10 @@ jobs:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
+          # Pasting a secret often drags a trailing space or line break along; none of these values may contain whitespace.
+          SIGNING_STORE_PASSWORD=$(printf %s "$SIGNING_STORE_PASSWORD" | tr -d '[:space:]')
+          SIGNING_KEY_ALIAS=$(printf %s "$SIGNING_KEY_ALIAS" | tr -d '[:space:]')
+          SIGNING_KEY_PASSWORD=$(printf %s "$SIGNING_KEY_PASSWORD" | tr -d '[:space:]')
           for v in SIGNING_KEYSTORE_BASE64 SIGNING_STORE_PASSWORD SIGNING_KEY_ALIAS SIGNING_KEY_PASSWORD; do
             if [ -z "${!v}" ]; then
               echo "::error::Repository secret $v is not set. See docs/RELEASE_SIGNING.md."; exit 1
