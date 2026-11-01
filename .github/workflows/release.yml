@@ -62,6 +62,8 @@ jobs:
             echo "::error::SIGNING_KEYSTORE_BASE64 is not valid base64 (length ${#SIGNING_KEYSTORE_BASE64}; the real value is about 5736 characters). Paste the whole single line from keystore-base64.txt."; exit 1
           fi
           if ! keytool -list -keystore app/minimart-release.jks -storepass "$SIGNING_STORE_PASSWORD" -alias "$SIGNING_KEY_ALIAS" > /dev/null 2>&1; then
+            alt=no; keytool -list -keystore app/minimart-release.jks -storepass "$SIGNING_KEY_PASSWORD" -alias "$SIGNING_KEY_ALIAS" > /dev/null 2>&1 && alt=yes
+            echo "::error::Secret lengths: store password ${#SIGNING_STORE_PASSWORD} (expected 24), key password ${#SIGNING_KEY_PASSWORD} (expected 24), alias ${#SIGNING_KEY_ALIAS} (expected 8). The key-password secret opens the keystore: $alt."
             echo "::error::The keystore did not open with these secrets. Check SIGNING_STORE_PASSWORD, SIGNING_KEY_ALIAS (minimart) and that SIGNING_KEYSTORE_BASE64 is complete (decoded size $(stat -c %s app/minimart-release.jks) bytes; expected 4300)."; exit 1
           fi
           {
