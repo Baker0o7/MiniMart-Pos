@@ -87,10 +87,14 @@ jobs:
 
       # The bundle first and without per-ABI APKs (AGP 9 refuses to build both in one go), then the APKs.
       - name: Build signed release AAB
-        run: gradle bundleRelease -PabiSplits=false --no-daemon
+        run: |
+          set -o pipefail
+          gradle bundleRelease -PabiSplits=false --no-daemon 2>&1 | tee bundle.log || { echo "::error::$(grep -E -A4 'What went wrong' bundle.log | tr '\n' ' ' | cut -c1-900)"; exit 1; }
 
       - name: Build signed release APK
-        run: gradle assembleRelease --no-daemon
+        run: |
+          set -o pipefail
+          gradle assembleRelease --no-daemon 2>&1 | tee apk.log || { echo "::error::$(grep -E -A4 'What went wrong' apk.log | tr '\n' ' ' | cut -c1-900)"; exit 1; }
 
       - name: Get version
         id: version
