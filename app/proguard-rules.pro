@@ -58,3 +58,7 @@
     public static int d(...);
     public static int i(...);
 }
+
+# ── SQLCipher (native library calls back into these classes) ─────────────────
+-keep class net.zetetic.database.** { *; }
+-keep interface net.zetetic.database.** { *; }

@@ -59,5 +59,8 @@ internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
             Spacer(Modifier.width(12.dp))
             Switch(checked = kiosk, onCheckedChange = null)
         }
+        val context = androidx.compose.ui.platform.LocalContext.current
+        Text("Shop data on this phone: " + com.minimart.pos.util.DbEncryption.status(context),
+            color = DT.SubText, style = MaterialTheme.typography.bodySmall)
     }
 }

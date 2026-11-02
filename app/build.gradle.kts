@@ -136,6 +136,8 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     implementation(libs.room.paging)
+    // Encrypts the shop database on the phone (see util/DbEncryption.kt and docs/SECURITY.md).
+    implementation(libs.sqlcipher)
     implementation(libs.paging.runtime)
     implementation(libs.paging.compose)
 
@@ -180,6 +182,8 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test:core-ktx:1.6.1")
+    androidTestImplementation(libs.coroutines.android)
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // Unit tests for financial calculation logic (Money, CartUiState, PluDecoder).

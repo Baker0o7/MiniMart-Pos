@@ -27,14 +27,17 @@ object BackupManager {
             val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
             if (!dbFile.exists()) return@withContext BackupResult.Error("Database file not found")
 
-            // Checkpoint WAL using direct SQLite to flush all data into main db file
+            // The shop database is encrypted on the phone, and an encrypted file only opens with this phone's key.
+            // A manual backup is meant to be restorable anywhere, so it is written from a complete plain snapshot.
+            val snapshot = File(context.cacheDir, "backup_snapshot.db")
             try {
-                val sqLiteDb = android.database.sqlite.SQLiteDatabase.openDatabase(
-                    dbFile.absolutePath, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
-                )
-                sqLiteDb.execSQL("PRAGMA wal_checkpoint(TRUNCATE)")
-                sqLiteDb.close()
-            } catch (_: Exception) { /* continue with backup even if checkpoint fails */ }
+                DbEncryption.snapshotPlain(context, snapshot)
+            } catch (e: Exception) {
+                snapshot.delete()
+                recordFailure(context, e.message ?: "snapshot failed")
+                return@withContext BackupResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Backup"))
+            }
+            try {
 
             val timestamp = df.format(Date())
             // App-specific external storage: needs no storage permission (so the app no longer
@@ -49,36 +52,27 @@ object BackupManager {
             if (!passphrase.isNullOrEmpty()) {
                 val enc = File(backupDir, "minimart_backup_$timestamp.mmbak")
                 // The encrypted file cannot be opened without the passphrase, so check the data first.
-                val plainCopy = File(context.cacheDir, "backup_check.db")
-                try {
-                    dbFile.copyTo(plainCopy, overwrite = true)
-                    verify(plainCopy)?.let { problem ->
-                        recordFailure(context, problem)
-                        return@withContext BackupResult.Error("Backup was not saved: $problem")
-                    }
-                } finally { plainCopy.delete() }
-                dbFile.inputStream().use { ins -> enc.outputStream().use { outs -> BackupCrypto.encrypt(ins, outs, passphrase) } }
+                verify(context, snapshot)?.let { problem ->
+                    recordFailure(context, problem)
+                    return@withContext BackupResult.Error("Backup was not saved: $problem")
+                }
+                snapshot.inputStream().use { ins -> enc.outputStream().use { outs -> BackupCrypto.encrypt(ins, outs, passphrase) } }
                 recordSuccess(context)
                 return@withContext BackupResult.Success(enc, "Encrypted backup saved: ${enc.name}\nKeep the passphrase — it cannot be recovered.")
             }
 
             val dest = File(backupDir, "minimart_backup_$timestamp.db")
-            dbFile.copyTo(dest, overwrite = true)
+            snapshot.copyTo(dest, overwrite = true)
             // A backup that cannot be opened is worse than none: it gives false comfort.
-            verify(dest)?.let { problem ->
+            verify(context, dest)?.let { problem ->
                 dest.delete()
                 recordFailure(context, problem)
                 return@withContext BackupResult.Error("Backup was not saved: $problem")
             }
 
-            // Also copy WAL and SHM if they exist
-            listOf("-wal", "-shm").forEach { suffix ->
-                val extra = File(dbFile.parent, dbFile.name + suffix)
-                if (extra.exists()) extra.copyTo(File(backupDir, dest.name + suffix), overwrite = true)
-            }
-
             recordSuccess(context)
-            BackupResult.Success(dest, "Backup saved and checked: ${dest.name}\nUse \"Share Latest Backup\" to copy it off this device.")
+            BackupResult.Success(dest, "Backup saved and checked: ${dest.name}\nUse \"Share Latest Backup\" to copy it off this device.\nThis file is not encrypted: add a passphrase when you back up if it will leave the phone.")
+            } finally { snapshot.delete() }
         } catch (e: Exception) {
             BackupResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Backup"))
         }
@@ -92,29 +86,23 @@ object BackupManager {
     private const val STALE_AFTER_MS = 3L * 24 * 60 * 60 * 1000
 
     /** Returns a description of the problem, or null if [file] is a complete, readable MiniMart database. */
-    fun verify(file: File): String? {
+    fun verify(context: Context, file: File): String? {
         if (!file.exists() || file.length() < 4096) return "the file is empty or too small"
         return try {
-            android.database.sqlite.SQLiteDatabase.openDatabase(
-                file.absolutePath, null, android.database.sqlite.SQLiteDatabase.OPEN_READONLY
-            ).use { db ->
-                val check = db.rawQuery("PRAGMA integrity_check", null).use { c -> if (c.moveToFirst()) c.getString(0) else "no result" }
-                if (check != "ok") return "database check failed ($check)"
-                val tables = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null).use { c ->
-                    buildSet { while (c.moveToNext()) add(c.getString(0)) }
-                }
-                val missing = listOf("users", "sales", "products").filter { it !in tables }
-                if (missing.isNotEmpty()) "missing data: ${missing.joinToString()}" else null
-            }
+            val info = DbEncryption.inspect(context, file)
+            if (info.integrity != "ok") return "database check failed (${info.integrity})"
+            val missing = listOf("users", "sales", "products").filter { it !in info.tables }
+            if (missing.isNotEmpty()) "missing data: ${missing.joinToString()}" else null
         } catch (e: Exception) {
             "cannot be opened (${e.message})"
         }
     }
 
     /**
-     * Automatic backups are plain database copies, so they live in the app's private storage, not in the
-     * external folder that other apps can read on older Android versions. (Manual backups can be
-     * passphrase-encrypted and are meant to leave the phone.)
+     * Automatic backups are straight copies of the database file, so they are encrypted with this phone's key
+     * exactly like the database, and live in the app's private storage, not in the external folder other apps can
+     * read. They restore on this phone only. (Manual backups are plain snapshots, optionally passphrase-encrypted,
+     * and are meant to leave the phone.)
      */
     private fun autoDir(context: Context): File = File(context.filesDir, "auto_backups")
 
@@ -123,15 +111,11 @@ object BackupManager {
         try {
             val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
             if (!dbFile.exists()) return@withContext BackupResult.Error("Database file not found")
-            try {
-                android.database.sqlite.SQLiteDatabase.openDatabase(
-                    dbFile.absolutePath, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
-                ).use { it.execSQL("PRAGMA wal_checkpoint(TRUNCATE)") }
-            } catch (_: Exception) { /* verification below decides whether the copy is usable */ }
+            try { DbEncryption.checkpoint(context) } catch (_: Exception) { /* verification below decides whether the copy is usable */ }
             val dir = autoDir(context).apply { mkdirs() }
             val dest = File(dir, "$AUTO_PREFIX${df.format(Date())}.db")
             dbFile.copyTo(dest, overwrite = true)
-            verify(dest)?.let { problem ->
+            verify(context, dest)?.let { problem ->
                 dest.delete()
                 recordFailure(context, problem)
                 return@withContext BackupResult.Error("Automatic backup failed: $problem")
@@ -245,16 +229,15 @@ object BackupManager {
 
             // Refuse files that are not SQLite databases or come from a newer app version:
             // Room's destructive-migration fallback would otherwise WIPE the data on next launch.
-            validateBackup(dbFile, backupFile)?.let { return BackupResult.Error(it) }
+            validateBackup(context, dbFile, backupFile)?.let { return BackupResult.Error(it) }
             // A file that merely has the right header can still be corrupt or hold no shop data;
             // check it fully BEFORE the live database is replaced.
-            verify(backupFile)?.let { return BackupResult.Error("This backup can't be restored: $it") }
+            verify(context, backupFile)?.let { return BackupResult.Error("This backup can't be restored: $it") }
 
             // Keep a safety copy of the current database so a bad restore can be undone.
+            // (A straight copy: encrypted with this phone's key when the database is, like the automatic backups.)
             try {
-                android.database.sqlite.SQLiteDatabase.openDatabase(
-                    dbFile.absolutePath, null, android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
-                ).use { it.execSQL("PRAGMA wal_checkpoint(TRUNCATE)") }
+                DbEncryption.checkpoint(context)
                 dbFile.copyTo(File(context.filesDir, "pre_restore_backup.db"), overwrite = true)
             } catch (_: Exception) { /* best effort */ }
 
@@ -284,21 +267,17 @@ object BackupManager {
     }
 
     /** Returns an error message if [backupFile] must not be restored, or null if it looks OK. */
-    private fun validateBackup(liveDb: File, backupFile: File): String? {
-        val magic = "SQLite format 3\u0000".toByteArray(Charsets.US_ASCII)
-        val header = ByteArray(magic.size)
-        val readOk = try { backupFile.inputStream().use { it.read(header) == header.size } } catch (_: Exception) { false }
-        if (!readOk || !header.contentEquals(magic)) return "This file is not a valid MiniMart backup"
+    private fun validateBackup(context: Context, liveDb: File, backupFile: File): String? {
+        // A backup is either a plain SQLite file (a manual backup) or a copy of the encrypted database
+        // (an automatic backup from this phone). Opening it checks which, and that it really is one.
         return try {
-            val readOnly = android.database.sqlite.SQLiteDatabase.OPEN_READONLY
-            val backupVersion = android.database.sqlite.SQLiteDatabase
-                .openDatabase(backupFile.absolutePath, null, readOnly).use { it.version }
-            val liveVersion = if (liveDb.exists())
-                android.database.sqlite.SQLiteDatabase.openDatabase(liveDb.absolutePath, null, readOnly).use { it.version }
-            else Int.MAX_VALUE
+            val backupVersion = DbEncryption.inspect(context, backupFile).version
+            val liveVersion = if (liveDb.exists()) runCatching { DbEncryption.inspect(context, liveDb).version }.getOrDefault(Int.MAX_VALUE) else Int.MAX_VALUE
             if (backupVersion > liveVersion) "This backup was made by a newer version of the app — update the app first" else null
         } catch (e: Exception) {
-            "Backup file is damaged: ${e.message}"
+            if (DbEncryption.kind(backupFile) == com.minimart.pos.util.DbFormat.Kind.ENCRYPTED)
+                "This backup is locked to another phone. Use a manual backup (made with a passphrase) to move shop data between phones."
+            else "This file is not a valid MiniMart backup (${e.message})"
         }
     }
 

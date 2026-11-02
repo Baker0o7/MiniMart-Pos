@@ -24,17 +24,23 @@ object DatabaseModule {
     fun provideDatabase(
         @ApplicationContext context: Context,
         callback: DatabaseCallback
-    ): AppDatabase = Room.databaseBuilder(
+    ): AppDatabase {
+        // Encrypts the shop database on first run after the update (and creates new ones encrypted). Null means
+        // "stay plain", for example when the phone's key store is unusable; the reason is shown in Settings.
+        val passphrase = com.minimart.pos.util.DbEncryption.prepare(context)
+        return Room.databaseBuilder(
         context,
         AppDatabase::class.java,
         AppDatabase.DATABASE_NAME
     )
+        .apply { if (passphrase != null) openHelperFactory(net.zetetic.database.sqlcipher.SupportOpenHelperFactory(passphrase)) }
         .addMigrations(*com.minimart.pos.data.db.AppMigrations.ALL)
         // Only the pre-release schemas (v1–v7) have no migration path. A missing migration for any
         // later version must fail loudly, not silently wipe the shop's sales and stock.
         .fallbackToDestructiveMigrationFrom(1, 2, 3, 4, 5, 6, 7)
         .addCallback(callback)
         .build()
+    }
 
     @Provides fun provideProductDao(db: AppDatabase): ProductDao = db.productDao()
     @Provides fun provideSaleDao(db: AppDatabase): SaleDao = db.saleDao()

@@ -8,12 +8,13 @@ What protects a shop's till, and what does not yet.
 * **Network:** HTTPS only, system certificate authorities only (`network_security_config.xml`). Till-to-till sync runs on the shop Wi-Fi, encrypted and signed with the pairing code, with replay protection.
 * **Untrusted input** (webhook, SMS, QR, sync peers) is validated before it reaches the database; SMS is read only from the sender ID `MPESA`.
 * **Screen:** optional screenshot blocking (Settings > Privacy). On Android 12+ other apps' overlay windows are hidden while MiniMart is open, so nothing can sit over the PIN pad and capture taps.
-* **Backups:** the cloud backup rules include only the database and plain settings, and cloud backup is skipped on phones that cannot encrypt it (no screen lock). Credential files are never backed up.
+* **Shop database encrypted at rest** (SQLCipher, AES-256, `util/DbEncryption.kt`). The key is random and lives only in the Android Keystore. The first start after the update converts the existing database into a new file, checks it (integrity, schema version, every table's row count) and only then swaps it in; if anything fails the plain database is left untouched and Settings says why. A plain copy of the old file is kept for 3 days, then deleted. The conversion is exercised on a real emulator (`DbEncryptionInstrumentedTest`, workflow *UI tests (emulator)*).
+* **Backups:** automatic backups are copies of the encrypted file (readable on this phone only). Manual backups are plain snapshots, optionally passphrase-encrypted: use a passphrase for any backup that leaves the phone, and for moving to a new phone. The database is excluded from Android cloud backup and device transfer, because a copy could not be opened without the Keystore key. Credential files are never backed up.
 * **Release build:** R8 shrinking, `Log.v/d/i` removed, signed APKs only from the release workflow.
 * **Audit log:** hash-chained and anchored, so deleted or edited entries show up in the integrity check.
 * **Release check** (`scripts/release-checks.sh`) fails if the set of components other apps can reach changes (`.MainActivity`, `.mpesa.MpesaSmsReceiver`), or the manifest allows debugging or cleartext traffic. Add to that list on purpose, not by accident.
 * Fields for secrets use the password keyboard (no suggestions or learning), and the web-hook address is copied as a sensitive clip.
 
 ## Known gaps
-* **The shop database is not encrypted at rest** (customer names and phone numbers, sales). Android's own app sandbox and device encryption protect it. Encrypting it with SQLCipher would need a one-time migration of every phone's data and a tested rollback, so it is a planned item, not a quick change.
+* **If the Keystore key is lost** (a phone reset around the app, a damaged Keystore), the encrypted database cannot be opened. The app puts the file aside (`minimart_pos.db.unreadable-*`), starts empty and says so; restore a manual backup. Keep a manual backup off the phone.
 * A rooted phone can read the database and the settings file.

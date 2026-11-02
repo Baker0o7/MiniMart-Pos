@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!-- Back up the Room database and DataStore preferences -->
-    <include domain="database" path="minimart_pos.db" />
+    <!-- The shop database is encrypted with a key that never leaves this phone's Keystore, so a copy of it in
+         Android's cloud backup could not be opened on a new phone. Only plain settings are included. Keep
+         shop data safe with Settings > Data & Backup (manual backups with a passphrase can be restored anywhere). -->
     <include domain="sharedpref" path="minimart_settings.preferences_pb" />
 </full-backup-content>
