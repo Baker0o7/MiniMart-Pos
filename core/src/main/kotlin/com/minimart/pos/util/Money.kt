@@ -69,7 +69,7 @@ value class Money private constructor(val cents: Long) : Comparable<Money> {
 
     /** Formats as "1,234.56" (no currency symbol — callers prepend their own currency string,
      * consistent with how the rest of the app already does `"$currency ${String.format(...)}"`). */
-    fun format(): String = String.format("%,.2f", toDouble())
+    fun format(): String = String.format(java.util.Locale.US, "%,.2f", toDouble())
 
     override fun toString(): String = format()
 }

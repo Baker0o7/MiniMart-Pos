@@ -38,9 +38,9 @@ if [ -n "${name:-}" ] && awk -v v="## [${name}]" 'index($0,v)==1{f=1;next} /^## 
 fi
 [ -n "$code" ] || { echo "::error::versionCode missing or not a number"; fail=1; }
 [ -n "$name" ] || { echo "::error::versionName must look like 1.2.3"; fail=1; }
-if grep -rn 'String.format("' --include=*.kt app/src/main data/src/main | grep -v Locale >/dev/null; then
+if grep -rn 'String.format("' --include=*.kt app/src/main data/src/main core/src/main | grep -v Locale >/dev/null; then
   echo "::error::String.format without Locale found (breaks on phones set to other languages)"
-  grep -rn 'String.format("' --include=*.kt app/src/main data/src/main | grep -v Locale | head -5
+  grep -rn 'String.format("' --include=*.kt app/src/main data/src/main core/src/main | grep -v Locale | head -5
   fail=1
 fi
 [ "$fail" -eq 0 ] && echo "Release checks passed (db v$ver, app $name/$code)"
