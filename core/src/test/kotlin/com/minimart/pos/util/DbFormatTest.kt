@@ -18,7 +18,7 @@ class DbFormatTest {
     @Test fun `raw key passphrase has the form SQLCipher expects`() {
         val p = DbFormat.rawKeyPassphrase(ByteArray(32) { it.toByte() })
         assertEquals("x'" + (0 until 32).joinToString("") { String.format("%02x", it) } + "'", p)
-        assertEquals(68, p.length)
+        assertEquals(67, p.length)
     }
     @Test fun `key must be 32 bytes`() { assertThrows(IllegalArgumentException::class.java) { DbFormat.rawKeyPassphrase(ByteArray(16)) } }
 }
