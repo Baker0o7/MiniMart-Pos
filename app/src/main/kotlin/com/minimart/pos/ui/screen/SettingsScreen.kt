@@ -599,6 +599,8 @@ fun SettingsScreen(
 
                 if (isOwner) PrivacySettingsSection(settingsRepo)
 
+                if (isOwner) DailyReportSettingsSection(settingsRepo)
+
                 if (isOwner) MpesaWebhookSettingsSection()
 
                 if (isOwner) ArchiveSettingsSection(ownerGate)

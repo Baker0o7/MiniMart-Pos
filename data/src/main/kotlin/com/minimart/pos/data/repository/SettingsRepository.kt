@@ -39,6 +39,9 @@ class SettingsRepository @Inject constructor(
         val KEY_BLOCK_SCREENSHOTS = booleanPreferencesKey("block_screenshots")
         val KEY_TELEMETRY = booleanPreferencesKey("telemetry_opt_in")
         val KEY_KIOSK = booleanPreferencesKey("kiosk_mode")
+        val KEY_DAILY_REPORT = booleanPreferencesKey("daily_report_on")
+        val KEY_DAILY_REPORT_HOUR = intPreferencesKey("daily_report_hour")
+        val KEY_OWNER_PHONE = stringPreferencesKey("owner_report_phone")
         val KEY_AMOLED = booleanPreferencesKey("theme_amoled")
         val KEY_HIGH_CONTRAST = booleanPreferencesKey("theme_high_contrast")
         val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
@@ -134,6 +137,15 @@ class SettingsRepository @Inject constructor(
     /** Till is locked to MiniMart (screen pinning) and the screen stays on, for a counter tablet staff share. */
     val kioskMode: Flow<Boolean> = context.dataStore.data.map { it[KEY_KIOSK] ?: false }
     suspend fun setKioskMode(on: Boolean) = context.dataStore.edit { it[KEY_KIOSK] = on }
+
+    /** The owner's end-of-day summary, posted as a notification at [dailyReportHour] (0-23). Off until the owner turns it on. */
+    val dailyReport: Flow<Boolean> = context.dataStore.data.map { it[KEY_DAILY_REPORT] ?: false }
+    suspend fun setDailyReport(on: Boolean) = context.dataStore.edit { it[KEY_DAILY_REPORT] = on }
+    val dailyReportHour: Flow<Int> = context.dataStore.data.map { (it[KEY_DAILY_REPORT_HOUR] ?: 20).coerceIn(0, 23) }
+    suspend fun setDailyReportHour(h: Int) = context.dataStore.edit { it[KEY_DAILY_REPORT_HOUR] = h.coerceIn(0, 23) }
+    /** Where the "Send to owner" button on the report sends the text (SMS or WhatsApp). Digits and a leading + only. */
+    val ownerReportPhone: Flow<String> = context.dataStore.data.map { it[KEY_OWNER_PHONE] ?: "" }
+    suspend fun setOwnerReportPhone(p: String) = context.dataStore.edit { it[KEY_OWNER_PHONE] = p.filterIndexed { i, c -> c.isDigit() || (i == 0 && c == '+') }.take(16) }
 
     /** "Deep black" backgrounds and the high-contrast option (see Palette.adapt in the app module). */
     val amoled: Flow<Boolean> = context.dataStore.data.map { it[KEY_AMOLED] ?: false }

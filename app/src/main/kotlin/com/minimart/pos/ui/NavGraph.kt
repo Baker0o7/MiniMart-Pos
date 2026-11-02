@@ -174,6 +174,7 @@ fun MiniMartNavGraph(
             currentRoute != null && currentRoute != Routes.LOGIN) {
             when (pendingRoute) {
                 "inventory" -> navController.navigate(Routes.INVENTORY) { launchSingleTop = true }
+                "reports" -> navController.navigate(Routes.REPORTS) { launchSingleTop = true }
             }
             onPendingRouteConsumed()
         }
