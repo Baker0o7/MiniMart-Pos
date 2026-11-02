@@ -40,6 +40,24 @@ jobs:
           disable-animations: true
           script: gradle :app:connectedDebugAndroidTest --no-daemon --stacktrace
 
+      - name: Show what the emulator tests did
+        if: always()
+        run: |
+          shopt -s globstar nullglob
+          files=(app/build/outputs/androidTest-results/**/*.xml)
+          echo "Result files: ${#files[@]}"
+          [ ${#files[@]} -gt 0 ] || { echo "::error::No emulator test results were produced"; exit 1; }
+          for f in "${files[@]}"; do
+            python3 - "$f" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          r = ET.parse(sys.argv[1]).getroot()
+          print(f"::notice::{r.get('name')}: {r.get('tests')} tests, {r.get('failures')} failures, {r.get('errors')} errors, {r.get('skipped')} skipped")
+          for c in r.iter('testcase'):
+              state = 'FAILED' if (c.find('failure') is not None or c.find('error') is not None) else 'passed'
+              print(f"::notice::  {c.get('classname','').split('.')[-1]}.{c.get('name')}: {state}")
+          PY
+          done
+
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v7
