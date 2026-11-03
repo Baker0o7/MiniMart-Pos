@@ -38,15 +38,7 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: |
-            gradle :app:installDebug :app:installDebugAndroidTest --no-daemon --stacktrace
-            adb shell pm list instrumentation | tee instr.txt
-            runner=$(sed -n 's/^instrumentation:\([^ ]*\) .*/\1/p' instr.txt | head -1)
-            echo "runner=$runner"
-            adb shell am instrument -w -r "$runner" > instrument-output.txt 2>&1 || true
-            grep -E "INSTRUMENTATION_STATUS: (test|class|numtests|stack)=|INSTRUMENTATION_STATUS_CODE|^OK|FAILURES|Tests run|INSTRUMENTATION_RESULT|shortMsg|Error" instrument-output.txt | head -150 | while IFS= read -r line; do echo "::notice::$line"; done
-            grep -q "INSTRUMENTATION_STATUS_CODE: -" instrument-output.txt && { echo "::error::an emulator test failed"; exit 1; } || true
-            grep -q "^OK (" instrument-output.txt || { echo "::error::emulator tests did not report OK"; exit 1; }
+          script: bash scripts/emulator-tests.sh
 
       - name: Upload test report
         if: always()
