@@ -24,6 +24,7 @@ class SettingsRepository @Inject constructor(
         val KEY_TAX_RATE         = floatPreferencesKey("tax_rate")
         val KEY_HIDDEN_ACTIONS    = stringPreferencesKey("hidden_actions")
         val KEY_ACTION_ORDER      = stringPreferencesKey("action_order")
+        val KEY_ACTION_COLUMNS    = intPreferencesKey("action_columns")
         val KEY_EXPIRY_ALERT_MONTHS = intPreferencesKey("expiry_alert_months")
         val KEY_CASH_DRAWER_ADDRESS = stringPreferencesKey("cash_drawer_address")
         val KEY_CASH_DRAWER_ON_SALE = booleanPreferencesKey("cash_drawer_on_sale")
@@ -91,6 +92,10 @@ class SettingsRepository @Inject constructor(
     /** Comma-separated tile ids in the order the owner arranged the Home quick actions. */
     val actionOrder: Flow<String> = context.dataStore.data.map { it[KEY_ACTION_ORDER] ?: "" }
     suspend fun setActionOrder(ids: String) = context.dataStore.edit { it[KEY_ACTION_ORDER] = ids }
+
+    /** How many Home tiles sit side by side: 1 to 4, and 4 until the owner picks otherwise. */
+    val actionColumns: Flow<Int> = context.dataStore.data.map { (it[KEY_ACTION_COLUMNS] ?: 4).coerceIn(1, 4) }
+    suspend fun setActionColumns(n: Int) = context.dataStore.edit { it[KEY_ACTION_COLUMNS] = n.coerceIn(1, 4) }
 
     val printerAddress: Flow<String?>   = context.dataStore.data.map { it[KEY_PRINTER_ADDRESS] }
     val printerName: Flow<String?>      = context.dataStore.data.map { it[KEY_PRINTER_NAME] }

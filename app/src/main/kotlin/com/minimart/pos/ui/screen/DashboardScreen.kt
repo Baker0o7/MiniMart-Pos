@@ -10,6 +10,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -107,6 +109,8 @@ fun DashboardScreen(
         ?: kotlinx.coroutines.flow.flowOf("")).collectAsStateWithLifecycle("")
     val savedActionOrder by (settingsRepo?.actionOrder
         ?: kotlinx.coroutines.flow.flowOf("")).collectAsStateWithLifecycle("")
+    val actionColumns by (settingsRepo?.actionColumns
+        ?: kotlinx.coroutines.flow.flowOf(4)).collectAsStateWithLifecycle(4)
     var showManageActions by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
     LaunchedEffect(isRefreshing) {
@@ -329,6 +333,10 @@ fun DashboardScreen(
 
             item { Spacer(Modifier.height(if (showManageActions) 4.dp else 12.dp)) }
             if (showManageActions) item {
+                val colScope = rememberCoroutineScope()
+                TileColumnsPicker(actionColumns, onPick = { n -> colScope.launch { settingsRepo?.setActionColumns(n) } })
+            }
+            if (showManageActions) item {
                 Text("Drag a tile to move it, or tap one and then tap where it should go. The red × hides a tile.", color = Sub, fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp))
             }
@@ -371,7 +379,8 @@ fun DashboardScreen(
                         cards = cards, savedOrder = savedActionOrder, editing = showManageActions,
                         onHide = { hide(it) },
                         onSaveOrder = { scope.launch { settingsRepo?.setActionOrder(it) } },
-                        onStartEditing = { showManageActions = true }
+                        onStartEditing = { showManageActions = true },
+                        columns = actionColumns
                     )
                     val hidden2 = hiddenActions.split(",").filter { it.isNotBlank() }.toSet()
                     if (hidden2.isNotEmpty()) {
@@ -444,7 +453,8 @@ fun DashboardScreen(
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: Color, glow: Color,
-    editing: Boolean, dragging: Boolean, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
+    editing: Boolean, dragging: Boolean, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit,
+    roomy: Boolean = false) {
     // A press-scale animation gives the tap visible feedback during the screen transition.
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -470,13 +480,40 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: Co
         .padding(horizontal = 4.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(modifier = Modifier.size(36.dp).clip(RoundedCornerShape(11.dp))
+            Box(modifier = Modifier.size(if (roomy) 48.dp else 36.dp).clip(RoundedCornerShape(if (roomy) 14.dp else 11.dp))
                 .background(glow.copy(0.22f)), contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = glow, modifier = Modifier.size(20.dp))
+                Icon(icon, null, tint = glow, modifier = Modifier.size(if (roomy) 28.dp else 20.dp))
             }
             Spacer(Modifier.height(7.dp))
-            Text(title, color = White, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, lineHeight = 14.sp,
+            Text(title, color = White, fontWeight = FontWeight.SemiBold, fontSize = if (roomy) 15.sp else 11.sp,
+                lineHeight = if (roomy) 19.sp else 14.sp,
                 textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (roomy && sub.isNotBlank()) Text(sub, color = Sub, fontSize = 12.sp, textAlign = TextAlign.Center,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+/** "Tiles per row" choice shown while arranging Home: 4, 3, 2 or 1 side by side. */
+@Composable
+internal fun TileColumnsPicker(selected: Int, onPick: (Int) -> Unit) {
+    Column(Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
+        Text("Tiles per row", color = White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+        Spacer(Modifier.height(6.dp))
+        Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(4, 3, 2, 1).forEach { n ->
+                val on = n == selected
+                Box(Modifier.weight(1f).heightIn(min = 48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (on) DT.Teal.copy(0.25f) else Color.White.copy(0.06f))
+                    .border(if (on) 2.dp else 1.dp, if (on) DT.Teal else Color.White.copy(0.2f), RoundedCornerShape(12.dp))
+                    .selectable(selected = on, role = androidx.compose.ui.semantics.Role.RadioButton,
+                        onClick = { onPick(n) })
+                    .semantics { contentDescription = if (n == 1) "1 tile per row" else "$n tiles per row" },
+                    contentAlignment = Alignment.Center) {
+                    Text("$n", color = White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
+            }
         }
     }
 }
@@ -492,7 +529,8 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: Co
 @Composable
 internal fun QuickActionGrid(
     cards: List<DashCard_>, savedOrder: String, editing: Boolean,
-    onHide: (String) -> Unit, onSaveOrder: (String) -> Unit, onStartEditing: () -> Unit = {}
+    onHide: (String) -> Unit, onSaveOrder: (String) -> Unit, onStartEditing: () -> Unit = {},
+    columns: Int = 4
 ) {
     val ao = com.minimart.pos.util.ActionOrder
     var draft by remember { mutableStateOf<List<String>?>(null) }
@@ -515,7 +553,8 @@ internal fun QuickActionGrid(
 
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val gap = 8.dp
-        val cols = if (maxWidth >= 600.dp) 6 else 4
+        val perRow = columns.coerceIn(1, 4)
+        val cols = if (maxWidth >= 600.dp) perRow + 2 else perRow
         // A little slack: with exact division the fourth tile can miss by a rounding error and wrap to a new row.
         val tileWidth = (maxWidth - gap * (cols - 1) - 2.dp) / cols
         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap),
@@ -561,7 +600,7 @@ internal fun QuickActionGrid(
                     ) {
                         DashActionCard(c.title, c.sub, c.icon, c.bg, c.glow, editing,
                             dragging = dragId == c.id, selected = pickedId == c.id,
-                            onClick = c.action, onLongClick = onStartEditing)
+                            onClick = c.action, onLongClick = onStartEditing, roomy = cols <= 2)
                         if (editing) DashBadge { onHide(c.id) }
                     }
                 }
