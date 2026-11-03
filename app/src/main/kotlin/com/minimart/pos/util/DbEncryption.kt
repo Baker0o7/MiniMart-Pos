@@ -177,11 +177,15 @@ object DbEncryption {
                 src.rawExecSQL("ATTACH DATABASE '${tmp.absolutePath}' AS encrypted KEY \"$passphrase\"")
                 stage = "copying the data"
                 src.rawExecSQL("SELECT sqlcipher_export('encrypted')")
-                // sqlcipher_export copies the tables but not the schema version Room checks on every start.
-                stage = "carrying over the schema version"
-                src.rawExecSQL("PRAGMA encrypted.user_version = $version")
+                stage = "detaching the new file"
                 src.rawExecSQL("DETACH DATABASE encrypted")
             } finally { src.close() }
+
+            // sqlcipher_export copies the tables but not the schema version Room checks on every start. It is set
+            // on the new file once it is open on its own (the attached-name form of the pragma failed on the emulator).
+            stage = "carrying over the schema version"
+            val fresh = open(tmp, passphrase, RW)
+            try { fresh.version = version } finally { fresh.close() }
 
             stage = "checking the new file"
             val check = open(tmp, passphrase, RO)
@@ -257,14 +261,17 @@ object DbEncryption {
     }
 
     private fun exportPlain(from: File, pass: String, dest: File) {
+        var version = 0
         val db = open(from, pass, RW)
         try {
-            val version = db.version
+            version = db.version
             db.rawExecSQL("ATTACH DATABASE '${dest.absolutePath}' AS plaintext KEY ''")
             db.rawExecSQL("SELECT sqlcipher_export('plaintext')")
-            db.rawExecSQL("PRAGMA plaintext.user_version = $version")
             db.rawExecSQL("DETACH DATABASE plaintext")
         } finally { db.close() }
+        // Same reason as in convert: the version is set on the finished file, not through the attached name.
+        val out = open(dest, "", RW)
+        try { out.version = version } finally { out.close() }
     }
 
     // ── Status for Settings ──────────────────────────────────────────────────────
