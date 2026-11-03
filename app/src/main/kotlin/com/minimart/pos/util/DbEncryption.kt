@@ -177,7 +177,7 @@ object DbEncryption {
             // The documented SQLCipher way: create the NEW database as "main" and pull the old one in through an
             // attachment, exporting into main.
             stage = "creating the new file"
-            val fresh = open(tmp, passphrase, RW or SQLiteDatabase.OPEN_CREATE)
+            val fresh = open(tmp, passphrase, RW or SQLiteDatabase.CREATE_IF_NECESSARY)
             try {
                 stage = "attaching the old file"
                 fresh.rawExecSQL("ATTACH DATABASE '${plain.absolutePath}' AS plaintext KEY ''")
@@ -268,7 +268,7 @@ object DbEncryption {
         var version = 0
         val src = open(from, pass, RO)
         try { version = src.version } finally { src.close() }
-        val out = open(dest, "", RW or SQLiteDatabase.OPEN_CREATE)
+        val out = open(dest, "", RW or SQLiteDatabase.CREATE_IF_NECESSARY)
         try {
             out.rawExecSQL("ATTACH DATABASE '${from.absolutePath}' AS encrypted KEY \"$pass\"")
             out.rawExecSQL("SELECT sqlcipher_export('main', 'encrypted')")
