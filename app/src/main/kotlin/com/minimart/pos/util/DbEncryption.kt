@@ -103,6 +103,11 @@ object DbEncryption {
     fun prepare(context: Context, name: String = AppDatabase.DATABASE_NAME): ByteArray? {
         val file = context.getDatabasePath(name)
         deleteOldSafetyCopy(file)
+        // Room's SQLCipher factory does not load the native library itself, so it must be loaded before any
+        // passphrase is handed back. (Found by the emulator test: a new database crashed on first open.)
+        val libraryOk = try { load(); true } catch (e: UnsatisfiedLinkError) { Log.e(TAG, "SQLCipher library missing", e); false }
+        if (!libraryOk && kind(file) != DbFormat.Kind.ENCRYPTED)
+            return plain(context, "Not encrypted: the encryption library could not be loaded on this phone")
         when (kind(file)) {
             DbFormat.Kind.MISSING_OR_EMPTY -> {
                 val k = key(context, create = true) ?: return plain(context, "Not encrypted: this phone's secure key store is not available")
