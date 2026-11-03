@@ -169,31 +169,29 @@ object DbEncryption {
             plain.copyTo(safety, overwrite = true)
 
             var sourceCounts: Map<String, Long> = emptyMap(); var version = 0
-            var attached = ""; var afterExport = ""
-            stage = "opening the old database"
-            val src = open(plain, "", RW)
+            var diag = ""
+            stage = "reading the old database"
+            val old = open(plain, "", RW)
+            try { version = old.version; sourceCounts = rowCounts(old) } finally { old.close() }
+
+            // The documented SQLCipher way: create the NEW database as "main" and pull the old one in through an
+            // attachment, exporting into main.
+            stage = "creating the new file"
+            val fresh = open(tmp, passphrase, RW or SQLiteDatabase.OPEN_CREATE)
             try {
-                version = src.version
-                sourceCounts = rowCounts(src)
-                // These three statements must run on one connection, so they use rawExecSQL, which does not
-                // hand the statement to a pooled connection that has never heard of the attached file.
-                stage = "attaching the new file"
-                src.rawExecSQL("ATTACH DATABASE '${tmp.absolutePath}' AS encrypted KEY \"$passphrase\"")
-                attached = databaseList(src)
+                stage = "attaching the old file"
+                fresh.rawExecSQL("ATTACH DATABASE '${plain.absolutePath}' AS plaintext KEY ''")
+                diag = databaseList(fresh)
                 stage = "copying the data"
-                src.rawExecSQL("SELECT sqlcipher_export('encrypted')")
-                afterExport = databaseList(src) + " file=" + tmp.exists() + "/" + tmp.length()
-                stage = "detaching the new file"
-                src.rawExecSQL("DETACH DATABASE encrypted")
-            } finally { src.close() }
+                fresh.rawExecSQL("SELECT sqlcipher_export('main', 'plaintext')")
+                stage = "detaching the old file"
+                fresh.rawExecSQL("DETACH DATABASE plaintext")
+                // sqlcipher_export copies the tables but not the schema version Room checks on every start.
+                stage = "carrying over the schema version"
+                fresh.version = version
+            } finally { fresh.close() }
+            stage = "checking the new file [attached: $diag; file exists: ${tmp.exists()}/${tmp.length()}]"
 
-            // sqlcipher_export copies the tables but not the schema version Room checks on every start. It is set
-            // on the new file once it is open on its own (the attached-name form of the pragma failed on the emulator).
-            stage = "carrying over the schema version [after attach: $attached; after export: $afterExport; exists now: ${tmp.exists()}]"
-            val fresh = open(tmp, passphrase, RW)
-            try { fresh.version = version } finally { fresh.close() }
-
-            stage = "checking the new file"
             val check = open(tmp, passphrase, RO)
             try {
                 if (scalarText(check, "PRAGMA integrity_check") != "ok") return "integrity check failed"
@@ -268,16 +266,15 @@ object DbEncryption {
 
     private fun exportPlain(from: File, pass: String, dest: File) {
         var version = 0
-        val db = open(from, pass, RW)
+        val src = open(from, pass, RO)
+        try { version = src.version } finally { src.close() }
+        val out = open(dest, "", RW or SQLiteDatabase.OPEN_CREATE)
         try {
-            version = db.version
-            db.rawExecSQL("ATTACH DATABASE '${dest.absolutePath}' AS plaintext KEY ''")
-            db.rawExecSQL("SELECT sqlcipher_export('plaintext')")
-            db.rawExecSQL("DETACH DATABASE plaintext")
-        } finally { db.close() }
-        // Same reason as in convert: the version is set on the finished file, not through the attached name.
-        val out = open(dest, "", RW)
-        try { out.version = version } finally { out.close() }
+            out.rawExecSQL("ATTACH DATABASE '${from.absolutePath}' AS encrypted KEY \"$pass\"")
+            out.rawExecSQL("SELECT sqlcipher_export('main', 'encrypted')")
+            out.rawExecSQL("DETACH DATABASE encrypted")
+            out.version = version
+        } finally { out.close() }
     }
 
     // ── Status for Settings ──────────────────────────────────────────────────────
