@@ -42,6 +42,10 @@ class DbEncryptionInstrumentedTest {
     @Before fun before() = wipe()
     @After fun after() = wipe()
 
+    /** Prepares the test database and, if that leaves it plain, fails with the reason the app itself records. */
+    private fun prepared(): ByteArray = DbEncryption.prepare(context, name)
+        ?: throw AssertionError("prepare returned null; status = " + DbEncryption.status(context))
+
     private fun openRoom(passphrase: ByteArray?): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(*AppMigrations.ALL)
             .apply { if (passphrase != null) openHelperFactory(SupportOpenHelperFactory(passphrase)) }
@@ -61,8 +65,7 @@ class DbEncryptionInstrumentedTest {
         val before = AppDatabase.DATABASE_NAME.length   // keep the constant referenced so a rename breaks this test
         assertTrue(before > 0)
 
-        val pass = DbEncryption.prepare(context, name)
-        assertNotNull("conversion must succeed on a normal phone", pass)
+        val pass = prepared()
         assertEquals(DbFormat.Kind.ENCRYPTED, DbEncryption.kind(file))
 
         val db = openRoom(pass)                       // Room must accept it: no "new database", no destructive wipe
@@ -74,8 +77,8 @@ class DbEncryptionInstrumentedTest {
 
     @Test fun preparingAgainIsHarmlessAndReturnsTheSameKey() {
         plainDbWithProducts(3)
-        val first = DbEncryption.prepare(context, name)!!
-        val second = DbEncryption.prepare(context, name)!!
+        val first = prepared()
+        val second = prepared()
         assertTrue(first.contentEquals(second))
     }
 
@@ -90,7 +93,7 @@ class DbEncryptionInstrumentedTest {
 
     @Test fun backupSnapshotIsPlainReadableAndRestoresIntoAnEncryptedDatabase() {
         plainDbWithProducts(5)
-        val pass = DbEncryption.prepare(context, name)!!
+        val pass = prepared()
         val snap = File(context.cacheDir, "snap_test.db")
         DbEncryption.snapshotPlain(context, snap, name)
         assertEquals(DbFormat.Kind.PLAIN, DbEncryption.kind(snap))
@@ -102,7 +105,7 @@ class DbEncryptionInstrumentedTest {
         // Restore on a "new phone": the live file is gone and the snapshot is put in its place.
         file.delete(); File(file.path + "-wal").delete(); File(file.path + "-shm").delete()
         snap.copyTo(file, overwrite = true)
-        val again = DbEncryption.prepare(context, name)
+        val again = prepared()
         assertNotNull(again)
         assertEquals(DbFormat.Kind.ENCRYPTED, DbEncryption.kind(file))
         val db = openRoom(again)
@@ -125,8 +128,7 @@ class DbEncryptionInstrumentedTest {
         DbEncryption.prepare(context, name)
         // Simulate the key being lost: its stored copy vanishes but the encrypted file stays.
         context.getSharedPreferences("minimart_dbkey", Context.MODE_PRIVATE).edit().clear().commit()
-        val pass = DbEncryption.prepare(context, name)
-        assertNotNull("the app must still start, on a new empty database", pass)
+        val pass = prepared()
         val aside = file.parentFile!!.listFiles { f -> f.name.startsWith("$name.unreadable-") }
         assertTrue("the unreadable file must be kept, not deleted", !aside.isNullOrEmpty())
     }
