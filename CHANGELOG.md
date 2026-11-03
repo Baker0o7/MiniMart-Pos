@@ -5,6 +5,15 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.24.0] - 2026-11-03
+
+- **Your shop data is now locked on the phone.** The sales database is encrypted with a key kept safe by Android, so someone who copies the files off a lost or stolen phone cannot read them. Your existing data is converted automatically the first time you open this version. If anything goes wrong during that, the app keeps your old data and tells you.
+- **Backups still work.** Backups you make yourself can be restored on another phone as before. The database is no longer copied to Google's automatic backup, because it could not be read there.
+- **Daily summary for the owner.** Get a notification each evening with the day's takings, and optionally send it to a phone number (Settings).
+- **Choose how many Home tiles per row.** Tap Edit on Home and pick 4, 3, 2 or 1. With 1 or 2 per row the tiles are bigger and easier to read.
+- **Steadier screens.** Several screens now handle errors and slow loading without closing or freezing.
+- **One-time step for some phones:** if your phone has an earlier test build installed (signed with a different key), uninstall it once before installing this version. Your data is not affected if you made a backup first.
+
 ## [1.23.0] - 2026-10-31
 
 - **No sale is lost when the phone is offline or crashes.** A sale, refund or void is now saved together with its entry in the sync queue, so the main device always hears about it.
