@@ -51,8 +51,11 @@ jobs:
             python3 - "$f" <<'PY'
           import sys, xml.etree.ElementTree as ET
           r = ET.parse(sys.argv[1]).getroot()
-          print(f"::notice::{r.get('name')}: {r.get('tests')} tests, {r.get('failures')} failures, {r.get('errors')} errors, {r.get('skipped')} skipped")
-          for c in r.iter('testcase'):
+          cases = list(r.iter('testcase'))
+          bad = [c for c in cases if c.find('failure') is not None or c.find('error') is not None]
+          print(f"::notice::{sys.argv[1].split('/')[-1]}: {len(cases)} tests, {len(bad)} failed")
+          if not cases: print("::error::The result file contains no tests")
+          for c in cases:
               state = 'FAILED' if (c.find('failure') is not None or c.find('error') is not None) else 'passed'
               print(f"::notice::  {c.get('classname','').split('.')[-1]}.{c.get('name')}: {state}")
           PY
