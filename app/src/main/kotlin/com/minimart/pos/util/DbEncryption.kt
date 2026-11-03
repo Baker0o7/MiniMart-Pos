@@ -90,6 +90,9 @@ object DbEncryption {
         db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
             .use { c -> buildList { while (c.moveToNext()) add(c.getString(0)) } }
 
+    private fun databaseList(db: SQLiteDatabase): String =
+        db.rawQuery("PRAGMA database_list").use { c -> buildList { while (c.moveToNext()) add(c.getString(1) + "=" + c.getString(2).substringAfterLast('/')) }.joinToString(",") }
+
     private fun rowCounts(db: SQLiteDatabase): Map<String, Long> =
         tableNames(db).associateWith { t -> scalarText(db, "SELECT COUNT(*) FROM `$t`")?.toLongOrNull() ?: -1L }
 
@@ -166,6 +169,7 @@ object DbEncryption {
             plain.copyTo(safety, overwrite = true)
 
             var sourceCounts: Map<String, Long> = emptyMap(); var version = 0
+            var attached = ""; var afterExport = ""
             stage = "opening the old database"
             val src = open(plain, "", RW)
             try {
@@ -175,15 +179,17 @@ object DbEncryption {
                 // hand the statement to a pooled connection that has never heard of the attached file.
                 stage = "attaching the new file"
                 src.rawExecSQL("ATTACH DATABASE '${tmp.absolutePath}' AS encrypted KEY \"$passphrase\"")
+                attached = databaseList(src)
                 stage = "copying the data"
                 src.rawExecSQL("SELECT sqlcipher_export('encrypted')")
+                afterExport = databaseList(src) + " file=" + tmp.exists() + "/" + tmp.length()
                 stage = "detaching the new file"
                 src.rawExecSQL("DETACH DATABASE encrypted")
             } finally { src.close() }
 
             // sqlcipher_export copies the tables but not the schema version Room checks on every start. It is set
             // on the new file once it is open on its own (the attached-name form of the pragma failed on the emulator).
-            stage = "carrying over the schema version"
+            stage = "carrying over the schema version [after attach: $attached; after export: $afterExport; exists now: ${tmp.exists()}]"
             val fresh = open(tmp, passphrase, RW)
             try { fresh.version = version } finally { fresh.close() }
 
