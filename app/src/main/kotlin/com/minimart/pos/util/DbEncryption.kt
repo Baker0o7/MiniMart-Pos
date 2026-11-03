@@ -84,10 +84,10 @@ object DbEncryption {
     }
 
     private fun scalarText(db: SQLiteDatabase, sql: String): String? =
-        db.rawQuery(sql, emptyArray<Any?>()).use { c -> if (c.moveToFirst()) c.getString(0) else null }
+        db.rawQuery(sql).use { c -> if (c.moveToFirst()) c.getString(0) else null }
 
     private fun tableNames(db: SQLiteDatabase): List<String> =
-        db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name", emptyArray<Any?>())
+        db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
             .use { c -> buildList { while (c.moveToNext()) add(c.getString(0)) } }
 
     private fun rowCounts(db: SQLiteDatabase): Map<String, Long> =
