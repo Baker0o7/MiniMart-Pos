@@ -153,37 +153,47 @@ object DbEncryption {
         val tmp = File(dir, plain.name + ".enc.tmp")
         val safety = File(dir, plain.name + ".preenc")
         tmp.delete()
+        var stage = "start"
         try {
-            // Fold the write-ahead log into the main file so nothing recent is left out of the copy.
+            stage = "folding the log into the main file"
             open(plain, "", RW).let { db -> try { scalarText(db, "PRAGMA wal_checkpoint(TRUNCATE)") } finally { db.close() } }
+            stage = "making the safety copy"
             plain.copyTo(safety, overwrite = true)
 
             var sourceCounts: Map<String, Long> = emptyMap(); var version = 0
+            stage = "opening the old database"
             val src = open(plain, "", RW)
             try {
                 version = src.version
                 sourceCounts = rowCounts(src)
-                src.execSQL("ATTACH DATABASE '${tmp.absolutePath}' AS encrypted KEY \"$passphrase\"")
-                scalarText(src, "SELECT sqlcipher_export('encrypted')")
+                // These three statements must run on one connection, so they use rawExecSQL, which does not
+                // hand the statement to a pooled connection that has never heard of the attached file.
+                stage = "attaching the new file"
+                src.rawExecSQL("ATTACH DATABASE '${tmp.absolutePath}' AS encrypted KEY \"$passphrase\"")
+                stage = "copying the data"
+                src.rawExecSQL("SELECT sqlcipher_export('encrypted')")
                 // sqlcipher_export copies the tables but not the schema version Room checks on every start.
-                src.execSQL("PRAGMA encrypted.user_version = $version")
-                src.execSQL("DETACH DATABASE encrypted")
+                stage = "carrying over the schema version"
+                src.rawExecSQL("PRAGMA encrypted.user_version = $version")
+                src.rawExecSQL("DETACH DATABASE encrypted")
             } finally { src.close() }
 
+            stage = "checking the new file"
             val check = open(tmp, passphrase, RO)
             try {
                 if (scalarText(check, "PRAGMA integrity_check") != "ok") return "integrity check failed"
-                if (check.version != version) return "schema version did not carry over"
+                if (check.version != version) return "schema version did not carry over (${check.version} instead of $version)"
                 val copied = rowCounts(check)
                 if (copied != sourceCounts) return "row counts differ"
             } finally { check.close() }
 
+            stage = "swapping the files"
             listOf("-wal", "-shm").forEach { File(dir, plain.name + it).delete() }
             if (!tmp.renameTo(plain)) return "could not replace the database file"
             return null
         } catch (e: Throwable) {
             tmp.delete(); safety.delete()
-            return e.message ?: e.javaClass.simpleName
+            return "$stage: " + (e.message ?: e.javaClass.simpleName)
         }
     }
 
@@ -229,10 +239,10 @@ object DbEncryption {
                 try {
                     scalarText(db, "PRAGMA wal_checkpoint(TRUNCATE)")
                     val version = db.version
-                    db.execSQL("ATTACH DATABASE '${dest.absolutePath}' AS plaintext KEY ''")
-                    scalarText(db, "SELECT sqlcipher_export('plaintext')")
-                    db.execSQL("PRAGMA plaintext.user_version = $version")
-                    db.execSQL("DETACH DATABASE plaintext")
+                    db.rawExecSQL("ATTACH DATABASE '${dest.absolutePath}' AS plaintext KEY ''")
+                    db.rawExecSQL("SELECT sqlcipher_export('plaintext')")
+                    db.rawExecSQL("PRAGMA plaintext.user_version = $version")
+                    db.rawExecSQL("DETACH DATABASE plaintext")
                 } finally { db.close() }
             }
         }
