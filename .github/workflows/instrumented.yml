@@ -38,28 +38,15 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: gradle :app:connectedDebugAndroidTest --no-daemon --stacktrace
-
-      - name: Show what the emulator tests did
-        if: always()
-        run: |
-          shopt -s globstar nullglob
-          files=(app/build/outputs/androidTest-results/**/*.xml)
-          echo "Result files: ${#files[@]}"
-          [ ${#files[@]} -gt 0 ] || { echo "::error::No emulator test results were produced"; exit 1; }
-          for f in "${files[@]}"; do
-            python3 - "$f" <<'PY'
-          import sys, xml.etree.ElementTree as ET
-          r = ET.parse(sys.argv[1]).getroot()
-          cases = list(r.iter('testcase'))
-          bad = [c for c in cases if c.find('failure') is not None or c.find('error') is not None]
-          print(f"::notice::{sys.argv[1].split('/')[-1]}: {len(cases)} tests, {len(bad)} failed")
-          if not cases: print("::error::The result file contains no tests")
-          for c in cases:
-              state = 'FAILED' if (c.find('failure') is not None or c.find('error') is not None) else 'passed'
-              print(f"::notice::  {c.get('classname','').split('.')[-1]}.{c.get('name')}: {state}")
-          PY
-          done
+          script: |
+            gradle :app:installDebug :app:installDebugAndroidTest --no-daemon --stacktrace
+            adb shell pm list instrumentation | tee instr.txt
+            runner=$(sed -n 's/^instrumentation:\([^ ]*\) .*/\1/p' instr.txt | head -1)
+            echo "runner=$runner"
+            adb shell am instrument -w -r "$runner" > instrument-output.txt 2>&1 || true
+            grep -E "INSTRUMENTATION_STATUS: (test|class|numtests|stack)=|INSTRUMENTATION_STATUS_CODE|^OK|FAILURES|Tests run|INSTRUMENTATION_RESULT|shortMsg|Error" instrument-output.txt | head -150 | while IFS= read -r line; do echo "::notice::$line"; done
+            grep -q "INSTRUMENTATION_STATUS_CODE: -" instrument-output.txt && { echo "::error::an emulator test failed"; exit 1; } || true
+            grep -q "^OK (" instrument-output.txt || { echo "::error::emulator tests did not report OK"; exit 1; }
 
       - name: Upload test report
         if: always()
