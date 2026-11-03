@@ -156,7 +156,12 @@ object DbEncryption {
         var stage = "start"
         try {
             stage = "folding the log into the main file"
-            open(plain, "", RW).let { db -> try { scalarText(db, "PRAGMA wal_checkpoint(TRUNCATE)") } finally { db.close() } }
+            // Room keeps the database in write-ahead-log mode. Attaching a second database to a log-mode connection
+            // makes the library rebuild its connections, which silently drops the attachment (found by the emulator
+            // test), so the old file is first switched to the ordinary journal mode. Room switches it back on open.
+            open(plain, "", RW).let { db ->
+                try { scalarText(db, "PRAGMA wal_checkpoint(TRUNCATE)"); scalarText(db, "PRAGMA journal_mode=DELETE") } finally { db.close() }
+            }
             stage = "making the safety copy"
             plain.copyTo(safety, overwrite = true)
 
@@ -235,17 +240,31 @@ object DbEncryption {
             DbFormat.Kind.PLAIN -> { checkpoint(context, name); file.copyTo(dest, overwrite = true) }
             else -> {
                 val pass = keyPassphrase(context) ?: error("the database key is not available")
-                val db = open(file, pass, RW)
+                // Work on a private copy of the live file, not the live file itself: it is in log mode while the app
+                // runs (see convert), and the copy can safely be switched to the ordinary journal mode.
+                checkpoint(context, name)
+                val work = File(dest.parentFile, dest.name + ".work")
+                work.delete()
                 try {
-                    scalarText(db, "PRAGMA wal_checkpoint(TRUNCATE)")
-                    val version = db.version
-                    db.rawExecSQL("ATTACH DATABASE '${dest.absolutePath}' AS plaintext KEY ''")
-                    db.rawExecSQL("SELECT sqlcipher_export('plaintext')")
-                    db.rawExecSQL("PRAGMA plaintext.user_version = $version")
-                    db.rawExecSQL("DETACH DATABASE plaintext")
-                } finally { db.close() }
+                    file.copyTo(work, overwrite = true)
+                    open(work, pass, RW).let { d -> try { scalarText(d, "PRAGMA journal_mode=DELETE") } finally { d.close() } }
+                    exportPlain(work, pass, dest)
+                } finally {
+                    work.delete(); File(work.path + "-wal").delete(); File(work.path + "-shm").delete()
+                }
             }
         }
+    }
+
+    private fun exportPlain(from: File, pass: String, dest: File) {
+        val db = open(from, pass, RW)
+        try {
+            val version = db.version
+            db.rawExecSQL("ATTACH DATABASE '${dest.absolutePath}' AS plaintext KEY ''")
+            db.rawExecSQL("SELECT sqlcipher_export('plaintext')")
+            db.rawExecSQL("PRAGMA plaintext.user_version = $version")
+            db.rawExecSQL("DETACH DATABASE plaintext")
+        } finally { db.close() }
     }
 
     // ── Status for Settings ──────────────────────────────────────────────────────
