@@ -57,7 +57,7 @@ class BackupRestoreInstrumentedTest {
         val db = open(DbEncryption.prepare(context)); return try { count(db) } finally { db.close() }
     }
 
-    @Test fun aBackupPutsTheShopBackAsItWas() = runBlocking {
+    @Test fun aBackupPutsTheShopBackAsItWas() = runBlocking<Unit> {
         addProducts(5)
         val saved = (BackupManager.backup(context) as BackupResult.Success).file
         addProducts(3, from = 100)
@@ -69,7 +69,7 @@ class BackupRestoreInstrumentedTest {
         saved.delete()
     }
 
-    @Test fun aPassphraseBackupRestoresWithThePassphraseAndNotWithoutIt() = runBlocking {
+    @Test fun aPassphraseBackupRestoresWithThePassphraseAndNotWithoutIt() = runBlocking<Unit> {
         addProducts(4)
         val saved = (BackupManager.backup(context, passphrase = "correct horse") as BackupResult.Success).file
         addProducts(2, from = 100)
@@ -83,7 +83,7 @@ class BackupRestoreInstrumentedTest {
         saved.delete()
     }
 
-    @Test fun aDamagedBackupIsRefusedAndTheLiveDataIsUntouched() = runBlocking {
+    @Test fun aDamagedBackupIsRefusedAndTheLiveDataIsUntouched() = runBlocking<Unit> {
         addProducts(5)
         val saved = (BackupManager.backup(context) as BackupResult.Success).file
         val damaged = File(context.cacheDir, "damaged_backup.db")
@@ -97,7 +97,7 @@ class BackupRestoreInstrumentedTest {
         damaged.delete(); saved.delete()
     }
 
-    @Test fun aFileThatIsNotADatabaseIsRefused() = runBlocking {
+    @Test fun aFileThatIsNotADatabaseIsRefused() = runBlocking<Unit> {
         addProducts(2)
         val junk = File(context.cacheDir, "junk.db").apply { writeText("this is not a database ".repeat(400)) }
         assertTrue(BackupManager.restore(context, junk) is BackupResult.Error)
