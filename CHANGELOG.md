@@ -5,6 +5,14 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.24.1] - 2026-11-04
+
+- **An M-Pesa code can no longer be used twice after a refund.** If you refunded a sale, its M-Pesa code stays used, so the same payment cannot buy goods again. A sale you cancelled (voided) by mistake still lets you ring it up again with the same code.
+- **Today's cash on the Shifts page.** Owners and managers see one total for the day: what should be in the drawers, what was counted, and whether you are over or short. Shifts still open are listed as not counted yet.
+- **Cash totals are exact to the cent**, and a difference under KSh 1 counts as balanced.
+- **Safer restore.** Restoring a backup now checks the copy first and only then replaces your data, so a damaged or incomplete backup can no longer leave your shop data half-overwritten.
+- **Stronger data check.** The check now also warns about an M-Pesa sale bigger than its payment, and about stock records that do not match the sales that used them.
+
 ## [1.24.0] - 2026-11-03
 
 - **Your shop data is now locked on the phone.** The sales database is encrypted with a key kept safe by Android, so someone who copies the files off a lost or stolen phone cannot read them. Your existing data is converted automatically the first time you open this version. If anything goes wrong during that, the app keeps your old data and tells you.
