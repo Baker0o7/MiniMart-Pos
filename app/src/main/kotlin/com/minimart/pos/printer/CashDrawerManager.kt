@@ -96,7 +96,7 @@ class CashDrawerManager @Inject constructor(
                 DrawerResult.Error("No printer connected and no BT drawer address configured")
             } catch (e: Exception) {
                 Log.e(TAG, "Drawer open failed", e)
-                DrawerResult.Error(e.localizedMessage ?: "Unknown error")
+                DrawerResult.Error(com.minimart.pos.util.ErrorAdvice.explainDevice(e, "Opening the drawer", "cash drawer"))
             }
         }
 }

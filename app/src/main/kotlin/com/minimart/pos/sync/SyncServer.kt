@@ -226,7 +226,8 @@ class SyncServer @Inject constructor(
             // body, bad JSON) indistinguishable from "server unreachable" on the client side.
             try {
                 val writer = PrintWriter(socket.getOutputStream(), true)
-                respond(writer, 500, """{"error":"${(e.message ?: "Internal error").replace("\"", "'")}"}""")
+                com.minimart.pos.util.ErrorAdvice.explain(e, "A sync request")   // keep the detail on this phone
+                respond(writer, 500, """{"error":"Internal error"}""")
             } catch (_: Exception) { /* socket already broken, nothing more we can do */ }
         } finally {
             socket.close()

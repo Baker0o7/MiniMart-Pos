@@ -52,7 +52,7 @@ class CloudReporter @Inject constructor(
                 if (r is CloudResult.Ok) config.lastPushAt = System.currentTimeMillis()
                 r
             } catch (e: Exception) {
-                CloudResult.Failed(e.localizedMessage ?: "Upload failed")
+                CloudResult.Failed(com.minimart.pos.util.ErrorAdvice.explain(e, "The upload"))
             }
         }
     }
@@ -76,6 +76,6 @@ class CloudReporter @Inject constructor(
             CloudResult.Failed(msg.ifBlank { "Server replied $code" })
         }
     } catch (e: Exception) {
-        CloudResult.Failed(e.localizedMessage ?: "Could not reach the server")
+        CloudResult.Failed(com.minimart.pos.util.ErrorAdvice.explain(e, "Reaching the server"))
     }
 }

@@ -18,6 +18,22 @@ object ErrorAdvice {
         return "$doing didn't work. ${reason(error)}"
     }
 
+    /**
+     * Like [explain] for a gadget on the other end of a cable or Bluetooth link (a printer, a cash drawer),
+     * where "could not read or write the file" would send the owner the wrong way.
+     */
+    fun explainDevice(error: Throwable, doing: String, device: String): String {
+        if (!ProblemLog.isExpected(error)) try { onProblem?.invoke(error, doing) } catch (_: Throwable) { }
+        val chain = generateSequence(error) { it.cause?.takeIf { c -> c !== it } }.take(5).toList()
+        val link = chain.any { it is java.io.IOException || it::class.java.name.contains("Bluetooth", ignoreCase = true) }
+        val permission = chain.any { it is SecurityException }
+        return "$doing didn't work. " + when {
+            permission -> reason(error)
+            link -> "The $device did not respond. Check it is switched on and close to the phone, then try again."
+            else -> reason(error)
+        }
+    }
+
     fun reason(error: Throwable): String {
         val chain = generateSequence(error) { it.cause?.takeIf { c -> c !== it } }.take(5).toList()
         val names = chain.map { it::class.java.name }

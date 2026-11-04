@@ -149,6 +149,7 @@ class CartViewModel @Inject constructor(
                     val price = com.minimart.pos.util.PluDecoder.calculatePrice(
                         weighedProduct.pricePerKg, pluResult.weightKg)
                     addWeighedItem(weighedProduct, pluResult.weightKg, price)
+                    com.minimart.pos.util.ScanFeedback.ok()
                     _uiState.update { it.copy(isLoading = false, lastScannedProduct = weighedProduct, error = null) }
                     return@run
                 }
@@ -158,19 +159,23 @@ class CartViewModel @Inject constructor(
             // ── Regular fixed-price barcode ──────────────────────────────────
             val product = productRepo.getByBarcode(clean)
             if (product == null) {
+                com.minimart.pos.util.ScanFeedback.problem()
                 _uiState.update { it.copy(isLoading = false, error = "Product not found: $clean", unknownBarcode = clean) }
                 return@run
             }
             if (product.isWeighed) {
                 // Also avoids the integer-stock check below, which wrongly blocked e.g. 0.5 kg in stock.
+                com.minimart.pos.util.ScanFeedback.ok()
                 _uiState.update { it.copy(isLoading = false, pendingWeighProduct = product, error = null) }
                 return@run
             }
             if (product.stock <= 0) {
+                com.minimart.pos.util.ScanFeedback.problem()
                 _uiState.update { it.copy(isLoading = false, error = "${product.name} is out of stock") }
                 return@run
             }
             addToCart(product)
+            com.minimart.pos.util.ScanFeedback.ok()
             _uiState.update { it.copy(isLoading = false, lastScannedProduct = product, error = null) }
         }
     }

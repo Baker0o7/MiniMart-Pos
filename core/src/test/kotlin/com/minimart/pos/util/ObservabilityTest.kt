@@ -37,3 +37,16 @@ class ObservabilityTest {
         assertEquals(HealthLevel.WARN, level(HealthInputs(databaseEncrypted = false), "dbenc"))
     }
 }
+
+class DeviceErrorTest {
+    @Test fun aDroppedBluetoothLinkIsExplainedAsThePrinterNotAnswering() {
+        val m = ErrorAdvice.explainDevice(IOException("read failed, socket might closed or timeout"), "Printing", "printer")
+        assertTrue(m.startsWith("Printing didn't work."))
+        assertTrue(m.contains("printer did not respond"))
+        assertTrue(!m.contains("socket"))
+    }
+
+    @Test fun aMissingPermissionStillTellsThemToAllowIt() {
+        assertTrue(ErrorAdvice.explainDevice(SecurityException("bt"), "Printing", "printer").contains("Permissions"))
+    }
+}

@@ -206,7 +206,7 @@ class ThermalPrinter @Inject constructor(
             PrintResult.Success
         } catch (e: Exception) {
             Log.e(TAG, "Print failed", e)
-            PrintResult.Error("Print failed: ${e.message}")
+            PrintResult.Error(com.minimart.pos.util.ErrorAdvice.explainDevice(e, "Printing", "printer"))
         }
     }
 
@@ -229,7 +229,7 @@ class ThermalPrinter @Inject constructor(
             write(EscPos.divider(), EscPos.NEWLINE, EscPos.NEWLINE, EscPos.CUT)
             PrintResult.Success
         } catch (e: Exception) {
-            PrintResult.Error("Print failed: ${e.message}")
+            PrintResult.Error(com.minimart.pos.util.ErrorAdvice.explainDevice(e, "Printing", "printer"))
         }
     }
 
@@ -240,7 +240,7 @@ class ThermalPrinter @Inject constructor(
             write(EscPos.INIT, EscPos.ALIGN_LEFT, EscPos.text(text), EscPos.NEWLINE, EscPos.NEWLINE, EscPos.NEWLINE, EscPos.CUT)
             PrintResult.Success
         } catch (e: Exception) {
-            PrintResult.Error("Print failed: ${e.message}")
+            PrintResult.Error(com.minimart.pos.util.ErrorAdvice.explainDevice(e, "Printing", "printer"))
         }
     }
 
@@ -279,7 +279,7 @@ class ThermalPrinter @Inject constructor(
                 else -> PrintResult.Success
             }
         } catch (e: Exception) {
-            PrintResult.Error("Print failed: ${e.message}")
+            PrintResult.Error(com.minimart.pos.util.ErrorAdvice.explainDevice(e, "Printing", "printer"))
         }
     }
 

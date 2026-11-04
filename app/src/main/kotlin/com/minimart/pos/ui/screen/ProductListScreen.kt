@@ -347,6 +347,22 @@ fun AddEditProductDialog(
     }
     var showScanner by remember { mutableStateOf(false) }
     var showExpiryPicker by remember { mutableStateOf(false) }
+
+    // Closing by a stray tap outside, Back, or Cancel must not throw away a half-filled form silently.
+    val formState = listOf(barcode, name, price, costPrice, isWeighed.toString(), pricePerKg, pluCode, stock, category, unit, sku,
+        lowAt, vat, supplierName, supplierPhone, reorderQty, batchNumber, expiryDateStr).joinToString("\u0001")
+    val startingState = remember { formState }
+    var askDiscard by remember { mutableStateOf(false) }
+    val requestClose: () -> Unit = { if (formState != startingState) askDiscard = true else onDismiss() }
+    if (askDiscard) {
+        AlertDialog(
+            onDismissRequest = { askDiscard = false }, containerColor = DT.Surface,
+            title = { Text("Leave without saving?", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+            text = { Text("What you typed for this product will be lost.", color = DT.SubText) },
+            confirmButton = { TextButton(onClick = { askDiscard = false }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Keep editing", color = DT.TealLight) } },
+            dismissButton = { TextButton(onClick = { askDiscard = false; onDismiss() }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Discard", color = DT.Red) } }
+        )
+    }
     val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
@@ -408,7 +424,7 @@ fun AddEditProductDialog(
         ) { DatePicker(state = pickerState, colors = pickerColors) }
     }
 
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    Dialog(onDismissRequest = requestClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(
             modifier = Modifier.fillMaxWidth(0.95f).fillMaxHeight(0.92f),
             shape = RoundedCornerShape(24.dp),
@@ -420,7 +436,7 @@ fun AddEditProductDialog(
                     verticalAlignment = Alignment.CenterVertically) {
                     Text(if (product == null) "Add product" else "Edit product", color = DT.OnSurface,
                         fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, modifier = Modifier.weight(1f))
-                    IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, "Close", tint = DT.SubText) }
+                    IconButton(onClick = requestClose) { Icon(Icons.Default.Close, "Close", tint = DT.SubText) }
                 }
                 HorizontalDivider(color = DT.Border)
 
@@ -558,7 +574,7 @@ fun AddEditProductDialog(
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedButton(
-                        onClick = onDismiss, modifier = Modifier.weight(1f).height(48.dp),
+                        onClick = requestClose, modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)
                     ) { Text("Cancel", color = DT.SubText) }

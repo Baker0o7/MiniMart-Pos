@@ -51,7 +51,11 @@ class SyncApplier @Inject constructor(
                 }
                 r.put("status", if (fresh) "ok" else "duplicate")
             } catch (ex: Exception) {
-                r.put("status", "rejected").put("error", ex.message ?: "Could not apply")
+                // Only messages the app wrote itself (rule failures) go back to the till; anything else
+                // (database or code errors) stays on this phone and in the problem list.
+                val shown = if (ex is IllegalArgumentException || ex is IllegalStateException) ex.message else null
+                com.minimart.pos.util.ErrorAdvice.explain(ex, "Applying a till sale")
+                r.put("status", "rejected").put("error", shown?.takeIf { it.isNotBlank() } ?: "Could not apply")
             }
             results.put(r)
         }

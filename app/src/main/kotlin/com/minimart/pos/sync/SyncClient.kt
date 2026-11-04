@@ -113,7 +113,7 @@ class SyncClient @Inject constructor(
             SyncResult.Success(pushed, rejected, applied.products, applied.customers, reasons.distinct().take(3))
         } catch (e: Exception) {
             Log.e(TAG, "Sync error", e)
-            SyncResult.Error(e.localizedMessage ?: "Sync failed")
+            SyncResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Sync"))
         }
     } }
 
