@@ -5,6 +5,15 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.25.0] - 2026-11-05
+
+- **Beep when you scan.** A short beep when an item is added, and a lower double beep when a scan is not found or the item is out of stock. Turn it off in Settings, under Bluetooth Barcode Scanner.
+- **"Leave without saving?"** on the product form, so a stray tap does not throw away what you typed.
+- **Store health shows more.** It now lists problems the app handled (kept only on the phone, with no sales or customer details) and has a Share button to send the list to whoever is helping you. It also warns if the shop database is not locked.
+- **Clearer messages** when the printer or cash drawer does not answer, or sync and the cloud upload fail.
+- **Safer sync.** A till no longer receives technical error text from the main phone.
+- **Totals add up to the exact cent** in Reports, Expenses, Analytics, purchase orders and the cloud summary.
+
 ## [1.24.1] - 2026-11-04
 
 - **An M-Pesa code can no longer be used twice after a refund.** If you refunded a sale, its M-Pesa code stays used, so the same payment cannot buy goods again. A sale you cancelled (voided) by mistake still lets you ring it up again with the same code.
