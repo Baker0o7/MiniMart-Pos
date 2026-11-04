@@ -127,7 +127,7 @@ fun ShiftScreen(
 
             // ── Today's cash across all shifts (owners and managers; hidden while close is blind) ──
             if (state.canSeeVariance) {
-                val dayStart = remember(state.allShifts) {
+                val dayStart = run {
                     java.util.Calendar.getInstance().apply {
                         set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
                         set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
