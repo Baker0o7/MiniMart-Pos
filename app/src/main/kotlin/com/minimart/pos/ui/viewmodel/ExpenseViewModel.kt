@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.viewmodel
 
+import com.minimart.pos.util.sumOfMoney
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.entity.Expense
@@ -64,12 +65,12 @@ class ExpenseViewModel @Inject constructor(
                     // New getCompletedSalesByDateRange filters in SQL instead.
                     saleRepo.getCompletedSalesByDateRange(start, end)
                 ) { expenses, sales ->
-                    val totalExpenses = expenses.sumOf { it.amount }
-                    val totalRevenue  = sales.sumOf { it.totalAmount }
+                    val totalExpenses = expenses.sumOfMoney { it.amount }
+                    val totalRevenue  = sales.sumOfMoney { it.totalAmount }
                     val netProfit     = totalRevenue - totalExpenses
                     val margin        = if (totalRevenue > 0) (netProfit / totalRevenue) * 100 else 0.0
                     val byCategory    = expenses.groupBy { it.category }
-                        .mapValues { (_, list) -> list.sumOf { it.amount } }
+                        .mapValues { (_, list) -> list.sumOfMoney { it.amount } }
                     _uiState.update { state ->
                         state.copy(
                             period = period,

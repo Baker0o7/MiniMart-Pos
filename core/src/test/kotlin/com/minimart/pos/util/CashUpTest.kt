@@ -50,3 +50,21 @@ class CashUpTest {
         assertEquals(CashVerdict.BALANCED, d.verdict); assertEquals(0, d.closedShifts)
     }
 }
+
+class MoneySumsTest {
+    @Test fun tenTenCentAmountsSumToExactlyOneShilling() {
+        assertEquals(1.0, List(10) { 0.1 }.sumOfMoney { it }, 0.0)
+        assertEquals(0.3, addMoney(0.1, 0.2), 0.0)
+    }
+
+    @Test fun manySmallSalesNeverDriftFromTheCentTotal() {
+        val rnd = java.util.Random(42)
+        val cents = List(5_000) { rnd.nextInt(100_000) }           // sale totals, in cents
+        val asDoubles = cents.map { it / 100.0 }
+        assertEquals(cents.sumOf { it.toLong() }, Math.round(asDoubles.sumOfMoney { it } * 100))
+    }
+
+    @Test fun anEmptyListIsZero() {
+        assertEquals(0.0, emptyList<Double>().sumOfMoney { it }, 0.0)
+    }
+}

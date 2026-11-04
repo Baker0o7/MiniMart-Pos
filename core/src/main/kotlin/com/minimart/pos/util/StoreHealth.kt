@@ -29,7 +29,11 @@ data class HealthInputs(
     val secureStorageAvailable: Boolean = true,
     val weakPairingCode: Boolean = false,
     val defaultPinStillUsed: Boolean = false,
-    val staleOpenShifts: Int = 0
+    val staleOpenShifts: Int = 0,
+    /** Distinct handled problems in the last week (see [ProblemLog]). */
+    val recentProblems: Int = 0,
+    /** Whether the shop database is encrypted on this phone; null when not known. */
+    val databaseEncrypted: Boolean? = null
 )
 
 /** Turns raw numbers into plain-language checks, worst problems first. Pure, so it can be tested. */
@@ -97,6 +101,11 @@ object StoreHealth {
             "${i.staleOpenShifts} shift(s) have been open for more than 16 hours. Close them to get correct cash totals.", HealthAction.SHIFTS)
         if (i.crashReports > 0) out += HealthCheck("crash", "App crashes", HealthLevel.WARN,
             "The app closed unexpectedly ${i.crashReports} time(s) recently.", HealthAction.NONE)
+
+        if (i.recentProblems > 0) out += HealthCheck("problems", "Problems the app handled", if (i.recentProblems >= 20) HealthLevel.BAD else HealthLevel.WARN,
+            "${i.recentProblems} different problem(s) in the last week. Open the list below and share it if they keep happening.", HealthAction.NONE)
+        if (i.databaseEncrypted == false) out += HealthCheck("dbenc", "Data protection", HealthLevel.WARN,
+            "The shop database is not locked on this phone. Anyone who copies its files could read your sales. Restart the app to lock it; if this stays, share the problem list.", HealthAction.NONE)
 
         return out.sortedByDescending { it.level.ordinal }
     }

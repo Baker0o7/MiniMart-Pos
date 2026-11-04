@@ -15,6 +15,9 @@ Small, self-contained, and each has a clear "done":
 
 ## Next
 
+* Cash paid out of the drawer and refund dates: needs a schema change (v18) so cash-up can count them.
+* Tell the main phone's owner when a till sale is refused during sync.
+* Whole-cents money columns (only with a tested migration and a trial on a real phone).
 * Light theme (the app is dark-only today by design; this is a large, careful change).
 * Keeping `security-crypto` out entirely once the secrets migration has run on most phones (see [DEPENDENCIES.md](DEPENDENCIES.md)).
 * A bigger archive and restore flow for very large shops.

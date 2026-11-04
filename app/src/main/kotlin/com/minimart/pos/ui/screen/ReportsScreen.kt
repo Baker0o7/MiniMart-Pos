@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.sumOfMoney
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -54,7 +55,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
     // Compute payment method split from real sale data
     val paymentTotals = remember(state.sales) {
         state.sales.groupBy { it.paymentMethod }
-            .mapValues { (_, sales) -> sales.sumOf { it.totalAmount } }
+            .mapValues { (_, sales) -> sales.sumOfMoney { it.totalAmount } }
     }
 
     // Build daily/hourly bars from sale timestamps for the revenue chart

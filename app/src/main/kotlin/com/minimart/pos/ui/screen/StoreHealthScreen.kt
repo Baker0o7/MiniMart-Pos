@@ -77,6 +77,16 @@ fun StoreHealthScreen(
                     }
                 }
             }
+            if (s.problems.isNotEmpty()) item {
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                ProblemListCard(s.problems, onShare = {
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, vm.problemReport())
+                    }
+                    runCatching { ctx.startActivity(android.content.Intent.createChooser(send, "Share problem list")
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                }, onClear = { vm.clearProblems() })
+            }
             item {
                 OutlinedButton(onClick = onOpenHardware, shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, DT.Border), modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
@@ -87,6 +97,29 @@ fun StoreHealthScreen(
                 Text("This check only reads your data. It never changes anything.",
                     color = DT.SubText, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp))
             }
+        }
+    }
+}
+
+/** The newest handled problems, with Share (to send to whoever is helping) and Clear. */
+@Composable
+private fun ProblemListCard(problems: List<com.minimart.pos.util.ProblemEntry>, onShare: () -> Unit, onClear: () -> Unit) {
+    val df = remember { java.text.SimpleDateFormat("d MMM HH:mm", java.util.Locale.getDefault()) }
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(DT.Surface)
+            .border(1.dp, DT.Border, RoundedCornerShape(16.dp)).padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text("Problems the app handled", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        Text("Kept on this phone only. It holds no sales, customers or payment details.", color = DT.SubText, fontSize = 12.sp)
+        problems.take(8).forEach { p ->
+            Text("${df.format(java.util.Date(p.lastAt))}  ${p.doing}: ${p.kind}${if (p.count > 1) " (x${p.count})" else ""}",
+                color = DT.OnSurface, fontSize = 12.sp)
+        }
+        if (problems.size > 8) Text("and ${problems.size - 8} more. Share to see them all.", color = DT.SubText, fontSize = 12.sp)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = onShare, modifier = Modifier.heightIn(min = 48.dp)) { Text("Share list") }
+            OutlinedButton(onClick = onClear, modifier = Modifier.heightIn(min = 48.dp)) { Text("Clear") }
         }
     }
 }

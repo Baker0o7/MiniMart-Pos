@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.viewmodel
 
+import com.minimart.pos.util.sumOfMoney
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.dao.TopSellerResult
@@ -60,7 +61,7 @@ class ReportsViewModel @Inject constructor(
                 saleRepo.getCompletedSalesByDateRange(start, end),
                 saleRepo.getTopSellers(start, end)
             ) { completed, topSellers ->
-                val totalRevenue = completed.sumOf { it.totalAmount }
+                val totalRevenue = completed.sumOfMoney { it.totalAmount }
                 ReportsUiState(
                     period = period,
                     sales = completed,

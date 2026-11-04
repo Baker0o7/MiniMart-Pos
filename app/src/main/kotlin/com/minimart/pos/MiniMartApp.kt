@@ -25,6 +25,7 @@ class MiniMartApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         com.minimart.pos.util.CrashRecorder.install(this)
+        com.minimart.pos.util.ProblemRecorder.install(this)
         // The main device must be reachable again after a restart without anyone opening Settings.
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
             // Starting WorkManager opens its own database; doing that here keeps it off the launch path.

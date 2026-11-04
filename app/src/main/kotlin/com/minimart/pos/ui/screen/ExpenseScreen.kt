@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.sumOfMoney
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -319,7 +320,7 @@ private fun groupByDay(expenses: List<Expense>): List<DayGroup> {
                     yesterday -> "Yesterday"
                     else -> dateFormat.format(Date(dayStart))
                 },
-                total = list.sumOf { it.amount },
+                total = list.sumOfMoney { it.amount },
                 items = list
             )
         }
@@ -351,7 +352,7 @@ private fun ExpenseListTab(
         }
     } else {
         val groups = remember(expenses) { groupByDay(expenses) }
-        val total = remember(expenses) { expenses.sumOf { it.amount } }
+        val total = remember(expenses) { expenses.sumOfMoney { it.amount } }
         val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
         LazyColumn(

@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.viewmodel
 
+import com.minimart.pos.util.sumOfMoney
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.dao.ProductSalesStat
@@ -78,7 +79,7 @@ class AnalyticsViewModel @Inject constructor(
             expenseRepo.getExpensesByDateRange(start, Long.MAX_VALUE),
             settingsRepo.currency
         ) { sales, prev, stats, expenses, currency ->
-            compute(r, start, currency, sales, prev ?: 0.0, stats, expenses.sumOf { it.amount })
+            compute(r, start, currency, sales, prev ?: 0.0, stats, expenses.sumOfMoney { it.amount })
         }
     }
         .flowOn(kotlinx.coroutines.Dispatchers.Default)
@@ -95,8 +96,8 @@ class AnalyticsViewModel @Inject constructor(
         r: AnalyticsRange, start: Long, currency: String, sales: List<Sale>, prev: Double,
         stats: List<ProductSalesStat>, expenses: Double
     ): AnalyticsState {
-        val revenue = sales.sumOf { it.totalAmount }
-        val tax = sales.sumOf { it.taxAmount }
+        val revenue = sales.sumOfMoney { it.totalAmount }
+        val tax = sales.sumOfMoney { it.taxAmount }
         val cogs = stats.sumOf { it.cost }
         val statRevenue = stats.sumOf { it.revenue }
         val coverage = if (statRevenue > 0) (stats.sumOf { it.costedRevenue } / statRevenue).coerceIn(0.0, 1.0) else 0.0

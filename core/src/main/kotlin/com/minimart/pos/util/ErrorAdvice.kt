@@ -7,7 +7,16 @@ package com.minimart.pos.util
  * readable and are passed through.
  */
 object ErrorAdvice {
-    fun explain(error: Throwable, doing: String): String = "$doing didn't work. ${reason(error)}"
+    /**
+     * Set once at app start to keep a note of unexpected problems (see [ProblemLog]). Called for every
+     * error shown to a person; it must never be able to break the message, so failures in it are ignored.
+     */
+    @Volatile var onProblem: ((Throwable, String) -> Unit)? = null
+
+    fun explain(error: Throwable, doing: String): String {
+        if (!ProblemLog.isExpected(error)) try { onProblem?.invoke(error, doing) } catch (_: Throwable) { }
+        return "$doing didn't work. ${reason(error)}"
+    }
 
     fun reason(error: Throwable): String {
         val chain = generateSequence(error) { it.cause?.takeIf { c -> c !== it } }.take(5).toList()

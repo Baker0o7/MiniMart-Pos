@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.viewmodel
 
+import com.minimart.pos.util.sumOfMoney
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -80,7 +81,7 @@ class PurchasingViewModel @Inject constructor(
                 }
                 val orderRows = orders.map { po ->
                     val its = byPo[po.id].orEmpty()
-                    OrderRow(po, names[po.supplierId] ?: "Supplier", its.sumOf { it.lineTotal }, its.size)
+                    OrderRow(po, names[po.supplierId] ?: "Supplier", its.sumOfMoney { it.lineTotal }, its.size)
                 }
                 val known = suppliers.map { it.name.trim().lowercase() }.toSet()
                 val importable = prods.map { it.supplierName.trim() }
@@ -185,7 +186,7 @@ data class PoEditorState(
 ) {
     val editable: Boolean get() = status == PurchaseOrderStatus.DRAFT
     val supplier: Supplier? get() = suppliers.firstOrNull { it.id == supplierId }
-    val total: Double get() = lines.sumOf { it.total }
+    val total: Double get() = lines.sumOfMoney { it.total }
     val receivedValue: Double get() = lines.sumOf { it.receivedQty * it.cost }
     val balance: Double get() = (total - amountPaid).coerceAtLeast(0.0)
     val canReceive: Boolean get() =

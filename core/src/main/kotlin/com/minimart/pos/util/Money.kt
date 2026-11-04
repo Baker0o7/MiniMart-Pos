@@ -79,3 +79,10 @@ value class Money private constructor(val cents: Long) : Comparable<Money> {
 fun Double.roundedToCents(): Double = Money.fromDouble(this).toDouble()
 
 fun Iterable<Money>.sum(): Money = fold(Money.ZERO) { acc, m -> acc + m }
+
+/** Adds money amounts held as Doubles in exact cents, so a total never shows or stores 0.1 + 0.2 = 0.30000000000000004. */
+inline fun <T> Iterable<T>.sumOfMoney(selector: (T) -> Double): Double =
+    fold(Money.ZERO) { acc, t -> acc + Money.fromDouble(selector(t)) }.toDouble()
+
+/** [a] + [b] in exact cents. */
+fun addMoney(a: Double, b: Double): Double = (Money.fromDouble(a) + Money.fromDouble(b)).toDouble()

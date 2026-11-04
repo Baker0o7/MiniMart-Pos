@@ -93,3 +93,10 @@ Compose screen  ->  ViewModel (Hilt)  ->  Repository (in :data)  ->  DAO / Room
 | add a setting | `SettingsRepository` (key + flow), then a section in `ui/screen/Settings*.kt` |
 | add a screen | `ui/screen`, a route in `NavGraph.kt`, a ViewModel in `ui/viewmodel` |
 | change the database | entity + DAO + `AppDatabase` version + migration + a test |
+
+
+## Cash-up, problem log and health (added with 1.25)
+* `core/.../CashUp.kt`: what should be in the drawer (opening float plus cash, and the cash share of split sales), the over/short verdict (under KSh 1 is balanced) and the day total across shifts. `ShiftRepository.clockOut` uses it; the Shifts screen shows the day card to owners and managers.
+* `core/.../ProblemLog.kt` + `app/.../ProblemRecorder.kt`: `ErrorAdvice.explain` reports unexpected errors (not rule messages or cancellations) through `ErrorAdvice.onProblem`; the recorder keeps a masked, de-duplicated list in a private file. Store health shows it with Share and Clear.
+* `data/.../IntegrityChecker.kt`: read-only checks (totals, stock, M-Pesa codes and amounts, batch and sale agreement). Shown in Store health.
+* `Money.kt`: `sumOfMoney` and `addMoney` add Double amounts in exact cents for totals that are shown or uploaded. The database columns are still REAL.

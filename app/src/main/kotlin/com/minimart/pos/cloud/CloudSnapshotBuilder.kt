@@ -1,5 +1,6 @@
 package com.minimart.pos.cloud
 
+import com.minimart.pos.util.addMoney
 import com.minimart.pos.data.entity.PaymentMethod
 import com.minimart.pos.data.entity.SaleStatus
 import com.minimart.pos.data.entity.ShiftStatus
@@ -55,20 +56,20 @@ class CloudSnapshotBuilder @Inject constructor(
             val d = byDay[dayFmt.format(Date(s.createdAt))] ?: return@forEach
             when (s.status) {
                 SaleStatus.COMPLETED -> {
-                    d.revenue += s.totalAmount; d.tx++; d.discounts += s.discountAmount
+                    d.revenue = addMoney(d.revenue, s.totalAmount); d.tx++; d.discounts = addMoney(d.discounts, s.discountAmount)
                     when (s.paymentMethod) {
-                        PaymentMethod.CASH -> d.cash += s.totalAmount
-                        PaymentMethod.MPESA -> d.mpesa += s.totalAmount
-                        PaymentMethod.CARD -> d.card += s.totalAmount
-                        PaymentMethod.CREDIT -> d.credit += s.totalAmount
+                        PaymentMethod.CASH -> d.cash = addMoney(d.cash, s.totalAmount)
+                        PaymentMethod.MPESA -> d.mpesa = addMoney(d.mpesa, s.totalAmount)
+                        PaymentMethod.CARD -> d.card = addMoney(d.card, s.totalAmount)
+                        PaymentMethod.CREDIT -> d.credit = addMoney(d.credit, s.totalAmount)
                         PaymentMethod.MIXED -> { d.cash += s.cashPortion; d.credit += (s.totalAmount - s.cashPortion).coerceAtLeast(0.0) }
                     }
                 }
-                SaleStatus.VOIDED -> { d.voids++; d.voidTotal += s.totalAmount }
-                SaleStatus.REFUNDED -> { d.refunds++; d.refundTotal += s.totalAmount }
+                SaleStatus.VOIDED -> { d.voids++; d.voidTotal = addMoney(d.voidTotal, s.totalAmount) }
+                SaleStatus.REFUNDED -> { d.refunds++; d.refundTotal = addMoney(d.refundTotal, s.totalAmount) }
             }
         }
-        allExpenses.forEach { e -> byDay[dayFmt.format(Date(e.createdAt))]?.let { it.expenses += e.amount } }
+        allExpenses.forEach { e -> byDay[dayFmt.format(Date(e.createdAt))]?.let { it.expenses = addMoney(it.expenses, e.amount) } }
 
         val daily = JSONArray()
         byDay.forEach { (day, d) ->

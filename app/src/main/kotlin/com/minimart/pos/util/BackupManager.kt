@@ -140,6 +140,7 @@ object BackupManager {
     }
 
     private fun recordFailure(context: Context, message: String) {
+        ProblemRecorder.record(RuntimeException(message), "Backup")
         context.getSharedPreferences(STATUS_PREFS, Context.MODE_PRIVATE).edit()
             .putString("last_error", message).putLong("last_error_at", System.currentTimeMillis()).apply()
     }

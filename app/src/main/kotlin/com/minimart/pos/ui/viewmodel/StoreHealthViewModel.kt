@@ -42,7 +42,9 @@ data class StoreHealthState(
     val checkedAt: Long = 0L,
     /** What the data check found, shown under the "Sales and stock records" row. */
     val dataProblems: List<String> = emptyList(),
-    val error: String? = null
+    val error: String? = null,
+    /** Problems the app handled, newest first (see ProblemLog). */
+    val problems: List<com.minimart.pos.util.ProblemEntry> = emptyList()
 )
 
 /** Gathers the facts about this shop's data and phone, then lets [StoreHealth] judge them. */
@@ -77,12 +79,28 @@ class StoreHealthViewModel @Inject constructor(
                 val checks = StoreHealth.evaluate(inputs)
                 _state.value = StoreHealthState(
                     loading = false, checks = checks, overall = StoreHealth.overall(checks),
-                    headline = StoreHealth.headline(checks), checkedAt = now, dataProblems = problems
+                    headline = StoreHealth.headline(checks), checkedAt = now, dataProblems = problems,
+                    problems = com.minimart.pos.util.ProblemRecorder.load(context)
                 )
             } catch (e: Exception) {
                 _state.update { it.copy(loading = false, error = ErrorAdvice.explain(e, "The health check")) }
             } finally { running = false }
         }
+    }
+
+    fun clearProblems() {
+        com.minimart.pos.util.ProblemRecorder.clear(context)
+        _state.update { it.copy(problems = emptyList()) }
+    }
+
+    /** Text for sharing: version, phone, and the problem list. */
+    fun problemReport(): String {
+        val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "?"
+        val df = java.text.SimpleDateFormat("d MMM HH:mm", java.util.Locale.US)
+        return com.minimart.pos.util.ProblemLog.report(
+            _state.value.problems,
+            "MiniMart POS $version on ${android.os.Build.MODEL} (Android ${android.os.Build.VERSION.SDK_INT})"
+        ) { df.format(java.util.Date(it)) }
     }
 
     private suspend fun gather(now: Long): Pair<HealthInputs, List<String>> {
@@ -119,7 +137,9 @@ class StoreHealthViewModel @Inject constructor(
             secureStorageAvailable = settings.secureStorageAvailable,
             weakPairingCode = weak,
             defaultPinStillUsed = defaultPin,
-            staleOpenShifts = stale
+            staleOpenShifts = stale,
+            recentProblems = com.minimart.pos.util.ProblemLog.recent(com.minimart.pos.util.ProblemRecorder.load(context), now),
+            databaseEncrypted = runCatching { com.minimart.pos.util.DbEncryption.isEncrypted(context) }.getOrNull()
         )
         return inputs to (report?.issues.orEmpty().take(10))
     }
