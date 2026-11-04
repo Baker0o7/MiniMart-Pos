@@ -125,6 +125,18 @@ fun ShiftScreen(
                 item { FeedbackBanner(state.error ?: state.successMessage, isError = state.error != null) }
             }
 
+            // ── Today's cash across all shifts (owners and managers; hidden while close is blind) ──
+            if (state.canSeeVariance) {
+                val dayStart = remember(state.allShifts) {
+                    java.util.Calendar.getInstance().apply {
+                        set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
+                        set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+                    }.timeInMillis
+                }
+                val today = state.allShifts.filter { it.clockIn >= dayStart }
+                if (today.isNotEmpty()) item { TodayCashCard(today, state.currency) }
+            }
+
             // ── Shift history ──
             if (state.allShifts.isNotEmpty()) {
                 item { Text("Shift History", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp) }
@@ -243,6 +255,38 @@ private fun ActiveShiftCard(shift: Shift, currency: String, onOpenDrawer: () -> 
 }
 
 // ─── Shift History Row ────────────────────────────────────────────────────────
+
+/** The day's drawer counts added up, so the owner sees one over/short figure instead of adding shifts by hand. */
+@Composable
+private fun TodayCashCard(today: List<Shift>, currency: String) {
+    val m = com.minimart.pos.util.Money
+    val day = com.minimart.pos.util.CashUp.day(today.map {
+        com.minimart.pos.util.ShiftCash(
+            it.cashierName, m.fromDouble(it.expectedCash),
+            if (it.status == ShiftStatus.CLOSED) m.fromDouble(it.closingFloat ?: 0.0) else null)
+    })
+    fun money(v: com.minimart.pos.util.Money) = "$currency ${v.format()}"
+    val (label, color) = when (day.verdict) {
+        com.minimart.pos.util.CashVerdict.BALANCED -> "Cash balances" to SuccessGreen
+        com.minimart.pos.util.CashVerdict.OVER -> "Over by ${day.variance.format()}" to DT.Amber
+        com.minimart.pos.util.CashVerdict.SHORT -> "Short by ${(-day.variance).format()}" to DT.Red
+    }
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DT.Surface2)) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Today's cash", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+            if (day.closedShifts == 0) {
+                Text("No shift has been closed yet today.", color = DT.SubText, fontSize = 13.sp)
+            } else {
+                SummaryRow("Should be in the drawers", money(day.expected))
+                SummaryRow("Counted", money(day.counted))
+                Text(label, color = color, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            }
+            if (day.openShifts.isNotEmpty())
+                Text("Not counted yet: ${day.openShifts.joinToString(", ")} (still clocked in).", color = DT.Amber, fontSize = 12.sp)
+        }
+    }
+}
 
 @Composable
 private fun ShiftHistoryRow(shift: Shift, currency: String, onClick: () -> Unit) {

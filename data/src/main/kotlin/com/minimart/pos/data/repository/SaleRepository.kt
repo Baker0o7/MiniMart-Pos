@@ -99,7 +99,7 @@ class SaleRepository @Inject constructor(
      * bill, credit has a customer, and an M-Pesa reference is well formed, not already used by a live
      * sale, and (when the SMS tracker has seen that payment) was for at least this amount.
      */
-    suspend fun mpesaRefUseCount(ref: String): Int = saleDao.countCompletedWithMpesaRef(ref.trim())
+    suspend fun mpesaRefUseCount(ref: String): Int = saleDao.countClaimingMpesaRef(ref.trim())
     suspend fun mpesaSalesBetween(start: Long, end: Long): List<Sale> = saleDao.mpesaSalesBetween(start, end)
     suspend fun saleCount(): Int = saleDao.saleCount()
     suspend fun profitBetween(start: Long, end: Long): Double = saleDao.profitBetween(start, end)
@@ -108,7 +108,7 @@ class SaleRepository @Inject constructor(
     private suspend fun checkPayment(sale: Sale, items: List<SaleItem>, hasCustomer: Boolean, creditAmount: Double) {
         PaymentValidator.validate(sale, items, creditAmount, hasCustomer)?.let { throw IllegalArgumentException(it) }
         val ref = sale.mpesaRef?.trim()?.takeIf { it.isNotEmpty() } ?: return
-        if (saleDao.countCompletedWithMpesaRef(ref) > 0)
+        if (saleDao.countClaimingMpesaRef(ref) > 0)
             throw IllegalArgumentException("M-Pesa reference $ref was already used for another sale")
         db.mpesaPaymentDao().findByCode(ref)?.let { paid ->
             val due = if (sale.paymentMethod == PaymentMethod.MPESA) sale.totalAmount else sale.amountPaid - sale.cashPortion

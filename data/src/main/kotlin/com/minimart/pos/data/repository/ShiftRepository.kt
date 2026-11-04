@@ -1,6 +1,8 @@
 package com.minimart.pos.data.repository
 
-import com.minimart.pos.util.roundedToCents
+import com.minimart.pos.util.CashUp
+import com.minimart.pos.util.Money
+import com.minimart.pos.util.sum
 import com.minimart.pos.data.dao.ShiftDao
 import com.minimart.pos.data.entity.PaymentMethod
 import com.minimart.pos.data.entity.Sale
@@ -76,48 +78,42 @@ class ShiftRepository @Inject constructor(
             .first()
             .filter { it.cashierId == shift.cashierId }
 
-        var cashSales  = 0.0
-        var mpesaSales = 0.0
-        var cardSales  = 0.0
-        var totalDiscount = 0.0
+        // Every total is added as exact cents (Money), never as Doubles, so the drawer figure cannot drift.
+        fun m(v: Double) = Money.fromDouble(v)
+        var cashSales  = Money.ZERO
+        var mpesaSales = Money.ZERO
+        var cardSales  = Money.ZERO
+        var totalDiscount = Money.ZERO
         val totalTx = completed.size
 
         completed.forEach { sale ->
-            // Bug fix: this `when` used to be `CASH/MPESA/CARD -> ...; else -> {}`, which
-            // silently dropped MIXED (split cash+credit) sales from cashSales entirely.
-            // The cash portion of a split payment is real money in the till — omitting it
-            // made expectedCash understated, showing a false "shortage" at shift close for
-            // any cashier who processed split payments. Now exhaustive (no `else` branch)
-            // so the compiler itself will flag it if a new PaymentMethod is ever added
-            // without updating this reconciliation logic.
+            // Exhaustive `when` (no `else`): the compiler flags a new PaymentMethod that this
+            // reconciliation does not handle. Only the cash share of a split sale is in the drawer.
             when (sale.paymentMethod) {
-                PaymentMethod.CASH   -> cashSales  += sale.totalAmount
-                PaymentMethod.MPESA  -> mpesaSales += sale.totalAmount
-                PaymentMethod.CARD   -> cardSales  += sale.totalAmount
-                PaymentMethod.MIXED  -> cashSales  += sale.cashPortion // only the cash actually collected
-                PaymentMethod.CREDIT -> { /* no cash collected — buy on account */ }
+                PaymentMethod.CASH, PaymentMethod.MIXED ->
+                    cashSales += CashUp.cashFromSale(sale.paymentMethod.name, m(sale.totalAmount), m(sale.cashPortion))
+                PaymentMethod.MPESA  -> mpesaSales += m(sale.totalAmount)
+                PaymentMethod.CARD   -> cardSales  += m(sale.totalAmount)
+                PaymentMethod.CREDIT -> { /* no cash collected: buy on account */ }
             }
-            totalDiscount += sale.discountAmount
+            totalDiscount += m(sale.discountAmount)
         }
 
-        // Bug fix: was cashSales + mpesaSales + cardSales, which excludes MIXED and
-        // CREDIT sales entirely — understating total shift revenue for any cashier who
-        // processed a split payment or buy-on-account sale. totalSales should reflect
-        // every completed sale's value regardless of how it was paid; expectedCash (the
-        // till count) is the one that correctly stays cash-method-specific.
-        val totalSales = completed.sumOf { it.totalAmount }
-        val expectedCash = (shift.openingFloat + cashSales).roundedToCents()
-        val discrepancy = (safeClosingFloat - expectedCash).roundedToCents()
+        // totalSales is every completed sale whatever the payment method; expectedCash is cash only.
+        val totalSales = completed.map { m(it.totalAmount) }.sum()
+        val count = CashUp.reconcile(m(shift.openingFloat) + cashSales, m(safeClosingFloat))
+        val expectedCash = count.expected.toDouble()
+        val discrepancy = count.variance.toDouble()
 
         val closed = shift.copy(
             clockOut        = System.currentTimeMillis(),
             closingFloat    = safeClosingFloat,
-            totalCashSales  = cashSales,
-            totalMpesaSales = mpesaSales,
-            totalCardSales  = cardSales,
-            totalSales      = totalSales,
+            totalCashSales  = cashSales.toDouble(),
+            totalMpesaSales = mpesaSales.toDouble(),
+            totalCardSales  = cardSales.toDouble(),
+            totalSales      = totalSales.toDouble(),
             totalTransactions = totalTx,
-            totalDiscounts  = totalDiscount,
+            totalDiscounts  = totalDiscount.toDouble(),
             expectedCash    = expectedCash,
             cashDiscrepancy = discrepancy,
             notes           = notes,

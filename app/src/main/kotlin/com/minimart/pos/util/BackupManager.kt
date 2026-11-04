@@ -241,18 +241,29 @@ object BackupManager {
                 dbFile.copyTo(File(context.filesDir, "pre_restore_backup.db"), overwrite = true)
             } catch (_: Exception) { /* best effort */ }
 
-            // Remove the CURRENT database's stale -wal/-shm files first — they describe
-            // pending writes against the database we're about to replace wholesale, and
-            // must never be allowed to apply against the restored file.
-            listOf("-wal", "-shm").forEach { suffix ->
-                File(dbFile.parent, dbFile.name + suffix).let { if (it.exists()) it.delete() }
+            // Copy into a temporary file beside the database and check THAT. If the copy is cut short
+            // (full storage, the phone switching off) or the copy does not pass, the live database was
+            // never touched, instead of being left half overwritten.
+            val staging = File(dbFile.parent, dbFile.name + ".restoring")
+            try {
+                backupFile.copyTo(staging, overwrite = true)
+                if (staging.length() != backupFile.length())
+                    return BackupResult.Error("The backup could not be copied completely (is the phone full?). Nothing was changed.")
+                verify(context, staging)?.let { return BackupResult.Error("This backup can't be restored: $it. Nothing was changed.") }
+
+                // Remove the CURRENT database's stale -wal/-shm files — they describe pending writes
+                // against the database we're about to replace and must never apply to the restored file.
+                listOf("-wal", "-shm").forEach { suffix ->
+                    File(dbFile.parent, dbFile.name + suffix).let { if (it.exists()) it.delete() }
+                }
+                java.nio.file.Files.move(staging.toPath(), dbFile.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE)
+            } finally {
+                staging.delete()   // gone already after a successful move
             }
 
-            backupFile.copyTo(dbFile, overwrite = true)
-
-            // If the backup itself has matching -wal/-shm companions (e.g. it was taken
-            // before a full checkpoint completed), restore those too so no committed data
-            // is lost. Otherwise the deletion above already guarantees no stale ones remain.
+            // If the backup has matching -wal/-shm companions (taken before a full checkpoint completed),
+            // restore those too so no committed data is lost.
             listOf("-wal", "-shm").forEach { suffix ->
                 val backupCompanion = File(backupFile.parent, backupFile.name + suffix)
                 if (backupCompanion.exists()) {

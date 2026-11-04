@@ -158,12 +158,17 @@ interface SaleDao {
     """)
     suspend fun profitBetween(startMs: Long, endMs: Long): Double
 
-    /** How many live (not refunded/voided) sales already claim this M-Pesa reference. */
-    @Query("SELECT UPPER(mpesaRef) FROM sales WHERE mpesaRef IS NOT NULL AND mpesaRef != '' AND status = 'COMPLETED'")
+    /**
+     * M-Pesa references that are spoken for. A completed sale holds its code, and so does a refunded one:
+     * the customer got that money back, so the same payment must not buy goods a second time. A voided
+     * sale (a ringing mistake) releases its code so the sale can be rung again.
+     */
+    @Query("SELECT UPPER(mpesaRef) FROM sales WHERE mpesaRef IS NOT NULL AND mpesaRef != '' AND status IN ('COMPLETED', 'REFUNDED')")
     fun claimedMpesaRefs(): kotlinx.coroutines.flow.Flow<List<String>>
 
-    @Query("SELECT COUNT(*) FROM sales WHERE mpesaRef = :ref COLLATE NOCASE AND status = 'COMPLETED'")
-    suspend fun countCompletedWithMpesaRef(ref: String): Int
+    /** How many completed or refunded sales already carry this M-Pesa reference (see [claimedMpesaRefs]). */
+    @Query("SELECT COUNT(*) FROM sales WHERE mpesaRef = :ref COLLATE NOCASE AND status IN ('COMPLETED', 'REFUNDED')")
+    suspend fun countClaimingMpesaRef(ref: String): Int
 
     /** Finds a sale by receipt number and creation time (how a synced sale is matched on the main device). */
     @Query("SELECT * FROM sales WHERE receiptNumber = :receipt AND createdAt = :createdAt LIMIT 1")
