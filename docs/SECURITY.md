@@ -18,3 +18,11 @@ What protects a shop's till, and what does not yet.
 ## Known gaps
 * **If the Keystore key is lost** (a phone reset around the app, a damaged Keystore), the encrypted database cannot be opened. The app puts the file aside (`minimart_pos.db.unreadable-*`), starts empty and says so; restore a manual backup. Keep a manual backup off the phone.
 * A rooted phone can read the database and the settings file.
+
+## Sensitive field encryption (app level)
+M-Pesa sender names, sender phones and raw messages are sealed with AES-256-GCM (`FieldCipher`, `enc1:` prefix) before they
+reach the database, on top of SQLCipher. The key lives in the Android Keystore (`minimart_field_key_v1`) and never leaves the
+phone. Old rows are sealed once at startup. If the Keystore is unavailable the app stores as before rather than losing sales.
+
+Trade-offs: a manual backup restored on a *different* phone cannot read those three fields (code and amount are intact).
+Customer phone numbers are not sealed because they are searched and looked up. Sync traffic is a separate protection.

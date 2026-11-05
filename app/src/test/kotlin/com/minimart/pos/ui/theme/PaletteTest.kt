@@ -74,4 +74,16 @@ class PaletteTest {
         assertEquals(AppAccent.TEAL, AppAccent.fromName("PINK"))
         assertEquals(AppAccent.ROSE, AppAccent.fromName("ROSE"))
     }
+
+    @Test fun paymentColoursAreReadableOnEveryAccentAndDistinct() {
+        val colours = com.minimart.pos.data.entity.PaymentMethod.entries.map { paymentColor(it) }
+        assertEquals("each way of paying has its own colour", colours.size, colours.toSet().size)
+        AppAccent.entries.forEach { a -> modes.forEach { (amoled, hc) ->
+            val p = a.palette.adapt(amoled, hc)
+            colours.forEach { c ->
+                assertTrue("${a.name} colour on surface", contrast(c, p.surface) >= 4.5f)
+                assertTrue("${a.name} colour on bg", contrast(c, p.bg) >= 4.5f)
+            }
+        } }
+    }
 }

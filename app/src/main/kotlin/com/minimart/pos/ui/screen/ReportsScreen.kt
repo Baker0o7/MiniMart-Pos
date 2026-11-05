@@ -263,16 +263,9 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         .clip(RoundedCornerShape(18.dp)).background(DT.Surface)
                         .border(1.dp, DT.Border, RoundedCornerShape(18.dp)).padding(16.dp)) {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            val methodColors = mapOf(
-                                PaymentMethod.CASH   to Color(0xFF4CAF50),
-                                PaymentMethod.MPESA  to Color(0xFF00C853),
-                                PaymentMethod.CARD   to Color(0xFF64B5F6),
-                                PaymentMethod.MIXED  to Color(0xFFFFB74D),
-                                PaymentMethod.CREDIT to Color(0xFFEF5350)
-                            )
                             val total = paymentTotals.values.sum().coerceAtLeast(0.01)
                             paymentTotals.entries.sortedByDescending { it.value }.forEach { (method, amount) ->
-                                val color = methodColors[method] ?: DT.TealLight
+                                val color = com.minimart.pos.ui.theme.paymentColor(method)
                                 val pct = (amount / total * 100).toFloat()
                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {

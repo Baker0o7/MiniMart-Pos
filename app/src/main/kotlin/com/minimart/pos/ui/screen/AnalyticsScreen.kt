@@ -165,13 +165,13 @@ private fun AnalyticsBody(s: AnalyticsState) {
                 val total = s.paymentMix.sumOf { it.second }.coerceAtLeast(0.01)
                 Row(Modifier.fillMaxWidth().height(14.dp).clip(RoundedCornerShape(7.dp))) {
                     s.paymentMix.forEach { (m, v) ->
-                        Box(Modifier.weight((v / total).toFloat().coerceAtLeast(0.001f)).fillMaxHeight().background(methodColor(m)))
+                        Box(Modifier.weight((v / total).toFloat().coerceAtLeast(0.001f)).fillMaxHeight().background(com.minimart.pos.ui.theme.paymentColor(m)))
                     }
                 }
                 Spacer(Modifier.height(10.dp))
                 s.paymentMix.forEach { (m, v) ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(10.dp).clip(CircleShape).background(methodColor(m)))
+                        Box(Modifier.size(10.dp).clip(CircleShape).background(com.minimart.pos.ui.theme.paymentColor(m)))
                         Spacer(Modifier.width(8.dp))
                         Text(prettyEnumName(m.name), color = DT.OnSurface, fontSize = 13.sp, modifier = Modifier.weight(1f))
                         Text("$cur ${money(v)}", color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
@@ -393,13 +393,6 @@ private fun hourLabel(h: Int): String {
     return "$h12 ${if (h < 12) "AM" else "PM"}"
 }
 
-private fun methodColor(m: PaymentMethod): Color = when (m) {
-    PaymentMethod.CASH -> DT.Green
-    PaymentMethod.MPESA -> DT.TealLight
-    PaymentMethod.CARD -> Blue
-    PaymentMethod.MIXED -> DT.Amber
-    PaymentMethod.CREDIT -> Purple
-}
 
 @Composable
 private fun KpiTile(label: String, value: String, valueColor: Color, modifier: Modifier, footer: @Composable () -> Unit = {}) {

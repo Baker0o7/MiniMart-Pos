@@ -50,6 +50,17 @@ object DatabaseModule {
     @Provides @Singleton fun provideCustomerDao(db: AppDatabase) = db.customerDao()
     @Provides @Singleton fun provideSyncDao(db: AppDatabase) = db.syncDao()
     @Provides @Singleton fun provideMpesaPaymentDao(db: AppDatabase) = db.mpesaPaymentDao()
+
+    /** Seals M-Pesa sender details with a Keystore key. Without a working Keystore the app stores them as before
+     * (the database itself is still encrypted) rather than failing sales. */
+    @Provides @Singleton fun provideFieldCipher(): com.minimart.pos.util.FieldCipher = try {
+        val box = com.minimart.pos.util.AesGcmBox(com.minimart.pos.data.security.KeystoreKey.getOrCreate("minimart_field_key_v1"))
+        check(box.open("selftest", box.seal("selftest", byteArrayOf(1, 2, 3)))?.size == 3) { "Keystore self-test failed" }
+        com.minimart.pos.util.FieldCipher(box)
+    } catch (e: Exception) {
+        android.util.Log.e("FieldCipher", "Keystore unavailable; sender details stay as they are", e)
+        com.minimart.pos.util.FieldCipher.NONE
+    }
     @Provides @Singleton fun providePurchasingDao(db: AppDatabase) = db.purchasingDao()
     @Provides @Singleton fun provideBatchDao(db: AppDatabase) = db.batchDao()
 

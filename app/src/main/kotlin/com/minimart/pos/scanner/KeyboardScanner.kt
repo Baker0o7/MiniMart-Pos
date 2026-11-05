@@ -18,8 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class KeyboardScanner @Inject constructor() {
 
-    private val buffer = StringBuilder()
-    private var lastKeyTime = 0L
+    private val scan = ScanBuffer()
 
     // Emits a complete barcode string whenever ENTER is received
     private val _barcodeFlow = MutableSharedFlow<String>(extraBufferCapacity = 8)
@@ -31,26 +30,14 @@ class KeyboardScanner @Inject constructor() {
      */
     fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         val now = System.currentTimeMillis()
-
-        // If gap > 300ms assume new barcode, clear buffer
-        if (now - lastKeyTime > 300L && buffer.isNotEmpty()) buffer.clear()
-        lastKeyTime = now
-
-        return when {
-            (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER) && buffer.isNotEmpty() -> {
-                val barcode = buffer.toString().trim()
-                buffer.clear()
-                if (barcode.length >= 3) _barcodeFlow.tryEmit(barcode)
-                true
-            }
-            event.isPrintingKey -> {
-                val char = event.unicodeChar.toChar()
-                if ((char.isLetterOrDigit() || char == '-') && buffer.length < BarcodeNormalizer.MAX_LENGTH) buffer.append(char)
-                true
-            }
-            else -> false
+        val step = when {
+            keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER -> scan.enter(now)
+            event.isPrintingKey -> scan.printable(event.unicodeChar.toChar(), now)
+            else -> scan.other(now)
         }
+        step.barcode?.let { _barcodeFlow.tryEmit(it) }
+        return step.consumed
     }
 
-    fun clearBuffer() = buffer.clear()
+    fun clearBuffer() = scan.clear()
 }

@@ -27,4 +27,17 @@ interface MpesaPaymentDao {
 
     @Query("SELECT * FROM mpesa_payments WHERE code = :code COLLATE NOCASE LIMIT 1")
     suspend fun findByCode(code: String): MpesaPayment?
+
+    /** Rows that still hold readable sender details from before field encryption (see FieldCipher). */
+    @Query("""
+        SELECT * FROM mpesa_payments
+        WHERE (senderName <> '' AND senderName NOT LIKE 'enc1:%')
+           OR (senderPhone <> '' AND senderPhone NOT LIKE 'enc1:%')
+           OR (rawMessage <> '' AND rawMessage NOT LIKE 'enc1:%')
+        LIMIT :limit
+    """)
+    suspend fun unsealedRows(limit: Int): List<MpesaPayment>
+
+    @Query("UPDATE mpesa_payments SET senderName = :name, senderPhone = :phone, rawMessage = :raw WHERE id = :id")
+    suspend fun updateSensitive(id: Long, name: String, phone: String, raw: String)
 }

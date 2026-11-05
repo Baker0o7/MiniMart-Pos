@@ -256,11 +256,11 @@ private fun SaleHistoryRow(
                 Text("${saleWithItems.items.size} item${if (saleWithItems.items.size != 1) "s" else ""}",
                     color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                 val (pmLabel, pmColor) = when (sale.paymentMethod) {
-                    PaymentMethod.CASH   -> "💵 Cash"   to DT.Green
-                    PaymentMethod.MPESA  -> "📱 M-Pesa" to Color(0xFF00C853)
-                    PaymentMethod.CARD   -> "💳 Card"   to Color(0xFF1565C0)
-                    PaymentMethod.CREDIT -> "🤝 Credit" to DT.Amber
-                    PaymentMethod.MIXED  -> "🔀 Split"  to Color(0xFF7B1FA2)
+                    PaymentMethod.CASH   -> "💵 Cash"   to com.minimart.pos.ui.theme.paymentColor(sale.paymentMethod)
+                    PaymentMethod.MPESA  -> "📱 M-Pesa" to com.minimart.pos.ui.theme.paymentColor(sale.paymentMethod)
+                    PaymentMethod.CARD   -> "💳 Card"   to com.minimart.pos.ui.theme.paymentColor(sale.paymentMethod)
+                    PaymentMethod.CREDIT -> "🤝 Credit" to com.minimart.pos.ui.theme.paymentColor(sale.paymentMethod)
+                    PaymentMethod.MIXED  -> "🔀 Split"  to com.minimart.pos.ui.theme.paymentColor(sale.paymentMethod)
                 }
                 Box(modifier = Modifier.clip(RoundedCornerShape(6.dp))
                     .background(pmColor.copy(0.15f))

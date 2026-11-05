@@ -27,3 +27,7 @@ Honest status. "Zero bugs" cannot be proven by tests; this lists what is enforce
 6. Make a backup (with passphrase), wipe the app data, restore: products, sales, customers and stock match.
 7. Pair a second shop's phone with a different main device: confirm neither sees the other's sales.
 8. Printer, scanner, kiosk mode and rotation on the cheapest phone you support.
+
+## Hardware and UI test coverage (added)
+`ScanBufferTest` (scanner timing/filtering), `EscPosCommandsTest` (printer and drawer bytes, hostile text),
+`MpesaFieldEncryptionTest`, `FieldCipherTest`, `TileColumnsPickerUiTest` (emulator). Not covered: real printers, drawers and scanners on a phone.

@@ -16,6 +16,7 @@ class MiniMartApp : Application(), Configuration.Provider {
     @Inject lateinit var settings: com.minimart.pos.data.repository.SettingsRepository
     @Inject lateinit var syncServer: com.minimart.pos.sync.SyncServer
     @Inject lateinit var productRepo: com.minimart.pos.data.repository.ProductRepository
+    @Inject lateinit var mpesaPayments: com.minimart.pos.data.repository.MpesaPaymentRepository
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -43,6 +44,7 @@ class MiniMartApp : Application(), Configuration.Provider {
             launch { settings.telemetryOptIn.collect { com.minimart.pos.util.Telemetry.apply(it) } }
             launch { settings.paperWidthMm.collect { com.minimart.pos.printer.EscPos.lineChars = com.minimart.pos.printer.EscPos.charsForPaper(it) } }
             try { productRepo.warmUp() } catch (_: Exception) {}
+            try { mpesaPayments.sealLegacyRows() } catch (_: Exception) {}
             try { if (settings.syncServerEnabled.first()) syncServer.start() } catch (_: Exception) {}
         }
     }
