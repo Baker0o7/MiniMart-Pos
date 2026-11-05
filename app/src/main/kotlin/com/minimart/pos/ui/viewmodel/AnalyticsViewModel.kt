@@ -102,7 +102,7 @@ class AnalyticsViewModel @Inject constructor(
             val rows = st.map { StaffRow(it.cashierId, it.name, it.sales, it.revenue, it.voids, it.refunds, it.reversedValue) }
             base.copy(
                 basket = RetailInsights.basket(BasketTotals(b.baskets, b.lines, b.multiLineBaskets)),
-                pairs = RetailInsights.pairs(p.map { ProductPair(it.first, it.second, it.times) }),
+                pairs = RetailInsights.pairs(p.map { ProductPair(it.nameA, it.nameB, it.times) }),
                 staff = RetailInsights.staff(rows),
                 leakage = RetailInsights.leakage(base.revenue, base.discounts, rows)
                     .takeIf { it.discounts > 0.0 || it.reversedCount > 0 }

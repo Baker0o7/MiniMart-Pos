@@ -81,7 +81,7 @@ interface SaleDao {
 
     /** Pairs of products bought in the same completed sale, commonest first. */
     @Query("""
-        SELECT a.productName AS first, b.productName AS second, COUNT(*) AS times
+        SELECT a.productName AS nameA, b.productName AS nameB, COUNT(*) AS times
         FROM sale_items a JOIN sale_items b ON a.saleId = b.saleId AND a.productId < b.productId
         JOIN sales s ON s.id = a.saleId
         WHERE s.status = 'COMPLETED' AND s.createdAt >= :startMs AND s.createdAt < :endMs
@@ -220,7 +220,7 @@ interface SaleDao {
 }
 
 data class BasketRow(val baskets: Int, val lines: Int, val multiLineBaskets: Int)
-data class PairRow(val first: String, val second: String, val times: Int)
+data class PairRow(val nameA: String, val nameB: String, val times: Int)
 data class StaffActivityRow(val cashierId: Long, val name: String, val sales: Int, val revenue: Double, val voids: Int, val refunds: Int, val reversedValue: Double)
 
 data class DailyProductUnits(val productId: Long, val day: Long, val qty: Double)

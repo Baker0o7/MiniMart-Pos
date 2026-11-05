@@ -45,7 +45,7 @@ class RetailAnalyticsQueryTest : DbTestBase() {
         val pairs = db.saleDao().productPairs(0L, 10_000L).first()
         assertEquals(1, pairs.size)
         assertEquals(2, pairs[0].times)
-        assertEquals(setOf("Item $a", "Item $b"), setOf(pairs[0].first, pairs[0].second))
+        assertEquals(setOf("Item $a", "Item $b"), setOf(pairs[0].nameA, pairs[0].nameB))
     }
 
     @Test fun staffActivitySeparatesSalesFromRefundsAndVoids() = runBlocking {
