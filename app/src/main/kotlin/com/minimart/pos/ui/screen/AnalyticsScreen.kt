@@ -315,6 +315,58 @@ private fun AnalyticsBody(s: AnalyticsState) {
             }
         } }
 
+
+        // ── Basket, staff and leakage ─────────────────────────────────────────
+        if (s.basket != null || s.pairs.isNotEmpty()) item {
+            AnalyticsCard("What goes in a basket") {
+                s.basket?.let { b ->
+                    Text("${String.format(Locale.US, "%.1f", b.avgItemsPerBasket)} items per sale", color = DT.OnSurface, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text("${String.format(Locale.US, "%.0f", b.multiItemShare * 100)}% of ${b.baskets} sales had two or more different products.", color = DT.SubText, fontSize = 11.sp)
+                }
+                if (s.pairs.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    Text("Often bought together", color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    s.pairs.forEach { p ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("${p.first} + ${p.second}", color = DT.OnSurface, fontSize = 13.sp, modifier = Modifier.weight(1f), maxLines = 2)
+                            Text("${p.times}×", color = DT.SubText, fontSize = 12.sp)
+                        }
+                    }
+                    Text("Put these side by side, or offer one when the other is scanned.", color = DT.SubText, fontSize = 11.sp)
+                }
+            }
+        }
+        if (s.staff.size > 1) item {
+            AnalyticsCard("Staff and reversals") {
+                s.staff.forEach { st ->
+                    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(st.row.name, color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text("${st.row.sales} sales • $cur ${money(st.row.revenue)}", color = DT.SubText, fontSize = 11.sp)
+                        }
+                        Text("${st.row.voids + st.row.refunds} taken back (${String.format(Locale.US, "%.0f", st.reversalRate * 100)}%)",
+                            color = if (st.flagged) DT.Amber else DT.SubText, fontSize = 12.sp,
+                            fontWeight = if (st.flagged) FontWeight.Bold else FontWeight.Normal)
+                    }
+                }
+                if (s.staff.any { it.flagged }) {
+                    Spacer(Modifier.height(4.dp))
+                    Text("Amber means well above the shop's usual rate. It is worth a conversation, not a conclusion: new staff, a busy day or a supplier problem can all cause it.",
+                        color = DT.SubText, fontSize = 11.sp)
+                }
+            }
+        }
+        s.leakage?.let { l -> item {
+            AnalyticsCard("Where money leaks") {
+                if (l.discounts > 0.0) Text("Discounts given: $cur ${money(l.discounts)} (${String.format(Locale.US, "%.1f", l.discountShare * 100)}% of what you would have sold)",
+                    color = DT.OnSurface, fontSize = 13.sp)
+                if (l.reversedCount > 0) Text("Sales taken back: ${l.reversedCount} worth $cur ${money(l.reversedValue)} (${String.format(Locale.US, "%.1f", l.reversalRate * 100)}% of sales)",
+                    color = DT.OnSurface, fontSize = 13.sp)
+                Spacer(Modifier.height(4.dp))
+                Text("Some discounts and returns are normal. Watch for these creeping up.", color = DT.SubText, fontSize = 11.sp)
+            }
+        } }
+
         s.typicalWeek?.let { week -> item {
             AnalyticsCard("Your typical week") {
                 val total = week.sum()

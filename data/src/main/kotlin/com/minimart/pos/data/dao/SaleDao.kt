@@ -71,6 +71,38 @@ interface SaleDao {
     """)
     fun getProductSalesStats(startMs: Long, endMs: Long = Long.MAX_VALUE): Flow<List<ProductSalesStat>>
 
+    /** How many completed sales, how many lines they held, and how many held two or more different products. */
+    @Query("""
+        SELECT COUNT(*) AS baskets, COALESCE(SUM(n), 0) AS lines, COALESCE(SUM(CASE WHEN n >= 2 THEN 1 ELSE 0 END), 0) AS multiLineBaskets
+        FROM (SELECT s.id AS id, COUNT(si.id) AS n FROM sales s JOIN sale_items si ON si.saleId = s.id
+              WHERE s.status = 'COMPLETED' AND s.createdAt >= :startMs AND s.createdAt < :endMs GROUP BY s.id)
+    """)
+    fun basketTotals(startMs: Long, endMs: Long = Long.MAX_VALUE): Flow<BasketRow>
+
+    /** Pairs of products bought in the same completed sale, commonest first. */
+    @Query("""
+        SELECT a.productName AS first, b.productName AS second, COUNT(*) AS times
+        FROM sale_items a JOIN sale_items b ON a.saleId = b.saleId AND a.productId < b.productId
+        JOIN sales s ON s.id = a.saleId
+        WHERE s.status = 'COMPLETED' AND s.createdAt >= :startMs AND s.createdAt < :endMs
+        GROUP BY a.productId, b.productId HAVING COUNT(*) >= 2 ORDER BY times DESC LIMIT 20
+    """)
+    fun productPairs(startMs: Long, endMs: Long = Long.MAX_VALUE): Flow<List<PairRow>>
+
+    /** Per cashier: completed sales and revenue, and refunds and voids with their value. */
+    @Query("""
+        SELECT s.cashierId AS cashierId, COALESCE(u.displayName, 'Unknown') AS name,
+               SUM(CASE WHEN s.status = 'COMPLETED' THEN 1 ELSE 0 END) AS sales,
+               ROUND(SUM(CASE WHEN s.status = 'COMPLETED' THEN s.totalAmount ELSE 0 END), 2) AS revenue,
+               SUM(CASE WHEN s.status = 'VOIDED' THEN 1 ELSE 0 END) AS voids,
+               SUM(CASE WHEN s.status = 'REFUNDED' THEN 1 ELSE 0 END) AS refunds,
+               ROUND(SUM(CASE WHEN s.status <> 'COMPLETED' THEN s.totalAmount ELSE 0 END), 2) AS reversedValue
+        FROM sales s LEFT JOIN users u ON u.id = s.cashierId
+        WHERE s.createdAt >= :startMs AND s.createdAt < :endMs
+        GROUP BY s.cashierId
+    """)
+    fun staffActivity(startMs: Long, endMs: Long = Long.MAX_VALUE): Flow<List<StaffActivityRow>>
+
     /** Units sold per product per local day (completed sales), for demand forecasting. [offsetMs] is the phone's UTC offset. */
     @Query("""
         SELECT si.productId AS productId, ((s.createdAt + :offsetMs) / 86400000) AS day,
@@ -186,6 +218,10 @@ interface SaleDao {
         return saleId
     }
 }
+
+data class BasketRow(val baskets: Int, val lines: Int, val multiLineBaskets: Int)
+data class PairRow(val first: String, val second: String, val times: Int)
+data class StaffActivityRow(val cashierId: Long, val name: String, val sales: Int, val revenue: Double, val voids: Int, val refunds: Int, val reversedValue: Double)
 
 data class DailyProductUnits(val productId: Long, val day: Long, val qty: Double)
 

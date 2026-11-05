@@ -10,6 +10,13 @@ import com.minimart.pos.data.repository.ExpenseRepository
 import com.minimart.pos.data.repository.SaleRepository
 import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.util.AbcResult
+import com.minimart.pos.util.BasketSummary
+import com.minimart.pos.util.BasketTotals
+import com.minimart.pos.util.Leakage
+import com.minimart.pos.util.ProductPair
+import com.minimart.pos.util.RetailInsights
+import com.minimart.pos.util.StaffInsight
+import com.minimart.pos.util.StaffRow
 import com.minimart.pos.util.BusinessInsights
 import com.minimart.pos.util.MarginReport
 import com.minimart.pos.util.ProductPerformance
@@ -50,7 +57,12 @@ data class AnalyticsState(
     val abc: AbcResult? = null,
     val margins: MarginReport? = null,
     /** Typical takings per weekday (Monday first), when the period is long enough to tell. */
-    val typicalWeek: List<Double>? = null
+    val typicalWeek: List<Double>? = null,
+    val discounts: Double = 0.0,
+    val basket: BasketSummary? = null,
+    val pairs: List<ProductPair> = emptyList(),
+    val staff: List<StaffInsight> = emptyList(),
+    val leakage: Leakage? = null
 ) {
     val netProfit: Double get() = grossProfit - expenses
     /** % change vs the previous period of the same length; null when there is nothing to compare. */
@@ -80,6 +92,21 @@ class AnalyticsViewModel @Inject constructor(
             settingsRepo.currency
         ) { sales, prev, stats, expenses, currency ->
             compute(r, start, currency, sales, prev ?: 0.0, stats, expenses.sumOfMoney { it.amount })
+        }.combine(
+            combine(
+                saleRepo.basketTotals(start, Long.MAX_VALUE),
+                saleRepo.productPairs(start, Long.MAX_VALUE),
+                saleRepo.staffActivity(start, Long.MAX_VALUE)
+            ) { b, p, st -> Triple(b, p, st) }
+        ) { base, (b, p, st) ->
+            val rows = st.map { StaffRow(it.cashierId, it.name, it.sales, it.revenue, it.voids, it.refunds, it.reversedValue) }
+            base.copy(
+                basket = RetailInsights.basket(BasketTotals(b.baskets, b.lines, b.multiLineBaskets)),
+                pairs = RetailInsights.pairs(p.map { ProductPair(it.first, it.second, it.times) }),
+                staff = RetailInsights.staff(rows),
+                leakage = RetailInsights.leakage(base.revenue, base.discounts, rows)
+                    .takeIf { it.discounts > 0.0 || it.reversedCount > 0 }
+            )
         }
     }
         .flowOn(kotlinx.coroutines.Dispatchers.Default)
@@ -131,6 +158,7 @@ class AnalyticsViewModel @Inject constructor(
             grossProfit = revenue - tax - cogs,
             costCoverage = coverage,
             expenses = expenses,
+            discounts = sales.sumOfMoney { it.discountAmount },
             trend = trend.mapIndexed { i, v -> TrendPoint(start + i * bucketMs, v) },
             trendBucketDays = bucketDays,
             paymentMix = mix.entries.map { it.key to it.value }.filter { it.second > 0 }.sortedByDescending { it.second },
