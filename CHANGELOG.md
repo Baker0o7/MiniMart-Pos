@@ -5,6 +5,12 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.26.0] - 2026-11-05
+
+- **What goes in a basket.** Analytics now shows how many items a typical sale has, how many sales had two or more different products, and which products are often bought together, so you can put them side by side.
+- **Staff and reversals.** See each cashier's sales and how often their sales were refunded or voided. A high rate is shown in amber as something to talk about, not as proof of anything.
+- **Where money leaks.** The discounts you gave and the sales that were taken back, with their value, for the period you choose.
+
 ## [1.25.0] - 2026-11-05
 
 - **Beep when you scan.** A short beep when an item is added, and a lower double beep when a scan is not found or the item is out of stock. Turn it off in Settings, under Bluetooth Barcode Scanner.
