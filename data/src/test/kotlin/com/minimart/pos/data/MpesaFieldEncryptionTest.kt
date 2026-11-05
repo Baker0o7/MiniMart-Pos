@@ -23,7 +23,7 @@ class MpesaFieldEncryptionTest : DbTestBase() {
 
     private fun rawRow(code: String) = db.openHelper.readableDatabase.query(
         "SELECT senderName, senderPhone, rawMessage, amount FROM mpesa_payments WHERE code = '$code'").use { c ->
-        c.moveToFirst(); listOf(c.getString(0), c.getString(1), c.getString(2), c.getString(3))
+        c.moveToFirst(); listOf(c.getString(0), c.getString(1), c.getString(2), c.getDouble(3).toString())
     }
 
     @Test fun theDatabaseFileHoldsNoNamePhoneOrMessageText() = runBlocking {
