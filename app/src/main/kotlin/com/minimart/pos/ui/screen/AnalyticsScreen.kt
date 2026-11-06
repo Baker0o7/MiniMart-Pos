@@ -38,8 +38,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val Blue = Color(0xFF64B5F6)
-private val Purple = Color(0xFFB39DDB)
+private val Blue: Color get() = DT.SoftBlue
+private val Purple: Color get() = DT.SoftPurple
 
 private fun money(v: Double) = String.format(Locale.US, "%,.0f", v)
 

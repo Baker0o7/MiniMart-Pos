@@ -237,7 +237,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         .padding(16.dp)) {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.CalendarToday, null, tint = Color(0xFF64B5F6), modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.CalendarToday, null, tint = DT.SoftBlue, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
                                 Text("Active Days", color = DT.SubText, fontSize = 11.sp)
                             }
@@ -299,7 +299,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                     Spacer(Modifier.height(16.dp))
                     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                         verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Whatshot, null, tint = Color(0xFFFFB74D), modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Whatshot, null, tint = DT.SoftOrange, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
                         Text("Top Products", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
@@ -313,10 +313,10 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             // Rank badge
                             Box(modifier = Modifier.size(28.dp).clip(CircleShape)
-                                .background(if (rank == 1) Color(0xFFFFB74D).copy(0.2f) else DT.TealDim),
+                                .background(if (rank == 1) DT.SoftOrange.copy(0.2f) else DT.TealDim),
                                 contentAlignment = Alignment.Center) {
                                 Text("$rank",
-                                    color = if (rank == 1) Color(0xFFFFB74D) else DT.TealLight,
+                                    color = if (rank == 1) DT.SoftOrange else DT.TealLight,
                                     fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                             Spacer(Modifier.width(10.dp))

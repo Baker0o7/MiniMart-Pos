@@ -171,6 +171,11 @@ object DT {
     val SubText: Color   get() = pal.subText     // secondary text
     val Green: Color get() = if (light) Color(0xFF1B5E20) else Color(0xFF4CAF50)
     val Red: Color   get() = if (light) Color(0xFFB71C1C) else Color(0xFFEF5350)
+    /** Blue / purple / orange used for icons and small text: the pastel shade on dark, a deep shade on light. */
+    val SoftBlue: Color   get() = if (light) Color(0xFF0D47A1) else Color(0xFF64B5F6)
+    val SoftPurple: Color get() = if (light) Color(0xFF5E35B1) else Color(0xFFB39DDB)
+    val SoftOrange: Color get() = if (light) Color(0xFF8A5300) else Color(0xFFFFB74D)
+    val SoftGrey: Color   get() = if (light) Color(0xFF455A64) else Color(0xFF8CA3B5)
     val Amber: Color get() = if (light) Color(0xFF7A4A00) else Color(0xFFFFC107)
 
     val Glow: Color      get() = pal.glow

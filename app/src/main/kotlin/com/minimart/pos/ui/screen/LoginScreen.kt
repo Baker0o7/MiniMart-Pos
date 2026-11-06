@@ -93,14 +93,19 @@ fun LoginScreen(
 
 
     // Emerald "glass" palette for this screen
-    val bgTop   = Color(0xFF04201A)
-    val bgMid   = Color(0xFF031612)
-    val bgBot   = Color(0xFF020E0B)
-    val emerald = Color(0xFF1DE9A6)
-    val emDeep  = Color(0xFF0A7F63)
-    val glassHi = Color(0xFF0F4338)
-    val glassLo = Color(0xFF0A2E27)
-    val glassBd = Color(0xFF1E7A63)
+    // On the light theme the same screen uses the app's light palette, so it matches the rest of the app
+    // (and the light status and navigation bars) instead of staying a dark island.
+    val light   = DT.light
+    val ink     = DT.Ink
+    val bgTop   = if (light) DT.DashTop else Color(0xFF04201A)
+    val bgMid   = if (light) DT.Bg else Color(0xFF031612)
+    val bgBot   = if (light) DT.Bg else Color(0xFF020E0B)
+    val emerald = if (light) DT.TealLight else Color(0xFF1DE9A6)
+    val glassHi = if (light) DT.Surface else Color(0xFF0F4338)
+    val glassLo = if (light) DT.Surface2 else Color(0xFF0A2E27)
+    val glassBd = if (light) DT.Border else Color(0xFF1E7A63)
+    val fieldBg = if (light) DT.Surface else Color(0xFF051C17)
+    val emptyBox = if (light) DT.Surface2 else Color(0xFF082923)
 
     Box(modifier = Modifier.fillMaxSize()
         .background(Brush.verticalGradient(listOf(bgTop, bgMid, bgBot)))) {
@@ -129,10 +134,10 @@ fun LoginScreen(
             }
             Spacer(Modifier.height(10.dp))
             Row {
-                Text("MiniMart ", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
+                Text("MiniMart ", color = ink, fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
                 Text("POS", color = emerald, fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
             }
-            Text("Point of Sale System", color = Color.White.copy(0.9f), fontSize = 14.sp)
+            Text("Point of Sale System", color = ink.copy(0.85f), fontSize = 14.sp)
             Spacer(Modifier.height(6.dp))
             Box(Modifier.width(44.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(emerald))
             Spacer(Modifier.height(12.dp))
@@ -140,13 +145,13 @@ fun LoginScreen(
             // Login card
             Box(modifier = Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(26.dp))
-                .background(Brush.verticalGradient(listOf(Color(0xFF0B3B31), Color(0xFF082A24))))
+                .background(Brush.verticalGradient(if (light) listOf(DT.CardTop, DT.CardBottom) else listOf(Color(0xFF0B3B31), Color(0xFF082A24))))
                 .border(1.2.dp, emerald.copy(0.45f), RoundedCornerShape(26.dp))
                 .padding(horizontal = 16.dp, vertical = 14.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
-                    Text("Welcome Back 👋", color = Color.White,
+                    Text("Welcome Back 👋", color = ink,
                         fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
 
                     // Username (pill)
@@ -159,9 +164,9 @@ fun LoginScreen(
                             shape = RoundedCornerShape(50),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = emerald, unfocusedBorderColor = glassBd,
-                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                focusedTextColor = ink, unfocusedTextColor = ink,
                                 cursorColor = emerald,
-                                focusedContainerColor = Color(0xFF051C17), unfocusedContainerColor = Color(0xFF051C17)))
+                                focusedContainerColor = fieldBg, unfocusedContainerColor = fieldBg))
                     }
 
                     // PIN label + boxes
@@ -169,7 +174,7 @@ fun LoginScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically) {
-                            Text("PIN", color = Color.White.copy(0.85f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                            Text("PIN", color = ink.copy(0.85f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(start = 6.dp))
                             TextButton(onClick = { showPin = !showPin },
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
@@ -183,7 +188,7 @@ fun LoginScreen(
                             repeat(6) { i ->
                                 val filled = i < pin.length
                                 Box(modifier = Modifier.weight(1f).aspectRatio(1.05f).clip(RoundedCornerShape(14.dp))
-                                    .background(if (filled) emerald.copy(0.18f) else Color(0xFF082923))
+                                    .background(if (filled) emerald.copy(0.18f) else emptyBox)
                                     .border(1.5.dp, if (filled) emerald else glassBd, RoundedCornerShape(14.dp)),
                                     contentAlignment = Alignment.Center) {
                                     if (showPin && filled) {
@@ -237,13 +242,13 @@ fun LoginScreen(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         row.forEach { key ->
                             val keyBrush = when (key) {
-                                "✓"  -> Brush.verticalGradient(listOf(Color(0xFF2BE08A), Color(0xFF0E8A4E)))
-                                "⌫" -> Brush.verticalGradient(listOf(Color(0xFF5A1414), Color(0xFF330A0A)))
+                                "✓"  -> Brush.verticalGradient(if (light) listOf(DT.Teal, DT.HeaderMid) else listOf(Color(0xFF2BE08A), Color(0xFF0E8A4E)))
+                                "⌫" -> Brush.verticalGradient(if (light) listOf(Color(0xFFFFE4E4), Color(0xFFFFCFCF)) else listOf(Color(0xFF5A1414), Color(0xFF330A0A)))
                                 else -> Brush.verticalGradient(listOf(glassHi, glassLo))
                             }
                             val keyBorder = when (key) {
-                                "✓"  -> Color(0xFF6BF5B0)
-                                "⌫" -> Color(0xFFE5484D)
+                                "✓"  -> if (light) DT.Teal else Color(0xFF6BF5B0)
+                                "⌫" -> if (light) Color(0xFFB71C1C) else Color(0xFFE5484D)
                                 else -> glassBd
                             }
                             Box(modifier = Modifier.weight(1f).aspectRatio(2.2f)
@@ -260,9 +265,9 @@ fun LoginScreen(
                                     }
                                 }, contentAlignment = Alignment.Center) {
                                 when (key) {
-                                    "⌫" -> Icon(Icons.AutoMirrored.Filled.Backspace, null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(28.dp))
+                                    "⌫" -> Icon(Icons.AutoMirrored.Filled.Backspace, null, tint = if (light) Color(0xFFB71C1C) else Color(0xFFFF6B6B), modifier = Modifier.size(28.dp))
                                     "✓" -> Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(34.dp))
-                                    else -> Text(key, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 26.sp, textAlign = TextAlign.Center)
+                                    else -> Text(key, color = ink, fontWeight = FontWeight.Bold, fontSize = 26.sp, textAlign = TextAlign.Center)
                                 }
                             }
                         }
@@ -278,7 +283,7 @@ fun LoginScreen(
                 if (state.isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(22.dp), color = emerald, strokeWidth = 2.dp)
                     Spacer(Modifier.width(10.dp))
-                    Text("Signing in…", color = Color.White.copy(0.7f), fontSize = 13.sp)
+                    Text("Signing in…", color = ink.copy(0.7f), fontSize = 13.sp)
                 } else if (state.biometricEnabled) {
                     Box(modifier = Modifier.size(48.dp).clip(CircleShape)
                         .background(glassLo)
@@ -288,7 +293,7 @@ fun LoginScreen(
                         Icon(Icons.Default.Fingerprint, null, tint = emerald, modifier = Modifier.size(26.dp))
                     }
                     Spacer(Modifier.width(12.dp))
-                    Text("Use biometric", color = Color.White.copy(0.7f), fontSize = 13.sp)
+                    Text("Use biometric", color = ink.copy(0.7f), fontSize = 13.sp)
                 }
             }
         }

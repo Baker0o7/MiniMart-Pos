@@ -121,7 +121,8 @@ class PaletteTest {
     }
 
     @Test fun statusAndPaymentColoursAreReadableOnLightSurfaces() {
-        val greens = listOf(Color(0xFF1B5E20), Color(0xFFB71C1C), Color(0xFF7A4A00))   // DT.Green / Red / Amber on the light theme
+        val greens = listOf(Color(0xFF1B5E20), Color(0xFFB71C1C), Color(0xFF7A4A00),
+            Color(0xFF0D47A1), Color(0xFF5E35B1), Color(0xFF8A5300), Color(0xFF455A64))   // + the soft blue / purple / orange / grey   // DT.Green / Red / Amber on the light theme
         val pay = com.minimart.pos.data.entity.PaymentMethod.entries.map { paymentColor(it, light = true) }
         assertEquals(pay.size, pay.toSet().size)
         AppAccent.entries.forEach { a ->

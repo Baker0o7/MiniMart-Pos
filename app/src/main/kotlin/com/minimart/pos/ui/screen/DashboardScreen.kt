@@ -62,11 +62,11 @@ private fun roleLabel(role: UserRole?): String? = when (role) {
 // ─── Design tokens ─────────────────────────────────────────────────────────────
 private val Bg: Color get() = DT.DashBg
 private val TealGlow: Color get() = DT.Glow
-private val GreenGlow   = Color(0xFF4CAF50)
-private val PurpleGlow  = Color(0xFFB39DDB)
-private val BlueGlow    = Color(0xFF64B5F6)
-private val AmberGlow   = Color(0xFFFFB74D)
-private val RedGlow     = Color(0xFFEF5350)
+private val GreenGlow: Color get() = DT.Green
+private val PurpleGlow: Color get() = DT.SoftPurple
+private val BlueGlow: Color get() = DT.SoftBlue
+private val AmberGlow: Color get() = DT.SoftOrange
+private val RedGlow: Color get() = DT.Red
 private val White: Color get() = DT.Ink
 private val Sub: Color get() = DT.SubText
 
@@ -175,7 +175,7 @@ fun DashboardScreen(
                             .padding(horizontal = 10.dp, vertical = 7.dp),
                             horizontalAlignment = Alignment.Start) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF8CA3B5)))
+                                Box(Modifier.size(8.dp).clip(CircleShape).background(DT.SoftGrey))
                                 Text(" Offline", color = White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
                             }
                             Box(Modifier.padding(vertical = 4.dp).width(60.dp).height(1.dp).background(TealGlow.copy(0.45f)))
