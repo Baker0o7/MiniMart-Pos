@@ -5,6 +5,13 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.27.1] - 2026-11-06
+
+- **Sign-in screen follows the light theme.** In Light (or Phone setting while the phone is light), the PIN screen now uses the same pale colours as the rest of the app instead of staying dark.
+- **No dark flash when opening.** The app remembers your theme, so Light no longer starts with a dark screen.
+- **Easier to read in Light.** WhatsApp buttons on Receipt and Low Stock, the Confirm button for voids and refunds, and Home tiles and alerts were adjusted so text is clear on pale backgrounds.
+- **Matching card sizes.** The paired cards on Analytics (Revenue and Sales, Gross and Net profit), Reports (Avg Basket and Active Days) and Credit Ledger (Owed to Shop and All Customers) are now the same height.
+
 ## [1.27.0] - 2026-11-06
 
 - **Light theme.** Settings > Appearance now has Dark, Light and Phone setting. Dark is still the default and looks exactly as before. Light uses pale backgrounds with dark text, and every accent colour has a light version that stays easy to read.
