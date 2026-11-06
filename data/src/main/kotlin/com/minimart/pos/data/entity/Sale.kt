@@ -38,7 +38,9 @@ data class Sale(
     val status: SaleStatus = SaleStatus.COMPLETED,
     val cashierId: Long,
     val notes: String = "",
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    /** When the sale was refunded or voided (0 while completed, and for reversals made before v18). */
+    @ColumnInfo(defaultValue = "0") val statusChangedAt: Long = 0L
 )
 
 // ─── Sale Line Item ───────────────────────────────────────────────────────────

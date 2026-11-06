@@ -13,7 +13,7 @@ import javax.inject.Inject
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class, MpesaPayment::class,
         Supplier::class, PurchaseOrder::class, PurchaseOrderItem::class,
         com.minimart.pos.data.entity.StockBatch::class, com.minimart.pos.data.entity.SaleItemCost::class],
-    version = 17,
+    version = 18,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -146,6 +146,19 @@ object AppMigrations {
         }
     }
 
+    /**
+     * Cash-up accuracy: expenses can be marked as paid from the drawer, sales remember when they were refunded or
+     * voided, and shifts keep what was paid out and refunded. Existing rows keep 0 / false (nothing is guessed).
+     */
+    val MIGRATION_17_18 = object : androidx.room.migration.Migration(17, 18) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE expenses ADD COLUMN paidFromDrawer INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE sales ADD COLUMN statusChangedAt INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE shifts ADD COLUMN cashPaidOut REAL NOT NULL DEFAULT 0.0")
+            db.execSQL("ALTER TABLE shifts ADD COLUMN cashRefunded REAL NOT NULL DEFAULT 0.0")
+        }
+    }
+
     /** Whole-amount money columns (not per-unit costs). Used by [MIGRATION_16_17] and its test. */
     val MONEY_COLUMNS: List<Pair<String, List<String>>> = listOf(
         "products" to listOf("price", "pricePerKg"),
@@ -160,7 +173,7 @@ object AppMigrations {
             "totalSales", "totalDiscounts", "expectedCash", "cashDiscrepancy")
     )
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17)
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18)
 }
 
 class AppTypeConverters {

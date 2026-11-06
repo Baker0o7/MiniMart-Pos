@@ -29,6 +29,9 @@ data class Shift(
     val totalItemsSold: Int = 0,
     val expectedCash: Double = 0.0,     // openingFloat + cashSales
     val cashDiscrepancy: Double = 0.0,  // closingFloat - expectedCash
+    /** Cash taken out of the drawer for expenses, and cash refunded for sales made in an earlier shift. */
+    @androidx.room.ColumnInfo(defaultValue = "0.0") val cashPaidOut: Double = 0.0,
+    @androidx.room.ColumnInfo(defaultValue = "0.0") val cashRefunded: Double = 0.0,
     val notes: String = "",
     val status: ShiftStatus = ShiftStatus.OPEN
 )

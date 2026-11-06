@@ -16,6 +16,7 @@ What protects a shop's till, and what does not yet.
 * Fields for secrets use the password keyboard (no suggestions or learning), and the web-hook address is copied as a sensitive clip.
 
 ## Known gaps
+* **PIN lockout uses the phone's clock.** Setting the clock forward ends a lockout early. PINs are also checked against `PinPolicy` (no repeated digits, runs, repeated pairs or the commonest PINs), which makes the first guesses useless, but a short numeric PIN is still weak against someone with unlimited time.
 * **If the Keystore key is lost** (a phone reset around the app, a damaged Keystore), the encrypted database cannot be opened. The app puts the file aside (`minimart_pos.db.unreadable-*`), starts empty and says so; restore a manual backup. Keep a manual backup off the phone.
 * A rooted phone can read the database and the settings file.
 

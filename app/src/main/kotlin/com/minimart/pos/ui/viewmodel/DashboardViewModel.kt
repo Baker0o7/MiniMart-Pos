@@ -340,8 +340,7 @@ class AuthViewModel @Inject constructor(
         val user = _uiState.value.currentUser ?: return
         val pin = newPin.trim()
         val error = when {
-            pin.length < 4 || !pin.all { it.isDigit() } -> "PIN must be at least 4 digits"
-            pin == DEFAULT_PIN -> "Choose a PIN other than 1234"
+            com.minimart.pos.util.PinPolicy.problem(pin) != null -> com.minimart.pos.util.PinPolicy.problem(pin)
             pin != confirm.trim() -> "PINs do not match"
             else -> null
         }

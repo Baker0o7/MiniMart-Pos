@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -422,6 +423,7 @@ private fun ExpenseRow(expense: Expense, currency: String, time: String, onDelet
     val detail = listOfNotNull(
         prettyEnumName(expense.category.name),
         expense.supplierName.takeIf { it.isNotBlank() },
+        "from till".takeIf { expense.paidFromDrawer },
         time
     ).joinToString(" • ")
     Row(
@@ -462,6 +464,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
     var supplierName by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var yesterday by remember { mutableStateOf(false) }
+    var fromDrawer by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val titleFocus = remember { FocusRequester() }
@@ -487,6 +490,8 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
             category = category,
             supplierName = if (category == ExpenseCategory.SUPPLIER) supplierName.trim() else "",
             notes = notes.trim(),
+            // Only a payment made today can come out of today's drawer count.
+            paidFromDrawer = fromDrawer && !yesterday,
             createdAt = createdAt
         ))
     }
@@ -545,6 +550,18 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ExpenseChip("Today", !yesterday) { yesterday = false }
                     ExpenseChip("Yesterday", yesterday) { yesterday = true }
+                }
+
+                // Cash taken from the till for this expense is subtracted from what the cash-up expects to find.
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = fromDrawer && !yesterday, enabled = !yesterday,
+                        role = androidx.compose.ui.semantics.Role.Switch, onValueChange = { fromDrawer = it }),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Paid in cash from the till", color = DT.OnSurface, fontSize = 14.sp)
+                        Text("Turn on if you took this money out of the cash drawer, so the cash count still balances.",
+                            color = DT.SubText, fontSize = 11.sp)
+                    }
+                    Switch(checked = fromDrawer && !yesterday, onCheckedChange = null, enabled = !yesterday)
                 }
 
                 OutlinedTextField(

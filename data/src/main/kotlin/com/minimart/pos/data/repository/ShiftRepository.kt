@@ -30,7 +30,9 @@ data class ZReport(
 class ShiftRepository @Inject constructor(
     private val shiftDao: ShiftDao,
     private val saleRepo: SaleRepository,
-    private val settings: SettingsRepository
+    private val settings: SettingsRepository,
+    private val saleDao: com.minimart.pos.data.dao.SaleDao,
+    private val expenseDao: com.minimart.pos.data.dao.ExpenseDao
 ) {
     fun getAllShifts(): Flow<List<Shift>> = shiftDao.getAllShifts()
     fun getShiftsForCashier(id: Long): Flow<List<Shift>> = shiftDao.getShiftsForCashier(id)
@@ -101,7 +103,12 @@ class ShiftRepository @Inject constructor(
 
         // totalSales is every completed sale whatever the payment method; expectedCash is cash only.
         val totalSales = completed.map { m(it.totalAmount) }.sum()
-        val count = CashUp.reconcile(m(shift.openingFloat) + cashSales, m(safeClosingFloat))
+        // Cash that left the drawer without being a sale: expenses paid from it, and refunds of earlier shifts' cash sales.
+        val closeAt = System.currentTimeMillis()
+        val paidOut = expenseDao.drawerPaidBetween(shift.clockIn, closeAt, shift.cashierId).map { m(it.amount) }.sum()
+        val cashRefunded = saleDao.cashReversedFromEarlier(shift.clockIn, closeAt, shift.cashierId)
+            .map { CashUp.cashFromSale(it.paymentMethod.name, m(it.totalAmount), m(it.cashPortion)) }.sum()
+        val count = CashUp.reconcile(CashUp.expectedDrawer(m(shift.openingFloat), cashSales, paidOut, cashRefunded), m(safeClosingFloat))
         val expectedCash = count.expected.toDouble()
         val discrepancy = count.variance.toDouble()
 
@@ -115,6 +122,8 @@ class ShiftRepository @Inject constructor(
             totalTransactions = totalTx,
             totalDiscounts  = totalDiscount.toDouble(),
             expectedCash    = expectedCash,
+            cashPaidOut     = paidOut.toDouble(),
+            cashRefunded    = cashRefunded.toDouble(),
             cashDiscrepancy = discrepancy,
             notes           = notes,
             status          = ShiftStatus.CLOSED

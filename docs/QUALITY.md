@@ -13,7 +13,7 @@ Honest status. "Zero bugs" cannot be proven by tests; this lists what is enforce
 | Real-device testing | **Not done.** Nothing here has run on a phone | See checklist |
 
 ## Known gaps (kept short on purpose)
-* **Cash-up** counts opening float plus cash sales (and the cash share of split sales). It does not know about cash paid out of the drawer for expenses, or refunds paid from the drawer for sales made in an earlier shift: the database records neither where an expense was paid from nor when a refund happened. Fixing it needs a schema change.
+* **Cash-up** (v18) subtracts expenses marked "paid in cash from the till" and cash refunds of earlier shifts' sales. Limits: it only knows what was marked (an unmarked cash expense still shows as a shortage); a refund is attributed to the cashier who made the original sale, because the refunding person is not recorded; reversals before v18 have no date and are not counted; a refund synced from a till is dated when it reached the main phone.
 * **Sync:** a till sale the main phone refuses (for example a reused M-Pesa code) is kept as a conflict on the till and shown there, but the main phone's owner is not alerted.
 * **Observability** is on the phone only: crash notes, the handled-problem list and Store health. Nothing is sent anywhere unless the owner shares it or turns on the opt-in reports.
 * **Integrity check** (Store health) catches totals, stock, duplicate M-Pesa codes and batch mismatches after the fact; it does not stop them.

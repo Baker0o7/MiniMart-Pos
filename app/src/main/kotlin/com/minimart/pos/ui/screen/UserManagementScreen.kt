@@ -77,12 +77,8 @@ class UserManagementViewModel @Inject constructor(
 
     private fun isOwner() = _state.value.currentUser?.role == UserRole.OWNER
 
-    /** Same rule as the Settings PIN change: at least 4 digits, and not the factory default. */
-    private fun pinProblem(pin: String): String? = when {
-        pin.length < 4 || pin.length > 12 || !pin.all { it.isDigit() } -> "PIN must be 4–12 digits"
-        pin == "1234" -> "Choose a PIN other than 1234"
-        else -> null
-    }
+    /** Same rule everywhere a PIN is set: 4-12 digits and not an easy-to-guess one (see PinPolicy). */
+    private fun pinProblem(pin: String): String? = com.minimart.pos.util.PinPolicy.problem(pin)
 
     fun changePassword(userId: Long, newPin: String) {
         viewModelScope.launch {

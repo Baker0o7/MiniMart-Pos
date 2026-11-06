@@ -38,6 +38,17 @@ interface SaleDao {
     """)
     suspend fun costsBetween(startMs: Long, endMs: Long): List<SaleCostRow>
 
+    /**
+     * Cash sales made BEFORE [startMs] that were refunded or voided during [startMs]..[endMs]: the money went back
+     * out of this drawer, but the sale is not in this shift's sales, so the cash-up must subtract it separately.
+     */
+    @Query("""
+        SELECT * FROM sales
+        WHERE status IN ('REFUNDED', 'VOIDED') AND statusChangedAt >= :startMs AND statusChangedAt <= :endMs
+          AND createdAt < :startMs AND cashierId = :cashierId AND paymentMethod IN ('CASH', 'MIXED')
+    """)
+    suspend fun cashReversedFromEarlier(startMs: Long, endMs: Long, cashierId: Long): List<Sale>
+
     @Query("SELECT * FROM sales WHERE createdAt >= :startMs ORDER BY createdAt DESC")
     fun getSalesToday(startMs: Long): Flow<List<Sale>>
 
@@ -175,10 +186,10 @@ interface SaleDao {
 
     /** Only a COMPLETED sale can be refunded; returns rows changed (0 = already refunded/voided).
      *  Existing sale notes are kept and the reason is appended. */
-    @Query("UPDATE sales SET status = 'REFUNDED', notes = CASE WHEN notes = '' THEN :reason ELSE notes || ' | ' || :reason END WHERE id = :saleId AND status = 'COMPLETED'")
+    @Query("UPDATE sales SET status = 'REFUNDED', statusChangedAt = CAST(strftime('%s','now') AS INTEGER) * 1000, notes = CASE WHEN notes = '' THEN :reason ELSE notes || ' | ' || :reason END WHERE id = :saleId AND status = 'COMPLETED'")
     suspend fun refundSale(saleId: Long, reason: String): Int
 
-    @Query("UPDATE sales SET status = 'VOIDED', notes = CASE WHEN notes = '' THEN :reason ELSE notes || ' | ' || :reason END WHERE id = :saleId AND status = 'COMPLETED'")
+    @Query("UPDATE sales SET status = 'VOIDED', statusChangedAt = CAST(strftime('%s','now') AS INTEGER) * 1000, notes = CASE WHEN notes = '' THEN :reason ELSE notes || ' | ' || :reason END WHERE id = :saleId AND status = 'COMPLETED'")
     suspend fun voidSale(saleId: Long, reason: String): Int
 
     /** Completed sales that carry an M-Pesa code, for matching against the messages this phone received. */

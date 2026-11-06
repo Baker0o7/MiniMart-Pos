@@ -18,6 +18,8 @@ data class Expense(
     val supplierName: String = "",       // for SUPPLIER category
     val notes: String = "",
     val receiptRef: String = "",         // receipt/invoice number
+    /** Paid out of the till drawer in cash, so the cash-up expects that much less in the drawer. */
+    @androidx.room.ColumnInfo(defaultValue = "0") val paidFromDrawer: Boolean = false,
     val cashierId: Long = 1L,
     val createdAt: Long = System.currentTimeMillis()
 )

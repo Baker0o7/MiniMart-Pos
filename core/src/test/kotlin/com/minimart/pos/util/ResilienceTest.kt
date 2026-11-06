@@ -88,3 +88,19 @@ class ResilienceTest {
         assertNull(DemandForecast.accuracy(List(10) { 5.0 }, 0)); assertNull(DemandForecast.accuracy(List(20) { 5.0 } + List(7) { 0.0 }, 0))
     }
 }
+
+class CashUpPaidOutTest {
+    private fun m(d: Double) = Money.fromDouble(d)
+    @Test fun paidOutAndRefundsComeOffTheExpectedDrawer() {
+        assertEquals(m(1250.0), CashUp.expectedDrawer(m(500.0), m(1000.0), m(150.0), m(100.0)))
+    }
+    @Test fun withoutThemItIsTheOldRule() { assertEquals(m(1500.0), CashUp.expectedDrawer(m(500.0), m(1000.0))) }
+    @Test fun aDrawerCannotExpectLessThanNothing() { assertEquals(Money.ZERO, CashUp.expectedDrawer(m(100.0), m(0.0), m(500.0))) }
+    @Test fun negativeInputsAreNotCountedAsMoneyIn() { assertEquals(m(600.0), CashUp.expectedDrawer(m(500.0), m(100.0), m(-50.0), m(-50.0))) }
+    @Test fun aPaidOutExpenseStopsAFalseShortage() {
+        // Owner took KSh 200 for lunch. Counted 1300 of expected 1500 would have flagged SHORT before.
+        val before = CashUp.reconcile(CashUp.expectedDrawer(m(500.0), m(1000.0)), m(1300.0))
+        val after = CashUp.reconcile(CashUp.expectedDrawer(m(500.0), m(1000.0), m(200.0)), m(1300.0))
+        assertEquals(CashVerdict.SHORT, before.verdict); assertEquals(CashVerdict.BALANCED, after.verdict)
+    }
+}

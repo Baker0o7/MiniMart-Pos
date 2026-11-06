@@ -52,6 +52,8 @@ object ZReportFormatter {
         line("CASH DRAWER")
         amt("Opening float", s.openingFloat)
         amt("+ Cash sales", s.totalCashSales)
+        if (s.cashPaidOut > 0) amt("- Paid out of drawer", s.cashPaidOut)
+        if (s.cashRefunded > 0) amt("- Cash refunds", s.cashRefunded)
         val counted = s.closingFloat
         if (counted != null) {
             amt("Counted cash", counted)

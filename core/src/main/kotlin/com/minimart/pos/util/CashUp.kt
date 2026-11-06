@@ -30,6 +30,13 @@ object CashUp {
         else -> Money.ZERO   // M-Pesa, card and credit never touch the drawer
     }
 
+    /**
+     * What the drawer should hold at close: opening float plus cash taken, minus cash paid out for expenses and cash
+     * handed back for refunds of earlier shifts' sales. Never below zero (a drawer cannot hold less than nothing).
+     */
+    fun expectedDrawer(opening: Money, cashSales: Money, paidOut: Money = Money.ZERO, cashRefunded: Money = Money.ZERO): Money =
+        (opening + cashSales - paidOut.coerceAtLeast(Money.ZERO) - cashRefunded.coerceAtLeast(Money.ZERO)).coerceAtLeast(Money.ZERO)
+
     fun reconcile(expected: Money, counted: Money): CashUpResult {
         val diff = counted - expected
         val verdict = when {
