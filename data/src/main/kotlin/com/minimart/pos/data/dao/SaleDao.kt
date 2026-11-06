@@ -29,6 +29,15 @@ interface SaleDao {
     """)
     fun getCompletedSalesByDateRange(startMs: Long, endMs: Long): Flow<List<Sale>>
 
+    /** What the goods in each completed sale cost, for the accountant's export (sales with no recorded cost sum to 0). */
+    @Query("""
+        SELECT s.id AS saleId, COALESCE(SUM(i.costTotal), 0.0) AS cost
+        FROM sales s JOIN sale_items i ON i.saleId = s.id
+        WHERE s.createdAt >= :startMs AND s.createdAt <= :endMs AND s.status = 'COMPLETED'
+        GROUP BY s.id
+    """)
+    suspend fun costsBetween(startMs: Long, endMs: Long): List<SaleCostRow>
+
     @Query("SELECT * FROM sales WHERE createdAt >= :startMs ORDER BY createdAt DESC")
     fun getSalesToday(startMs: Long): Flow<List<Sale>>
 
@@ -248,3 +257,5 @@ data class TopSellerResult(
 
 // Search extension added at end — actually must go inside interface
 // Will patch inline instead
+
+data class SaleCostRow(val saleId: Long, val cost: Double)

@@ -31,3 +31,15 @@ Honest status. "Zero bugs" cannot be proven by tests; this lists what is enforce
 ## Hardware and UI test coverage (added)
 `ScanBufferTest` (scanner timing/filtering), `EscPosCommandsTest` (printer and drawer bytes, hostile text),
 `MpesaFieldEncryptionTest`, `FieldCipherTest`, `TileColumnsPickerUiTest` (emulator). Not covered: real printers, drawers and scanners on a phone.
+
+## Accounting export, forecast accuracy, stale data and stability (added)
+* **Accountant export** (`AccountingExport`, Reports > table icon): a double-entry journal that is checked to balance, a profit and loss,
+  and the VAT collected, as CSV for Excel or Sheets. Cent-exact (`Money`); text cells that could run as a formula are defused. Refunded and voided
+  sales are not income and are left out. Sales made before item costs were recorded show a warning that profit is overstated.
+* **Forecast accuracy** (`DemandForecast.accuracy`): the forecast is replayed on the last week and the product shows how far off it would have been.
+* **Stale data** (`SyncFreshness`): a till that has not synced for 12 hours gets a note on the health screen; after 48 hours (or never) Home shows a
+  "tap to sync" banner. Disagreements between phones are counted from the activity log.
+* **Printer fallbacks** (`PrinterHistory`): print results are remembered; one automatic reconnect is tried before a print is reported as failed;
+  repeated failures show on the hardware screen with the PDF/WhatsApp fallback.
+* **Crash-loop guard** (`CrashLoopGuard`, `StartupGuard`): three starts within five minutes holds background work back for two minutes so the till screen stays usable.
+Not covered: any of this on a real phone, printer or second till.

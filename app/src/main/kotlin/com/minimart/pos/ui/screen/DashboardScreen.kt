@@ -103,6 +103,10 @@ fun DashboardScreen(
     vm: DashboardViewModel = hiltViewModel()
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    val syncVm: com.minimart.pos.ui.viewmodel.SyncViewModel = hiltViewModel()
+    val sync by syncVm.state.collectAsStateWithLifecycle()
+    // A till phone that has not reached the main phone for a long time may show old prices and stock.
+    val freshness = com.minimart.pos.util.SyncFreshness.assess(sync.peerIp.isNotBlank(), sync.lastSyncAt, System.currentTimeMillis(), sync.pendingCount, sync.conflictCount)
     CrashReportPrompt()
     val rm    = com.minimart.pos.util.RoleManager
     val hiddenActions by (settingsRepo?.hiddenActions
@@ -279,6 +283,14 @@ fun DashboardScreen(
             }
 
             // ── Needs attention (first, so it is never below the fold) ────────
+            if (freshness != null && freshness.warnAtCheckout) {
+                item { Spacer(Modifier.height(16.dp)) }
+                item {
+                    DashAlert(Icons.Default.Sync, if (freshness.level == com.minimart.pos.util.HealthLevel.BAD) RedGlow else AmberGlow,
+                        Color(0xFF1E1005), freshness.headline, "Tap to sync now. " + freshness.detail.substringBefore(". Connect").take(90),
+                        { syncVm.syncNow() })
+                }
+            }
             if (state.lowStockProducts.isNotEmpty()) {
                 item { Spacer(Modifier.height(16.dp)) }
                 item {

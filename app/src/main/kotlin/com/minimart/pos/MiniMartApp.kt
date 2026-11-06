@@ -28,8 +28,12 @@ class MiniMartApp : Application(), Configuration.Provider {
         com.minimart.pos.util.CrashRecorder.install(this)
         com.minimart.pos.util.ProblemRecorder.install(this)
         com.minimart.pos.util.ScanFeedback.install(this)
+        // If the app has been closing right after opening, hold back background work so the till screen can be used.
+        val restartLoop = com.minimart.pos.util.StartupGuard.onStart(this)
         // The main device must be reachable again after a restart without anyone opening Settings.
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
+            launch { kotlinx.coroutines.delay(com.minimart.pos.util.CrashLoopGuard.STABLE_AFTER_MS); com.minimart.pos.util.StartupGuard.markStable(this@MiniMartApp) }
+            if (restartLoop) kotlinx.coroutines.delay(com.minimart.pos.util.CrashLoopGuard.holdBackMs(true))
             // Starting WorkManager opens its own database; doing that here keeps it off the launch path.
             try {
                 com.minimart.pos.worker.LowStockWorker.schedule(this@MiniMartApp)

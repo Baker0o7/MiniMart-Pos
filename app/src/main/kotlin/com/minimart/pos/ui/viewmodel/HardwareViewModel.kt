@@ -155,6 +155,8 @@ class HardwareViewModel @Inject constructor(
             printerName = runCatching { settings.printerName.first() }.getOrNull(),
             printerPaired = paired,
             printerTest = printerTest,
+            printerFailuresToday = com.minimart.pos.util.PrinterHistory.failuresInLastDay(printer.history(), System.currentTimeMillis()),
+            printerLastOkHoursAgo = com.minimart.pos.util.PrinterHistory.hoursSinceOk(printer.history(), System.currentTimeMillis()),
             drawerConfigured = runCatching { settings.cashDrawerAddress.first().isNotBlank() }.getOrDefault(false),
             drawerTest = drawerTest,
             cameraPresent = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY),

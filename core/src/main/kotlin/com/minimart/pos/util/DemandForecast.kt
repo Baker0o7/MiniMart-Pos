@@ -19,6 +19,15 @@ data class Forecast(
  * pattern (Saturdays are busier) once there are at least [MIN_WEEKS_FOR_PATTERN] weeks of history.
  * A short history gives a flat average and a low [Forecast.confidence].
  */
+/** How well the method would have predicted the most recent days, so a forecast can say how far to trust it. */
+data class ForecastAccuracy(val daysChecked: Int, val percentOff: Int, val unitsPerDayOff: Double) {
+    fun label(): String = when {
+        percentOff <= 15 -> "Forecast has been accurate (within $percentOff%) lately"
+        percentOff <= 35 -> "Forecast is usually within $percentOff% - use it as a guide"
+        else -> "Sales are hard to predict (off by about $percentOff%) - order with care"
+    }
+}
+
 object DemandForecast {
     const val HALF_LIFE_DAYS = 10.0
     const val MIN_WEEKS_FOR_PATTERN = 3
@@ -66,6 +75,21 @@ object DemandForecast {
         val span = (leadDays + coverDays).coerceIn(1, f.daily.size)
         val need = f.daily.take(span).sum() - onHand.coerceAtLeast(0.0)
         return if (need <= 0) 0 else ceil(need).toInt()
+    }
+
+    /**
+     * Replays the forecast: predicts the last [holdout] days using only the days before them and compares with what
+     * really sold. Null when there is too little history or nothing sold in those days.
+     */
+    fun accuracy(history: List<Double>, firstWeekday: Int, holdout: Int = 7): ForecastAccuracy? {
+        val days = history.map { it.coerceAtLeast(0.0) }
+        if (holdout < 1 || days.size < holdout + 14) return null
+        val train = days.dropLast(holdout); val actual = days.takeLast(holdout)
+        val actualSum = actual.sum()
+        if (actualSum <= 0.0) return null
+        val predicted = forecast(train, firstWeekday, onHand = 0.0, horizon = holdout).daily
+        val absError = actual.indices.sumOf { kotlin.math.abs(predicted[it] - actual[it]) }
+        return ForecastAccuracy(holdout, kotlin.math.round(absError / actualSum * 100).toInt(), absError / holdout)
     }
 
     private fun confidence(n: Int) = (n / 28.0).coerceIn(0.0, 1.0)

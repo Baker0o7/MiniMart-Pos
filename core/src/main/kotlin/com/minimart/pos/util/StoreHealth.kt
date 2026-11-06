@@ -33,7 +33,13 @@ data class HealthInputs(
     /** Distinct handled problems in the last week (see [ProblemLog]). */
     val recentProblems: Int = 0,
     /** Whether the shop database is encrypted on this phone; null when not known. */
-    val databaseEncrypted: Boolean? = null
+    val databaseEncrypted: Boolean? = null,
+    /** Hours since this till last synced with the main phone; null when never (see [SyncFreshness]). */
+    val lastSyncAgeHours: Long? = null,
+    /** Disagreements between phones that were settled automatically and have not been looked at. */
+    val syncConflicts: Int = 0,
+    /** The app has been closing again and again right after opening (see [CrashLoopGuard]). */
+    val crashLoop: Boolean = false
 )
 
 /** Turns raw numbers into plain-language checks, worst problems first. Pure, so it can be tested. */
@@ -73,6 +79,18 @@ object StoreHealth {
                 else -> HealthCheck("sync", "Till sync", HealthLevel.GOOD, "Everything has been sent.")
             }
         }
+
+        if (i.syncConfigured && i.lastSyncAgeHours != null) {
+            val h = i.lastSyncAgeHours
+            if (h >= SyncFreshness.STALE_AFTER_HOURS) out += HealthCheck("sync_stale", "Data on this phone", HealthLevel.BAD,
+                "Last synced ${SyncFreshness.ageText(h * 3_600_000L)} ago. Prices, stock and customer balances here may be out of date.", HealthAction.SYNC)
+            else if (h >= SyncFreshness.AGING_AFTER_HOURS) out += HealthCheck("sync_stale", "Data on this phone", HealthLevel.WARN,
+                "Last synced ${SyncFreshness.ageText(h * 3_600_000L)} ago. Sync when you are near the main phone.", HealthAction.SYNC)
+        }
+        if (i.syncConflicts > 0) out += HealthCheck("sync_conflicts", "Phones disagreed", HealthLevel.WARN,
+            "${i.syncConflicts} change(s) were edited on two phones at once. The newest edit was kept; check the activity log if something looks wrong.", HealthAction.SYNC)
+        if (i.crashLoop) out += HealthCheck("crash_loop", "App keeps closing", HealthLevel.BAD,
+            "The app closed several times soon after opening. Background work was held back so you can keep selling. Share the problem report from this screen.")
 
         i.freeStorageMb?.let { mb ->
             out += when {

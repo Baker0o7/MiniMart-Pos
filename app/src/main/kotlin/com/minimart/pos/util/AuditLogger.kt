@@ -72,6 +72,11 @@ class AuditLogger @Inject constructor(
         }
     }
 
+    /** How many entries of [event] are in the current log file (the log is rotated, so this is recent history). */
+    fun countOf(event: AuditEvent): Int = try {
+        logFile.useLines { lines -> lines.count { it.contains(event.name) } }
+    } catch (_: Exception) { 0 }
+
     /** Name of the person currently signed in; set by the login/logout code. */
     @Volatile var actor: String = ""
 

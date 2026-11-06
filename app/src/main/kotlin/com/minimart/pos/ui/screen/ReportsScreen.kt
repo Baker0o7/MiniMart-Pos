@@ -103,6 +103,21 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
             // ── Header ──
             item {
                 GradientHeader(title = "Reports", subtitle = "Analytics overview", onBack = onBack, actions = {
+                    // Journal and profit-and-loss as CSV files an accountant can open in Excel or Sheets.
+                    IconButton(
+                        enabled = !isSharing,
+                        onClick = {
+                            isSharing = true
+                            shareScope.launch {
+                                try {
+                                    val files = vm.buildAccountingFiles(context)
+                                    com.minimart.pos.util.AccountingFiles.share(context, files, "Accounts for this period")
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, "Could not create the files. " + com.minimart.pos.util.ErrorAdvice.reason(e), android.widget.Toast.LENGTH_LONG).show()
+                                } finally { isSharing = false }
+                            }
+                        }
+                    ) { Icon(Icons.Default.TableChart, "Export for accountant as spreadsheet files", tint = Color.White, modifier = Modifier.size(24.dp)) }
                     // Share the business report as a PDF — straight to WhatsApp (EOD report for
                     // an accountant or partner).
                     IconButton(
@@ -126,7 +141,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         }
                     ) {
                         if (isSharing) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
-                        else Icon(Icons.Default.Share, "Share report via WhatsApp", tint = DT.Ink, modifier = Modifier.size(24.dp))
+                        else Icon(Icons.Default.Share, "Share report via WhatsApp", tint = Color.White, modifier = Modifier.size(24.dp))
                     }
                 })
                 Spacer(Modifier.height(10.dp))

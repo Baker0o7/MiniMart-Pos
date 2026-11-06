@@ -210,6 +210,7 @@ private fun ReorderRow(r: InsightRow) = RowCard {
             val day = java.text.SimpleDateFormat("EEE d MMM", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(Date(System.currentTimeMillis() + d * 86_400_000L))
             Text("Forecast: runs out around $day" + if (r.forecastConfidence < 0.5) " (rough, little history)" else "",
                 color = DT.SubText, fontSize = 11.sp)
+            r.accuracy?.let { Text(it.label(), color = DT.SubText, fontSize = 10.sp) }
         }
         if (r.product.supplierName.isNotBlank())
             Text(r.product.supplierName, color = DT.SubText, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)

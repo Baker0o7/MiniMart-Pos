@@ -25,7 +25,9 @@ data class InsightRow(
     val retailValue: Double,
     /** Forecast: whole days until it runs out (null = not selling or outlasts 4 weeks), and how much history backs it (0..1). */
     val emptyInDays: Int? = null,
-    val forecastConfidence: Double = 0.0
+    val forecastConfidence: Double = 0.0,
+    /** How well the same method predicted the last week (null: too little history to check). */
+    val accuracy: com.minimart.pos.util.ForecastAccuracy? = null
 )
 
 data class CategoryValue(val category: String, val items: Int, val costValue: Double, val retailValue: Double)
@@ -119,7 +121,8 @@ class InventoryInsightsViewModel @Inject constructor(
                 suggestedQty = suggested, needsReorder = plan.needsReorder, orderCost = suggested * p.costPrice,
                 lastSoldAt = lastSold[p.id],
                 costValue = onHand * p.costPrice, retailValue = onHand * unitPrice,
-                emptyInDays = fc.daysUntilEmpty, forecastConfidence = fc.confidence
+                emptyInDays = fc.daysUntilEmpty, forecastConfidence = fc.confidence,
+                accuracy = com.minimart.pos.util.DemandForecast.accuracy(usable, firstWeekday)
             )
         }
 

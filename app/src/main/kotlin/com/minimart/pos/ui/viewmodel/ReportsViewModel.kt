@@ -38,7 +38,8 @@ data class ReportsUiState(
 class ReportsViewModel @Inject constructor(
     private val saleRepo: SaleRepository,
     private val expenseRepo: com.minimart.pos.data.repository.ExpenseRepository,
-    private val settingsRepo: SettingsRepository
+    private val settingsRepo: SettingsRepository,
+    private val saleDao: com.minimart.pos.data.dao.SaleDao
 ) : ViewModel() {
 
     private val _period = MutableStateFlow(ReportPeriod.TODAY)
@@ -101,6 +102,21 @@ class ReportsViewModel @Inject constructor(
             topSellers = saleRepo.getTopSellers(start, rawEnd).first(),
             expenses = expenseRepo.getExpensesByDateRange(start, rawEnd).first()
         )
+    }
+
+    /** The accountant's CSV files for the selected period: a balanced journal and a profit and loss. */
+    suspend fun buildAccountingFiles(context: android.content.Context): List<java.io.File> {
+        val (start, rawEnd) = periodRange(_period.value, _customRange.value)
+        val end = minOf(rawEnd, System.currentTimeMillis())
+        val day = java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault())
+        val label = "${day.format(java.util.Date(start))} - ${day.format(java.util.Date(end))}"
+        val sales = saleRepo.getCompletedSalesByDateRange(start, end).first()
+        val costs = saleDao.costsBetween(start, end).associate { it.saleId to it.cost }
+        val expenses = expenseRepo.getExpensesByDateRange(start, end).first()
+        val store = settingsRepo.storeName.first(); val currency = settingsRepo.currency.first()
+        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            com.minimart.pos.util.AccountingFiles.write(context, sales, costs, expenses, store, currency, label)
+        }
     }
 
     fun setCustomRange(startMs: Long, endMs: Long) {

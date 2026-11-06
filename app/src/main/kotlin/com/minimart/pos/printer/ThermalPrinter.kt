@@ -65,6 +65,22 @@ class ThermalPrinter @Inject constructor(
     private var socket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
     private var connectedAddress: String? = null
+    /** The last printer that connected, kept after a drop so one automatic reconnect is possible. */
+    private var lastAddress: String? = null
+
+    private val historyPrefs by lazy { context.getSharedPreferences("printer_history", Context.MODE_PRIVATE) }
+
+    /** When the printer last worked and when it recently failed (see [com.minimart.pos.util.PrinterHistory]). */
+    fun history(): com.minimart.pos.util.PrinterRecord =
+        try { com.minimart.pos.util.PrinterHistory.decode(historyPrefs.getString("record", null)) } catch (_: Exception) { com.minimart.pos.util.PrinterRecord() }
+
+    private fun note(ok: Boolean) {
+        try {
+            val now = System.currentTimeMillis(); val r = history()
+            val next = if (ok) com.minimart.pos.util.PrinterHistory.onSuccess(r, now) else com.minimart.pos.util.PrinterHistory.onFailure(r, now)
+            historyPrefs.edit().putString("record", com.minimart.pos.util.PrinterHistory.encode(next)).apply()
+        } catch (_: Exception) { /* a note about printing must never break printing */ }
+    }
 
     // ── Connection ────────────────────────────────────────────────────────────
 
@@ -86,6 +102,7 @@ class ThermalPrinter @Inject constructor(
             socket = s
             outputStream = s.outputStream
             connectedAddress = address
+            lastAddress = address
             Log.d(TAG, "Connected to $address")
             PrintResult.Success
         } catch (e: Exception) {
@@ -235,6 +252,14 @@ class ThermalPrinter @Inject constructor(
 
     /** Prints already laid-out monospace text (32 columns) and cuts — used for the Z-report. */
     suspend fun printPlainText(text: String): PrintResult {
+        var r = tryPlainText(text)
+        // A printer that went to sleep or drifted out of range often works on a second try: reconnect once.
+        if (r is PrintResult.Error && lastAddress != null && connect(lastAddress!!) is PrintResult.Success) r = tryPlainText(text)
+        note(r is PrintResult.Success)
+        return r
+    }
+
+    private suspend fun tryPlainText(text: String): PrintResult {
         if (!isConnected) return PrintResult.Error("Printer not connected")
         return try {
             write(EscPos.INIT, EscPos.ALIGN_LEFT, EscPos.text(text), EscPos.NEWLINE, EscPos.NEWLINE, EscPos.NEWLINE, EscPos.CUT)

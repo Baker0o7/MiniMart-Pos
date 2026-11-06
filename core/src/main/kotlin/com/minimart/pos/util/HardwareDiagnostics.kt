@@ -16,6 +16,9 @@ data class HardwareInputs(
     /** Whether the chosen printer is still in the phone's paired list. Null when that cannot be read. */
     val printerPaired: Boolean? = null,
     val printerTest: TestOutcome? = null,
+    /** Print attempts that failed in the last 24 hours, and hours since one last worked (null = never recorded). */
+    val printerFailuresToday: Int = 0,
+    val printerLastOkHoursAgo: Long? = null,
     val drawerConfigured: Boolean = false,
     val drawerTest: TestOutcome? = null,
     val cameraPresent: Boolean = true,
@@ -119,6 +122,11 @@ object HardwareDiagnostics {
             "Test print failed: ${i.printerTest.reason}")
         i.printerTest == TestOutcome.Passed -> HealthCheck("printer", "Receipt printer", HealthLevel.GOOD,
             "${name(i.printerName)} printed the test page.")
+        i.printerFailuresToday >= 2 -> HealthCheck("printer", "Receipt printer",
+            if (i.printerFailuresToday >= 5) HealthLevel.BAD else HealthLevel.WARN,
+            "Printing failed ${i.printerFailuresToday} times in the last day" +
+                (i.printerLastOkHoursAgo?.let { ", and last worked ${if (it < 1) "less than an hour" else "$it hour(s)"} ago" } ?: "") +
+                ". Check the paper, the cover and the power. Until it is fixed, receipts can still be shared as a PDF or on WhatsApp.")
         else -> HealthCheck("printer", "Receipt printer", HealthLevel.GOOD,
             "${name(i.printerName)} is paired. Tap Test print to be sure it works.")
     }

@@ -60,7 +60,8 @@ class StoreHealthViewModel @Inject constructor(
     private val products: ProductRepository,
     private val shifts: ShiftRepository,
     private val pinHasher: PinHasher,
-    private val prefs: SharedPreferences
+    private val prefs: SharedPreferences,
+    private val audit: com.minimart.pos.util.AuditLogger
 ) : ViewModel() {
     private val _state = MutableStateFlow(StoreHealthState())
     val state: StateFlow<StoreHealthState> = _state.asStateFlow()
@@ -139,7 +140,10 @@ class StoreHealthViewModel @Inject constructor(
             defaultPinStillUsed = defaultPin,
             staleOpenShifts = stale,
             recentProblems = com.minimart.pos.util.ProblemLog.recent(com.minimart.pos.util.ProblemRecorder.load(context), now),
-            databaseEncrypted = runCatching { com.minimart.pos.util.DbEncryption.isEncrypted(context) }.getOrNull()
+            databaseEncrypted = runCatching { com.minimart.pos.util.DbEncryption.isEncrypted(context) }.getOrNull(),
+            lastSyncAgeHours = prefs.getLong("last_sync_at", 0L).takeIf { it > 0 }?.let { ((now - it).coerceAtLeast(0L)) / 3_600_000L },
+            syncConflicts = runCatching { audit.countOf(com.minimart.pos.util.AuditEvent.SYNC_CONFLICT) }.getOrDefault(0),
+            crashLoop = com.minimart.pos.util.StartupGuard.isInLoop(context, now)
         )
         return inputs to (report?.issues.orEmpty().take(10))
     }
