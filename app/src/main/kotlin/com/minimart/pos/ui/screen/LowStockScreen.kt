@@ -189,8 +189,8 @@ private fun LowStockCard(
                         }
                         // WhatsApp button
                         IconButton(onClick = { onWhatsApp(product.supplierPhone) },
-                            modifier = Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF25D366).copy(0.15f))) {
-                            Icon(Icons.AutoMirrored.Filled.Chat, "Message supplier on WhatsApp", tint = Color(0xFF25D366), modifier = Modifier.size(18.dp))
+                            modifier = Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background((if (DT.light) Color(0xFF0B7A3E) else Color(0xFF25D366)).copy(0.15f))) {
+                            Icon(Icons.AutoMirrored.Filled.Chat, "Message supplier on WhatsApp", tint = (if (DT.light) Color(0xFF0B7A3E) else Color(0xFF25D366)), modifier = Modifier.size(18.dp))
                         }
                     }
                 }

@@ -127,6 +127,10 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             settingsRepo.customerDisplayEnabled.catch { }.collect { on -> secondScreenEnabled = on; refreshPresentation() }
         }
+        // DataStore is slow to answer on a cold start, so the last theme is also kept in a tiny preference file
+        // that can be read at once; without it a light-theme owner would see a dark screen first.
+        val uiPrefs = getSharedPreferences("ui_state", MODE_PRIVATE)
+        com.minimart.pos.ui.theme.DT.themeMode = com.minimart.pos.ui.theme.ThemeMode.fromName(uiPrefs.getString("theme_mode", null))
         setContent {
             val darkMode by settingsRepo.darkMode.collectAsState(false)
             val accentName by settingsRepo.accent.collectAsState(initial = com.minimart.pos.ui.theme.DT.accent.name)
@@ -153,6 +157,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             val themeName by settingsRepo.themeMode.collectAsState(initial = com.minimart.pos.ui.theme.DT.themeMode.name)
+            androidx.compose.runtime.LaunchedEffect(themeName) { try { uiPrefs.edit().putString("theme_mode", themeName).apply() } catch (_: Exception) {} }
             val phoneIsDark = androidx.compose.foundation.isSystemInDarkTheme()
             androidx.compose.runtime.LaunchedEffect(themeName) { com.minimart.pos.ui.theme.DT.themeMode = com.minimart.pos.ui.theme.ThemeMode.fromName(themeName) }
             androidx.compose.runtime.LaunchedEffect(phoneIsDark) { com.minimart.pos.ui.theme.DT.systemDark = phoneIsDark }

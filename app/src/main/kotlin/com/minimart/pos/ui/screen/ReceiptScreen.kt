@@ -229,7 +229,7 @@ fun ReceiptScreen(
                             finally { isGeneratingPdf = false }
                         }
                     }
-                    ReceiptActionBtn(Modifier.weight(1f), Icons.Default.Share, "WhatsApp", Color(0xFF25D366)) {
+                    ReceiptActionBtn(Modifier.weight(1f), Icons.Default.Share, "WhatsApp", if (DT.light) Color(0xFF0B7A3E) else Color(0xFF25D366)) {
                         scope.launch {
                             try {
                                 val data = receiptData() ?: return@launch
@@ -345,7 +345,7 @@ internal fun ReasonDialog(title: String, subtitle: String, color: Color,
         confirmButton = {
             Button(onClick = { onConfirm(reason.trim()) }, enabled = reason.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = color)) {
-                Text("Confirm", color = if (color == DT.Red) Color.White else Color.Black, fontWeight = FontWeight.Bold)
+                Text("Confirm", color = if (color == DT.Red || DT.light) Color.White else Color.Black, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } })
