@@ -86,11 +86,11 @@ fun CreditOverviewScreen(
 
             // ── Summary card ──────────────────────────────────────────────────
             item {
-                Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                Row(modifier = Modifier.height(IntrinsicSize.Min).fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     // Total owed (buy-on-account / negative balances)
                     val debtors = creditCustomers.count { it.creditBalance < 0 }
-                    Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
+                    Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(18.dp))
                         .background(Brush.verticalGradient(listOf(DT.tone(Color(0xFF1F0A0A), DT.Red), DT.tone(Color(0xFF0F0505), DT.Red, .04f))))
                         .border(1.dp, DT.Red.copy(0.3f), RoundedCornerShape(18.dp)).padding(14.dp)) {
                         Column {
@@ -106,7 +106,7 @@ fun CreditOverviewScreen(
                         }
                     }
                     // All customers stats
-                    Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
+                    Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(18.dp))
                         .background(Brush.verticalGradient(listOf(DT.tone(Color(0xFF0B2822), DT.Teal), DT.tone(Color(0xFF061210), DT.Teal, .04f))))
                         .border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(18.dp)).padding(14.dp)) {
                         Column {

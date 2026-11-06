@@ -99,26 +99,26 @@ private fun AnalyticsBody(s: AnalyticsState) {
         // ── KPIs ──────────────────────────────────────────────────────────────
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    KpiTile("Revenue", "$cur ${money(s.revenue)}", DT.TealLight, Modifier.weight(1f)) {
+                Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    KpiTile("Revenue", "$cur ${money(s.revenue)}", DT.TealLight, Modifier.weight(1f).fillMaxHeight()) {
                         s.revenueChangePct?.let { pct ->
                             val up = pct >= 0
                             Text("${if (up) "▲" else "▼"} ${String.format(Locale.US, "%.0f", kotlin.math.abs(pct))}% vs previous ${s.range.days} days",
                                 color = if (up) DT.Green else DT.Red, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
-                    KpiTile("Sales", s.transactions.toString(), DT.OnSurface, Modifier.weight(1f)) {
+                    KpiTile("Sales", s.transactions.toString(), DT.OnSurface, Modifier.weight(1f).fillMaxHeight()) {
                         Text("avg basket $cur ${money(s.avgBasket)}", color = DT.SubText, fontSize = 11.sp)
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     KpiTile("Gross profit", "$cur ${money(s.grossProfit)}",
-                        if (s.grossProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f)) {
+                        if (s.grossProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f).fillMaxHeight()) {
                         val margin = if (s.revenue > 0) s.grossProfit / s.revenue * 100 else 0.0
                         Text("${String.format(Locale.US, "%.0f", margin)}% margin", color = DT.SubText, fontSize = 11.sp)
                     }
                     KpiTile("Net profit", "$cur ${money(s.netProfit)}",
-                        if (s.netProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f)) {
+                        if (s.netProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f).fillMaxHeight()) {
                         Text("after $cur ${money(s.expenses)} expenses", color = DT.SubText, fontSize = 11.sp)
                     }
                 }

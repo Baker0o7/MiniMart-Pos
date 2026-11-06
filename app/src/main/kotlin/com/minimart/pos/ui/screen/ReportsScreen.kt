@@ -208,10 +208,10 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
             // ── Stats row: avg basket + transactions ──
             item {
                 Spacer(Modifier.height(10.dp))
-                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                Row(Modifier.height(IntrinsicSize.Min).fillMaxWidth().padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     // Avg basket
-                    Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
+                    Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(18.dp))
                         .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(18.dp))
                         .padding(16.dp)) {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -232,7 +232,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             "${c.get(java.util.Calendar.YEAR)}-${c.get(java.util.Calendar.DAY_OF_YEAR)}"
                         }.toSet().size
                     }
-                    Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
+                    Box(modifier = Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(18.dp))
                         .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(18.dp))
                         .padding(16.dp)) {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
