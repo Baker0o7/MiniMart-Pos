@@ -126,7 +126,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         }
                     ) {
                         if (isSharing) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
-                        else Icon(Icons.Default.Share, "Share report via WhatsApp", tint = Color.White, modifier = Modifier.size(24.dp))
+                        else Icon(Icons.Default.Share, "Share report via WhatsApp", tint = DT.Ink, modifier = Modifier.size(24.dp))
                     }
                 })
                 Spacer(Modifier.height(10.dp))

@@ -86,4 +86,56 @@ class PaletteTest {
             }
         } }
     }
+
+    // ── Light theme ──────────────────────────────────────────────────────────────
+    private val lightModes = listOf(false, true)   // high contrast off / on
+
+    @Test fun everyAccentIsReadableOnTheLightTheme() {
+        AppAccent.entries.forEach { a -> lightModes.forEach { hc ->
+            val p = a.lightPalette().adapt(false, hc)
+            val m = "${a.name} light highContrast=$hc"
+            assertTrue("$m is a light palette", p.light && p.bg.luminance() > 0.8f && p.surface.luminance() > 0.8f)
+            assertTrue("$m ink on surface", contrast(p.ink, p.surface) >= 7f)
+            assertTrue("$m ink on bg", contrast(p.ink, p.bg) >= 7f)
+            assertTrue("$m text on surface", contrast(p.onSurface, p.surface) >= 7f)
+            assertTrue("$m secondary text on surface", contrast(p.subText, p.surface) >= 4.5f)
+            assertTrue("$m secondary text on raised surface", contrast(p.subText, p.surface2) >= 4.5f)
+            assertTrue("$m secondary text on bg", contrast(p.subText, p.bg) >= 4.5f)
+            assertTrue("$m white on accent buttons", contrast(Color.White, p.accent) >= 4.5f)
+            assertTrue("$m white on header", contrast(Color.White, p.headerMid) >= 4.5f && contrast(Color.White, p.headerEnd) >= 4.5f)
+            assertTrue("$m accent text on bg", contrast(p.accentLight, p.bg) >= 4.5f)
+            assertTrue("$m accent text on surface", contrast(p.accentLight, p.surface) >= 4.5f)
+            assertTrue("$m accent text on raised surface", contrast(p.accentLight, p.surface2) >= 4.5f)
+            assertTrue("$m nav icons on bar", contrast(p.navUnsel, p.navBg) >= 3f)
+            assertTrue("$m nav icons on raised bar", contrast(p.navUnsel, p.navSurface) >= 3f)
+            assertEquals("the accent itself is not changed", a.palette.accent, p.accent)
+        } }
+    }
+
+    @Test fun darkPaletteKeepsWhiteInkSoTheOriginalLookIsUnchanged() {
+        AppAccent.entries.forEach { assertEquals(Color.White, it.palette.ink); assertFalse(it.palette.light) }
+    }
+
+    @Test fun deepBlackDoesNothingOnTheLightTheme() {
+        AppAccent.entries.forEach { a -> assertEquals(a.lightPalette(), a.lightPalette().adapt(true, false)) }
+    }
+
+    @Test fun statusAndPaymentColoursAreReadableOnLightSurfaces() {
+        val greens = listOf(Color(0xFF1B5E20), Color(0xFFB71C1C), Color(0xFF7A4A00))   // DT.Green / Red / Amber on the light theme
+        val pay = com.minimart.pos.data.entity.PaymentMethod.entries.map { paymentColor(it, light = true) }
+        assertEquals(pay.size, pay.toSet().size)
+        AppAccent.entries.forEach { a ->
+            val p = a.lightPalette()
+            (greens + pay).forEach { c ->
+                assertTrue("${a.name} colour on surface", contrast(c, p.surface) >= 4.5f)
+                assertTrue("${a.name} colour on bg", contrast(c, p.bg) >= 4.5f)
+                assertTrue("${a.name} colour on raised surface", contrast(c, p.surface2) >= 4.5f)
+            }
+        }
+    }
+
+    @Test fun themeModeNamesRoundTripAndDefaultToDark() {
+        ThemeMode.entries.forEach { assertEquals(it, ThemeMode.fromName(it.name)) }
+        assertEquals(ThemeMode.DARK, ThemeMode.fromName(null)); assertEquals(ThemeMode.DARK, ThemeMode.fromName("PINK"))
+    }
 }

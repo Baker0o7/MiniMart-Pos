@@ -5,6 +5,14 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.27.0] - 2026-11-06
+
+- **Light theme.** Settings > Appearance now has Dark, Light and Phone setting. Dark is still the default and looks exactly as before. Light uses pale backgrounds with dark text, and every accent colour has a light version that stays easy to read.
+- **Hidden tiles are restored from Edit.** The "Restore hidden tiles" button no longer sits on Home. Tap Edit and it appears there, below the tiles-per-row choice.
+- **Private customer details on M-Pesa payments.** Sender names, sender phone numbers and the original message are now locked with a key that stays on this phone, on top of the database lock. After restoring a manual backup on a different phone those three details will be blank; the code and amount are kept.
+- **Same colour for each way of paying.** Cash, M-Pesa, card, mixed and credit now have one colour on Reports, Sales History and Analytics, readable on every theme.
+- **Tests.** More automatic checks for the barcode scanner, the printer and cash drawer commands, and the tiles-per-row picker.
+
 ## [1.26.0] - 2026-11-05
 
 - **What goes in a basket.** Analytics now shows how many items a typical sale has, how many sales had two or more different products, and which products are often bought together, so you can put them side by side.

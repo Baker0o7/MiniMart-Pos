@@ -7,6 +7,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
@@ -52,9 +53,26 @@ import kotlinx.coroutines.launch
 internal fun AppearanceSettingsSection(settingsRepo: SettingsRepository) {
     val scope = rememberCoroutineScope()
     DSection("Appearance", Icons.Default.Palette, summary = com.minimart.pos.ui.theme.DT.accent.label) {
-        Text("The app is always dark. Pick the colour used for buttons, headers and highlights, then the display options below.",
+        Text("Choose dark or light, then the colour used for buttons, headers and highlights.",
             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(10.dp))
+        Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            com.minimart.pos.ui.theme.ThemeMode.entries.forEach { m ->
+                val on = DT.themeMode == m
+                Box(Modifier.weight(1f).heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp))
+                    .background(if (on) DT.Teal else DT.Surface2)
+                    .border(1.dp, if (on) DT.Teal else DT.Border, RoundedCornerShape(12.dp))
+                    .selectable(selected = on, role = androidx.compose.ui.semantics.Role.RadioButton) {
+                        DT.themeMode = m                                      // instant
+                        scope.launch { settingsRepo.setThemeMode(m.name) }    // remembered
+                    }
+                    .semantics { contentDescription = m.label + " theme" },
+                    contentAlignment = Alignment.Center) {
+                    Text(m.label, color = if (on) Color.White else DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             com.minimart.pos.ui.theme.AppAccent.entries.forEach { a ->
                 val picked = com.minimart.pos.ui.theme.DT.accent == a
@@ -69,11 +87,11 @@ internal fun AppearanceSettingsSection(settingsRepo: SettingsRepository) {
                         }
                         .semantics { contentDescription = a.label + " colour" },
                     contentAlignment = Alignment.Center
-                ) { if (picked) Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(22.dp)) }
+                ) { if (picked) Icon(Icons.Default.Check, null, tint = DT.Ink, modifier = Modifier.size(22.dp)) }
             }
         }
         Spacer(Modifier.height(14.dp))
-        ThemeSwitch("Deep black", "Near-black backgrounds. Easier on the eyes at night and saves battery on OLED screens.",
+        ThemeSwitch("Deep black", "Dark theme only. Near-black backgrounds. Easier on the eyes at night and saves battery on OLED screens.",
             DT.amoled) { on -> DT.amoled = on; scope.launch { settingsRepo.setAmoled(on) } }
         ThemeSwitch("High contrast", "Whiter text, brighter secondary text and stronger borders.",
             DT.highContrast) { on -> DT.highContrast = on; scope.launch { settingsRepo.setHighContrast(on) } }

@@ -313,7 +313,7 @@ private fun InventoryRow(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             containerColor = DT.Surface,
-            title = { Text("Delete product?", color = Color.White, fontWeight = FontWeight.Bold) },
+            title = { Text("Delete product?", color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = { Text("\"${product.name}\" will be permanently removed. This cannot be undone.", color = DT.SubText) },
             confirmButton = {
                 Button(

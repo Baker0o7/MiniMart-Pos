@@ -67,7 +67,7 @@ private val PurpleGlow  = Color(0xFFB39DDB)
 private val BlueGlow    = Color(0xFF64B5F6)
 private val AmberGlow   = Color(0xFFFFB74D)
 private val RedGlow     = Color(0xFFEF5350)
-private val White       = Color.White
+private val White: Color get() = DT.Ink
 private val Sub: Color get() = DT.SubText
 
 internal data class DashCard_(
@@ -231,7 +231,7 @@ fun DashboardScreen(
                 // One combined summary card: revenue on the left, count + average basket on the right.
                 Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .background(Brush.linearGradient(listOf(Color(0xFF0B3A33), Color(0xFF0A2A3A), Color(0xFF14204A))))
+                    .background(Brush.linearGradient(if (DT.light) listOf(DT.CardTop, DT.CardBottom) else listOf(Color(0xFF0B3A33), Color(0xFF0A2A3A), Color(0xFF14204A))))
                     .border(1.dp, TealGlow.copy(0.5f), RoundedCornerShape(20.dp))) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         // Left: revenue
@@ -340,6 +340,19 @@ fun DashboardScreen(
                 Text("Drag a tile to move it, or tap one and then tap where it should go. The red × hides a tile.", color = Sub, fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp))
             }
+            // Hidden tiles are brought back from here, while arranging, so Home stays uncluttered the rest of the time.
+            if (showManageActions) item {
+                val hiddenCount = hiddenActions.split(",").count { it.isNotBlank() }
+                if (hiddenCount > 0) {
+                    val restoreScope = rememberCoroutineScope()
+                    TextButton(onClick = { restoreScope.launch { settingsRepo?.setHiddenActions("") } },
+                        modifier = Modifier.padding(horizontal = 12.dp).heightIn(min = 48.dp)) {
+                        Icon(Icons.Default.Restore, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Restore $hiddenCount hidden tile${if (hiddenCount == 1) "" else "s"}", color = DT.Teal, fontSize = 13.sp)
+                    }
+                }
+            }
 
             // ── Cards grid ────────────────────────────────────────────────────
             item {
@@ -382,18 +395,9 @@ fun DashboardScreen(
                         onStartEditing = { showManageActions = true },
                         columns = actionColumns
                     )
-                    val hidden2 = hiddenActions.split(",").filter { it.isNotBlank() }.toSet()
-                    if (hidden2.isNotEmpty()) {
-                        val restoreScope = rememberCoroutineScope()
-                        TextButton(onClick = { restoreScope.launch { settingsRepo?.setHiddenActions("") } },
-                            modifier = Modifier.fillMaxWidth()) {
-                            Icon(Icons.Default.Restore, null, tint = DT.Teal, modifier = Modifier.size(15.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Restore ${hidden2.size} hidden tile${if (hidden2.size == 1) "" else "s"}", color = DT.Teal, fontSize = 12.sp)
-                        }
-                    }
                 }
             }
+
 
             // ── Top sellers ───────────────────────────────────────────────────
             if (state.topSellers.isNotEmpty()) {
@@ -465,7 +469,7 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: Co
         .defaultMinSize(minHeight = 82.dp)
         .graphicsLayer { scaleX = scale; scaleY = scale; alpha = if (dragging) 0.85f else 1f }
         .clip(RoundedCornerShape(16.dp))
-        .background(Brush.verticalGradient(listOf(if (selected) glow.copy(0.28f) else bg, Bg)))
+        .background(Brush.verticalGradient(listOf(if (selected) glow.copy(0.28f) else DT.tone(bg, glow), Bg)))
         .border(if (lifted) 2.5.dp else if (editing) 1.5.dp else 1.dp,
             glow.copy(if (lifted) 1f else if (editing) 0.9f else 0.5f), RoundedCornerShape(16.dp))
         // TalkBack reads the short description we no longer show on screen.
@@ -634,7 +638,7 @@ private fun SummaryStat(icon: ImageVector, glow: Color, label: String, value: St
 private fun DashAlert(icon: ImageVector, glow: Color, bg: Color,
     title: String, sub: String, action: () -> Unit) {
     Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 3.dp)
-        .clip(RoundedCornerShape(16.dp)).background(bg)
+        .clip(RoundedCornerShape(16.dp)).background(DT.tone(bg, glow))
         .border(1.dp, glow.copy(0.25f), RoundedCornerShape(16.dp)).padding(14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(glow.copy(0.15f)),

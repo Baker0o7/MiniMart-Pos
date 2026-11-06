@@ -187,7 +187,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                 Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
-                    .background(Brush.verticalGradient(listOf(Color(0xFF0B2210), Color(0xFF060E08))))
+                    .background(Brush.verticalGradient(listOf(DT.tone(Color(0xFF0B2210), DT.Green), DT.tone(Color(0xFF060E08), DT.Green, .04f))))
                     .border(1.dp, DT.Green.copy(0.25f), RoundedCornerShape(18.dp)).padding(14.dp)) {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -204,7 +204,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                     }
                 }
                 Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
-                    .background(Brush.verticalGradient(listOf(Color(0xFF220B0B), Color(0xFF0E0606))))
+                    .background(Brush.verticalGradient(listOf(DT.tone(Color(0xFF220B0B), DT.Red), DT.tone(Color(0xFF0E0606), DT.Red, .04f))))
                     .border(1.dp, DT.Red.copy(0.25f), RoundedCornerShape(18.dp)).padding(14.dp)) {
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -225,7 +225,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
         // Net profit
         item {
             val profitColor = if (netProfit >= 0) DT.Green else DT.Red
-            val profitBg = if (netProfit >= 0) Color(0xFF0B2210) else Color(0xFF220B0B)
+            val profitBg = if (netProfit >= 0) DT.tone(Color(0xFF0B2210), DT.Green) else DT.tone(Color(0xFF220B0B), DT.Red)
             Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
                 .background(Brush.horizontalGradient(listOf(profitBg, DT.Surface)))
                 .border(1.dp, profitColor.copy(0.25f), RoundedCornerShape(18.dp)).padding(18.dp)) {
@@ -262,7 +262,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                     Icon(Icons.Default.BarChart, null, tint = DT.Red, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("By Category", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text("By Category", color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
             items(sortedCategories, key = { it.key.name }) { (cat, amount) ->
@@ -274,7 +274,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                         Row(modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically) {
-                            Text("${cat.toEmoji()} ${prettyEnumName(cat.name)}", color = Color.White,
+                            Text("${cat.toEmoji()} ${prettyEnumName(cat.name)}", color = DT.Ink,
                                 fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                             Column(horizontalAlignment = Alignment.End) {
                                 Text(expenseAmount(currency, amount), color = DT.Red, fontWeight = FontWeight.Bold)
@@ -380,7 +380,7 @@ private fun ExpenseListTab(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(group.label, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(group.label, color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         Text(expenseAmount(currency, group.total), color = DT.SubText, fontSize = 12.sp)
                     }
                 }
@@ -395,7 +395,7 @@ private fun ExpenseListTab(
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
             containerColor = DT.Surface,
-            title = { Text("Delete expense?", color = Color.White, fontWeight = FontWeight.Bold) },
+            title = { Text("Delete expense?", color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = {
                 Text("\"${expense.title}\" (${expenseAmount(currency, expense.amount)}) will be permanently removed.",
                     color = DT.SubText)

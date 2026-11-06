@@ -48,10 +48,10 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 /**
- * The app is dark on every screen, so Material's own parts (menus, dialogs, text selection, date
- * pickers, switches) are given the same dark palette. They used to follow the system light/dark
- * setting and the wallpaper colours, which put pale menus on dark screens. [darkTheme] and
- * [dynamicColor] are kept for callers but no longer change anything.
+ * The colours of every Material part (menus, dialogs, text selection, date pickers, switches) come from
+ * the same palette as the screens, dark by default or light when the owner picks it in Settings. They
+ * no longer follow the wallpaper colours, which put pale menus on dark screens. [darkTheme] and
+ * [dynamicColor] are kept for callers but change nothing.
  */
 @Composable
 fun MiniMartTheme(
@@ -59,7 +59,22 @@ fun MiniMartTheme(
     @Suppress("UNUSED_PARAMETER") dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = darkColorScheme(
+    val light = DT.light
+    val colorScheme = if (light) lightColorScheme(
+        primary = DT.Teal, onPrimary = Color.White,
+        primaryContainer = DT.TealDim, onPrimaryContainer = DT.OnSurface,
+        secondary = DT.TealLight, onSecondary = Color.White,
+        secondaryContainer = DT.Surface2, onSecondaryContainer = DT.OnSurface,
+        tertiary = DT.Amber, onTertiary = Color.White,
+        background = DT.Bg, onBackground = DT.OnSurface,
+        surface = DT.Surface, onSurface = DT.OnSurface,
+        surfaceVariant = DT.Surface2, onSurfaceVariant = DT.SubText,
+        surfaceTint = DT.Teal,
+        outline = DT.SubText, outlineVariant = DT.Border,
+        error = DT.Red, onError = Color.White,
+        surfaceContainerLowest = DT.Bg, surfaceContainerLow = DT.Surface,
+        surfaceContainer = DT.Surface, surfaceContainerHigh = DT.Surface2, surfaceContainerHighest = DT.Surface2
+    ) else darkColorScheme(
         primary = DT.Teal, onPrimary = Color.White,
         primaryContainer = DT.TealDim, onPrimaryContainer = DT.TealLight,
         secondary = DT.TealLight, onSecondary = Color.Black,
@@ -79,12 +94,11 @@ fun MiniMartTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? android.app.Activity)?.window ?: return@SideEffect
-            // Every screen paints a dark teal background whatever the Dark-mode switch says, so the
-            // system bar icons must always be light. They used to follow !darkTheme, which made
-            // the clock/battery and the back/home buttons near-invisible with Dark mode off.
+            // Status and navigation bar icons must contrast with the screen: dark icons on the light theme,
+            // light icons on the dark one.
             val controller = WindowCompat.getInsetsController(window, view)
-            controller.isAppearanceLightStatusBars = false
-            controller.isAppearanceLightNavigationBars = false
+            controller.isAppearanceLightStatusBars = light
+            controller.isAppearanceLightNavigationBars = light
         }
     }
 

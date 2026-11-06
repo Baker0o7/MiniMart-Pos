@@ -9,7 +9,13 @@ import com.minimart.pos.data.entity.PaymentMethod
  * read on the dark background. These are all light enough for text on every accent (checked in PaletteTest),
  * and no payment method uses red, which the app keeps for problems.
  */
-fun paymentColor(method: PaymentMethod): Color = when (method) {
+fun paymentColor(method: PaymentMethod, light: Boolean = DT.light): Color = if (light) when (method) {
+    PaymentMethod.CASH   -> Color(0xFF1B5E20)
+    PaymentMethod.MPESA  -> Color(0xFF00695C)
+    PaymentMethod.CARD   -> Color(0xFF0D47A1)
+    PaymentMethod.MIXED  -> Color(0xFF8A5300)
+    PaymentMethod.CREDIT -> Color(0xFF7B1FA2)
+} else when (method) {
     PaymentMethod.CASH   -> Color(0xFF81C784)
     PaymentMethod.MPESA  -> Color(0xFF2DD4BF)
     PaymentMethod.CARD   -> Color(0xFF64B5F6)

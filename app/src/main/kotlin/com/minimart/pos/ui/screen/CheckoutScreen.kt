@@ -154,7 +154,7 @@ fun CheckoutScreen(
         AlertDialog(
             onDismissRequest = { showDiscountDialog = false },
             containerColor = DT.Surface,
-            title = { Text("Discount", color = Color.White, fontWeight = FontWeight.Bold) },
+            title = { Text("Discount", color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = {
                 OutlinedTextField(value = globalDiscount,
                     onValueChange = { globalDiscount = sanitizeMoneyInput(it); vm.setGlobalDiscount(globalDiscount.toDoubleOrNull() ?: 0.0) },
@@ -163,7 +163,7 @@ fun CheckoutScreen(
                     singleLine = true, shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                        focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                         cursorColor = DT.Teal))
             },
             confirmButton = { TextButton(onClick = { showDiscountDialog = false }) { Text("Done", color = DT.Teal) } },
@@ -197,7 +197,7 @@ fun CheckoutScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Receipt, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Order Summary", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("Order Summary", color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                     Spacer(Modifier.height(12.dp))
                     HorizontalDivider(color = DT.Border)
@@ -213,7 +213,7 @@ fun CheckoutScreen(
                             }
                             Spacer(Modifier.width(10.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(item.product.name, color = Color.White, fontWeight = FontWeight.SemiBold,
+                                Text(item.product.name, color = DT.Ink, fontWeight = FontWeight.SemiBold,
                                     fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 Text("$currency ${String.format(java.util.Locale.US, "%,.2f", item.product.price)} × ${item.quantity}",
                                     color = DT.SubText, style = MaterialTheme.typography.labelSmall)
@@ -261,7 +261,7 @@ fun CheckoutScreen(
                     Spacer(Modifier.height(10.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically) {
-                        Text("TOTAL", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, letterSpacing = 1.sp)
+                        Text("TOTAL", color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, letterSpacing = 1.sp)
                         Text("$currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}", color = DT.Teal,
                             fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
                     }
@@ -320,7 +320,7 @@ fun CheckoutScreen(
                     .padding(start = 12.dp, top = 2.dp, bottom = 2.dp, end = 2.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text(selectedCustomer?.name ?: "", color = Color.White, fontWeight = FontWeight.SemiBold,
+                        Text(selectedCustomer?.name ?: "", color = DT.Ink, fontWeight = FontWeight.SemiBold,
                             fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(listOfNotNull(selectedCustomer?.phone?.takeIf { it.isNotBlank() },
                             "Credit: $currency ${String.format(java.util.Locale.US, "%,.2f", creditBalance)}").joinToString("  •  "),
@@ -352,7 +352,7 @@ fun CheckoutScreen(
                                 shape = RoundedCornerShape(14.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                                    focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                    focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                                     cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                                 // "Exact" is by far the most common tender — one tap instead of typing the total.
@@ -417,9 +417,9 @@ fun CheckoutScreen(
                                                     shape = RoundedCornerShape(12.dp),
                                                     colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
                                                 ) {
-                                                    Icon(Icons.Default.PhoneAndroid, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                                    Icon(Icons.Default.PhoneAndroid, null, tint = DT.Ink, modifier = Modifier.size(18.dp))
                                                     Spacer(Modifier.width(8.dp))
-                                                    Text("Send to Customer's Phone", color = Color.White, fontWeight = FontWeight.Bold)
+                                                    Text("Send to Customer's Phone", color = DT.Ink, fontWeight = FontWeight.Bold)
                                                 }
                                             } else {
                                                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
@@ -501,7 +501,7 @@ fun CheckoutScreen(
                                     shape = RoundedCornerShape(14.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                        focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                                         cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface))
 
                                 if (!stkConfirmed) {
@@ -550,7 +550,7 @@ fun CheckoutScreen(
                                             }
                                             Spacer(Modifier.width(12.dp))
                                             Column(Modifier.weight(1f)) {
-                                                Text(selectedCustomer?.name ?: "", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                                Text(selectedCustomer?.name ?: "", color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                                 if (selectedCustomer?.phone?.isNotBlank() == true)
                                                     Text(selectedCustomer?.phone ?: "", color = DT.SubText, fontSize = 12.sp)
                                             }
@@ -592,7 +592,7 @@ fun CheckoutScreen(
                                         null, tint = if (useSplitPayment) DT.Teal else DT.SubText, modifier = Modifier.size(20.dp))
                                     Spacer(Modifier.width(10.dp))
                                     Column(Modifier.weight(1f)) {
-                                        Text("Split payment (Credit + Cash)", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                        Text("Split payment (Credit + Cash)", color = DT.Ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                                         Text("Pay part with credit, rest with cash", color = DT.SubText, fontSize = 11.sp)
                                     }
                                 }
@@ -608,7 +608,7 @@ fun CheckoutScreen(
                                             shape = RoundedCornerShape(14.dp),
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                                focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                                                 cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface))
                                         if (splitCredit > 0) {
                                             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
@@ -631,7 +631,7 @@ fun CheckoutScreen(
                                             shape = RoundedCornerShape(14.dp),
                                             colors = OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                                focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                                                 cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface))
                                     }
                                 }
@@ -820,7 +820,7 @@ private fun CustomerSearchSheet(
 
             // Header
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Select Customer", color = Color.White, fontWeight = FontWeight.Bold,
+                Text("Select Customer", color = DT.Ink, fontWeight = FontWeight.Bold,
                     fontSize = 18.sp, modifier = Modifier.weight(1f))
                 // Import from contacts
                 IconButton(onClick = {
@@ -858,7 +858,7 @@ private fun CustomerSearchSheet(
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                                 cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                         OutlinedTextField(value = newPhone, onValueChange = { newPhone = it },
                             label = { Text("Phone Number", color = DT.SubText) },
@@ -868,7 +868,7 @@ private fun CustomerSearchSheet(
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                                 cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             OutlinedButton(onClick = { showAddForm = false },
@@ -885,9 +885,9 @@ private fun CustomerSearchSheet(
                                 enabled = newName.isNotBlank(),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = DT.Green)) {
-                                Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.Check, null, tint = DT.Ink, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Save & Select", color = Color.White, fontSize = 13.sp)
+                                Text("Save & Select", color = DT.Ink, fontSize = 13.sp)
                             }
                         }
                     }
@@ -906,7 +906,7 @@ private fun CustomerSearchSheet(
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                    focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                    focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                     cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
 
             // Customer list
@@ -951,7 +951,7 @@ private fun CustomerSearchSheet(
                             }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(cust.name, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                Text(cust.name, color = DT.Ink, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                 if (cust.phone.isNotBlank()) Text(cust.phone, color = DT.SubText, fontSize = 12.sp)
                                 Text("${cust.visitCount} visits  •  $currency ${String.format(java.util.Locale.US, "%,.0f", cust.totalPurchases)} total",
                                     color = DT.SubText, fontSize = 11.sp)

@@ -193,7 +193,7 @@ private fun CustomerCard(customer: Customer, currency: String, onSelect: () -> U
                     color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text(customer.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp,
+                Text(customer.name, color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (customer.phone.isNotBlank())
                     Text(customer.phone, color = DT.SubText, fontSize = 12.sp)
@@ -247,7 +247,7 @@ private fun CustomerDetailSheet(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             containerColor = DT.Surface,
-            title = { Text("Delete ${customer.name}?", color = Color.White, fontWeight = FontWeight.Bold) },
+            title = { Text("Delete ${customer.name}?", color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = {
                 // Deleting wipes the credit ledger too — make the cashier look at what is being lost.
                 val balanceNote = when {
@@ -281,7 +281,7 @@ private fun CustomerDetailSheet(
                     }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(customer.name, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp,
+                        Text(customer.name, color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp,
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
                         if (customer.phone.isNotBlank()) Text(customer.phone, color = DT.SubText)
                         if (customer.email.isNotBlank()) Text(customer.email, color = DT.SubText, fontSize = 12.sp)
@@ -315,14 +315,14 @@ private fun CustomerDetailSheet(
                 Button(onClick = onAddCredit, modifier = Modifier.fillMaxWidth().height(50.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
-                    Icon(Icons.Default.AddCard, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.AddCard, null, tint = DT.Ink, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Add Credit", fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Add Credit", fontWeight = FontWeight.Bold, color = DT.Ink)
                 }
             }
             // Transaction history
             if (transactions.isNotEmpty()) {
-                item { Text("Credit History", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
+                item { Text("Credit History", color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
                 items(transactions.take(20)) { tx ->
                     Row(modifier = Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp)).background(DT.Surface2)
@@ -336,7 +336,7 @@ private fun CustomerDetailSheet(
                         }
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(tx.type.name.replace("_", " "), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text(tx.type.name.replace("_", " "), color = DT.Ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                             if (tx.notes.isNotBlank()) Text(tx.notes, color = DT.SubText, fontSize = 11.sp)
                             Text(df.format(Date(tx.createdAt)), color = DT.SubText, fontSize = 11.sp)
                         }
@@ -380,7 +380,7 @@ private fun AddCustomerDialog(customer: Customer?, onDismiss: () -> Unit, onSave
 
     AlertDialog(onDismissRequest = onDismiss, containerColor = DT.Surface,
         title = { Text(if (customer == null) "New Customer" else "Edit Customer",
-            color = Color.White, fontWeight = FontWeight.Bold) },
+            color = DT.Ink, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
@@ -393,7 +393,7 @@ private fun AddCustomerDialog(customer: Customer?, onDismiss: () -> Unit, onSave
                     OutlinedTextField(value = value, onValueChange = onChange, label = { Text(label, color = DT.SubText) },
                         singleLine = true, modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                            focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                            focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                             cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                 }
             }
@@ -406,7 +406,7 @@ private fun AddCustomerDialog(customer: Customer?, onDismiss: () -> Unit, onSave
                 visitCount = customer?.visitCount ?: 0)) },
                 enabled = name.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Green),
-                shape = RoundedCornerShape(12.dp)) { Text("Save", color = Color.White, fontWeight = FontWeight.Bold) }
+                shape = RoundedCornerShape(12.dp)) { Text("Save", color = DT.Ink, fontWeight = FontWeight.Bold) }
         },
         dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
     )
@@ -418,7 +418,7 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
     var notes  by remember { mutableStateOf("") }
 
     AlertDialog(onDismissRequest = onDismiss, containerColor = DT.Surface,
-        title = { Text("Add Credit — ${customer.name}", color = Color.White, fontWeight = FontWeight.Bold) },
+        title = { Text("Add Credit — ${customer.name}", color = DT.Ink, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 // Bug fix: hardcoded "KES" + always teal even when the customer owes
@@ -434,7 +434,7 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                        focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                         cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                 // Quick amounts
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -455,7 +455,7 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
                     label = { Text("Notes (optional)", color = DT.SubText) }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                        focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                         cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
             }
         },
@@ -463,7 +463,7 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
             Button(onClick = { onAdd(amount.toDoubleOrNull() ?: 0.0, notes.trim()) },
                 enabled = (amount.toDoubleOrNull() ?: 0.0) > 0,
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Green, contentColor = Color.White, disabledContainerColor = DT.Green.copy(0.45f), disabledContentColor = Color.White.copy(0.7f)),
-                shape = RoundedCornerShape(12.dp)) { Text("Add Credit", color = Color.White, fontWeight = FontWeight.ExtraBold) }
+                shape = RoundedCornerShape(12.dp)) { Text("Add Credit", color = DT.Ink, fontWeight = FontWeight.ExtraBold) }
         },
         dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
     )

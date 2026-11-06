@@ -266,7 +266,7 @@ private fun ProductRow(product: Product, currency: String, canEdit: Boolean, onE
     }
     if (showDeleteConfirm) {
         AlertDialog(onDismissRequest = { showDeleteConfirm = false }, containerColor = DT.Surface,
-            title = { Text("Delete product?", color = Color.White, fontWeight = FontWeight.Bold) },
+            title = { Text("Delete product?", color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = { Text("\"${product.name}\" will be removed from your catalogue. Past sales keep their records.", color = DT.SubText) },
             confirmButton = {
                 Button(
@@ -450,7 +450,7 @@ fun AddEditProductDialog(
                             if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
                             else showScanner = !showScanner
                         }, colors = IconButtonDefaults.filledIconButtonColors(containerColor = DT.Teal)) {
-                            Icon(Icons.Default.QrCode, "Scan barcode", tint = Color.White)
+                            Icon(Icons.Default.QrCode, "Scan barcode", tint = DT.Ink)
                         }
                     }
                     if (showScanner && cameraPermission.status.isGranted) {
@@ -459,7 +459,7 @@ fun AddEditProductDialog(
                                 onBarcodeDetected = { barcode = it; showScanner = false })
                             ScannerOverlay(modifier = Modifier.fillMaxSize())
                             IconButton(onClick = { showScanner = false }, modifier = Modifier.align(Alignment.TopEnd)) {
-                                Icon(Icons.Default.Close, "Close scanner", tint = Color.White)
+                                Icon(Icons.Default.Close, "Close scanner", tint = DT.Ink)
                             }
                         }
                     }

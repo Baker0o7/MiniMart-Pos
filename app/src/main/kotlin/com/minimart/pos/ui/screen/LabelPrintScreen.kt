@@ -84,9 +84,9 @@ fun LabelPrintScreen(onBack: () -> Unit, vm: LabelPrintViewModel = hiltViewModel
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
             ) {
-                Icon(Icons.Default.Print, null, tint = Color.White)
+                Icon(Icons.Default.Print, null, tint = DT.Ink)
                 Spacer(Modifier.width(8.dp))
-                Text(if (s.printing) "Printing…" else "Print ${s.totalLabels} label${if (s.totalLabels == 1) "" else "s"}", fontWeight = FontWeight.Bold, color = Color.White)
+                Text(if (s.printing) "Printing…" else "Print ${s.totalLabels} label${if (s.totalLabels == 1) "" else "s"}", fontWeight = FontWeight.Bold, color = DT.Ink)
             }
         }
     }

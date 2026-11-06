@@ -146,7 +146,7 @@ fun ReceiptScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text(storeName, color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp,
+                                Text(storeName, color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp,
                                     maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                                 Text(
                                     "${(state.cashierName ?: cashierName).ifBlank { "Admin" }} · " +
@@ -167,7 +167,7 @@ fun ReceiptScreen(
                         items.forEach { item ->
                             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
-                                    Text(item.productName, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
+                                    Text(item.productName, color = DT.Ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
                                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                                     // For weighed items unitPrice holds the calculated line total (see
                                     // CartViewModel.addWeighedItem), so price/kg is derived by dividing back.
@@ -176,7 +176,7 @@ fun ReceiptScreen(
                                          else "${item.quantity} × ${String.format(java.util.Locale.US, "%,.2f", item.unitPrice)}"),
                                         color = DT.SubText, fontSize = 11.sp)
                                 }
-                                Text(money(item.lineTotal), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Text(money(item.lineTotal), color = DT.Ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                             }
                         }
                         Spacer(Modifier.height(4.dp))
@@ -197,7 +197,7 @@ fun ReceiptScreen(
                             Spacer(Modifier.height(4.dp))
                         }
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text("TOTAL", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp,
+                            Text("TOTAL", color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp,
                                 modifier = Modifier.weight(1f), letterSpacing = 1.sp)
                             Text(money(sale?.totalAmount ?: 0.0), color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
                         }
@@ -301,9 +301,9 @@ fun ReceiptScreen(
                 modifier = Modifier.weight(1.6f).height(50.dp).semantics { contentDescription = "New sale" },
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
-                Icon(Icons.Default.QrCode, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.QrCode, null, tint = DT.Ink, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("New Sale", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 15.sp)
+                Text("New Sale", fontWeight = FontWeight.Bold, color = DT.Ink, fontSize = 15.sp)
             }
         }
     }

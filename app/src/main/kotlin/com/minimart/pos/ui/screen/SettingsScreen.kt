@@ -131,7 +131,7 @@ fun SettingsScreen(
                         Box(Modifier.clip(RoundedCornerShape(20.dp)).background(badge.copy(0.22f))
                             .border(1.dp, badge.copy(0.6f), RoundedCornerShape(20.dp))
                             .padding(horizontal = 12.dp, vertical = 5.dp)) {
-                            Text(RoleManager.roleLabel(role), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(RoleManager.roleLabel(role), color = DT.Ink, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -207,7 +207,7 @@ fun SettingsScreen(
                                 shape = RoundedCornerShape(20.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal),
                                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
-                            ) { Text(if (printerName.isNullOrBlank()) "Pair" else "Change", color = Color.White, fontWeight = FontWeight.Bold) }
+                            ) { Text(if (printerName.isNullOrBlank()) "Pair" else "Change", color = DT.Ink, fontWeight = FontWeight.Bold) }
                         }
                         printerStatus?.let { Text(it, color = if (it.startsWith("✓")) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall) }
                         val paperMm by settingsRepo.paperWidthMm.collectAsStateWithLifecycle(58)
@@ -245,7 +245,7 @@ fun SettingsScreen(
                         // Auto open on sale toggle
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("Open on cash sale", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text("Open on cash sale", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                                 Text("Auto-opens when cash payment completes", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Switch(checked = cashDrawerOnSale, onCheckedChange = { scope.launch { settingsRepo.setCashDrawerOnSale(it) } },
@@ -265,7 +265,7 @@ fun SettingsScreen(
                             },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                                 focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                         Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -299,7 +299,7 @@ fun SettingsScreen(
                         initiallyExpanded = false) {
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("Blind close", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text("Blind close", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                                 Text("Cashiers count the till without seeing the expected cash. Managers and owners see the variance on the Z-report.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Switch(checked = blindClose, onCheckedChange = { scope.launch { settingsRepo.setBlindClose(it) } },
@@ -308,14 +308,14 @@ fun SettingsScreen(
                         Spacer(Modifier.height(12.dp))
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("Customer display on second screen", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text("Customer display on second screen", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                                 Text("Shows the live cart on an attached HDMI or dual-screen display. The Customer tile on Home also works full-screen on this device.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Switch(checked = secondScreen, onCheckedChange = { scope.launch { settingsRepo.setCustomerDisplayEnabled(it) } },
                                 colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
                         }
                         Spacer(Modifier.height(12.dp))
-                        Text("Drawer kick pin", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                        Text("Drawer kick pin", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                         Text("Try pin 5 if the drawer does not open on pin 2.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
                             FilterChip(selected = kickPin == 0, onClick = { scope.launch { settingsRepo.setCashDrawerPin(0) } }, label = { Text("Pin 2") })
@@ -330,7 +330,7 @@ fun SettingsScreen(
                     var beepOn by remember { mutableStateOf(com.minimart.pos.util.ScanFeedback.isOn(beepContext)) }
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Beep on scan", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                            Text("Beep on scan", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                             Text("A short beep when an item is added, and a lower double beep when a scan is not found or out of stock. Follows the notification volume.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                         }
                         Switch(checked = beepOn, onCheckedChange = { beepOn = it; com.minimart.pos.util.ScanFeedback.setOn(beepContext, it) },
@@ -362,7 +362,7 @@ fun SettingsScreen(
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 modifier = Modifier.padding(vertical = 4.dp)) {
                                 Icon(Icons.Default.Bluetooth, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
-                                Text(name, color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text(name, color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                                 Box(Modifier.clip(RoundedCornerShape(6.dp)).background(DT.Green.copy(0.15f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
                                     Text("Paired", color = DT.Green, style = MaterialTheme.typography.labelSmall)
                                 }
@@ -422,7 +422,7 @@ fun SettingsScreen(
                         // This device as server
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("Act as Sync Server", color = Color.White, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text("Act as Sync Server", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                                 if (syncState.serverRunning)
                                     Text("Server IP: ${syncState.serverIp}:9876", color = DT.Teal, fontSize = 11.sp)
                                 else
@@ -450,7 +450,7 @@ fun SettingsScreen(
                                         Text("Pairing code — enter this on the other device", color = DT.Teal, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                                     }
                                     Spacer(Modifier.height(4.dp))
-                                    Text(com.minimart.pos.util.PairingCode.grouped(syncState.mySecret), color = Color.White, fontSize = 20.sp,
+                                    Text(com.minimart.pos.util.PairingCode.grouped(syncState.mySecret), color = DT.Ink, fontSize = 20.sp,
                                         fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
                                     Text("Sync between phones is encrypted with this code.", color = DT.SubText, fontSize = 11.sp)
                                     var confirmReset by remember { mutableStateOf(false) }
@@ -461,7 +461,7 @@ fun SettingsScreen(
                                     if (confirmReset) AlertDialog(
                                         onDismissRequest = { confirmReset = false },
                                         containerColor = DT.Surface,
-                                        title = { Text("Make a new pairing code?", color = Color.White) },
+                                        title = { Text("Make a new pairing code?", color = DT.Ink) },
                                         text = { Text("Every till must enter the new code before it can sync again.", color = DT.SubText) },
                                         confirmButton = { TextButton(onClick = { syncVm.resetPairingCode(); confirmReset = false }) { Text("Make new code", color = DT.Teal) } },
                                         dismissButton = { TextButton(onClick = { confirmReset = false }) { Text("Cancel", color = DT.SubText) } }
@@ -475,7 +475,7 @@ fun SettingsScreen(
                         Spacer(Modifier.height(14.dp))
 
                         // Connect to another server
-                        Text("Connect to Server", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text("Connect to Server", color = DT.Ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(6.dp))
                         OutlinedTextField(
                             value = syncState.peerIp,
@@ -486,7 +486,7 @@ fun SettingsScreen(
                             singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Next), modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                                 focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                         Spacer(Modifier.height(8.dp))
                         OutlinedTextField(
@@ -498,7 +498,7 @@ fun SettingsScreen(
                             singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                                focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                                focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                                 focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                         Spacer(Modifier.height(10.dp))
 
@@ -517,9 +517,9 @@ fun SettingsScreen(
                                 if (syncState.isSyncing) {
                                     CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                                 } else {
-                                    Icon(Icons.Default.Sync, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Default.Sync, null, tint = DT.Ink, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Sync Now", color = Color.White, fontSize = 13.sp)
+                                    Text("Sync Now", color = DT.Ink, fontSize = 13.sp)
                                 }
                             }
                         }
@@ -553,7 +553,7 @@ fun SettingsScreen(
                     val cs by cloudVm.state.collectAsStateWithLifecycle()
                     val fieldColors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                        focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                         focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg)
                     DSection("Cloud dashboard (multi-store)", Icons.Default.Sync,
                         summary = if (cs.connected) "Connected" else "Off",
@@ -582,11 +582,11 @@ fun SettingsScreen(
                             Button(onClick = { cloudVm.connect() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.Surface2)) {
                                 if (cs.busy) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
-                                else Text("Connect & upload", color = Color.White, fontSize = 13.sp)
+                                else Text("Connect & upload", color = DT.Ink, fontSize = 13.sp)
                             }
                         } else {
                             Text(if (cs.lastPushAt > 0) "Last upload: " + java.text.SimpleDateFormat("d MMM, HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(java.util.Date(cs.lastPushAt)) else "Not uploaded yet",
-                                color = Color.White, fontSize = 12.sp)
+                                color = DT.Ink, fontSize = 12.sp)
                             Spacer(Modifier.height(4.dp))
                             Text("Uploads automatically every few hours and when a shift is closed.", color = DT.SubText, fontSize = 11.sp)
                             Spacer(Modifier.height(10.dp))
@@ -594,7 +594,7 @@ fun SettingsScreen(
                                 Button(onClick = { cloudVm.uploadNow() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.Surface2)) {
                                     if (cs.busy) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
-                                    else Text("Upload now", color = Color.White, fontSize = 13.sp)
+                                    else Text("Upload now", color = DT.Ink, fontSize = 13.sp)
                                 }
                                 OutlinedButton(onClick = { cloudVm.disconnect() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp)) {
                                     Text("Disconnect", color = DT.Red, fontSize = 13.sp)
@@ -706,7 +706,7 @@ fun SettingsScreen(
                                             }
                                         },
                                         colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
-                                    ) { Text("Back up", color = Color.White) }
+                                    ) { Text("Back up", color = DT.Ink) }
                                 },
                                 dismissButton = { TextButton(onClick = { showBackupDialog = false }) { Text("Cancel", color = DT.SubText) } }
                             )
@@ -717,8 +717,8 @@ fun SettingsScreen(
                             Button(onClick = { showBackupDialog = true }, modifier = Modifier.weight(1f), enabled = !isBackingUp,
                                 shape = RoundedCornerShape(10.dp), colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
                                 if (isBackingUp) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
-                                else Icon(Icons.Default.Backup, null, tint = Color.White, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp)); Text("Backup", color = Color.White)
+                                else Icon(Icons.Default.Backup, null, tint = DT.Ink, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp)); Text("Backup", color = DT.Ink)
                             }
                             OutlinedButton(onClick = { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context); showRestore = true },
                                 modifier = Modifier.weight(1f), shape = RoundedCornerShape(10.dp),
@@ -733,8 +733,8 @@ fun SettingsScreen(
                             Button(onClick = { com.minimart.pos.util.BackupManager.shareBackup(context, f) },
                                 modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = DT.Green.copy(0.85f))) {
-                                Icon(Icons.Default.Share, null, tint = Color.White, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp)); Text("Save a copy off this phone", color = Color.White, fontWeight = FontWeight.Bold)
+                                Icon(Icons.Default.Share, null, tint = DT.Ink, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp)); Text("Save a copy off this phone", color = DT.Ink, fontWeight = FontWeight.Bold)
                             }
                         }
                         val integrityRunning by integrityVm.running.collectAsStateWithLifecycle()
@@ -812,7 +812,7 @@ fun SettingsScreen(
                             AlertDialog(
                                 onDismissRequest = { pendingRestoreFile = null },
                                 containerColor = DT.Surface,
-                                title = { Text("Restore This Backup?", color = Color.White, fontWeight = FontWeight.Bold) },
+                                title = { Text("Restore This Backup?", color = DT.Ink, fontWeight = FontWeight.Bold) },
                                 text = {
                                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                         Text("\"${f.name}\" will replace ALL current data — every sale, product, and customer added since this backup was made will be lost. This cannot be undone. The app will restart.", color = DT.SubText)

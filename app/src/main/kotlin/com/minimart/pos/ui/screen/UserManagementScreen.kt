@@ -322,7 +322,7 @@ private fun DarkUserRow(user: User, isMe: Boolean, onChangePin: () -> Unit, onRe
     }
     if (showConfirm && onRemove != null) {
         AlertDialog(onDismissRequest = { showConfirm = false }, containerColor = DT.Surface,
-            title = { Text("Remove User?", color = Color.White, fontWeight = FontWeight.Bold) },
+            title = { Text("Remove User?", color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = { Text("\"${user.displayName}\" will lose access immediately. This cannot be undone.", color = DT.SubText) },
             confirmButton = {
                 Button(

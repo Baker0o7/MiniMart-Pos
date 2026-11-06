@@ -78,7 +78,7 @@ fun ScannerCartScreen(
         AlertDialog(
             onDismissRequest = { showClearConfirm = false },
             containerColor = DT.Surface,
-            title = { Text("Clear the cart?", color = Color.White, fontWeight = FontWeight.Bold) },
+            title = { Text("Clear the cart?", color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = { Text("All ${state.items.size} item(s) will be removed.", color = DT.SubText) },
             confirmButton = {
                 Button(onClick = { showClearConfirm = false; vm.clearCart() },
@@ -220,7 +220,7 @@ fun ScannerCartScreen(
                 AlertDialog(
                     onDismissRequest = { showHeld = false },
                     containerColor = DT.Surface,
-                    title = { Text("Held sales", color = Color.White, fontWeight = FontWeight.Bold) },
+                    title = { Text("Held sales", color = DT.Ink, fontWeight = FontWeight.Bold) },
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             if (state.items.isNotEmpty())
@@ -374,7 +374,7 @@ fun ScannerCartScreen(
                     .padding(start = 18.dp, end = 14.dp, top = 10.dp, bottom = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(if (state.items.isNotEmpty()) "Cart" else "", color = Color.White,
+                    Text(if (state.items.isNotEmpty()) "Cart" else "", color = DT.Ink,
                         fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f))
                     if (held.isNotEmpty()) {
                         CartChip("Held (${held.size})", Icons.Default.PlayCircle, DT.Amber) { showHeld = true }
@@ -437,7 +437,7 @@ fun ScannerCartScreen(
                             Text("TOTAL", color = DT.SubText, fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
                             Text("$currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}",
-                                color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
+                                color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
                         }
                         // Checkout pill button
                         Button(
@@ -448,9 +448,9 @@ fun ScannerCartScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = DT.Teal),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                         ) {
-                            Icon(Icons.Default.ShoppingCart, null, tint = Color.White, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.ShoppingCart, null, tint = DT.Ink, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("Checkout", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = Color.White)
+                            Text("Checkout", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = DT.Ink)
                         }
                     }
                     // ∞ + Scan row
@@ -491,10 +491,10 @@ fun ScannerCartScreen(
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Icon(
                                     if (showScanner) Icons.Default.Close else Icons.Default.QrCode, null,
-                                    tint = Color.White, modifier = Modifier.size(22.dp))
+                                    tint = DT.Ink, modifier = Modifier.size(22.dp))
                                 Text(
                                     if (showScanner) "Close Scanner" else "Scan Barcode",
-                                    color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+                                    color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
                             }
                         }
                     }
@@ -512,7 +512,7 @@ fun ScannerCartScreen(
             AlertDialog(
                 onDismissRequest = { vm.clearUnknownBarcode() },
                 containerColor = DT.Surface,
-                title = { Text("Product not found", color = Color.White, fontWeight = FontWeight.Bold) },
+                title = { Text("Product not found", color = DT.Ink, fontWeight = FontWeight.Bold) },
                 text = { Text("No product has the barcode $unknown. Add it now and put it in this sale?", color = DT.SubText) },
                 confirmButton = {
                     Button(onClick = { addingUnknown = true }, shape = RoundedCornerShape(12.dp),
@@ -576,7 +576,7 @@ private fun CartItemCard(
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 // Name + line total
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(item.product.name, color = Color.White, fontWeight = FontWeight.Bold,
+                    Text(item.product.name, color = DT.Ink, fontWeight = FontWeight.Bold,
                         fontSize = 15.sp, modifier = Modifier.weight(1f),
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.width(8.dp))
@@ -604,15 +604,15 @@ private fun CartItemCard(
                         }
                     } else {
                         Box(modifier = Modifier.clip(RoundedCornerShape(50.dp))
-                            .background(Color(0xFF0A1410))
+                            .background(DT.tone(Color(0xFF0A1410), DT.Teal, .08f))
                             .border(1.dp, DT.Border, RoundedCornerShape(50.dp))) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = { onQtyChange(item.quantity - 1) },
                                     modifier = Modifier.size(38.dp)) {
-                                    Icon(Icons.Default.Remove, "Decrease", tint = Color.White, modifier = Modifier.size(15.dp))
+                                    Icon(Icons.Default.Remove, "Decrease", tint = DT.Ink, modifier = Modifier.size(15.dp))
                                 }
                                 // Tap the number to type a quantity (24 cans = one tap instead of 24)
-                                Text(item.quantity.toString(), color = Color.White,
+                                Text(item.quantity.toString(), color = DT.Ink,
                                     fontWeight = FontWeight.ExtraBold, fontSize = 16.sp,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.widthIn(min = 32.dp)
@@ -622,7 +622,7 @@ private fun CartItemCard(
                                         .padding(vertical = 8.dp))
                                 IconButton(onClick = { onQtyChange(item.quantity + 1) },
                                     modifier = Modifier.size(38.dp)) {
-                                    Icon(Icons.Default.Add, "Increase", tint = Color.White, modifier = Modifier.size(15.dp))
+                                    Icon(Icons.Default.Add, "Increase", tint = DT.Ink, modifier = Modifier.size(15.dp))
                                 }
                             }
                         }
@@ -654,7 +654,7 @@ private fun QuantityDialog(name: String, current: Int, inStock: Int, onDismiss: 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = DT.Surface,
-        title = { Text(name, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        title = { Text(name, color = DT.Ink, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
@@ -667,7 +667,7 @@ private fun QuantityDialog(name: String, current: Int, inStock: Int, onDismiss: 
                     modifier = Modifier.fillMaxWidth().focusRequester(focus),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                        focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                         cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                 val over = value != null && value > inStock
                 Text(if (over) "Only $inStock in stock — it will be set to $inStock" else "$inStock in stock",
@@ -699,7 +699,7 @@ private fun WeightDialog(product: Product, initialKg: Double, currency: String,
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = DT.Surface,
-        title = { Text(product.name, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        title = { Text(product.name, color = DT.Ink, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("$currency ${formatPrice(product.pricePerKg)} per kg", color = DT.SubText, fontSize = 13.sp)
@@ -713,7 +713,7 @@ private fun WeightDialog(product: Product, initialKg: Double, currency: String,
                     modifier = Modifier.fillMaxWidth().focusRequester(focus),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                        focusedTextColor = Color.White, unfocusedTextColor = Color.White,
+                        focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                         cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text("Price", color = DT.SubText, fontSize = 13.sp)

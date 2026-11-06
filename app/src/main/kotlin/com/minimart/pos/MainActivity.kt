@@ -152,6 +152,10 @@ class MainActivity : ComponentActivity() {
                     runCatching { stopLockTask() }
                 }
             }
+            val themeName by settingsRepo.themeMode.collectAsState(initial = com.minimart.pos.ui.theme.DT.themeMode.name)
+            val phoneIsDark = androidx.compose.foundation.isSystemInDarkTheme()
+            androidx.compose.runtime.LaunchedEffect(themeName) { com.minimart.pos.ui.theme.DT.themeMode = com.minimart.pos.ui.theme.ThemeMode.fromName(themeName) }
+            androidx.compose.runtime.LaunchedEffect(phoneIsDark) { com.minimart.pos.ui.theme.DT.systemDark = phoneIsDark }
             androidx.compose.runtime.LaunchedEffect(amoled) { com.minimart.pos.ui.theme.DT.amoled = amoled }
             androidx.compose.runtime.LaunchedEffect(highContrast) { com.minimart.pos.ui.theme.DT.highContrast = highContrast }
             MiniMartTheme(darkTheme = darkMode) {

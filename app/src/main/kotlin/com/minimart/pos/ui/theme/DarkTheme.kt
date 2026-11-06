@@ -15,7 +15,10 @@ data class Palette(
     val dashBg: Color, val dashTop: Color,
     val navBg: Color, val navSurface: Color, val navUnsel: Color, val navBorder: Color,
     val headerMid: Color, val headerEnd: Color,
-    val cardTop: Color, val cardBottom: Color, val chip: Color, val storeText: Color
+    val cardTop: Color, val cardBottom: Color, val chip: Color, val storeText: Color,
+    /** Colour of text and icons that sit on the screen: white on the dark palette, near-black on the light one. */
+    val ink: Color = Color.White,
+    val light: Boolean = false
 )
 
 /** HSL (hue 0–360, saturation and lightness 0–1) to an opaque colour. Pure, so it is unit-tested. */
@@ -54,7 +57,7 @@ private fun tinted(hue: Float, accent: Color, light: Color, neutral: Boolean = f
     )
 }
 
-enum class AppAccent(val label: String, val palette: Palette) {
+enum class AppAccent(val label: String, val palette: Palette, val hue: Float = 174f, val neutral: Boolean = false) {
     TEAL("Teal", Palette(
         bg = Color(0xFF0A1A18), surface = Color(0xFF112420), surface2 = Color(0xFF163028), border = Color(0xFF1E4040),
         accent = Color(0xFF008376), accentLight = Color(0xFF4DB6AC), accentDim = Color(0xFF1E3D38),
@@ -63,17 +66,44 @@ enum class AppAccent(val label: String, val palette: Palette) {
         navBg = Color(0xFF0F1E1D), navSurface = Color(0xFF1A2E2C), navUnsel = Color(0xFF8DAAA6), navBorder = Color(0xFF1F4A42),
         headerMid = Color(0xFF006B5E), headerEnd = Color(0xFF004D40),
         cardTop = Color(0xFF0E3A33), cardBottom = Color(0xFF06201C), chip = Color(0xFF0A1F1C), storeText = Color(0xFF8FF0E0)
-    )),
-    BLUE("Blue", tinted(212f, Color(0xFF1777CB), Color(0xFF64B5F6))),
-    PURPLE("Purple", tinted(262f, Color(0xFF7E57C2), Color(0xFFB39DDB))),
-    ORANGE("Orange", tinted(28f, Color(0xFFBE5600), Color(0xFFFFB74D))),
-    ROSE("Rose", tinted(340f, Color(0xFFD81B60), Color(0xFFF06292))),
-    GREEN("Green", tinted(135f, Color(0xFF2E7D32), Color(0xFF81C784))),
-    GRAPHITE("Graphite", tinted(205f, Color(0xFF546E7A), Color(0xFFB0BEC5), neutral = true));
+    ), 174f),
+    BLUE("Blue", tinted(212f, Color(0xFF1777CB), Color(0xFF64B5F6)), 212f),
+    PURPLE("Purple", tinted(262f, Color(0xFF7E57C2), Color(0xFFB39DDB)), 262f),
+    ORANGE("Orange", tinted(28f, Color(0xFFBE5600), Color(0xFFFFB74D)), 28f),
+    ROSE("Rose", tinted(340f, Color(0xFFD81B60), Color(0xFFF06292)), 340f),
+    GREEN("Green", tinted(135f, Color(0xFF2E7D32), Color(0xFF81C784)), 135f),
+    GRAPHITE("Graphite", tinted(205f, Color(0xFF546E7A), Color(0xFFB0BEC5), neutral = true), 205f, neutral = true);
 
     companion object {
         fun fromName(name: String?): AppAccent = entries.firstOrNull { it.name == name } ?: TEAL
     }
+}
+
+/** How the app is coloured: always dark (the original look), always light, or whatever the phone is set to. */
+enum class ThemeMode(val label: String) {
+    DARK("Dark"), LIGHT("Light"), SYSTEM("Phone setting");
+    companion object { fun fromName(name: String?): ThemeMode = entries.firstOrNull { it.name == name } ?: DARK }
+}
+
+/**
+ * The same accent on light surfaces: pale tinted backgrounds, white cards, near-black text. The accent
+ * itself is unchanged (white text on it already passes), and the "light accent" used for small coloured
+ * text is darkened instead, so it still reads on a pale background. Contrast is checked in PaletteTest.
+ */
+fun AppAccent.lightPalette(): Palette {
+    val k = if (neutral) 0.18f else 1f
+    fun c(s: Float, l: Float) = hslColor(hue, s * k, l)
+    val a = palette.accent
+    return Palette(
+        bg = c(.35f, .955f), surface = c(.25f, .995f), surface2 = c(.30f, .92f), border = c(.25f, .80f),
+        accent = a, accentLight = lerp(a, Color.Black, .25f), accentDim = c(.45f, .90f),
+        glow = a, subText = c(.18f, .33f), onSurface = c(.30f, .09f),
+        dashBg = c(.35f, .955f), dashTop = c(.45f, .91f),
+        navBg = c(.25f, .995f), navSurface = c(.30f, .92f), navUnsel = c(.16f, .36f), navBorder = c(.25f, .82f),
+        headerMid = lerp(a, Color.Black, .22f), headerEnd = lerp(a, Color.Black, .42f),   // headers stay coloured: they carry white text
+        cardTop = c(.4f, .98f), cardBottom = c(.4f, .93f), chip = c(.3f, .92f), storeText = lerp(a, Color.Black, .3f),
+        ink = c(.30f, .09f), light = true
+    )
 }
 
 /**
@@ -84,7 +114,8 @@ enum class AppAccent(val label: String, val palette: Palette) {
  */
 fun Palette.adapt(amoled: Boolean, highContrast: Boolean): Palette {
     var p = this
-    if (amoled) p = p.copy(
+    val toward = if (light) Color.Black else Color.White
+    if (amoled && !light) p = p.copy(
         bg = lerp(p.bg, Color.Black, .85f), dashBg = lerp(p.dashBg, Color.Black, .85f),
         navBg = lerp(p.navBg, Color.Black, .8f), surface = lerp(p.surface, Color.Black, .5f),
         surface2 = lerp(p.surface2, Color.Black, .3f), cardBottom = lerp(p.cardBottom, Color.Black, .7f),
@@ -92,9 +123,9 @@ fun Palette.adapt(amoled: Boolean, highContrast: Boolean): Palette {
         dashTop = lerp(p.dashTop, Color.Black, .4f)
     )
     if (highContrast) p = p.copy(
-        onSurface = Color.White, subText = lerp(p.subText, Color.White, .4f),
-        border = lerp(p.border, Color.White, .35f), navBorder = lerp(p.navBorder, Color.White, .35f),
-        navUnsel = lerp(p.navUnsel, Color.White, .35f), accentLight = lerp(p.accentLight, Color.White, .2f)
+        onSurface = toward, ink = toward, subText = lerp(p.subText, toward, .4f),
+        border = lerp(p.border, toward, .35f), navBorder = lerp(p.navBorder, toward, .35f),
+        navUnsel = lerp(p.navUnsel, toward, .35f), accentLight = lerp(p.accentLight, toward, .2f)
     )
     return p
 }
@@ -108,9 +139,26 @@ object DT {
     var amoled by mutableStateOf(false)
     /** Whiter text, stronger borders (see [adapt]). */
     var highContrast by mutableStateOf(false)
+    /** Dark, light or follow the phone (see [ThemeMode]). */
+    var themeMode by mutableStateOf(ThemeMode.DARK)
+    /** Whether the phone is currently in dark mode; only used when [themeMode] is SYSTEM. */
+    var systemDark by mutableStateOf(true)
+    val light: Boolean get() = themeMode == ThemeMode.LIGHT || (themeMode == ThemeMode.SYSTEM && !systemDark)
 
     /** The accent's palette with the display options applied; recomputed only when one of them changes. */
-    private val pal: Palette by derivedStateOf { accent.palette.adapt(amoled, highContrast) }
+    private val pal: Palette by derivedStateOf {
+        (if (light) accent.lightPalette() else accent.palette).adapt(amoled, highContrast)
+    }
+
+    /** Text and icons that sit directly on the screen (white in the dark theme). */
+    val Ink: Color get() = pal.ink
+
+    /**
+     * A tile or banner that is a dark shade of [hint] on the dark theme. On the light theme the same
+     * thing becomes a pale wash of [hint] over the card colour, so [Ink] text stays readable on it.
+     */
+    fun tone(dark: Color, hint: Color, strength: Float = 0.12f): Color =
+        if (light) lerp(pal.surface, hint, strength) else dark
 
     val Bg: Color        get() = pal.bg          // deepest background
     val Surface: Color   get() = pal.surface     // card/surface
@@ -121,9 +169,9 @@ object DT {
     val TealDim: Color   get() = pal.accentDim   // accent background tint
     val OnSurface: Color get() = pal.onSurface   // primary text
     val SubText: Color   get() = pal.subText     // secondary text
-    val Green      = Color(0xFF4CAF50)
-    val Red        = Color(0xFFEF5350)
-    val Amber      = Color(0xFFFFC107)
+    val Green: Color get() = if (light) Color(0xFF1B5E20) else Color(0xFF4CAF50)
+    val Red: Color   get() = if (light) Color(0xFFB71C1C) else Color(0xFFEF5350)
+    val Amber: Color get() = if (light) Color(0xFF7A4A00) else Color(0xFFFFC107)
 
     val Glow: Color      get() = pal.glow
     val DashBg: Color    get() = pal.dashBg

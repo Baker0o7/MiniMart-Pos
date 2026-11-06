@@ -44,6 +44,7 @@ class SettingsRepository @Inject constructor(
         val KEY_DAILY_REPORT_HOUR = intPreferencesKey("daily_report_hour")
         val KEY_OWNER_PHONE = stringPreferencesKey("owner_report_phone")
         val KEY_AMOLED = booleanPreferencesKey("theme_amoled")
+        val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
         val KEY_HIGH_CONTRAST = booleanPreferencesKey("theme_high_contrast")
         val KEY_PRINTER_ADDRESS     = stringPreferencesKey("printer_address")
         val KEY_PRINTER_NAME     = stringPreferencesKey("printer_name")
@@ -155,6 +156,9 @@ class SettingsRepository @Inject constructor(
     /** "Deep black" backgrounds and the high-contrast option (see Palette.adapt in the app module). */
     val amoled: Flow<Boolean> = context.dataStore.data.map { it[KEY_AMOLED] ?: false }
     suspend fun setAmoled(on: Boolean) = context.dataStore.edit { it[KEY_AMOLED] = on }
+    /** "DARK", "LIGHT" or "SYSTEM"; dark until the owner chooses otherwise. */
+    val themeMode: Flow<String> = context.dataStore.data.map { it[KEY_THEME_MODE] ?: "DARK" }
+    suspend fun setThemeMode(name: String) = context.dataStore.edit { it[KEY_THEME_MODE] = name }
     val highContrast: Flow<Boolean> = context.dataStore.data.map { it[KEY_HIGH_CONTRAST] ?: false }
     suspend fun setHighContrast(on: Boolean) = context.dataStore.edit { it[KEY_HIGH_CONTRAST] = on }
     /** Whether this phone is meant to be the main device; the app restarts the sync server on launch if so. */

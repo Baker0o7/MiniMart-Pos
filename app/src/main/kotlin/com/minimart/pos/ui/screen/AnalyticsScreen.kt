@@ -413,7 +413,7 @@ private fun AnalyticsCard(title: String, content: @Composable ColumnScope.() -> 
         Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(DT.Surface)
             .border(1.dp, DT.Border, RoundedCornerShape(18.dp)).padding(14.dp)
     ) {
-        Text(title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(title, color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         Spacer(Modifier.height(10.dp))
         content()
     }

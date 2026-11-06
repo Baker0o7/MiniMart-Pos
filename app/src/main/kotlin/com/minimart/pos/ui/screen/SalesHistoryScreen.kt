@@ -205,13 +205,13 @@ private fun SaleHistoryRow(
         AlertDialog(
             onDismissRequest = { showVoidConfirm = false },
             containerColor = DT.Surface,
-            title = { Text("Void Sale?", color = Color.White, fontWeight = FontWeight.Bold) },
+            title = { Text("Void Sale?", color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = { Text("Receipt #${sale.receiptNumber}\n${currency} ${String.format(java.util.Locale.US, "%,.2f", sale.totalAmount)}\n\nThis cannot be undone.", color = DT.SubText) },
             confirmButton = {
                 Button(onClick = { onVoid(); showVoidConfirm = false },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DT.Red)) {
-                    Text("Void", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Void", color = DT.Ink, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {

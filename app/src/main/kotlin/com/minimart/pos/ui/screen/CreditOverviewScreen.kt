@@ -91,7 +91,7 @@ fun CreditOverviewScreen(
                     // Total owed (buy-on-account / negative balances)
                     val debtors = creditCustomers.count { it.creditBalance < 0 }
                     Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
-                        .background(Brush.verticalGradient(listOf(Color(0xFF1F0A0A), Color(0xFF0F0505))))
+                        .background(Brush.verticalGradient(listOf(DT.tone(Color(0xFF1F0A0A), DT.Red), DT.tone(Color(0xFF0F0505), DT.Red, .04f))))
                         .border(1.dp, DT.Red.copy(0.3f), RoundedCornerShape(18.dp)).padding(14.dp)) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -107,7 +107,7 @@ fun CreditOverviewScreen(
                     }
                     // All customers stats
                     Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
-                        .background(Brush.verticalGradient(listOf(Color(0xFF0B2822), Color(0xFF061210))))
+                        .background(Brush.verticalGradient(listOf(DT.tone(Color(0xFF0B2822), DT.Teal), DT.tone(Color(0xFF061210), DT.Teal, .04f))))
                         .border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(18.dp)).padding(14.dp)) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -144,7 +144,7 @@ fun CreditOverviewScreen(
                         verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Warning, null, tint = DT.Amber, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Outstanding Balances", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text("Outstanding Balances", color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
                 }
             }
@@ -172,7 +172,7 @@ fun CreditOverviewScreen(
                             }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(customer.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp,
+                                Text(customer.name, color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp,
                                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 if (customer.phone.isNotBlank())
                                     Text(customer.phone, color = DT.SubText, fontSize = 12.sp)
@@ -262,7 +262,7 @@ private fun CreditTxRow(tx: CreditTransaction, currency: String) {
         }
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
-            Text(tx.type.name.replace("_", " "), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            Text(tx.type.name.replace("_", " "), color = DT.Ink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             if (tx.notes.isNotBlank()) Text(tx.notes, color = DT.SubText, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(df.format(Date(tx.createdAt)), color = DT.SubText, fontSize = 11.sp)
         }

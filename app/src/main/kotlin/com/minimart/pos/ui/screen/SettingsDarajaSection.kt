@@ -157,10 +157,10 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
             modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
         ) {
-            Icon(Icons.Default.Send, null, tint = Color.White, modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.Send, null, tint = DT.Ink, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             Text(if (darajaSaved) "✓ Saved — encrypted on this device" else "Save Daraja Settings",
-                color = Color.White, fontWeight = FontWeight.Bold)
+                color = DT.Ink, fontWeight = FontWeight.Bold)
         }
     }
 

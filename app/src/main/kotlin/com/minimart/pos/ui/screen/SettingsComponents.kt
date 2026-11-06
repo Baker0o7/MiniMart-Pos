@@ -120,11 +120,11 @@ internal fun SaveButton(label: String, enabled: Boolean, color: Color, icon: Ima
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = color, contentColor = Color.White,
-            disabledContainerColor = color.copy(0.35f), disabledContentColor = Color.White.copy(0.7f)
+            disabledContainerColor = color.copy(0.35f), disabledContentColor = DT.Ink.copy(0.7f)
         )
     ) {
         if (!saved && icon != null) {
-            Icon(icon, null, tint = Color.White, modifier = Modifier.size(18.dp))
+            Icon(icon, null, tint = DT.Ink, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
         }
         Text(if (saved) "✓ Saved" else label, fontWeight = FontWeight.Bold)
