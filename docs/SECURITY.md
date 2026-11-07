@@ -15,6 +15,12 @@ What protects a shop's till, and what does not yet.
 * **Release check** (`scripts/release-checks.sh`) fails if the set of components other apps can reach changes (`.MainActivity`, `.mpesa.MpesaSmsReceiver`), or the manifest allows debugging or cleartext traffic. Add to that list on purpose, not by accident.
 * Fields for secrets use the password keyboard (no suggestions or learning), and the web-hook address is copied as a sensitive clip.
 
+## In-app updater
+* Contacts only `api.github.com` (latest release of `Baker0o7/MiniMart-Pos`) once a day (switch in Settings) and, only when the owner taps Download, the project's own `github.com/.../releases/download/` address. Redirects are followed by hand and only to GitHub's download hosts (`AppUpdate.isTrustedUrl`). Nothing about the shop or owner is sent.
+* The file is size-checked, SHA-256-checked when GitHub publishes a digest, kept in the app's private `files/updates/` and given to Android's `PackageInstaller` (no file sharing). Android refuses it unless it is signed with the same key as the installed app, and the owner confirms on Android's own screen.
+* Needs `REQUEST_INSTALL_PACKAGES`; the owner allows it once in Android settings. The receiver is not exported.
+* Gap: an attacker who controls the GitHub repo *and* the signing key could ship a bad update. Keep the release keystore safe.
+
 ## Known gaps
 * **PIN lockout uses the phone's clock.** Setting the clock forward ends a lockout early. PINs are also checked against `PinPolicy` (no repeated digits, runs, repeated pairs or the commonest PINs), which makes the first guesses useless, but a short numeric PIN is still weak against someone with unlimited time.
 * **If the Keystore key is lost** (a phone reset around the app, a damaged Keystore), the encrypted database cannot be opened. The app puts the file aside (`minimart_pos.db.unreadable-*`), starts empty and says so; restore a manual backup. Keep a manual backup off the phone.

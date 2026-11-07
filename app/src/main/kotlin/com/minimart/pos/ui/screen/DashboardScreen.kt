@@ -108,6 +108,8 @@ fun DashboardScreen(
     // A till phone that has not reached the main phone for a long time may show old prices and stock.
     val freshness = com.minimart.pos.util.SyncFreshness.assess(sync.peerIp.isNotBlank(), sync.lastSyncAt, System.currentTimeMillis(), sync.pendingCount, sync.conflictCount)
     CrashReportPrompt()
+    val updateVm: com.minimart.pos.ui.viewmodel.UpdateViewModel = hiltViewModel()
+    val updateState by updateVm.state.collectAsStateWithLifecycle()
     val rm    = com.minimart.pos.util.RoleManager
     val hiddenActions by (settingsRepo?.hiddenActions
         ?: kotlinx.coroutines.flow.flowOf("")).collectAsStateWithLifecycle("")
@@ -283,6 +285,13 @@ fun DashboardScreen(
             }
 
             // ── Needs attention (first, so it is never below the fold) ────────
+            (updateState as? com.minimart.pos.update.UpdateState.Available)?.let { up ->
+                item { Spacer(Modifier.height(16.dp)) }
+                item {
+                    DashAlert(Icons.Default.Sync, TealGlow, Color(0xFF05161A),
+                        "Update ${up.release.tag.removePrefix("v")} is available", "Open Settings, About & support, to install it", onNavigateToSettings)
+                }
+            }
             if (freshness != null && freshness.warnAtCheckout) {
                 item { Spacer(Modifier.height(16.dp)) }
                 item {

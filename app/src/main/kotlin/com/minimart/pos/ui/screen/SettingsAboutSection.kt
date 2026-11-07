@@ -25,7 +25,8 @@ import com.minimart.pos.util.SupportInfo
 
 /** Version, licence, project links, and a one-tap "copy support info" that holds no shop data or secrets. */
 @Composable
-internal fun AboutSettingsSection(syncOn: Boolean, cloudOn: Boolean, webhook: MpesaWebhookViewModel = androidx.hilt.navigation.compose.hiltViewModel()) {
+internal fun AboutSettingsSection(syncOn: Boolean, cloudOn: Boolean, webhook: MpesaWebhookViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                                  updates: com.minimart.pos.ui.viewmodel.UpdateViewModel = androidx.hilt.navigation.compose.hiltViewModel()) {
     val context = LocalContext.current
     val instantMpesaOn = webhook.state.collectAsStateWithLifecycle().value.enabled
     var copied by remember { mutableStateOf(false) }
@@ -33,6 +34,8 @@ internal fun AboutSettingsSection(syncOn: Boolean, cloudOn: Boolean, webhook: Mp
         Text("MiniMart POS ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
         Text("Free and open source under the Apache License 2.0. Your sales, customers and stock stay on this phone unless you turn on sync or the cloud dashboard.",
             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+        Spacer(Modifier.height(10.dp))
+        UpdateBlock(updates)
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = {
@@ -66,4 +69,46 @@ private fun facts(context: Context, sync: Boolean, cloud: Boolean, instant: Bool
         lastBackupDays = if (last > 0) ((now - last) / (24L * 60 * 60 * 1000)).toInt() else null,
         syncOn = sync, cloudOn = cloud, instantMpesaOn = instant
     )
+}
+
+/** "Check for updates" and the download-and-install flow; Android still asks the owner to confirm the install. */
+@Composable
+private fun UpdateBlock(vm: com.minimart.pos.ui.viewmodel.UpdateViewModel) {
+    val context = LocalContext.current
+    val state = vm.state.collectAsStateWithLifecycle().value
+    var auto by remember { mutableStateOf(vm.autoCheck) }
+    Text("App updates", color = DT.OnSurface, style = MaterialTheme.typography.titleSmall)
+    when (state) {
+        is com.minimart.pos.update.UpdateState.Idle -> Text("Not checked yet.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+        is com.minimart.pos.update.UpdateState.Checking -> Text("Checking…", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+        is com.minimart.pos.update.UpdateState.UpToDate -> Text("You have the latest version.", color = DT.Green, style = MaterialTheme.typography.bodySmall)
+        is com.minimart.pos.update.UpdateState.Available -> {
+            Text("Version ${state.release.tag.removePrefix("v")} is available (${state.asset.size / 1_000_000} MB).", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
+            if (state.release.notes.isNotBlank()) Text(state.release.notes, color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+            Text("Use Wi-Fi if you can; the download uses your data otherwise. Your sales and settings are kept.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+        }
+        is com.minimart.pos.update.UpdateState.Downloading -> {
+            Text("Downloading… ${state.percent}%", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
+            LinearProgressIndicator(progress = { state.percent / 100f }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp))
+        }
+        is com.minimart.pos.update.UpdateState.Installing -> Text("Almost done: confirm the update on the Android screen.", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
+        is com.minimart.pos.update.UpdateState.NeedsPermission -> Text("Android needs your permission before MiniMart can install its own updates. Tap the button, switch on \"Allow from this source\", then come back and tap Install again.", color = DT.Amber, style = MaterialTheme.typography.bodySmall)
+        is com.minimart.pos.update.UpdateState.Failed -> Text(state.message, color = DT.Red, style = MaterialTheme.typography.bodySmall)
+    }
+    val canInstall = state is com.minimart.pos.update.UpdateState.Available || state is com.minimart.pos.update.UpdateState.NeedsPermission ||
+        (state is com.minimart.pos.update.UpdateState.Failed && state.asset != null)
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
+        if (canInstall) {
+            Button(onClick = {
+                if (!vm.canInstall()) runCatching { context.startActivity(vm.permissionIntent()) }
+                vm.install()
+            }, modifier = Modifier.heightIn(min = 48.dp)) { Text(if (state is com.minimart.pos.update.UpdateState.Failed) "Try again" else "Download and install") }
+        }
+        val busy = state is com.minimart.pos.update.UpdateState.Checking || state is com.minimart.pos.update.UpdateState.Downloading
+        OutlinedButton(onClick = { vm.check() }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { Text("Check for updates") }
+    }
+    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+        Text("Check once a day in the background", color = DT.OnSurface, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+        Switch(checked = auto, onCheckedChange = { auto = it; vm.autoCheck = it })
+    }
 }

@@ -13,6 +13,7 @@ class MiniMartApp : Application(), Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
+    @Inject lateinit var updateManager: com.minimart.pos.update.UpdateManager
     @Inject lateinit var settings: com.minimart.pos.data.repository.SettingsRepository
     @Inject lateinit var syncServer: com.minimart.pos.sync.SyncServer
     @Inject lateinit var productRepo: com.minimart.pos.data.repository.ProductRepository
@@ -45,6 +46,7 @@ class MiniMartApp : Application(), Configuration.Provider {
                 com.minimart.pos.worker.MpesaWebhookWorker.schedule(this@MiniMartApp)
             } catch (_: Exception) {}
             try { if (settings.dailyReport.first()) com.minimart.pos.worker.DailyReportWorker.schedule(this@MiniMartApp, settings.dailyReportHour.first(), replace = false) } catch (_: Exception) {}
+            launch { try { updateManager.autoCheckIfDue() } catch (_: Exception) {} }
             launch { settings.telemetryOptIn.collect { com.minimart.pos.util.Telemetry.apply(it) } }
             launch { settings.paperWidthMm.collect { com.minimart.pos.printer.EscPos.lineChars = com.minimart.pos.printer.EscPos.charsForPaper(it) } }
             try { productRepo.warmUp() } catch (_: Exception) {}

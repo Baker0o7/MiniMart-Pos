@@ -4,6 +4,8 @@
 
     <!-- Network for LAN sync -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Lets the in-app updater hand a downloaded update to Android's installer (the owner still confirms). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Camera for ML Kit barcode scanning -->
@@ -67,6 +69,8 @@
         </activity>
 
         <!-- Only the system may deliver SMS broadcasts (BROADCAST_SMS), so apps cannot fake one. -->
+        <receiver android:name=".update.UpdateInstallReceiver" android:exported="false" />
+
         <receiver
             android:name=".mpesa.MpesaSmsReceiver"
             android:exported="true"
