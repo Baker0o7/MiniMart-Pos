@@ -38,7 +38,7 @@ fun SetupWizardScreen(onFinished: (openProducts: Boolean) -> Unit, vm: SetupView
             TextButton(onClick = { vm.skip { onFinished(false) } }) { Text(tr(com.minimart.pos.R.string.skip), color = DT.SubText) }
         }
         LinearProgressIndicator(progress = { (step + 1) / 3f }, modifier = Modifier.fillMaxWidth(), color = DT.Teal, trackColor = DT.Border)
-        Text("Step ${step + 1} of 3", color = DT.SubText, fontSize = 12.sp)
+        Text(tr(com.minimart.pos.R.string.step_of, step + 1), color = DT.SubText, fontSize = 12.sp)
 
         when (step) {
             0 -> {
@@ -55,7 +55,7 @@ fun SetupWizardScreen(onFinished: (openProducts: Boolean) -> Unit, vm: SetupView
             }
             1 -> {
                 Text(tr(com.minimart.pos.R.string.wiz_printer), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text("Pick the paper width of your thermal printer. Most small printers use 58 mm; larger ones use 80 mm. You can pair the printer later in Settings.",
+                Text(tr(com.minimart.pos.R.string.wiz_paper_help),
                     color = DT.SubText, fontSize = 13.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(58, 80).forEach { mm ->

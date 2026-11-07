@@ -222,12 +222,12 @@ private fun ActiveShiftCard(shift: Shift, currency: String, onOpenDrawer: () -> 
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Default.Schedule, null, tint = com.minimart.pos.ui.theme.DT.SubText, modifier = Modifier.size(18.dp))
-                Text("Started: ${dfFull.format(Date(shift.clockIn))}", style = MaterialTheme.typography.bodySmall, color = com.minimart.pos.ui.theme.DT.SubText)
+                Text(tr(com.minimart.pos.R.string.started_fmt, dfFull.format(Date(shift.clockIn))), style = MaterialTheme.typography.bodySmall, color = com.minimart.pos.ui.theme.DT.SubText)
             }
             if (shift.openingFloat > 0) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(Icons.Default.Money, null, tint = com.minimart.pos.ui.theme.DT.SubText, modifier = Modifier.size(18.dp))
-                    Text("Opening float: $currency ${String.format(java.util.Locale.US, "%,.2f", shift.openingFloat)}", style = MaterialTheme.typography.bodySmall, color = com.minimart.pos.ui.theme.DT.SubText)
+                    Text(tr(com.minimart.pos.R.string.opening_float_fmt, currency, String.format(java.util.Locale.US, "%,.2f", shift.openingFloat)), style = MaterialTheme.typography.bodySmall, color = com.minimart.pos.ui.theme.DT.SubText)
                 }
             }
             OutlinedButton(
@@ -342,7 +342,7 @@ private fun ClockInDialog(currency: String, onDismiss: () -> Unit, onClockIn: (D
                 OutlinedTextField(
                     value = openingFloat,
                     onValueChange = { openingFloat = it.replace(',', '.').filter { c -> c.isDigit() || c == '.' }.take(12) },
-                    label = { Text("Opening Float ($currency)", color = com.minimart.pos.ui.theme.DT.SubText) },
+                    label = { Text(tr(com.minimart.pos.R.string.opening_float_cur, currency), color = com.minimart.pos.ui.theme.DT.SubText) },
                     leadingIcon = { Icon(Icons.Default.Money, null, tint = com.minimart.pos.ui.theme.DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
@@ -404,7 +404,7 @@ private fun ClockOutDialog(currency: String, blind: Boolean, onOpenDrawer: () ->
                     Text(tr(com.minimart.pos.R.string.open_drawer_count), color = DT.Teal)
                 }
                 OutlinedTextField(value = closingFloat, onValueChange = { closingFloat = it.replace(',', '.').filter { c -> c.isDigit() || c == '.' }.take(12) },
-                    label = { Text("Closing Cash Counted ($currency)", color = DT.SubText) },
+                    label = { Text(tr(com.minimart.pos.R.string.closing_cash_cur, currency), color = DT.SubText) },
                     leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true, modifier = Modifier.fillMaxWidth(),

@@ -385,7 +385,7 @@ fun CheckoutScreen(
                                 }
                             }
                             if (cashInput.isNotEmpty() && cashAmount < state.total && state.total > 0) {
-                                Text("Short by $currency ${String.format(java.util.Locale.US, "%,.2f", state.total - cashAmount)}",
+                                Text(tr(com.minimart.pos.R.string.short_by, currency, String.format(java.util.Locale.US, "%,.2f", state.total - cashAmount)),
                                     color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                                     modifier = Modifier.padding(start = 4.dp))
                             }
@@ -601,7 +601,7 @@ fun CheckoutScreen(
                                 AnimatedVisibility(visible = useSplitPayment) {
                                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         OutlinedTextField(value = splitCreditInput, onValueChange = { splitCreditInput = sanitizeMoneyInput(it) },
-                                            label = { Text("Credit Amount (max $currency ${String.format(java.util.Locale.US, "%,.2f", creditBalance)})", color = DT.SubText) },
+                                            label = { Text(tr(com.minimart.pos.R.string.credit_amount_max, currency, String.format(java.util.Locale.US, "%,.2f", creditBalance)), color = DT.SubText) },
                                             leadingIcon = { Icon(Icons.Default.AccountBalanceWallet, null, tint = DT.Teal) },
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                             singleLine = true, modifier = Modifier.fillMaxWidth(),
@@ -624,7 +624,7 @@ fun CheckoutScreen(
                                         }
                                         // Cash input for split
                                         OutlinedTextField(value = cashInput, onValueChange = { cashInput = sanitizeMoneyInput(it) },
-                                            label = { Text("Cash for remaining $currency ${String.format(java.util.Locale.US, "%,.2f", splitCashNeeded)}", color = DT.SubText) },
+                                            label = { Text(tr(com.minimart.pos.R.string.cash_remaining, currency, String.format(java.util.Locale.US, "%,.2f", splitCashNeeded)), color = DT.SubText) },
                                             leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                             singleLine = true, modifier = Modifier.fillMaxWidth(),
@@ -852,7 +852,7 @@ private fun CustomerSearchSheet(
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(tr(com.minimart.pos.R.string.new_customer), color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         OutlinedTextField(value = newName, onValueChange = { newName = it },
-                            label = { Text("Full Name *", color = DT.SubText) },
+                            label = { Text(tr(com.minimart.pos.R.string.full_name_req), color = DT.SubText) },
                             leadingIcon = { Icon(Icons.Default.Person, null, tint = DT.SubText) },
                             singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Words, imeAction = androidx.compose.ui.text.input.ImeAction.Next), modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -861,7 +861,7 @@ private fun CustomerSearchSheet(
                                 focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                                 cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                         OutlinedTextField(value = newPhone, onValueChange = { newPhone = it },
-                            label = { Text("Phone Number", color = DT.SubText) },
+                            label = { Text(tr(com.minimart.pos.R.string.phone_number), color = DT.SubText) },
                             leadingIcon = { Icon(Icons.Default.Phone, null, tint = DT.SubText) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             singleLine = true, modifier = Modifier.fillMaxWidth(),

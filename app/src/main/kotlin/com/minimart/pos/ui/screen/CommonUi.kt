@@ -156,7 +156,7 @@ internal fun UndoBar(message: String, onUndo: () -> Unit, modifier: Modifier = M
             maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f))
         androidx.compose.material3.TextButton(onClick = onUndo) {
-            Text("UNDO", color = DT.Amber, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
+            Text(tr(com.minimart.pos.R.string.undo), color = DT.Amber, fontWeight = FontWeight.ExtraBold, fontSize = 13.sp)
         }
     }
 }
@@ -183,9 +183,9 @@ internal fun CrashReportPrompt() {
     AlertDialog(
         onDismissRequest = { com.minimart.pos.util.CrashRecorder.markSeen(context, current); report = null },
         containerColor = DT.Surface,
-        title = { Text("MiniMart closed unexpectedly", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+        title = { Text(tr(com.minimart.pos.R.string.crash_title), color = DT.OnSurface, fontWeight = FontWeight.Bold) },
         text = {
-            Text("Sorry about that. Your sales and stock are safe. You can send the technical details so it can be fixed. Nothing is sent unless you tap Share.",
+            Text(tr(com.minimart.pos.R.string.crash_body),
                 color = DT.SubText, fontSize = 13.sp)
         },
         confirmButton = {
@@ -198,11 +198,11 @@ internal fun CrashReportPrompt() {
                 }
                 try { context.startActivity(android.content.Intent.createChooser(send, "Send crash details").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {}
                 com.minimart.pos.util.CrashRecorder.markSeen(context, current); report = null
-            }) { Text("Share", color = DT.Teal, fontWeight = FontWeight.Bold) }
+            }) { Text(tr(com.minimart.pos.R.string.share), color = DT.Teal, fontWeight = FontWeight.Bold) }
         },
         dismissButton = {
             TextButton(onClick = { com.minimart.pos.util.CrashRecorder.markSeen(context, current); report = null }) {
-                Text("Dismiss", color = DT.SubText)
+                Text(tr(com.minimart.pos.R.string.dismiss), color = DT.SubText)
             }
         }
     )

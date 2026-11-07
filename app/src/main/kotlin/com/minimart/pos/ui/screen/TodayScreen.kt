@@ -57,7 +57,7 @@ fun TodayScreen(onBack: () -> Unit, onOpenHealth: () -> Unit, onOpenShifts: () -
             item { Splits(sum, s.currency) }
             item { Hours(sum) }
             item {
-                Text("Profit counts only items whose cost is known. Expenses are everything recorded today.",
+                Text(tr(com.minimart.pos.R.string.today_help),
                     color = DT.SubText, fontSize = 11.sp)
             }
         }
@@ -93,7 +93,7 @@ private fun Hero(sum: TodaySummary, currency: String) {
             Stat("Expenses", money(currency, sum.expenses), DT.Amber, Modifier.weight(1f))
             Stat("Net", money(currency, sum.netProfit), if (sum.netProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f))
         }
-        if (sum.count > 0) Text("Average basket ${money(currency, sum.averageBasket)}", color = DT.SubText, fontSize = 12.sp)
+        if (sum.count > 0) Text(tr(com.minimart.pos.R.string.avg_basket_fmt, money(currency, sum.averageBasket)), color = DT.SubText, fontSize = 12.sp)
     }
 }
 

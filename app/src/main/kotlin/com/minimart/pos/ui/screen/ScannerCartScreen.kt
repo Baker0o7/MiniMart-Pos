@@ -79,7 +79,7 @@ fun ScannerCartScreen(
             onDismissRequest = { showClearConfirm = false },
             containerColor = DT.Surface,
             title = { Text(tr(com.minimart.pos.R.string.clear_cart_q), color = DT.Ink, fontWeight = FontWeight.Bold) },
-            text = { Text("All ${state.items.size} item(s) will be removed.", color = DT.SubText) },
+            text = { Text(tr(com.minimart.pos.R.string.all_items_removed, state.items.size), color = DT.SubText) },
             confirmButton = {
                 Button(onClick = { showClearConfirm = false; vm.clearCart() },
                     colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)) { Text(tr(com.minimart.pos.R.string.clear)) }
@@ -721,7 +721,7 @@ private fun WeightDialog(product: Product, initialKg: Double, currency: String,
                 }
                 // Informational only — selling is never blocked on weighed stock.
                 if (kg != null && kg > product.stockKg)
-                    Text("Only ${product.stockLabel} on record", color = DT.Amber, fontSize = 12.sp)
+                    Text(tr(com.minimart.pos.R.string.only_on_record, product.stockLabel), color = DT.Amber, fontSize = 12.sp)
             }
         },
         confirmButton = {

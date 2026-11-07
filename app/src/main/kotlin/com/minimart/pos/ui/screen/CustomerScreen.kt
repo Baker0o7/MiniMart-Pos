@@ -111,7 +111,7 @@ fun CustomerScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Icon(Icons.Default.People, null, modifier = Modifier.size(64.dp), tint = DT.SubText.copy(0.25f))
                         if (state.query.isNotBlank()) {
-                            Text("No customers match \"${state.query}\"", color = DT.SubText, fontWeight = FontWeight.SemiBold)
+                            Text(tr(com.minimart.pos.R.string.no_match, state.query), color = DT.SubText, fontWeight = FontWeight.SemiBold)
                             Text(tr(com.minimart.pos.R.string.try_other_search), color = DT.SubText.copy(0.6f), fontSize = 12.sp)
                         } else {
                             Text(tr(com.minimart.pos.R.string.no_customers_yet), color = DT.SubText, fontWeight = FontWeight.SemiBold)
@@ -247,7 +247,7 @@ private fun CustomerDetailSheet(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             containerColor = DT.Surface,
-            title = { Text("Delete ${customer.name}?", color = DT.Ink, fontWeight = FontWeight.Bold) },
+            title = { Text(tr(com.minimart.pos.R.string.delete_named, customer.name), color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = {
                 // Deleting wipes the credit ledger too — make the cashier look at what is being lost.
                 val balanceNote = when {
@@ -418,7 +418,7 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
     var notes  by remember { mutableStateOf("") }
 
     AlertDialog(onDismissRequest = onDismiss, containerColor = DT.Surface,
-        title = { Text("Add Credit — ${customer.name}", color = DT.Ink, fontWeight = FontWeight.Bold) },
+        title = { Text(tr(com.minimart.pos.R.string.add_credit_named, customer.name), color = DT.Ink, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 // Bug fix: hardcoded "KES" + always teal even when the customer owes
@@ -429,7 +429,7 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
                     else "Current balance: $currency ${String.format(java.util.Locale.US, "%,.2f", customer.creditBalance)}",
                     color = if (customer.creditBalance < 0) DT.Red else DT.Teal, fontWeight = FontWeight.SemiBold)
                 OutlinedTextField(value = amount, onValueChange = { amount = it.replace(',', '.').filter { c -> c.isDigit() || c == '.' }.take(12) },
-                    label = { Text("Amount ($currency)", color = DT.SubText) },
+                    label = { Text(tr(com.minimart.pos.R.string.amount_cur, currency), color = DT.SubText) },
                     leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true, modifier = Modifier.fillMaxWidth(),

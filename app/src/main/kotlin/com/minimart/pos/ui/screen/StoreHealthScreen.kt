@@ -111,7 +111,7 @@ private fun ProblemListCard(problems: List<com.minimart.pos.util.ProblemEntry>, 
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Text(tr(com.minimart.pos.R.string.problems_handled), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-        Text("Kept on this phone only. It holds no sales, customers or payment details.", color = DT.SubText, fontSize = 12.sp)
+        Text(tr(com.minimart.pos.R.string.health_local), color = DT.SubText, fontSize = 12.sp)
         problems.take(8).forEach { p ->
             Text("${df.format(java.util.Date(p.lastAt))}  ${p.doing}: ${p.kind}${if (p.count > 1) " (x${p.count})" else ""}",
                 color = DT.OnSurface, fontSize = 12.sp)

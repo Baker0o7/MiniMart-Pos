@@ -100,7 +100,7 @@ fun SettingsScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            GradientHeader(title = "Settings", subtitle = storeName.takeIf { it.isNotBlank() }, onBack = onBack)
+            GradientHeader(title = tr(com.minimart.pos.R.string.settings), subtitle = storeName.takeIf { it.isNotBlank() }, onBack = onBack)
 
             Column(
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -239,7 +239,7 @@ fun SettingsScreen(
                     DSection(tr(com.minimart.pos.R.string.set_drawer), Icons.Default.LocalAtm,
                         summary = if (cashDrawerOnSale) "Opens on cash sale" else "Manual only",
                         initiallyExpanded = false) {
-                        Text("Cash drawer connected to thermal printer via RJ11 is auto-detected.",
+                        Text(tr(com.minimart.pos.R.string.drawer_autodetect),
                             color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                         Spacer(Modifier.height(10.dp))
                         // Auto open on sale toggle
@@ -254,7 +254,7 @@ fun SettingsScreen(
                         Spacer(Modifier.height(10.dp))
                         // Direct BT drawer address (optional)
                         OutlinedTextField(value = drawerInput, onValueChange = { drawerInput = it },
-                            label = { Text("Direct BT Drawer Address (optional)", color = DT.SubText) },
+                            label = { Text(tr(com.minimart.pos.R.string.drawer_bt_addr), color = DT.SubText) },
                             placeholder = { Text("00:11:22:33:44:55", color = DT.SubText.copy(0.5f)) },
                             singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
                             modifier = Modifier.fillMaxWidth().onFocusChanged { f ->
@@ -300,7 +300,7 @@ fun SettingsScreen(
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(tr(com.minimart.pos.R.string.blind_close_lbl), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
-                                Text("Cashiers count the till without seeing the expected cash. Managers and owners see the variance on the Z-report.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                                Text(tr(com.minimart.pos.R.string.blind_help), color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Switch(checked = blindClose, onCheckedChange = { scope.launch { settingsRepo.setBlindClose(it) } },
                                 colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
@@ -309,14 +309,14 @@ fun SettingsScreen(
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(tr(com.minimart.pos.R.string.cust_display), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
-                                Text("Shows the live cart on an attached HDMI or dual-screen display. The Customer tile on Home also works full-screen on this device.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                                Text(tr(com.minimart.pos.R.string.cust_display_help), color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Switch(checked = secondScreen, onCheckedChange = { scope.launch { settingsRepo.setCustomerDisplayEnabled(it) } },
                                 colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
                         }
                         Spacer(Modifier.height(12.dp))
                         Text(tr(com.minimart.pos.R.string.drawer_pin), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
-                        Text("Try pin 5 if the drawer does not open on pin 2.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                        Text(tr(com.minimart.pos.R.string.drawer_pin_help), color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
                             FilterChip(selected = kickPin == 0, onClick = { scope.launch { settingsRepo.setCashDrawerPin(0) } }, label = { Text("Pin 2") })
                             FilterChip(selected = kickPin == 1, onClick = { scope.launch { settingsRepo.setCashDrawerPin(1) } }, label = { Text("Pin 5") })
@@ -331,7 +331,7 @@ fun SettingsScreen(
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(tr(com.minimart.pos.R.string.beep_scan), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
-                            Text("A short beep when an item is added, and a lower double beep when a scan is not found or out of stock. Follows the notification volume.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                            Text(tr(com.minimart.pos.R.string.beep_help), color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                         }
                         Switch(checked = beepOn, onCheckedChange = { beepOn = it; com.minimart.pos.util.ScanFeedback.setOn(beepContext, it) },
                             colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
@@ -347,7 +347,7 @@ fun SettingsScreen(
                             colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
                     }
                     Spacer(Modifier.height(10.dp))
-                    Text("HID scanners pair as keyboards — connect via Android Bluetooth settings. Once paired, scan works automatically in the New Sale screen.",
+                    Text(tr(com.minimart.pos.R.string.hid_help),
                         color = DT.SubText, style = MaterialTheme.typography.labelSmall, lineHeight = 18.sp)
                     Spacer(Modifier.height(10.dp))
                     val btScanners = remember {
@@ -365,7 +365,7 @@ fun SettingsScreen(
                     if (btScanners.isEmpty()) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Default.BluetoothDisabled, null, tint = DT.SubText, modifier = Modifier.size(18.dp))
-                            Text("No paired BT scanners found", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                            Text(tr(com.minimart.pos.R.string.no_bt_scanners), color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                         }
                     } else {
                         btScanners.forEach { name ->
@@ -380,7 +380,7 @@ fun SettingsScreen(
                         }
                     }
                     Spacer(Modifier.height(6.dp))
-                    Text("Tip: Enable continuous scan mode (∞) in New Sale for rapid scanning.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                    Text(tr(com.minimart.pos.R.string.scan_tip), color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                 }
 
                 // ── Expiry Alerts ─────────────────────────────────────────────
@@ -410,7 +410,7 @@ fun SettingsScreen(
                         }
                     }
                     Spacer(Modifier.height(4.dp))
-                    Text("Checks every 12 hours. Runs in background.",
+                    Text(tr(com.minimart.pos.R.string.expiry_check_help),
                         color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                 }
 
@@ -458,7 +458,7 @@ fun SettingsScreen(
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Default.Lock, null, tint = DT.Teal, modifier = Modifier.size(14.dp))
                                         Spacer(Modifier.width(6.dp))
-                                        Text("Pairing code — enter this on the other device", color = DT.Teal, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                        Text(tr(com.minimart.pos.R.string.pairing_enter_other), color = DT.Teal, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                                     }
                                     Spacer(Modifier.height(4.dp))
                                     Text(com.minimart.pos.util.PairingCode.grouped(syncState.mySecret), color = DT.Ink, fontSize = 20.sp,
@@ -691,7 +691,7 @@ fun SettingsScreen(
                                             val level = com.minimart.pos.util.BackupAdvice.passphraseStrength(pass)
                                             Text(com.minimart.pos.util.BackupAdvice.strengthLabel(level),
                                                 color = when (level) { 3 -> DT.Green; 2 -> DT.Amber; else -> DT.Red }, style = MaterialTheme.typography.labelSmall)
-                                            Text("Write the passphrase down somewhere safe. If you forget it, this backup can never be opened.",
+                                            Text(tr(com.minimart.pos.R.string.pass_warning),
                                                 color = DT.Amber, style = MaterialTheme.typography.labelSmall)
                                         }
                                     }
@@ -939,7 +939,7 @@ fun SettingsScreen(
             title = { Text(tr(com.minimart.pos.R.string.select_printer), color = DT.OnSurface) },
             text = {
                 Column {
-                    if (pairedDevices.isEmpty()) Text("No paired Bluetooth printers found. Pair in phone Settings first.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                    if (pairedDevices.isEmpty()) Text(tr(com.minimart.pos.R.string.no_bt_printers), color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                     else pairedDevices.forEach { device ->
                         TextButton(onClick = {
                             scope.launch {
