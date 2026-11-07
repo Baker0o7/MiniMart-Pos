@@ -5,6 +5,13 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.31.0] - 2026-11-08
+
+- **Share your product list between shops.** In Settings, Cloud dashboard, choose "Shared product list". One shop is the main shop and sends its names, prices, tax and supplier details; your other shops follow it. Stock, sales and customers are never shared, and a following shop's own price edits are replaced by the main shop's list. You need to run the new `cloud/catalog_setup.sql` once in your online database first.
+- **Better web dashboard.** Choose 7, 14 or 30 days, compare your shops, see top products, export the daily figures as a CSV file, switch to Arabic, and install the page on a phone's home screen. Shops send their top products from this version on.
+- **More of the app in Arabic.** The sale screen, receipt screen, setup wizard, and many labels with amounts and names are translated.
+- **The first-run setup now looks like Settings**, with a purple header, cards, and buttons that stay at the bottom.
+
 ## [1.30.1] - 2026-11-08
 
 - **Vibration on touch and scan.** Every tap now gives a light tick, a scan that is accepted gives one short buzz with the beep, and one that is not found or is out of stock gives two buzzes. Turn it off in Settings, Bluetooth Barcode Scanner, \"Vibrate on touch and scan\".
