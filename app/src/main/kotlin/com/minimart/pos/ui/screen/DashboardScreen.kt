@@ -52,10 +52,11 @@ import com.minimart.pos.ui.theme.DT
 import com.minimart.pos.ui.viewmodel.DashboardViewModel
 import kotlinx.coroutines.launch
 
+@Composable
 private fun roleLabel(role: UserRole?): String? = when (role) {
-    UserRole.OWNER   -> "Owner"
-    UserRole.MANAGER -> "Manager"
-    UserRole.CASHIER -> "Cashier"
+    UserRole.OWNER   -> tr(com.minimart.pos.R.string.role_owner)
+    UserRole.MANAGER -> tr(com.minimart.pos.R.string.role_manager)
+    UserRole.CASHIER -> tr(com.minimart.pos.R.string.role_cashier)
     null             -> null
 }
 
@@ -160,7 +161,7 @@ fun DashboardScreen(
                         Box(Modifier.width(1.5.dp).height(46.dp).background(TealGlow.copy(0.6f)))
                         Spacer(Modifier.width(10.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(roleLabel(currentRole) ?: "Welcome", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp,
+                            Text(roleLabel(currentRole) ?: tr(com.minimart.pos.R.string.welcome), color = White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
                             // A long shop name must not wrap and unbalance the header.
                             Text(state.storeName, color = DT.StoreText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
@@ -182,12 +183,12 @@ fun DashboardScreen(
                             horizontalAlignment = Alignment.Start) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.size(8.dp).clip(CircleShape).background(DT.SoftGrey))
-                                Text(" Offline", color = White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+                                Text(" ${tr(com.minimart.pos.R.string.status_offline)}", color = White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
                             }
                             Box(Modifier.padding(vertical = 4.dp).width(60.dp).height(1.dp).background(TealGlow.copy(0.45f)))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(Modifier.size(8.dp).clip(CircleShape).background(GreenGlow))
-                                Text(" Ready", color = White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+                                Text(" ${tr(com.minimart.pos.R.string.status_ready)}", color = White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
                             }
                         }
                         Spacer(Modifier.width(8.dp))
@@ -249,7 +250,7 @@ fun DashboardScreen(
                                     Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = White, modifier = Modifier.size(20.dp))
                                 }
                                 Spacer(Modifier.width(8.dp))
-                                Text("Today's Sales Revenue", color = White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                                Text(tr(com.minimart.pos.R.string.dash_revenue), color = White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                                     maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 15.sp)
                             }
                             Spacer(Modifier.height(8.dp))
@@ -267,7 +268,7 @@ fun DashboardScreen(
                                         color = if (up) GreenGlow else RedGlow, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
                                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 } else {
-                                    Text("No sales yesterday", color = Sub, fontSize = 11.sp,
+                                    Text(tr(com.minimart.pos.R.string.dash_no_yesterday), color = Sub, fontSize = 11.sp,
                                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                             }
@@ -275,9 +276,9 @@ fun DashboardScreen(
                         Spacer(Modifier.width(12.dp))
                         // Right: count + average basket (tap through to detail)
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            SummaryStat(Icons.Default.ShoppingBag, PurpleGlow, "Sales (Count)", state.todaySaleCount.toString(),
+                            SummaryStat(Icons.Default.ShoppingBag, PurpleGlow, tr(com.minimart.pos.R.string.dash_sales_count), state.todaySaleCount.toString(),
                                 onNavigateToSalesHistory, interaction)
-                            SummaryStat(Icons.Default.ShoppingCart, GreenGlow, "Average Basket Value", money(avgBasket),
+                            SummaryStat(Icons.Default.ShoppingCart, GreenGlow, tr(com.minimart.pos.R.string.dash_avg_basket), money(avgBasket),
                                 if (rm.canViewReports(currentRole)) onNavigateToAnalytics else onNavigateToSalesHistory, interaction)
                         }
                     }
@@ -305,21 +306,21 @@ fun DashboardScreen(
                 item {
                     val n = state.lowStockProducts.size
                     DashAlert(Icons.Default.Warning, RedGlow, Color(0xFF1E0808),
-                        "$n ${if (n == 1) "item is" else "items are"} low on stock", "Needs restocking", onNavigateToLowStock)
+                        androidx.compose.ui.res.pluralStringResource(com.minimart.pos.R.plurals.dash_low_stock, n, n), tr(com.minimart.pos.R.string.dash_needs_restock), onNavigateToLowStock)
                 }
             }
             if (state.expiredProducts.isNotEmpty() || state.expiringProducts.isNotEmpty()) {
                 item { Spacer(Modifier.height(if (state.lowStockProducts.isEmpty()) 16.dp else 6.dp)) }
                 item {
                     val parts = listOfNotNull(
-                        state.expiredProducts.size.takeIf { it > 0 }?.let { "$it expired" },
-                        state.expiringProducts.size.takeIf { it > 0 }?.let { "$it expiring soon" }
+                        state.expiredProducts.size.takeIf { it > 0 }?.let { androidx.compose.ui.res.stringResource(com.minimart.pos.R.string.dash_expired, it) },
+                        state.expiringProducts.size.takeIf { it > 0 }?.let { androidx.compose.ui.res.stringResource(com.minimart.pos.R.string.dash_expiring, it) }
                     )
                     DashAlert(
                         Icons.Default.CalendarToday,
                         if (state.expiredProducts.isNotEmpty()) RedGlow else AmberGlow,
                         if (state.expiredProducts.isNotEmpty()) Color(0xFF1E0808) else Color(0xFF1E1005),
-                        parts.joinToString(" · "), "Review in Inventory", onNavigateToInventory)
+                        parts.joinToString(" · "), tr(com.minimart.pos.R.string.dash_review_inv), onNavigateToInventory)
                 }
             }
 
@@ -332,8 +333,8 @@ fun DashboardScreen(
                     Icon(Icons.Outlined.GridView, null, tint = TealGlow, modifier = Modifier.size(30.dp))
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Quick Actions", color = White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
-                        Text("Everything else is in the bottom bar", color = Sub, fontSize = 12.sp)
+                        Text(tr(com.minimart.pos.R.string.dash_quick), color = White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                        Text(tr(com.minimart.pos.R.string.dash_bottom_bar), color = Sub, fontSize = 12.sp)
                     }
                     Box(modifier = Modifier.clip(RoundedCornerShape(16.dp))
                         .background(if (showManageActions) DT.Teal else DT.Chip)
@@ -344,7 +345,7 @@ fun DashboardScreen(
                             Icon(if (showManageActions) Icons.Default.Check else Icons.Default.Tune,
                                 null, tint = if (showManageActions) Color.White else TealGlow, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(7.dp))
-                            Text(if (showManageActions) "Done" else "Edit",
+                            Text(if (showManageActions) tr(com.minimart.pos.R.string.done) else tr(com.minimart.pos.R.string.edit),
                                 color = if (showManageActions) Color.White else TealGlow,
                                 fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                         }
@@ -383,28 +384,28 @@ fun DashboardScreen(
 
                 val cards = buildList {
                     if (rm.canViewReports(currentRole) && "today" !in hidden)
-                        add(DashCard_("today","Today","Takings & profit",Icons.Default.Today,Color(0xFF0B2220),GreenGlow,onNavigateToToday))
+                        add(DashCard_("today",tr(com.minimart.pos.R.string.card_today),tr(com.minimart.pos.R.string.card_today_s),Icons.Default.Today,Color(0xFF0B2220),GreenGlow,onNavigateToToday))
                     if (rm.canAccessSettings(currentRole) && "health" !in hidden)
-                        add(DashCard_("health","Store health","Is all well?",Icons.Default.HealthAndSafety,Color(0xFF0B1F2C),BlueGlow,onNavigateToHealth))
+                        add(DashCard_("health",tr(com.minimart.pos.R.string.card_health),tr(com.minimart.pos.R.string.card_health_s),Icons.Default.HealthAndSafety,Color(0xFF0B1F2C),BlueGlow,onNavigateToHealth))
                     if (rm.canViewReports(currentRole) && "reports" !in hidden)
-                        add(DashCard_("reports","Reports","Sales & PDF",Icons.Default.BarChart,Color(0xFF160B2C),PurpleGlow,onNavigateToReports))
+                        add(DashCard_("reports",tr(com.minimart.pos.R.string.card_reports),tr(com.minimart.pos.R.string.card_reports_s),Icons.Default.BarChart,Color(0xFF160B2C),PurpleGlow,onNavigateToReports))
                     if (rm.canViewReports(currentRole) && "analytics" !in hidden)
-                        add(DashCard_("analytics","Analytics","Trends & profit",Icons.Default.Insights,Color(0xFF0B1F2C),BlueGlow,onNavigateToAnalytics))
+                        add(DashCard_("analytics",tr(com.minimart.pos.R.string.card_analytics),tr(com.minimart.pos.R.string.card_analytics_s),Icons.Default.Insights,Color(0xFF0B1F2C),BlueGlow,onNavigateToAnalytics))
                     if (rm.canEditPrices(currentRole) && "stockinsights" !in hidden)
-                        add(DashCard_("stockinsights","Insights","Reorder & value",Icons.Default.Inventory2,Color(0xFF1E1708),AmberGlow,onNavigateToStockInsights))
+                        add(DashCard_("stockinsights",tr(com.minimart.pos.R.string.card_insights),tr(com.minimart.pos.R.string.card_insights_s),Icons.Default.Inventory2,Color(0xFF1E1708),AmberGlow,onNavigateToStockInsights))
                     if (rm.canEditPrices(currentRole) && "purchasing" !in hidden)
-                        add(DashCard_("purchasing","Purchasing","Suppliers & POs",Icons.Default.LocalShipping,Color(0xFF0B2220),GreenGlow,onNavigateToPurchasing))
+                        add(DashCard_("purchasing",tr(com.minimart.pos.R.string.card_purchasing),tr(com.minimart.pos.R.string.card_purchasing_s),Icons.Default.LocalShipping,Color(0xFF0B2220),GreenGlow,onNavigateToPurchasing))
                     if (rm.canEditPrices(currentRole) && "labels" !in hidden)
-                        add(DashCard_("labels","Labels","Print barcodes",Icons.Default.QrCode2,Color(0xFF1A1030),PurpleGlow,onNavigateToLabels))
+                        add(DashCard_("labels",tr(com.minimart.pos.R.string.card_labels),tr(com.minimart.pos.R.string.card_labels_s),Icons.Default.QrCode2,Color(0xFF1A1030),PurpleGlow,onNavigateToLabels))
                     if (rm.canManageUsers(currentRole) && "activity" !in hidden)
-                        add(DashCard_("activity","Activity","Who did what",Icons.Default.Fingerprint,Color(0xFF1A0F1F),PurpleGlow,onNavigateToActivityLog))
+                        add(DashCard_("activity",tr(com.minimart.pos.R.string.card_activity),tr(com.minimart.pos.R.string.card_activity_s),Icons.Default.Fingerprint,Color(0xFF1A0F1F),PurpleGlow,onNavigateToActivityLog))
                     if ("customerview" !in hidden)
-                        add(DashCard_("customerview","Customer","Display screen",Icons.Default.Tv,Color(0xFF0B1A2C),BlueGlow,onNavigateToCustomerDisplay))
-                    if ("history"  !in hidden) add(DashCard_("history",  "History","Past sales",        Icons.Default.History,   Color(0xFF081525), BlueGlow,   onNavigateToSalesHistory))
-                    if ("lowstock" !in hidden) add(DashCard_("lowstock", "Low Stock",    "Running low", Icons.Default.Warning,   Color(0xFF1E0808), RedGlow,    onNavigateToLowStock))
-                    if ("mpesa" !in hidden) add(DashCard_("mpesa", "M-Pesa", "Payments", Icons.Default.PhoneAndroid, Color(0xFF0B2210), GreenGlow, onNavigateToMpesa))
-                    if ("customers" !in hidden) add(DashCard_("customers", "Customers", "Credit & loyalty",  Icons.Default.People,    Color(0xFF0B1525), BlueGlow,   onNavigateToCustomers))
-                    if ("creditoverview" !in hidden) add(DashCard_("creditoverview", "Ledger", "Balances owed", Icons.Default.AccountBalanceWallet, Color(0xFF1A0808), RedGlow, onNavigateToCreditOverview))
+                        add(DashCard_("customerview",tr(com.minimart.pos.R.string.card_custview),tr(com.minimart.pos.R.string.card_custview_s),Icons.Default.Tv,Color(0xFF0B1A2C),BlueGlow,onNavigateToCustomerDisplay))
+                    if ("history"  !in hidden) add(DashCard_("history",  tr(com.minimart.pos.R.string.card_history),tr(com.minimart.pos.R.string.card_history_s),        Icons.Default.History,   Color(0xFF081525), BlueGlow,   onNavigateToSalesHistory))
+                    if ("lowstock" !in hidden) add(DashCard_("lowstock", tr(com.minimart.pos.R.string.card_lowstock),tr(com.minimart.pos.R.string.card_lowstock_s), Icons.Default.Warning,   Color(0xFF1E0808), RedGlow,    onNavigateToLowStock))
+                    if ("mpesa" !in hidden) add(DashCard_("mpesa", tr(com.minimart.pos.R.string.card_mpesa),tr(com.minimart.pos.R.string.card_mpesa_s), Icons.Default.PhoneAndroid, Color(0xFF0B2210), GreenGlow, onNavigateToMpesa))
+                    if ("customers" !in hidden) add(DashCard_("customers", tr(com.minimart.pos.R.string.card_customers),tr(com.minimart.pos.R.string.card_customers_s),  Icons.Default.People,    Color(0xFF0B1525), BlueGlow,   onNavigateToCustomers))
+                    if ("creditoverview" !in hidden) add(DashCard_("creditoverview", tr(com.minimart.pos.R.string.card_ledger),tr(com.minimart.pos.R.string.card_ledger_s), Icons.Default.AccountBalanceWallet, Color(0xFF1A0808), RedGlow, onNavigateToCreditOverview))
                 }
 
                 Column(Modifier.padding(horizontal = 16.dp).animateContentSize(),
@@ -428,7 +429,7 @@ fun DashboardScreen(
                         verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Whatshot, null, tint = AmberGlow, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Top Items Today", color = White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(tr(com.minimart.pos.R.string.dash_top_items), color = White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
                 item { Spacer(Modifier.height(8.dp)) }
@@ -501,7 +502,7 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: Co
         .then(if (editing) Modifier else Modifier.combinedClickable(
             role = androidx.compose.ui.semantics.Role.Button, indication = null,
             interactionSource = interactionSource, onClick = onClick,
-            onLongClickLabel = "Rearrange tiles", onLongClick = onLongClick))
+            onLongClickLabel = tr(com.minimart.pos.R.string.dash_rearrange), onLongClick = onLongClick))
         .padding(horizontal = 4.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -523,7 +524,7 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: Co
 @Composable
 internal fun TileColumnsPicker(selected: Int, onPick: (Int) -> Unit) {
     Column(Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
-        Text("Tiles per row", color = White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+        Text(tr(com.minimart.pos.R.string.dash_tiles_row), color = White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         Spacer(Modifier.height(6.dp))
         Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(4, 3, 2, 1).forEach { n ->
@@ -674,7 +675,7 @@ private fun DashAlert(icon: ImageVector, glow: Color, bg: Color,
             Box(modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(glow.copy(0.15f))
                 .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = action)
                 .padding(horizontal = 12.dp, vertical = 7.dp)) {
-                Text("View", color = glow, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text(tr(com.minimart.pos.R.string.view), color = glow, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }
         }
     }
@@ -684,7 +685,7 @@ private fun DashAlert(icon: ImageVector, glow: Color, bg: Color,
 private fun BoxScope.DashBadge(onRemove: () -> Unit) {
     // 48dp touch target around a 20dp visual badge, nudged into the corner so most of the tile stays free to drag.
     Box(Modifier.align(Alignment.TopEnd).offset(x = 10.dp, y = (-10).dp).size(48.dp)
-        .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Hide this card", onClick = onRemove),
+        .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = tr(com.minimart.pos.R.string.dash_hide_card), onClick = onRemove),
         contentAlignment = Alignment.Center) {
         Box(Modifier.size(20.dp).clip(CircleShape).background(RedGlow), contentAlignment = Alignment.Center) {
             Icon(Icons.Default.Close, "Hide card", tint = White, modifier = Modifier.size(12.dp))

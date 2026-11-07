@@ -154,11 +154,11 @@ fun CheckoutScreen(
         AlertDialog(
             onDismissRequest = { showDiscountDialog = false },
             containerColor = DT.Surface,
-            title = { Text("Discount", color = DT.Ink, fontWeight = FontWeight.Bold) },
+            title = { Text(tr(com.minimart.pos.R.string.discount), color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = {
                 OutlinedTextField(value = globalDiscount,
                     onValueChange = { globalDiscount = sanitizeMoneyInput(it); vm.setGlobalDiscount(globalDiscount.toDoubleOrNull() ?: 0.0) },
-                    label = { Text("Amount ($currency)", color = DT.SubText) },
+                    label = { Text(tr(com.minimart.pos.R.string.amount_cur, currency), color = DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true, shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -166,11 +166,11 @@ fun CheckoutScreen(
                         focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                         cursorColor = DT.Teal))
             },
-            confirmButton = { TextButton(onClick = { showDiscountDialog = false }) { Text("Done", color = DT.Teal) } },
+            confirmButton = { TextButton(onClick = { showDiscountDialog = false }) { Text(tr(com.minimart.pos.R.string.done), color = DT.Teal) } },
             dismissButton = {
                 if (globalDiscount.isNotEmpty()) TextButton(onClick = {
                     globalDiscount = ""; vm.setGlobalDiscount(0.0); showDiscountDialog = false
-                }) { Text("Clear", color = DT.Red) }
+                }) { Text(tr(com.minimart.pos.R.string.clear), color = DT.Red) }
             }
         )
     }
@@ -181,8 +181,8 @@ fun CheckoutScreen(
 
             // ── Top bar ───────────────────────────────────────────────────────
             GradientHeader(
-                title = "Checkout",
-                subtitle = "${state.itemCount} item${if (state.itemCount != 1) "s" else ""}  •  $currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}",
+                title = tr(com.minimart.pos.R.string.checkout),
+                subtitle = "${itemsText(state.itemCount)}  •  $currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}",
                 onBack = onBack
             )
 
@@ -197,7 +197,7 @@ fun CheckoutScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Receipt, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Order Summary", color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(tr(com.minimart.pos.R.string.order_summary), color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                     Spacer(Modifier.height(12.dp))
                     HorizontalDivider(color = DT.Border)
@@ -230,10 +230,10 @@ fun CheckoutScreen(
                     HorizontalDivider(color = DT.Border)
                     Spacer(Modifier.height(10.dp))
                     if (state.totalTax > 0) {
-                        SummaryLine("VAT (incl.)", "$currency ${String.format(java.util.Locale.US, "%,.2f", state.totalTax)}", DT.SubText)
+                        SummaryLine(tr(com.minimart.pos.R.string.vat_incl), "$currency ${String.format(java.util.Locale.US, "%,.2f", state.totalTax)}", DT.SubText)
                     }
                     if (state.totalDiscount > 0) {
-                        SummaryLine("Discount", "- $currency ${String.format(java.util.Locale.US, "%,.2f", state.totalDiscount)}", DT.Amber, bold = true)
+                        SummaryLine(tr(com.minimart.pos.R.string.discount), "- $currency ${String.format(java.util.Locale.US, "%,.2f", state.totalDiscount)}", DT.Amber, bold = true)
                     }
                     // Change pill (cash only)
                     AnimatedVisibility(visible = selectedMethod == PaymentMethod.CASH && cashAmount >= state.total && state.total > 0) {
@@ -245,7 +245,7 @@ fun CheckoutScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.Money, null, tint = DT.Green, modifier = Modifier.size(18.dp))
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Change", color = DT.Green, fontWeight = FontWeight.Bold)
+                                    Text(tr(com.minimart.pos.R.string.change), color = DT.Green, fontWeight = FontWeight.Bold)
                                 }
                                 AnimatedContent(targetState = change, transitionSpec = {
                                     slideInVertically { -it } togetherWith slideOutVertically { it }
@@ -261,7 +261,7 @@ fun CheckoutScreen(
                     Spacer(Modifier.height(10.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically) {
-                        Text("TOTAL", color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, letterSpacing = 1.sp)
+                        Text(tr(com.minimart.pos.R.string.total_caps), color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, letterSpacing = 1.sp)
                         Text("$currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}", color = DT.Teal,
                             fontWeight = FontWeight.ExtraBold, fontSize = 24.sp)
                     }
@@ -281,7 +281,7 @@ fun CheckoutScreen(
                 Spacer(Modifier.width(12.dp))
                 Box(Modifier.width(1.5.dp).height(26.dp).background(DT.Teal.copy(0.6f)))
                 Spacer(Modifier.width(12.dp))
-                Text("Payment Method", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
+                Text(tr(com.minimart.pos.R.string.payment_method), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
             }
             Spacer(Modifier.height(10.dp))
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -345,7 +345,7 @@ fun CheckoutScreen(
                     when (method) {
                         PaymentMethod.CASH -> {
                             OutlinedTextField(value = cashInput, onValueChange = { cashInput = sanitizeMoneyInput(it) },
-                                label = { Text("Cash Received ($currency)", color = DT.SubText) },
+                                label = { Text(tr(com.minimart.pos.R.string.cash_received_cur, currency), color = DT.SubText) },
                                 leadingIcon = { Icon(Icons.Default.Money, null, tint = DT.SubText) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                 singleLine = true, modifier = Modifier.fillMaxWidth(),
@@ -419,7 +419,7 @@ fun CheckoutScreen(
                                                 ) {
                                                     Icon(Icons.Default.PhoneAndroid, null, tint = DT.Ink, modifier = Modifier.size(18.dp))
                                                     Spacer(Modifier.width(8.dp))
-                                                    Text("Send to Customer's Phone", color = DT.Ink, fontWeight = FontWeight.Bold)
+                                                    Text(tr(com.minimart.pos.R.string.send_stk), color = DT.Ink, fontWeight = FontWeight.Bold)
                                                 }
                                             } else {
                                                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
@@ -447,7 +447,7 @@ fun CheckoutScreen(
                                                     }
                                                     Spacer(Modifier.height(8.dp))
                                                     TextButton(onClick = { darajaVm.cancel() }) {
-                                                        Text("Cancel", color = DT.SubText)
+                                                        Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText)
                                                     }
                                                 }
                                             }
@@ -461,7 +461,7 @@ fun CheckoutScreen(
                                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                                         Icon(Icons.Default.CheckCircle, null, tint = DT.Green, modifier = Modifier.size(20.dp))
                                                         Spacer(Modifier.width(8.dp))
-                                                        Text("Payment confirmed", color = DT.Green, fontWeight = FontWeight.Bold)
+                                                        Text(tr(com.minimart.pos.R.string.payment_confirmed), color = DT.Green, fontWeight = FontWeight.Bold)
                                                     }
                                                     Text("Ref: ${stkState.mpesaReceiptNumber ?: ""}", color = DT.OnSurface, fontSize = 13.sp)
                                                     // Safaricom's status query doesn't return the receipt code, so a short code
@@ -485,7 +485,7 @@ fun CheckoutScreen(
                                                     }
                                                     Spacer(Modifier.height(6.dp))
                                                     TextButton(onClick = { darajaVm.reset() }) {
-                                                        Text("Try again", color = DT.Teal)
+                                                        Text(tr(com.minimart.pos.R.string.try_again), color = DT.Teal)
                                                     }
                                                 }
                                             }
@@ -495,7 +495,7 @@ fun CheckoutScreen(
 
                                 // ── Manual ref field (always visible as fallback) ──────────
                                 OutlinedTextField(value = mpesaRef, onValueChange = { mpesaRef = it.uppercase() },
-                                    label = { Text("M-Pesa Ref (optional)", color = DT.SubText) },
+                                    label = { Text(tr(com.minimart.pos.R.string.mpesa_ref_opt), color = DT.SubText) },
                                     leadingIcon = { Icon(Icons.Default.ConfirmationNumber, null, tint = DT.SubText) },
                                     singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Done), modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(14.dp),
@@ -527,7 +527,7 @@ fun CheckoutScreen(
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(Icons.Default.PhoneAndroid, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
                                             Spacer(Modifier.width(8.dp))
-                                            Text("Amount due", color = DT.SubText, fontSize = 14.sp)
+                                            Text(tr(com.minimart.pos.R.string.amount_due), color = DT.SubText, fontSize = 14.sp)
                                         }
                                         Text("$currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}",
                                             color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
@@ -592,8 +592,8 @@ fun CheckoutScreen(
                                         null, tint = if (useSplitPayment) DT.Teal else DT.SubText, modifier = Modifier.size(20.dp))
                                     Spacer(Modifier.width(10.dp))
                                     Column(Modifier.weight(1f)) {
-                                        Text("Split payment (Credit + Cash)", color = DT.Ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                        Text("Pay part with credit, rest with cash", color = DT.SubText, fontSize = 11.sp)
+                                        Text(tr(com.minimart.pos.R.string.split_pay), color = DT.Ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                        Text(tr(com.minimart.pos.R.string.split_pay_help), color = DT.SubText, fontSize = 11.sp)
                                     }
                                 }
 
@@ -679,15 +679,15 @@ fun CheckoutScreen(
                         tint = if (canComplete) Color.White else DT.SubText, modifier = Modifier.size(22.dp))
                     Spacer(Modifier.width(10.dp))
                     Text(when {
-                        stkInFlight && !useSplitPayment -> "WAITING FOR CUSTOMER…"
-                        !canComplete && useSplitPayment && splitCredit <= 0 -> "ENTER CREDIT AMOUNT"
-                        !canComplete && useSplitPayment -> "ENTER CASH AMOUNT"
-                        !canComplete && selectedMethod == PaymentMethod.CASH && state.total > 0 -> "ENTER CASH AMOUNT"
-                        !canComplete && selectedMethod == PaymentMethod.CREDIT -> "SELECT CUSTOMER"
-                        !canComplete -> "SELECT PAYMENT METHOD"
-                        useSplitPayment -> "COMPLETE SPLIT PAYMENT"
-                        selectedMethod == PaymentMethod.CREDIT && creditBalance < state.total -> "PURCHASE ON CREDIT"
-                        else -> "COMPLETE CHECKOUT"
+                        stkInFlight && !useSplitPayment -> tr(com.minimart.pos.R.string.btn_waiting)
+                        !canComplete && useSplitPayment && splitCredit <= 0 -> tr(com.minimart.pos.R.string.btn_enter_credit)
+                        !canComplete && useSplitPayment -> tr(com.minimart.pos.R.string.btn_enter_cash)
+                        !canComplete && selectedMethod == PaymentMethod.CASH && state.total > 0 -> tr(com.minimart.pos.R.string.btn_enter_cash)
+                        !canComplete && selectedMethod == PaymentMethod.CREDIT -> tr(com.minimart.pos.R.string.btn_select_customer)
+                        !canComplete -> tr(com.minimart.pos.R.string.btn_select_method)
+                        useSplitPayment -> tr(com.minimart.pos.R.string.btn_split)
+                        selectedMethod == PaymentMethod.CREDIT && creditBalance < state.total -> tr(com.minimart.pos.R.string.btn_credit)
+                        else -> tr(com.minimart.pos.R.string.btn_complete)
                     }, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, letterSpacing = 0.5.sp,
                         color = if (canComplete) Color.White else DT.SubText)
                 }
@@ -820,7 +820,7 @@ private fun CustomerSearchSheet(
 
             // Header
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Select Customer", color = DT.Ink, fontWeight = FontWeight.Bold,
+                Text(tr(com.minimart.pos.R.string.select_customer), color = DT.Ink, fontWeight = FontWeight.Bold,
                     fontSize = 18.sp, modifier = Modifier.weight(1f))
                 // Import from contacts
                 IconButton(onClick = {
@@ -850,7 +850,7 @@ private fun CustomerSearchSheet(
                     .background(DT.Surface2).border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(16.dp))
                     .padding(14.dp)) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("New Customer", color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(tr(com.minimart.pos.R.string.new_customer), color = DT.Teal, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         OutlinedTextField(value = newName, onValueChange = { newName = it },
                             label = { Text("Full Name *", color = DT.SubText) },
                             leadingIcon = { Icon(Icons.Default.Person, null, tint = DT.SubText) },
@@ -874,7 +874,7 @@ private fun CustomerSearchSheet(
                             OutlinedButton(onClick = { showAddForm = false },
                                 modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp),
                                 border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) {
-                                Text("Cancel", color = DT.SubText)
+                                Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText)
                             }
                             Button(onClick = {
                                 if (newName.isNotBlank()) {
@@ -887,7 +887,7 @@ private fun CustomerSearchSheet(
                                 colors = ButtonDefaults.buttonColors(containerColor = DT.Green)) {
                                 Icon(Icons.Default.Check, null, tint = DT.Ink, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Save & Select", color = DT.Ink, fontSize = 13.sp)
+                                Text(tr(com.minimart.pos.R.string.save_select), color = DT.Ink, fontSize = 13.sp)
                             }
                         }
                     }
@@ -896,7 +896,7 @@ private fun CustomerSearchSheet(
 
             // Search field
             OutlinedTextField(value = query, onValueChange = onQueryChange,
-                placeholder = { Text("Search by name or phone", color = DT.SubText) },
+                placeholder = { Text(tr(com.minimart.pos.R.string.search_cust), color = DT.SubText) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { onQueryChange("") }) {
                     Icon(Icons.Default.Close, "Clear search", tint = DT.SubText, modifier = Modifier.size(16.dp)) }
@@ -918,9 +918,9 @@ private fun CustomerSearchSheet(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Default.PeopleOutline, null, tint = DT.SubText.copy(0.4f), modifier = Modifier.size(40.dp))
-                            Text("No customers found", color = DT.SubText)
+                            Text(tr(com.minimart.pos.R.string.no_customers), color = DT.SubText)
                             if (query.isBlank()) {
-                                Text("Tap + to add one now", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
+                                Text(tr(com.minimart.pos.R.string.tap_add), color = DT.SubText.copy(0.6f), fontSize = 12.sp)
                             } else {
                                 // What was typed becomes the new customer, so nothing has to be typed twice.
                                 val looksLikePhone = query.trim().count { it.isDigit() } >= 7
