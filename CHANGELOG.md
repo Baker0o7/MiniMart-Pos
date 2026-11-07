@@ -5,6 +5,11 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.30.1] - 2026-11-08
+
+- **Vibration on touch and scan.** Every tap now gives a light tick, a scan that is accepted gives one short buzz with the beep, and one that is not found or is out of stock gives two buzzes. Turn it off in Settings, Bluetooth Barcode Scanner, \"Vibrate on touch and scan\".
+- **More of the app in Arabic.** Purchasing, Labels and Analytics are now translated. The setup wizard, Customer display, longer help sentences, receipts and printed reports are still English.
+
 ## [1.30.0] - 2026-11-07
 
 - **The app can now be used in Arabic.** Open Settings, then Language, and choose العربية. The whole screen turns right to left. Login, Home, the bottom bar, Checkout, Inventory, Products, Customers, Reports, Expenses, Shifts, Sales history, Credit ledger, Users and most of Settings are translated. Some screens (Purchasing, Labels, Analytics, the setup wizard), longer help sentences, receipts and printed reports are still in English for now. Choose "Same as the phone" to go back to the phone's language.
