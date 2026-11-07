@@ -86,7 +86,7 @@ fun ExpenseScreen(onBack: () -> Unit, vm: ExpenseViewModel = hiltViewModel()) {
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
             GradientHeader(
-                title = "Expenses & P&L",
+                title = tr(com.minimart.pos.R.string.expenses_pl),
                 subtitle = periodLabel,
                 onBack = onBack,
                 actions = { HeaderPillButton("Add", Icons.Default.Add) { showAddDialog = true } }
@@ -194,7 +194,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.AutoMirrored.Filled.TrendingUp, null, tint = DT.Green, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Revenue", color = DT.SubText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text(tr(com.minimart.pos.R.string.revenue), color = DT.SubText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                         Spacer(Modifier.height(6.dp))
                         Text(expenseAmount(currency, revenue), color = DT.Green,
@@ -211,7 +211,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.AutoMirrored.Filled.TrendingDown, null, tint = DT.Red, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Expenses", color = DT.SubText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text(tr(com.minimart.pos.R.string.expenses), color = DT.SubText, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                         Spacer(Modifier.height(6.dp))
                         Text(expenseAmount(currency, expenses), color = DT.Red,
@@ -234,7 +234,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("Net Profit", color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(tr(com.minimart.pos.R.string.net_profit), color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(4.dp))
                         Text("${if (netProfit >= 0) "+" else ""}${expenseAmount(currency, netProfit)}",
                             color = profitColor, fontWeight = FontWeight.ExtraBold, fontSize = 24.sp,
@@ -242,7 +242,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                     }
                     Spacer(Modifier.width(12.dp))
                     Column(horizontalAlignment = Alignment.End) {
-                        Text("Margin", color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(tr(com.minimart.pos.R.string.margin), color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(4.dp))
                         Text("${String.format(Locale.US, "%.1f", margin)}%",
                             color = profitColor, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
@@ -252,7 +252,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
         }
         if (revenue <= 0.0 && expenses <= 0.0) {
             item {
-                Text("No sales or expenses in this period yet.",
+                Text(tr(com.minimart.pos.R.string.no_sales_expenses),
                     color = DT.SubText, fontSize = 13.sp,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center)
@@ -263,7 +263,7 @@ private fun PLTab(revenue: Double, expenses: Double, netProfit: Double,
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                     Icon(Icons.Default.BarChart, null, tint = DT.Red, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("By Category", color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(tr(com.minimart.pos.R.string.by_category), color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
             items(sortedCategories, key = { it.key.name }) { (cat, amount) ->
@@ -340,14 +340,14 @@ private fun ExpenseListTab(
         Box(Modifier.fillMaxSize().padding(bottom = 48.dp), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(Icons.Default.Receipt, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.3f))
-                Text("No expenses in this period", color = DT.SubText, fontWeight = FontWeight.SemiBold)
-                Text("Log rent, stock purchases, power and more.", color = DT.SubText.copy(0.7f), fontSize = 12.sp)
+                Text(tr(com.minimart.pos.R.string.no_expenses), color = DT.SubText, fontWeight = FontWeight.SemiBold)
+                Text(tr(com.minimart.pos.R.string.expenses_help), color = DT.SubText.copy(0.7f), fontSize = 12.sp)
                 Spacer(Modifier.height(4.dp))
                 Button(onClick = onAdd, shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White)) {
                     Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Add expense", fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.add_expense), fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -396,7 +396,7 @@ private fun ExpenseListTab(
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
             containerColor = DT.Surface,
-            title = { Text("Delete expense?", color = DT.Ink, fontWeight = FontWeight.Bold) },
+            title = { Text(tr(com.minimart.pos.R.string.delete_expense_q), color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = {
                 Text("\"${expense.title}\" (${expenseAmount(currency, expense.amount)}) will be permanently removed.",
                     color = DT.SubText)
@@ -407,12 +407,12 @@ private fun ExpenseListTab(
                     colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)) {
                     Icon(Icons.Default.Delete, null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Delete", fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.delete), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { pendingDelete = null }, shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+                    border = BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) }
             }
         )
     }
@@ -499,7 +499,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = DT.Surface,
-        title = { Text("Add expense", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+        title = { Text(tr(com.minimart.pos.R.string.add_expense), color = DT.OnSurface, fontWeight = FontWeight.Bold) },
         text = {
             // Requested from inside the dialog's own content so the field is attached first;
             // asking from the parent can run before the dialog window has composed it.
@@ -510,7 +510,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
             ) {
                 OutlinedTextField(
                     value = title, onValueChange = { title = it },
-                    label = { Text("Description *", color = DT.SubText) },
+                    label = { Text(tr(com.minimart.pos.R.string.description_req), color = DT.SubText) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth().focusRequester(titleFocus),
@@ -525,7 +525,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
                     colors = fieldColors, shape = fieldShape
                 )
 
-                Text("Category", color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Text(tr(com.minimart.pos.R.string.category), color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 Row(
                     modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -538,7 +538,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
                 if (category == ExpenseCategory.SUPPLIER) {
                     OutlinedTextField(
                         value = supplierName, onValueChange = { supplierName = it },
-                        label = { Text("Supplier", color = DT.SubText) },
+                        label = { Text(tr(com.minimart.pos.R.string.supplier), color = DT.SubText) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
                         modifier = Modifier.fillMaxWidth(),
@@ -546,7 +546,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
                     )
                 }
 
-                Text("Date", color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Text(tr(com.minimart.pos.R.string.date), color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     ExpenseChip("Today", !yesterday) { yesterday = false }
                     ExpenseChip("Yesterday", yesterday) { yesterday = true }
@@ -557,7 +557,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
                         role = androidx.compose.ui.semantics.Role.Switch, onValueChange = { fromDrawer = it }),
                     verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("Paid in cash from the till", color = DT.OnSurface, fontSize = 14.sp)
+                        Text(tr(com.minimart.pos.R.string.paid_from_till), color = DT.OnSurface, fontSize = 14.sp)
                         Text("Turn on if you took this money out of the cash drawer, so the cash count still balances.",
                             color = DT.SubText, fontSize = 11.sp)
                     }
@@ -566,7 +566,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
 
                 OutlinedTextField(
                     value = notes, onValueChange = { notes = it },
-                    label = { Text("Notes (optional)", color = DT.SubText) },
+                    label = { Text(tr(com.minimart.pos.R.string.notes_optional), color = DT.SubText) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
@@ -587,12 +587,12 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
             ) {
                 Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("Save", fontWeight = FontWeight.ExtraBold)
+                Text(tr(com.minimart.pos.R.string.save), fontWeight = FontWeight.ExtraBold)
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+                border = BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) }
         }
     )
 }

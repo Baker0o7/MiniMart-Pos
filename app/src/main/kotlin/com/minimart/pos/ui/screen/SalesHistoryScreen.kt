@@ -120,7 +120,7 @@ fun SalesHistoryScreen(
 
             // ── Top bar ───────────────────────────────────────────────────────
             GradientHeader(
-                title = "Sales History",
+                title = tr(com.minimart.pos.R.string.sales_history),
                 subtitle = "${stats.count} records  •  $currency ${String.format(java.util.Locale.US, "%,.2f", stats.total)}",
                 onBack = onBack
             )
@@ -130,7 +130,7 @@ fun SalesHistoryScreen(
             OutlinedTextField(
                 value = query,
                 onValueChange = vm::setQuery,
-                placeholder = { Text("Search by receipt, ref, notes…", color = DT.SubText, maxLines = 1) },
+                placeholder = { Text(tr(com.minimart.pos.R.string.search_receipt), color = DT.SubText, maxLines = 1) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (query.isNotEmpty()) IconButton(onClick = { vm.setQuery("") }) {
@@ -157,7 +157,7 @@ fun SalesHistoryScreen(
                         Icon(Icons.Default.Receipt, null, modifier = Modifier.size(64.dp), tint = DT.SubText.copy(0.3f))
                         Text(if (query.isNotBlank()) "No results for \"$query\"" else "No sales yet",
                             color = DT.SubText, fontWeight = FontWeight.Medium)
-                        if (query.isNotBlank()) Text("Try receipt number, M-Pesa ref, or notes",
+                        if (query.isNotBlank()) Text(tr(com.minimart.pos.R.string.try_receipt),
                             color = DT.SubText.copy(0.6f), style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -205,19 +205,19 @@ private fun SaleHistoryRow(
         AlertDialog(
             onDismissRequest = { showVoidConfirm = false },
             containerColor = DT.Surface,
-            title = { Text("Void Sale?", color = DT.Ink, fontWeight = FontWeight.Bold) },
+            title = { Text(tr(com.minimart.pos.R.string.void_sale_q), color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = { Text("Receipt #${sale.receiptNumber}\n${currency} ${String.format(java.util.Locale.US, "%,.2f", sale.totalAmount)}\n\nThis cannot be undone.", color = DT.SubText) },
             confirmButton = {
                 Button(onClick = { onVoid(); showVoidConfirm = false },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DT.Red)) {
-                    Text("Void", color = DT.Ink, fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.void), color = DT.Ink, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showVoidConfirm = false }, shape = RoundedCornerShape(12.dp),
                     border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) {
-                    Text("Cancel", color = DT.SubText)
+                    Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText)
                 }
             }
         )
@@ -283,7 +283,7 @@ private fun SaleHistoryRow(
                 ) {
                     Icon(Icons.Default.Cancel, null, tint = DT.Red, modifier = Modifier.size(12.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Void", color = DT.Red, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    Text(tr(com.minimart.pos.R.string.void), color = DT.Red, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }

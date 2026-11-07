@@ -61,7 +61,7 @@ fun ShiftScreen(
         containerColor = com.minimart.pos.ui.theme.DT.Bg,
         topBar = {
             GradientHeader(
-                title = "Shifts",
+                title = tr(com.minimart.pos.R.string.shifts),
                 subtitle = state.activeShift?.let { "Open · ${it.cashierName}" } ?: "Clock in, close and Z-reports",
                 onBack = onBack
             )
@@ -89,8 +89,8 @@ fun ShiftScreen(
                     ) {
                         Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Icon(Icons.Default.AccessTime, null, tint = Brand500, modifier = Modifier.size(48.dp))
-                            Text("No Active Shift", color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                            Text("Clock in to start tracking your shift", color = com.minimart.pos.ui.theme.DT.SubText, style = MaterialTheme.typography.bodySmall)
+                            Text(tr(com.minimart.pos.R.string.no_active_shift), color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Text(tr(com.minimart.pos.R.string.clock_in_help), color = com.minimart.pos.ui.theme.DT.SubText, style = MaterialTheme.typography.bodySmall)
                             Button(
                                 onClick = { showClockInDialog = true },
                                 modifier = Modifier.fillMaxWidth().height(50.dp),
@@ -99,7 +99,7 @@ fun ShiftScreen(
                             ) {
                                 Icon(Icons.AutoMirrored.Filled.Login, null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Clock In", fontWeight = FontWeight.Bold)
+                                Text(tr(com.minimart.pos.R.string.clock_in), fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -115,7 +115,7 @@ fun ShiftScreen(
                     ) {
                         Icon(Icons.Default.NightsStay, null)
                         Spacer(Modifier.width(8.dp))
-                        Text("End of day checklist", fontWeight = FontWeight.Bold)
+                        Text(tr(com.minimart.pos.R.string.eod_checklist), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -139,7 +139,7 @@ fun ShiftScreen(
 
             // ── Shift history ──
             if (state.allShifts.isNotEmpty()) {
-                item { Text("Shift History", color = DT.Ink, fontWeight = FontWeight.SemiBold, fontSize = 16.sp) }
+                item { Text(tr(com.minimart.pos.R.string.shift_history), color = DT.Ink, fontWeight = FontWeight.SemiBold, fontSize = 16.sp) }
                 items(state.allShifts.take(20), key = { it.id }) { shift ->
                     ShiftHistoryRow(shift = shift, currency = state.currency, onClick = { showSummaryDialog = shift })
                 }
@@ -212,7 +212,7 @@ private fun ActiveShiftCard(shift: Shift, currency: String, onOpenDrawer: () -> 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(modifier = Modifier.size(10.dp).background(SuccessGreen, androidx.compose.foundation.shape.CircleShape))
                 Spacer(Modifier.width(8.dp))
-                Text("Active Shift", color = SuccessGreen, fontWeight = FontWeight.Bold)
+                Text(tr(com.minimart.pos.R.string.active_shift), color = SuccessGreen, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.weight(1f))
                 Text("${hours}h ${mins}m", color = SuccessGreen, style = MaterialTheme.typography.labelMedium)
             }
@@ -238,7 +238,7 @@ private fun ActiveShiftCard(shift: Shift, currency: String, onOpenDrawer: () -> 
             ) {
                 Icon(Icons.Default.LocalAtm, null, tint = com.minimart.pos.ui.theme.DT.Teal, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Open drawer (no sale)", color = com.minimart.pos.ui.theme.DT.Teal, fontWeight = FontWeight.SemiBold)
+                Text(tr(com.minimart.pos.R.string.open_drawer_nosale), color = com.minimart.pos.ui.theme.DT.Teal, fontWeight = FontWeight.SemiBold)
             }
             Button(
                 onClick = onClockOut,
@@ -248,7 +248,7 @@ private fun ActiveShiftCard(shift: Shift, currency: String, onOpenDrawer: () -> 
             ) {
                 Icon(Icons.AutoMirrored.Filled.Logout, null)
                 Spacer(Modifier.width(8.dp))
-                Text("Clock Out & End Shift", fontWeight = FontWeight.Bold)
+                Text(tr(com.minimart.pos.R.string.clock_out_end), fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -274,9 +274,9 @@ private fun TodayCashCard(today: List<Shift>, currency: String) {
     Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = DT.Surface2)) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Today's cash", color = DT.Ink, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+            Text(tr(com.minimart.pos.R.string.todays_cash), color = DT.Ink, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
             if (day.closedShifts == 0) {
-                Text("No shift has been closed yet today.", color = DT.SubText, fontSize = 13.sp)
+                Text(tr(com.minimart.pos.R.string.no_shift_closed), color = DT.SubText, fontSize = 13.sp)
             } else {
                 SummaryRow("Should be in the drawers", money(day.expected))
                 SummaryRow("Counted", money(day.counted))
@@ -334,10 +334,10 @@ private fun ClockInDialog(currency: String, onDismiss: () -> Unit, onClockIn: (D
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = com.minimart.pos.ui.theme.DT.Bg,
-        title = { Text("Clock In", fontWeight = FontWeight.Bold, color = DT.Ink) },
+        title = { Text(tr(com.minimart.pos.R.string.clock_in), fontWeight = FontWeight.Bold, color = DT.Ink) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Enter the opening cash float in the drawer:",
+                Text(tr(com.minimart.pos.R.string.enter_float),
                     style = MaterialTheme.typography.bodyMedium, color = DT.Ink)
                 OutlinedTextField(
                     value = openingFloat,
@@ -357,7 +357,7 @@ private fun ClockInDialog(currency: String, onDismiss: () -> Unit, onClockIn: (D
                         unfocusedContainerColor = com.minimart.pos.ui.theme.DT.Bg
                     )
                 )
-                Text("Leave 0 if no cash drawer is used.",
+                Text(tr(com.minimart.pos.R.string.leave_zero_drawer),
                     style = MaterialTheme.typography.labelSmall,
                     color = com.minimart.pos.ui.theme.DT.SubText)
             }
@@ -369,12 +369,12 @@ private fun ClockInDialog(currency: String, onDismiss: () -> Unit, onClockIn: (D
             ) {
                 Icon(Icons.AutoMirrored.Filled.Login, null, tint = DT.Ink)
                 Spacer(Modifier.width(6.dp))
-                Text("Clock In", color = DT.Ink, fontWeight = FontWeight.Bold)
+                Text(tr(com.minimart.pos.R.string.clock_in), color = DT.Ink, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = com.minimart.pos.ui.theme.DT.SubText)
+                Text(tr(com.minimart.pos.R.string.cancel), color = com.minimart.pos.ui.theme.DT.SubText)
             }
         }
     )
@@ -390,7 +390,7 @@ private fun ClockOutDialog(currency: String, blind: Boolean, onOpenDrawer: () ->
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = DT.Surface,
-        title = { Text("End Shift", fontWeight = FontWeight.Bold, color = DT.Ink) },
+        title = { Text(tr(com.minimart.pos.R.string.end_shift), fontWeight = FontWeight.Bold, color = DT.Ink) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
@@ -401,7 +401,7 @@ private fun ClockOutDialog(currency: String, blind: Boolean, onOpenDrawer: () ->
                 TextButton(onClick = onOpenDrawer) {
                     Icon(Icons.Default.LocalAtm, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Open drawer to count", color = DT.Teal)
+                    Text(tr(com.minimart.pos.R.string.open_drawer_count), color = DT.Teal)
                 }
                 OutlinedTextField(value = closingFloat, onValueChange = { closingFloat = it.replace(',', '.').filter { c -> c.isDigit() || c == '.' }.take(12) },
                     label = { Text("Closing Cash Counted ($currency)", color = DT.SubText) },
@@ -412,7 +412,7 @@ private fun ClockOutDialog(currency: String, blind: Boolean, onOpenDrawer: () ->
                         focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink, cursorColor = DT.Teal,
                         focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                 OutlinedTextField(value = notes, onValueChange = { notes = it },
-                    label = { Text("Notes / Discrepancy reason", color = DT.SubText) },
+                    label = { Text(tr(com.minimart.pos.R.string.shift_notes), color = DT.SubText) },
                     maxLines = 3, modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
                         focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink, cursorColor = DT.Teal,
@@ -428,9 +428,9 @@ private fun ClockOutDialog(currency: String, blind: Boolean, onOpenDrawer: () ->
                 colors = ButtonDefaults.buttonColors(containerColor = ErrorRed,
                     disabledContainerColor = ErrorRed.copy(0.4f), disabledContentColor = DT.Ink.copy(0.7f)),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
-            ) { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = DT.Ink, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("End Shift", color = DT.Ink, fontWeight = FontWeight.Bold) }
+            ) { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = DT.Ink, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(tr(com.minimart.pos.R.string.end_shift), color = DT.Ink, fontWeight = FontWeight.Bold) }
         },
-        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
     )
 }
 
@@ -450,7 +450,7 @@ private fun ShiftSummaryDialog(shift: Shift, currency: String, showVariance: Boo
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.BarChart, null, tint = DT.Teal, modifier = Modifier.size(22.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Shift Summary", fontWeight = FontWeight.Bold, color = DT.Ink)
+                Text(tr(com.minimart.pos.R.string.shift_summary), fontWeight = FontWeight.Bold, color = DT.Ink)
             }
         },
         text = {
@@ -481,7 +481,7 @@ private fun ShiftSummaryDialog(shift: Shift, currency: String, showVariance: Boo
                             color = when { disc > 10 -> SuccessGreen; disc < -10 -> ErrorRed; else -> Color.White }
                         )
                     } else {
-                        Text("Blind close — variance is visible to managers only.", style = MaterialTheme.typography.bodySmall, color = DT.SubText)
+                        Text(tr(com.minimart.pos.R.string.blind_close), style = MaterialTheme.typography.bodySmall, color = DT.SubText)
                     }
                 }
                 if (shift.notes.isNotBlank()) {
@@ -493,10 +493,10 @@ private fun ShiftSummaryDialog(shift: Shift, currency: String, showVariance: Boo
         confirmButton = {
             Row {
                 if (shift.clockOut != null) {
-                    TextButton(onClick = onPrint) { Text("Print Z", color = DT.Teal) }
-                    TextButton(onClick = onShare) { Text("Share", color = DT.Teal) }
+                    TextButton(onClick = onPrint) { Text(tr(com.minimart.pos.R.string.print_z), color = DT.Teal) }
+                    TextButton(onClick = onShare) { Text(tr(com.minimart.pos.R.string.share), color = DT.Teal) }
                 }
-                TextButton(onClick = onDismiss) { Text("Close", color = DT.SubText) }
+                TextButton(onClick = onDismiss) { Text(tr(com.minimart.pos.R.string.close), color = DT.SubText) }
             }
         }
     )

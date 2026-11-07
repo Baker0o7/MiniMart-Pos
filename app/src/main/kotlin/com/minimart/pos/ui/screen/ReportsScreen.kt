@@ -102,7 +102,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
             // ── Header ──
             item {
-                GradientHeader(title = "Reports", subtitle = "Analytics overview", onBack = onBack, actions = {
+                GradientHeader(title = tr(com.minimart.pos.R.string.reports), subtitle = tr(com.minimart.pos.R.string.analytics_overview), onBack = onBack, actions = {
                     // Journal and profit-and-loss as CSV files an accountant can open in Excel or Sheets.
                     IconButton(
                         enabled = !isSharing,
@@ -178,8 +178,8 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Default.BarChart, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.3f))
-                            Text("No sales in this period", color = DT.SubText, fontWeight = FontWeight.SemiBold)
-                            Text("Reports will appear here once a sale is completed",
+                            Text(tr(com.minimart.pos.R.string.no_sales_period), color = DT.SubText, fontWeight = FontWeight.SemiBold)
+                            Text(tr(com.minimart.pos.R.string.reports_empty),
                                 color = DT.SubText.copy(0.6f), fontSize = 12.sp)
                         }
                     }
@@ -200,14 +200,14 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             }
                             Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Revenue", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Text(tr(com.minimart.pos.R.string.revenue), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                                 Text("${state.currency} ${String.format(java.util.Locale.US, "%,.2f", state.totalRevenue)}",
                                     color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text("${state.totalTransactions}", color = DT.OnSurface,
                                     fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
-                                Text("sales", color = DT.SubText, fontSize = 11.sp)
+                                Text(tr(com.minimart.pos.R.string.sales_lc), color = DT.SubText, fontSize = 11.sp)
                             }
                         }
                         // Real bar chart from sale timestamps
@@ -233,11 +233,11 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.ShoppingCart, null, tint = DT.TealLight, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Avg Basket", color = DT.SubText, fontSize = 11.sp)
+                                Text(tr(com.minimart.pos.R.string.avg_basket), color = DT.SubText, fontSize = 11.sp)
                             }
                             Text("${state.currency} ${String.format(java.util.Locale.US, "%,.2f", state.averageBasket)}",
                                 color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
-                            Text("per transaction", color = DT.SubText, fontSize = 11.sp)
+                            Text(tr(com.minimart.pos.R.string.per_transaction), color = DT.SubText, fontSize = 11.sp)
                         }
                     }
                     // Unique days with sales
@@ -254,10 +254,10 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.CalendarToday, null, tint = DT.SoftBlue, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Active Days", color = DT.SubText, fontSize = 11.sp)
+                                Text(tr(com.minimart.pos.R.string.active_days), color = DT.SubText, fontSize = 11.sp)
                             }
                             Text("$activeDays", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 28.sp)
-                            Text("with sales", color = DT.SubText, fontSize = 11.sp)
+                            Text(tr(com.minimart.pos.R.string.with_sales), color = DT.SubText, fontSize = 11.sp)
                         }
                     }
                 }
@@ -271,7 +271,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Payments, null, tint = DT.SubText, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Payment Split", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text(tr(com.minimart.pos.R.string.payment_split), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
                     Spacer(Modifier.height(8.dp))
                     Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
@@ -316,7 +316,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Whatshot, null, tint = DT.SoftOrange, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Top Products", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text(tr(com.minimart.pos.R.string.top_products), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
                     Spacer(Modifier.height(8.dp))
                 }

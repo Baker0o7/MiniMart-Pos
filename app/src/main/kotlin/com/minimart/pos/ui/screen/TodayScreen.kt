@@ -76,7 +76,7 @@ private fun Card(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun Hero(sum: TodaySummary, currency: String) {
     Card {
-        Text("Sales so far today", color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Text(tr(com.minimart.pos.R.string.sales_so_far), color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         Text(money(currency, sum.revenue), color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 32.sp)
         val vs = sum.vsLastWeekPercent
         Text(
@@ -115,12 +115,12 @@ private fun Alerts(alerts: List<String>, onOpenHealth: () -> Unit, onOpenShifts:
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.WarningAmber, null, tint = DT.Amber, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Needs your attention", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text(tr(com.minimart.pos.R.string.needs_attention), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         }
         alerts.forEach { Text("• $it", color = DT.OnSurface, fontSize = 13.sp) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton(onClick = onOpenShifts) { Text("Shifts", color = DT.Teal) }
-            TextButton(onClick = onOpenHealth) { Text("Store health", color = DT.Teal) }
+            TextButton(onClick = onOpenShifts) { Text(tr(com.minimart.pos.R.string.shifts), color = DT.Teal) }
+            TextButton(onClick = onOpenHealth) { Text(tr(com.minimart.pos.R.string.store_health), color = DT.Teal) }
         }
     }
 }
@@ -128,7 +128,7 @@ private fun Alerts(alerts: List<String>, onOpenHealth: () -> Unit, onOpenShifts:
 @Composable
 private fun Splits(sum: TodaySummary, currency: String) {
     Card {
-        Text("How customers paid", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(tr(com.minimart.pos.R.string.how_paid), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         val rows = listOf("Cash" to sum.cash, "M-Pesa" to sum.mpesa, "Card" to sum.card, "On credit" to sum.credit)
         val total = rows.sumOf { it.second }.coerceAtLeast(0.01)
         rows.forEach { (name, v) ->
@@ -147,7 +147,7 @@ private fun Splits(sum: TodaySummary, currency: String) {
 @Composable
 private fun Hours(sum: TodaySummary) {
     Card {
-        Text("Sales by hour", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Text(tr(com.minimart.pos.R.string.sales_by_hour), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         val peak = sum.busiestHour
         Text(if (peak == null) "No sales yet today." else "Busiest hour: ${hourLabel(peak)}", color = DT.SubText, fontSize = 12.sp)
         BarChart(
