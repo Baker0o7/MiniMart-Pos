@@ -108,7 +108,7 @@ fun PurchaseOrdersScreen(
     val state by vm.uiState.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
         GradientHeader(
-            title = "Purchasing",
+            title = tr(com.minimart.pos.R.string.purchasing),
             subtitle = if (state.totalOwed > 0) "Owed to suppliers: $currency ${formatPrice(state.totalOwed)}" else "Orders to suppliers",
             onBack = onBack
         ) {
@@ -117,7 +117,7 @@ fun PurchaseOrdersScreen(
             HeaderPillButton("New order", Icons.Default.Add) { onOpenOrder(0) }
         }
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            item { FilterChip(selected = state.filter == null, onClick = { vm.setFilter(null) }, label = { Text("All") }) }
+            item { FilterChip(selected = state.filter == null, onClick = { vm.setFilter(null) }, label = { Text(tr(com.minimart.pos.R.string.all)) }) }
             items(PurchaseOrderStatus.values().toList()) { st ->
                 FilterChip(selected = state.filter == st, onClick = { vm.setFilter(st) }, label = { Text(prettyEnumName(st.name)) })
             }
@@ -126,8 +126,8 @@ fun PurchaseOrdersScreen(
             Column(Modifier.fillMaxSize().padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 Icon(Icons.Default.LocalShipping, null, tint = DT.SubText, modifier = Modifier.size(48.dp))
                 Spacer(Modifier.height(12.dp))
-                Text("No purchase orders yet", color = DT.OnSurface, fontWeight = FontWeight.Bold)
-                Text("Tap + to order stock from a supplier.", color = DT.SubText, fontSize = 13.sp)
+                Text(tr(com.minimart.pos.R.string.no_pos), color = DT.OnSurface, fontWeight = FontWeight.Bold)
+                Text(tr(com.minimart.pos.R.string.tap_order_stock), color = DT.SubText, fontSize = 13.sp)
             }
         } else {
             LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -184,7 +184,7 @@ fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewMode
                 }
             }
             if (state.suppliers.isEmpty()) item {
-                Text("No suppliers yet. Tap + to add one.", color = DT.SubText, modifier = Modifier.padding(24.dp))
+                Text(tr(com.minimart.pos.R.string.no_suppliers), color = DT.SubText, modifier = Modifier.padding(24.dp))
             }
             items(state.suppliers, key = { it.supplier.id }) { row ->
                 val s = row.supplier
@@ -235,7 +235,7 @@ fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewMode
                     PoField(address, { address = it.take(120) }, "Address", Modifier.fillMaxWidth())
                     PoField(notes, { notes = it.take(300) }, "Notes", Modifier.fillMaxWidth(), singleLine = false)
                     if (s.id != 0L) TextButton(onClick = { vm.deactivateSupplier(s.id); editing = null }) {
-                        Text("Remove supplier", color = DT.Red)
+                        Text(tr(com.minimart.pos.R.string.remove_supplier), color = DT.Red)
                     }
                 }
             },
@@ -243,9 +243,9 @@ fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewMode
                 TextButton(onClick = {
                     vm.saveSupplier(s.copy(name = name, phone = phone, email = email, address = address, notes = notes))
                     editing = null
-                }) { Text("Save", color = DT.TealLight) }
+                }) { Text(tr(com.minimart.pos.R.string.save), color = DT.TealLight) }
             },
-            dismissButton = { TextButton(onClick = { editing = null }) { Text("Cancel", color = DT.SubText) } }
+            dismissButton = { TextButton(onClick = { editing = null }) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
         )
     }
 }
@@ -312,7 +312,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                             Icon(Icons.Default.ArrowDropDown, null, tint = DT.SubText)
                         }
                         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-                            if (s.suppliers.isEmpty()) DropdownMenuItem(text = { Text("Add a supplier first") }, onClick = { open = false })
+                            if (s.suppliers.isEmpty()) DropdownMenuItem(text = { Text(tr(com.minimart.pos.R.string.add_supplier_first)) }, onClick = { open = false })
                             s.suppliers.forEach { sup ->
                                 DropdownMenuItem(text = { Text(sup.name) }, onClick = { vm.setSupplier(sup.id); open = false })
                             }
@@ -338,7 +338,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                 }
             }
 
-            if (s.lines.isEmpty()) item { Text("No items yet.", color = DT.SubText, fontSize = 13.sp) }
+            if (s.lines.isEmpty()) item { Text(tr(com.minimart.pos.R.string.no_items_yet), color = DT.SubText, fontSize = 13.sp) }
 
             itemsIndexed(s.lines, key = { _, l -> l.productId }) { i, l ->
                 Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(14.dp)).padding(12.dp)) {
@@ -370,10 +370,10 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
 
             item {
                 Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DT.Surface).padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row { Text("Order total", color = DT.SubText, modifier = Modifier.weight(1f)); Text("$currency ${formatPrice(s.total)}", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold) }
+                    Row { Text(tr(com.minimart.pos.R.string.order_total), color = DT.SubText, modifier = Modifier.weight(1f)); Text("$currency ${formatPrice(s.total)}", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold) }
                     if (!s.editable && s.status != PurchaseOrderStatus.CANCELLED) {
-                        Row { Text("Paid", color = DT.SubText, modifier = Modifier.weight(1f)); Text("$currency ${formatPrice(s.amountPaid)}", color = DT.Green) }
-                        Row { Text("Balance", color = DT.SubText, modifier = Modifier.weight(1f)); Text("$currency ${formatPrice(s.balance)}", color = if (s.balance > 0) DT.Amber else DT.Green, fontWeight = FontWeight.Bold) }
+                        Row { Text(tr(com.minimart.pos.R.string.paid), color = DT.SubText, modifier = Modifier.weight(1f)); Text("$currency ${formatPrice(s.amountPaid)}", color = DT.Green) }
+                        Row { Text(tr(com.minimart.pos.R.string.balance), color = DT.SubText, modifier = Modifier.weight(1f)); Text("$currency ${formatPrice(s.balance)}", color = if (s.balance > 0) DT.Amber else DT.Green, fontWeight = FontWeight.Bold) }
                     }
                 }
             }
@@ -387,7 +387,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                         PoButton("Save draft", vm::saveDraft, Modifier.weight(1f), filled = false)
                         PoButton("Mark as sent", vm::markOrdered, Modifier.weight(1f))
                     }
-                    if (s.poId != 0L) TextButton(onClick = { confirm = "delete" }, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text("Delete draft", color = DT.Red) }
+                    if (s.poId != 0L) TextButton(onClick = { confirm = "delete" }, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text(tr(com.minimart.pos.R.string.delete_draft), color = DT.Red) }
                 }
                 PurchaseOrderStatus.ORDERED, PurchaseOrderStatus.PARTIAL -> {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -414,7 +414,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
         var updateCosts by rememberSaveable { mutableStateOf(true) }
         AlertDialog(
             onDismissRequest = { showReceive = false }, containerColor = DT.Surface,
-            title = { Text("Receive goods", color = DT.OnSurface) },
+            title = { Text(tr(com.minimart.pos.R.string.receive_goods), color = DT.OnSurface) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     s.lines.forEachIndexed { i, l ->
@@ -423,7 +423,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                     }
                     Row(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { updateCosts = !updateCosts }, verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = updateCosts, onCheckedChange = { updateCosts = it })
-                        Text("Update product cost prices", color = DT.OnSurface, fontSize = 13.sp)
+                        Text(tr(com.minimart.pos.R.string.update_cost_prices), color = DT.OnSurface, fontSize = 13.sp)
                     }
                 }
             },
@@ -431,9 +431,9 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                 TextButton(onClick = {
                     val q = entries.mapNotNull { (i, t) -> t.toDoubleOrNull()?.takeIf { it > 0 }?.let { i to it } }.toMap()
                     vm.receive(q, updateCosts); showReceive = false
-                }) { Text("Add to stock", color = DT.Green) }
+                }) { Text(tr(com.minimart.pos.R.string.add_to_stock), color = DT.Green) }
             },
-            dismissButton = { TextButton(onClick = { showReceive = false }) { Text("Cancel", color = DT.SubText) } }
+            dismissButton = { TextButton(onClick = { showReceive = false }) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
         )
     }
 
@@ -441,7 +441,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
         var amount by remember { mutableStateOf(if (s.balance > 0) plainNumber(s.balance) else "") }
         AlertDialog(
             onDismissRequest = { showPay = false }, containerColor = DT.Surface,
-            title = { Text("Payment to supplier", color = DT.OnSurface) },
+            title = { Text(tr(com.minimart.pos.R.string.pay_supplier), color = DT.OnSurface) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Balance: $currency ${formatPrice(s.balance)}", color = DT.SubText, fontSize = 13.sp)
@@ -449,9 +449,9 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                 }
             },
             confirmButton = {
-                TextButton(onClick = { vm.pay(amount.toDoubleOrNull() ?: 0.0); showPay = false }) { Text("Record", color = DT.TealLight) }
+                TextButton(onClick = { vm.pay(amount.toDoubleOrNull() ?: 0.0); showPay = false }) { Text(tr(com.minimart.pos.R.string.record), color = DT.TealLight) }
             },
-            dismissButton = { TextButton(onClick = { showPay = false }) { Text("Cancel", color = DT.SubText) } }
+            dismissButton = { TextButton(onClick = { showPay = false }) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
         )
     }
 
@@ -468,9 +468,9 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                 TextButton(onClick = {
                     when (kind) { "delete" -> vm.deleteDraft(); "cancel" -> vm.cancel(); else -> vm.closeShort() }
                     confirm = null
-                }) { Text("Confirm", color = DT.Red) }
+                }) { Text(tr(com.minimart.pos.R.string.confirm), color = DT.Red) }
             },
-            dismissButton = { TextButton(onClick = { confirm = null }) { Text("Back", color = DT.SubText) } }
+            dismissButton = { TextButton(onClick = { confirm = null }) { Text(tr(com.minimart.pos.R.string.back), color = DT.SubText) } }
         )
     }
 }
@@ -485,7 +485,7 @@ private fun ProductPickerDialog(s: PoEditorState, onPick: (com.minimart.pos.data
     }
     AlertDialog(
         onDismissRequest = onDismiss, containerColor = DT.Surface,
-        title = { Text("Add item", color = DT.OnSurface) },
+        title = { Text(tr(com.minimart.pos.R.string.add_item), color = DT.OnSurface) },
         text = {
             Column {
                 PoField(q, { q = it.take(40) }, "Search products", Modifier.fillMaxWidth())
@@ -497,6 +497,6 @@ private fun ProductPickerDialog(s: PoEditorState, onPick: (com.minimart.pos.data
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Done", color = DT.TealLight) } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr(com.minimart.pos.R.string.done), color = DT.TealLight) } }
     )
 }

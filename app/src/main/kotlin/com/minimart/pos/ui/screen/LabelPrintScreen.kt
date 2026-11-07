@@ -36,7 +36,7 @@ fun LabelPrintScreen(onBack: () -> Unit, vm: LabelPrintViewModel = hiltViewModel
 
         OutlinedTextField(
             value = s.query, onValueChange = vm::setQuery, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
-            label = { Text("Search products", fontSize = 12.sp) },
+            label = { Text(tr(com.minimart.pos.R.string.search_products), fontSize = 12.sp) },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -45,15 +45,15 @@ fun LabelPrintScreen(onBack: () -> Unit, vm: LabelPrintViewModel = hiltViewModel
                 focusedLabelColor = DT.TealLight, unfocusedLabelColor = DT.SubText, cursorColor = DT.TealLight)
         )
         Row(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            FilterChip(selected = s.showPrice, onClick = { vm.setShowPrice(!s.showPrice) }, label = { Text("Show price") })
+            FilterChip(selected = s.showPrice, onClick = { vm.setShowPrice(!s.showPrice) }, label = { Text(tr(com.minimart.pos.R.string.show_price)) })
             Spacer(Modifier.width(8.dp))
-            AssistChip(onClick = vm::selectLowStock, label = { Text("Low stock") })
+            AssistChip(onClick = vm::selectLowStock, label = { Text(tr(com.minimart.pos.R.string.low_stock)) })
             Spacer(Modifier.width(8.dp))
-            if (s.totalLabels > 0) AssistChip(onClick = vm::clearSelection, label = { Text("Clear") })
+            if (s.totalLabels > 0) AssistChip(onClick = vm::clearSelection, label = { Text(tr(com.minimart.pos.R.string.clear)) })
         }
 
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (s.visible.isEmpty()) item { Text("No products with a barcode found.", color = DT.SubText) }
+            if (s.visible.isEmpty()) item { Text(tr(com.minimart.pos.R.string.no_barcode_products), color = DT.SubText) }
             items(s.visible, key = { it.id }) { p ->
                 val n = s.copies[p.id] ?: 0
                 Row(

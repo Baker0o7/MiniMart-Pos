@@ -49,7 +49,7 @@ fun AnalyticsScreen(onBack: () -> Unit, vm: AnalyticsViewModel = hiltViewModel()
     val range by vm.range.collectAsStateWithLifecycle()
 
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
-        GradientHeader(title = "Analytics", subtitle = "Sales, profit and trends", onBack = onBack)
+        GradientHeader(title = tr(com.minimart.pos.R.string.analytics), subtitle = tr(com.minimart.pos.R.string.analytics_sub), onBack = onBack)
 
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -80,7 +80,7 @@ fun AnalyticsScreen(onBack: () -> Unit, vm: AnalyticsViewModel = hiltViewModel()
                     Icon(Icons.Default.Insights, null, tint = DT.SubText, modifier = Modifier.size(48.dp))
                     Spacer(Modifier.height(10.dp))
                     Text("No sales in the last ${s.range.label}", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
-                    Text("Complete a sale and your trends will show up here.", color = DT.SubText,
+                    Text(tr(com.minimart.pos.R.string.trends_empty), color = DT.SubText,
                         fontSize = 13.sp, textAlign = TextAlign.Center)
                 }
             }
@@ -279,7 +279,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
         s.margins?.takeIf { it.best.isNotEmpty() || it.lossMakers.isNotEmpty() || it.thin.isNotEmpty() }?.let { m -> item {
             AnalyticsCard("Profit by product") {
                 if (m.lossMakers.isNotEmpty()) {
-                    Text("Selling below cost", color = DT.Red, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.below_cost), color = DT.Red, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     m.lossMakers.take(5).forEach { p ->
                         Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
                             Text(p.productLabel(), color = DT.OnSurface, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -289,7 +289,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     Spacer(Modifier.height(8.dp))
                 }
                 if (m.thin.isNotEmpty()) {
-                    Text("Thin margin (under 10%)", color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.thin_margin), color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     m.thin.take(5).forEach { p ->
                         Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
                             Text(p.productLabel(), color = DT.OnSurface, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -299,7 +299,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     Spacer(Modifier.height(8.dp))
                 }
                 if (m.best.isNotEmpty()) {
-                    Text("Biggest profit earners", color = DT.Green, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.profit_earners), color = DT.Green, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     m.best.forEach { p ->
                         Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
                             Text(p.productLabel(), color = DT.OnSurface, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -325,14 +325,14 @@ private fun AnalyticsBody(s: AnalyticsState) {
                 }
                 if (s.pairs.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
-                    Text("Often bought together", color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.bought_together), color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     s.pairs.forEach { p ->
                         Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text("${p.first} + ${p.second}", color = DT.OnSurface, fontSize = 13.sp, modifier = Modifier.weight(1f), maxLines = 2)
                             Text("${p.times}×", color = DT.SubText, fontSize = 12.sp)
                         }
                     }
-                    Text("Put these side by side, or offer one when the other is scanned.", color = DT.SubText, fontSize = 11.sp)
+                    Text(tr(com.minimart.pos.R.string.side_by_side), color = DT.SubText, fontSize = 11.sp)
                 }
             }
         }
@@ -363,7 +363,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                 if (l.reversedCount > 0) Text("Sales taken back: ${l.reversedCount} worth $cur ${money(l.reversedValue)} (${String.format(Locale.US, "%.1f", l.reversalRate * 100)}% of sales)",
                     color = DT.OnSurface, fontSize = 13.sp)
                 Spacer(Modifier.height(4.dp))
-                Text("Some discounts and returns are normal. Watch for these creeping up.", color = DT.SubText, fontSize = 11.sp)
+                Text(tr(com.minimart.pos.R.string.discounts_normal), color = DT.SubText, fontSize = 11.sp)
             }
         } }
 
