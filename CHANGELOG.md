@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.30.0] - 2026-11-07
+
+- **The app can now be used in Arabic.** Open Settings, then Language, and choose العربية. The whole screen turns right to left. Login, Home, the bottom bar, Checkout, Inventory, Products, Customers, Reports, Expenses, Shifts, Sales history, Credit ledger, Users and most of Settings are translated. Some screens (Purchasing, Labels, Analytics, the setup wizard), longer help sentences, receipts and printed reports are still in English for now. Choose "Same as the phone" to go back to the phone's language.
+
 ## [1.29.0] - 2026-11-07
 
 - **Update the app from inside the app.** Open Settings, then About & support, and tap "Check for updates". If a new version is out you see what changed and can tap "Download and install"; Android then asks you to confirm. The first time, Android asks you to allow MiniMart to install updates. Home shows a card when an update is waiting, and the app checks once a day by itself (you can turn that off). Your sales and settings are kept. Use Wi-Fi if you can, because the download uses data.
