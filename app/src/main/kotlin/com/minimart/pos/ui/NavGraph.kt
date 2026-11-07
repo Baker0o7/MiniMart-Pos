@@ -145,10 +145,10 @@ fun MiniMartNavGraph(
             text = {
                 Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
                     Text("You signed in with the default PIN (1234). Choose a new PIN to protect this till.")
-                    OutlinedTextField(newPin, { newPin = it.filter(Char::isDigit).take(8) }, label = { Text("New PIN") },
+                    OutlinedTextField(newPin, { newPin = it.filter(Char::isDigit).take(8) }, label = { Text(androidx.compose.ui.res.stringResource(com.minimart.pos.R.string.new_pin)) },
                         singleLine = true, visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword))
-                    OutlinedTextField(confirmPin, { confirmPin = it.filter(Char::isDigit).take(8) }, label = { Text("Confirm PIN") },
+                    OutlinedTextField(confirmPin, { confirmPin = it.filter(Char::isDigit).take(8) }, label = { Text(androidx.compose.ui.res.stringResource(com.minimart.pos.R.string.confirm_pin)) },
                         singleLine = true, visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword))
                     authState.pinChangeError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
@@ -489,11 +489,11 @@ private fun BottomNavBar(
             Row(modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically) {
-                NavItem(Icons.Default.Home,      "Home",      currentRoute == Routes.DASHBOARD, onHome)
-                NavItem(Icons.Default.Inventory2,"Products",  currentRoute == Routes.PRODUCTS,  onProducts)
+                NavItem(Icons.Default.Home, androidx.compose.ui.res.stringResource(com.minimart.pos.R.string.nav_home),      currentRoute == Routes.DASHBOARD, onHome)
+                NavItem(Icons.Default.Inventory2, androidx.compose.ui.res.stringResource(com.minimart.pos.R.string.nav_products),  currentRoute == Routes.PRODUCTS,  onProducts)
                 Spacer(Modifier.width(76.dp))
-                NavItem(Icons.Default.Store,     "Inventory", currentRoute == Routes.INVENTORY, onInventory)
-                NavItem(Icons.Default.Receipt,   "Expenses",  currentRoute == Routes.EXPENSES,  onExpenses)
+                NavItem(Icons.Default.Store, androidx.compose.ui.res.stringResource(com.minimart.pos.R.string.nav_inventory), currentRoute == Routes.INVENTORY, onInventory)
+                NavItem(Icons.Default.Receipt, androidx.compose.ui.res.stringResource(com.minimart.pos.R.string.nav_expenses),  currentRoute == Routes.EXPENSES,  onExpenses)
             }
         }
         // Raised center scan button: accent ring around a filled disc. The cart badge is a sibling of
@@ -507,9 +507,9 @@ private fun BottomNavBar(
                 .padding(7.dp)
                 .clip(CircleShape)
                 .background(Brush.linearGradient(listOf(DT.TealLight, NavSel)))
-                .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Scan a barcode", onClick = onScan),
+                .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = androidx.compose.ui.res.stringResource(com.minimart.pos.R.string.nav_scan_label), onClick = onScan),
                 contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.QrCode2, "Scan", tint = DT.Bg, modifier = Modifier.size(32.dp))
+                Icon(Icons.Default.QrCode2, androidx.compose.ui.res.stringResource(com.minimart.pos.R.string.nav_scan), tint = DT.Bg, modifier = Modifier.size(32.dp))
             }
             if (cartItemCount > 0) {
                 Box(modifier = Modifier.align(Alignment.TopEnd)

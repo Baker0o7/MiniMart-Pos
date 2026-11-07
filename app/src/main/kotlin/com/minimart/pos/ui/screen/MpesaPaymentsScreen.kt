@@ -77,7 +77,7 @@ fun MpesaPaymentsScreen(
     Box(Modifier.fillMaxSize().background(DT.Bg)) {
         Column(Modifier.fillMaxSize()) {
             GradientHeader(
-                title = "M-Pesa Payments",
+                title = tr(com.minimart.pos.R.string.mpesa_payments),
                 subtitle = if (enabled && permitted) "Tracking incoming payments" else "Tracking is off",
                 onBack = onBack
             )
@@ -97,7 +97,7 @@ fun MpesaPaymentsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Text("Log payments automatically", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text(tr(com.minimart.pos.R.string.log_auto), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 Text(
                                     when {
                                         denied -> "SMS permission was refused. Allow it in phone Settings › Apps › MiniMart POS."
@@ -127,7 +127,7 @@ fun MpesaPaymentsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Text("Require a verified code", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text(tr(com.minimart.pos.R.string.require_verified), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 Text("An M-Pesa sale can only be completed with a code that matches a payment received on this phone (tracking must be on). Payments confirmed by STK push are exempt. Text-message sender names can be faked, so for large payments also check the money in your M-Pesa balance.",
                                     color = DT.SubText, fontSize = 12.sp)
                             }
@@ -265,14 +265,14 @@ private fun VerifyCard(check: MpesaCheck?, currency: String, onVerify: (String) 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.VerifiedUser, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Verify a payment", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(tr(com.minimart.pos.R.string.verify_payment), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
         Text("Type the transaction code from the customer's message. It is only confirmed if this phone received it from M-Pesa itself.",
             color = DT.SubText, fontSize = 12.sp)
         OutlinedTextField(
             value = code,
             onValueChange = { code = it.filter { c -> c.isLetterOrDigit() }.uppercase().take(12); if (check != null) onClear() },
-            label = { Text("Transaction code, e.g. UJ71ABC234", color = DT.SubText) },
+            label = { Text(tr(com.minimart.pos.R.string.tx_code), color = DT.SubText) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { onVerify(code) }),
@@ -289,7 +289,7 @@ private fun VerifyCard(check: MpesaCheck?, currency: String, onVerify: (String) 
             modifier = Modifier.fillMaxWidth().heightIn(min = 46.dp), shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White,
                 disabledContainerColor = DT.Teal.copy(0.35f), disabledContentColor = Color.White.copy(0.7f))
-        ) { Text("Verify", fontWeight = FontWeight.Bold) }
+        ) { Text(tr(com.minimart.pos.R.string.verify), fontWeight = FontWeight.Bold) }
 
         when (check) {
             is MpesaCheck.Found -> FeedbackBanner(

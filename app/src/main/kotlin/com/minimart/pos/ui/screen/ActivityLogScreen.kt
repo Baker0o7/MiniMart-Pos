@@ -63,7 +63,7 @@ fun ActivityLogScreen(onBack: () -> Unit, vm: ActivityLogViewModel = hiltViewMod
         if (s.loading) {
             Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = DT.Teal) }
         } else if (rows.isEmpty()) {
-            Box(Modifier.fillMaxSize(), Alignment.Center) { Text("Nothing recorded here yet.", color = DT.SubText) }
+            Box(Modifier.fillMaxSize(), Alignment.Center) { Text(tr(com.minimart.pos.R.string.nothing_recorded), color = DT.SubText) }
         } else {
             LazyColumn(
                 state = rememberLazyListState(), contentPadding = PaddingValues(16.dp),

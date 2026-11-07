@@ -77,7 +77,7 @@ fun CreditOverviewScreen(
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
-                            Text("Credit Ledger", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                            Text(tr(com.minimart.pos.R.string.credit_ledger), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
                             Text("${creditCustomers.size} customers with outstanding balance", color = Color.White.copy(0.7f), fontSize = 12.sp)
                         }
                     }
@@ -97,7 +97,7 @@ fun CreditOverviewScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.AccountBalanceWallet, null, tint = DT.Red, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Owed to Shop", color = DT.SubText, fontSize = 11.sp)
+                                Text(tr(com.minimart.pos.R.string.owed_to_shop), color = DT.SubText, fontSize = 11.sp)
                             }
                             Spacer(Modifier.height(4.dp))
                             Text("$currency ${String.format(java.util.Locale.US, "%,.2f", totalOwed)}",
@@ -113,7 +113,7 @@ fun CreditOverviewScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.People, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("All Customers", color = DT.SubText, fontSize = 11.sp)
+                                Text(tr(com.minimart.pos.R.string.all_customers), color = DT.SubText, fontSize = 11.sp)
                             }
                             Spacer(Modifier.height(4.dp))
                             Text(state.customers.size.toString(),
@@ -130,8 +130,8 @@ fun CreditOverviewScreen(
                     Box(Modifier.fillMaxWidth().padding(60.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(60.dp), tint = DT.Green.copy(0.4f))
-                            Text("No outstanding credit", color = DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                            Text("All customer accounts are settled", color = DT.SubText, fontSize = 13.sp)
+                            Text(tr(com.minimart.pos.R.string.no_outstanding), color = DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                            Text(tr(com.minimart.pos.R.string.all_settled), color = DT.SubText, fontSize = 13.sp)
                         }
                     }
                 }
@@ -144,7 +144,7 @@ fun CreditOverviewScreen(
                         verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Warning, null, tint = DT.Amber, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Outstanding Balances", color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text(tr(com.minimart.pos.R.string.outstanding_balances), color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
                 }
             }
@@ -213,11 +213,11 @@ fun CreditOverviewScreen(
                             .border(1.dp, DT.Teal.copy(0.3f), RoundedCornerShape(bottomStart = 18.dp, bottomEnd = 18.dp))
                             .padding(12.dp)) {
                             if (txs.isEmpty()) {
-                                Text("No transactions yet", color = DT.SubText, fontSize = 13.sp,
+                                Text(tr(com.minimart.pos.R.string.no_transactions), color = DT.SubText, fontSize = 13.sp,
                                     modifier = Modifier.padding(8.dp))
                             } else {
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text("Recent Activity", color = DT.Teal, fontWeight = FontWeight.SemiBold,
+                                    Text(tr(com.minimart.pos.R.string.recent_activity), color = DT.Teal, fontWeight = FontWeight.SemiBold,
                                         fontSize = 12.sp, modifier = Modifier.padding(bottom = 4.dp))
                                     txs.take(5).forEach { tx -> CreditTxRow(tx, currency) }
                                     if (txs.size > 5) {

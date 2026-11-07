@@ -43,7 +43,7 @@ fun LowStockScreen(
 
             // ── Top bar ───────────────────────────────────────────────────────
             GradientHeader(
-                title = "Reorder Reminders",
+                title = tr(com.minimart.pos.R.string.reorder_reminders),
                 subtitle = "${lowStock.size} item${if (lowStock.size != 1) "s" else ""} need restocking",
                 onBack = onBack
             )
@@ -53,8 +53,8 @@ fun LowStockScreen(
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(64.dp), tint = DT.Green)
-                        Text("All stock levels are healthy!", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
-                        Text("No items below their reorder threshold.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                        Text(tr(com.minimart.pos.R.string.stock_healthy), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+                        Text(tr(com.minimart.pos.R.string.no_below_threshold), color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             } else {
@@ -197,7 +197,7 @@ private fun LowStockCard(
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Default.Warning, null, tint = DT.Amber, modifier = Modifier.size(14.dp))
-                    Text("No supplier info. Edit product to add supplier name & phone.",
+                    Text(tr(com.minimart.pos.R.string.no_supplier_info),
                         color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                 }
             }

@@ -90,11 +90,11 @@ fun StoreHealthScreen(
             item {
                 OutlinedButton(onClick = onOpenHardware, shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, DT.Border), modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                    Text("Check printer, scanner and phone", color = DT.TealLight, fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.check_hw), color = DT.TealLight, fontWeight = FontWeight.Bold)
                 }
             }
             item {
-                Text("This check only reads your data. It never changes anything.",
+                Text(tr(com.minimart.pos.R.string.health_readonly),
                     color = DT.SubText, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp))
             }
         }
@@ -110,7 +110,7 @@ private fun ProblemListCard(problems: List<com.minimart.pos.util.ProblemEntry>, 
             .border(1.dp, DT.Border, RoundedCornerShape(16.dp)).padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Text("Problems the app handled", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+        Text(tr(com.minimart.pos.R.string.problems_handled), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
         Text("Kept on this phone only. It holds no sales, customers or payment details.", color = DT.SubText, fontSize = 12.sp)
         problems.take(8).forEach { p ->
             Text("${df.format(java.util.Date(p.lastAt))}  ${p.doing}: ${p.kind}${if (p.count > 1) " (x${p.count})" else ""}",
@@ -118,8 +118,8 @@ private fun ProblemListCard(problems: List<com.minimart.pos.util.ProblemEntry>, 
         }
         if (problems.size > 8) Text("and ${problems.size - 8} more. Share to see them all.", color = DT.SubText, fontSize = 12.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onShare, modifier = Modifier.heightIn(min = 48.dp)) { Text("Share list") }
-            OutlinedButton(onClick = onClear, modifier = Modifier.heightIn(min = 48.dp)) { Text("Clear") }
+            OutlinedButton(onClick = onShare, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.share_list)) }
+            OutlinedButton(onClick = onClear, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.clear)) }
         }
     }
 }

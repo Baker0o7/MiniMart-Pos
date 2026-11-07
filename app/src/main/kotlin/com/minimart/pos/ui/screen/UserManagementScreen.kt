@@ -186,7 +186,7 @@ fun UserManagementScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             // Top bar
             GradientHeader(
-                title = "User Management",
+                title = tr(com.minimart.pos.R.string.user_mgmt),
                 onBack = onBack,
                 actions = { HeaderPillButton("Add", Icons.Default.PersonAdd) { showAddDialog = true } }
             )
@@ -230,9 +230,9 @@ fun UserManagementScreen(
                             .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
-                                    Text("Staff", color = androidx.compose.ui.graphics.Color.White,
+                                    Text(tr(com.minimart.pos.R.string.staff), color = androidx.compose.ui.graphics.Color.White,
                                         fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
-                                    Text("Manage team access", color = androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize = 12.sp)
+                                    Text(tr(com.minimart.pos.R.string.manage_team), color = androidx.compose.ui.graphics.Color.White.copy(0.7f), fontSize = 12.sp)
                                 }
                                 Icon(Icons.Default.People, null,
                                     tint = androidx.compose.ui.graphics.Color.White.copy(0.7f),
@@ -298,7 +298,7 @@ private fun DarkUserRow(user: User, isMe: Boolean, onChangePin: () -> Unit, onRe
                     if (isMe) {
                         Spacer(Modifier.width(6.dp))
                         Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(DT.Teal.copy(0.2f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                            Text("You", color = DT.Teal, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            Text(tr(com.minimart.pos.R.string.you), color = DT.Teal, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -318,7 +318,7 @@ private fun DarkUserRow(user: User, isMe: Boolean, onChangePin: () -> Unit, onRe
     }
     if (showConfirm && onRemove != null) {
         AlertDialog(onDismissRequest = { showConfirm = false }, containerColor = DT.Surface,
-            title = { Text("Remove User?", color = DT.Ink, fontWeight = FontWeight.Bold) },
+            title = { Text(tr(com.minimart.pos.R.string.remove_user_q), color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = { Text("\"${user.displayName}\" will lose access immediately. This cannot be undone.", color = DT.SubText) },
             confirmButton = {
                 Button(
@@ -328,12 +328,12 @@ private fun DarkUserRow(user: User, isMe: Boolean, onChangePin: () -> Unit, onRe
                 ) {
                     Icon(Icons.Default.PersonRemove, null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Remove", fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.remove), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showConfirm = false }, shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) }
             })
     }
 }
@@ -354,7 +354,7 @@ private fun AddUserDialog(onDismiss: () -> Unit, onAdd: (String, String, String,
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = DT.Surface,
-        title = { Text("Add New User", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+        title = { Text(tr(com.minimart.pos.R.string.add_new_user), color = DT.OnSurface, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 DarkInput(displayName, { displayName = it }, "Full Name *")
@@ -364,7 +364,7 @@ private fun AddUserDialog(onDismiss: () -> Unit, onAdd: (String, String, String,
                 DarkInput(confirmPin, { if (it.length <= 6 && it.all(Char::isDigit)) confirmPin = it }, "Confirm PIN *",
                     keyboardType = KeyboardType.NumberPassword, isPassword = true)
                 if (pin.isNotEmpty() && confirmPin.isNotEmpty() && !pinsMatch) {
-                    Text("PINs don't match", color = DT.Red, style = MaterialTheme.typography.labelSmall)
+                    Text(tr(com.minimart.pos.R.string.pins_mismatch), color = DT.Red, style = MaterialTheme.typography.labelSmall)
                 }
                 // Role picker
                 ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
@@ -372,7 +372,7 @@ private fun AddUserDialog(onDismiss: () -> Unit, onAdd: (String, String, String,
                         value = role.name,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Role", color = DT.SubText) },
+                        label = { Text(tr(com.minimart.pos.R.string.role), color = DT.SubText) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                         modifier = Modifier.fillMaxWidth().menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable),
                         colors = darkTextFieldColors()
@@ -399,10 +399,10 @@ private fun AddUserDialog(onDismiss: () -> Unit, onAdd: (String, String, String,
             ) {
                 Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("Add User", fontWeight = FontWeight.ExtraBold)
+                Text(tr(com.minimart.pos.R.string.add_user), fontWeight = FontWeight.ExtraBold)
             }
         },
-        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
     )
 }
 
@@ -425,7 +425,7 @@ private fun ChangePinDialog(userName: String, onDismiss: () -> Unit, onSave: (St
                 DarkInput(confirmPin, { if (it.length <= 6 && it.all(Char::isDigit)) confirmPin = it },
                     "Confirm PIN", keyboardType = KeyboardType.NumberPassword, isPassword = true)
                 if (newPin.isNotEmpty() && confirmPin.isNotEmpty() && !pinsMatch) {
-                    Text("PINs don't match", color = DT.Red, style = MaterialTheme.typography.labelSmall)
+                    Text(tr(com.minimart.pos.R.string.pins_mismatch), color = DT.Red, style = MaterialTheme.typography.labelSmall)
                 }
             }
         },
@@ -440,10 +440,10 @@ private fun ChangePinDialog(userName: String, onDismiss: () -> Unit, onSave: (St
             ) {
                 Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("Save", fontWeight = FontWeight.ExtraBold)
+                Text(tr(com.minimart.pos.R.string.save), fontWeight = FontWeight.ExtraBold)
             }
         },
-        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
     )
 }
 
