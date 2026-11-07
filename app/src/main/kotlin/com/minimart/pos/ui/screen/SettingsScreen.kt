@@ -337,6 +337,16 @@ fun SettingsScreen(
                             colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
                     }
                     Spacer(Modifier.height(10.dp))
+                    var hapticOn by remember { mutableStateOf(com.minimart.pos.util.ScanFeedback.isHapticOn(beepContext)) }
+                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(tr(com.minimart.pos.R.string.haptic_title), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                            Text(tr(com.minimart.pos.R.string.haptic_help), color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                        }
+                        Switch(checked = hapticOn, onCheckedChange = { hapticOn = it; com.minimart.pos.util.ScanFeedback.setHapticOn(beepContext, it) },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
+                    }
+                    Spacer(Modifier.height(10.dp))
                     Text("HID scanners pair as keyboards — connect via Android Bluetooth settings. Once paired, scan works automatically in the New Sale screen.",
                         color = DT.SubText, style = MaterialTheme.typography.labelSmall, lineHeight = 18.sp)
                     Spacer(Modifier.height(10.dp))

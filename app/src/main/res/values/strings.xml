@@ -354,4 +354,6 @@
     <string name="bought_together">Often bought together</string>
     <string name="trends_empty">Complete a sale and your trends will show up here.</string>
     <string name="profit_earners">Biggest profit earners</string>
+    <string name="haptic_title">Vibrate on touch and scan</string>
+    <string name="haptic_help">A light tick on every tap, one buzz when a scan is taken and two when it is not. Also follows the phone\'s touch-feedback setting.</string>
 </resources>

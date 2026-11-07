@@ -104,6 +104,23 @@ class MainActivity : ComponentActivity() {
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* nothing to do */ }
 
+    private var downAt = 0L
+    private var downX = 0f
+    private var downY = 0f
+
+    /** A light tick on every tap (a short press that did not drag), so the till feels responsive. */
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        when (ev.actionMasked) {
+            android.view.MotionEvent.ACTION_DOWN -> { downAt = ev.eventTime; downX = ev.x; downY = ev.y }
+            android.view.MotionEvent.ACTION_UP -> {
+                val slop = android.view.ViewConfiguration.get(this).scaledTouchSlop
+                if (ev.eventTime - downAt < 350 && kotlin.math.abs(ev.x - downX) < slop && kotlin.math.abs(ev.y - downY) < slop)
+                    com.minimart.pos.util.ScanFeedback.tap(window.decorView)
+            }
+        }
+        return super.dispatchTouchEvent(ev)
+    }
+
     override fun attachBaseContext(newBase: android.content.Context) {
         super.attachBaseContext(com.minimart.pos.util.AppLanguage.wrap(newBase))
     }

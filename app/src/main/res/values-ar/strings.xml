@@ -366,4 +366,6 @@
     <string name="bought_together">تُشترى معًا غالبًا</string>
     <string name="trends_empty">أتمم عملية بيع وستظهر اتجاهاتك هنا.</string>
     <string name="profit_earners">أكثر المنتجات ربحًا</string>
+    <string name="haptic_title">الاهتزاز عند اللمس والمسح</string>
+    <string name="haptic_help">نقرة خفيفة عند كل لمسة، واهتزاز واحد عند قبول المسح واهتزازان عند عدم قبوله. يتبع أيضًا إعداد اهتزاز اللمس في الهاتف.</string>
 </resources>
