@@ -144,8 +144,8 @@ fun SettingsScreen(
                             Icon(Icons.Default.Lock, null, tint = DT.Amber, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(10.dp))
                             Column {
-                                Text("Cashier Access Only", color = DT.Amber, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                Text("Contact your manager to change settings.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                                Text(tr(com.minimart.pos.R.string.cashier_only), color = DT.Amber, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                Text(tr(com.minimart.pos.R.string.contact_manager), color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -153,11 +153,11 @@ fun SettingsScreen(
 
                 // ── Store Information ─────────────────────────────────────────
                 if (isAdmin) {
-                    DSection("Store Information", Icons.Default.Store) {
+                    DSection(tr(com.minimart.pos.R.string.set_store_info), Icons.Default.Store) {
                         DField(storeNameInput, { storeNameInput = it }, "Store Name", isText = true)
                         Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                            Text("Currency", color = DT.OnSurface, modifier = Modifier.weight(1f))
+                            Text(tr(com.minimart.pos.R.string.currency), color = DT.OnSurface, modifier = Modifier.weight(1f))
                             OutlinedTextField(currencyInput, { currencyInput = it }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
                                 modifier = Modifier.width(90.dp), shape = RoundedCornerShape(10.dp), colors = dColors())
                         }
@@ -167,7 +167,7 @@ fun SettingsScreen(
                         val cleanCurrency = currencyInput.trim().uppercase().take(5)
                         val storeDirty = storeNameInput.trim() != storeName || cleanCurrency != currency || footerInput.trim() != receiptFooter
                         val storeValid = storeNameInput.isNotBlank() && cleanCurrency.isNotEmpty()
-                        if (!storeValid) Text("Store name and currency can't be empty.", color = DT.Red,
+                        if (!storeValid) Text(tr(com.minimart.pos.R.string.store_empty), color = DT.Red,
                             style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(bottom = 6.dp))
                         SaveButton("Save Store Settings", enabled = storeDirty && storeValid, color = DT.Teal) {
                             scope.launch {
@@ -184,7 +184,7 @@ fun SettingsScreen(
 
                 // ── Thermal Printer ───────────────────────────────────────────
                 if (isAdmin) {
-                    DSection("Thermal Printer", Icons.Default.Print,
+                    DSection(tr(com.minimart.pos.R.string.set_printer), Icons.Default.Print,
                         summary = if (printer.isConnected) (printerName ?: "Connected") else (printerName ?: "Not paired"),
                         initiallyExpanded = false) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
@@ -212,7 +212,7 @@ fun SettingsScreen(
                         printerStatus?.let { Text(it, color = if (it.startsWith("✓")) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall) }
                         val paperMm by settingsRepo.paperWidthMm.collectAsStateWithLifecycle(58)
                         Spacer(Modifier.height(10.dp))
-                        Text("Paper width", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                        Text(tr(com.minimart.pos.R.string.paper_width), color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             listOf(58, 80).forEach { mm ->
                                 FilterChip(
@@ -236,7 +236,7 @@ fun SettingsScreen(
                     var drawerTouched by remember { mutableStateOf(false) }
                     LaunchedEffect(cashDrawerAddress) { drawerInput = cashDrawerAddress }
 
-                    DSection("Cash Drawer", Icons.Default.LocalAtm,
+                    DSection(tr(com.minimart.pos.R.string.set_drawer), Icons.Default.LocalAtm,
                         summary = if (cashDrawerOnSale) "Opens on cash sale" else "Manual only",
                         initiallyExpanded = false) {
                         Text("Cash drawer connected to thermal printer via RJ11 is auto-detected.",
@@ -245,8 +245,8 @@ fun SettingsScreen(
                         // Auto open on sale toggle
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("Open on cash sale", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
-                                Text("Auto-opens when cash payment completes", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                                Text(tr(com.minimart.pos.R.string.open_on_cash), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text(tr(com.minimart.pos.R.string.auto_open_cash), color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Switch(checked = cashDrawerOnSale, onCheckedChange = { scope.launch { settingsRepo.setCashDrawerOnSale(it) } },
                                 colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
@@ -279,7 +279,7 @@ fun SettingsScreen(
                             }, border = androidx.compose.foundation.BorderStroke(1.dp, DT.Teal), shape = RoundedCornerShape(12.dp)) {
                                 Icon(Icons.Default.LocalAtm, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Test Open", color = DT.Teal, style = MaterialTheme.typography.labelMedium)
+                                Text(tr(com.minimart.pos.R.string.test_open), color = DT.Teal, style = MaterialTheme.typography.labelMedium)
                             }
                         }
                         testStatus?.let {
@@ -294,12 +294,12 @@ fun SettingsScreen(
                     val blindClose by settingsRepo.blindClose.collectAsStateWithLifecycle(true)
                     val secondScreen by settingsRepo.customerDisplayEnabled.collectAsStateWithLifecycle(false)
                     val kickPin by settingsRepo.cashDrawerPin.collectAsStateWithLifecycle(0)
-                    DSection("Shift close & display", Icons.Default.Tv,
+                    DSection(tr(com.minimart.pos.R.string.set_shift_display), Icons.Default.Tv,
                         summary = if (blindClose) "Blind close on" else "Blind close off",
                         initiallyExpanded = false) {
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("Blind close", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text(tr(com.minimart.pos.R.string.blind_close_lbl), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                                 Text("Cashiers count the till without seeing the expected cash. Managers and owners see the variance on the Z-report.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Switch(checked = blindClose, onCheckedChange = { scope.launch { settingsRepo.setBlindClose(it) } },
@@ -308,14 +308,14 @@ fun SettingsScreen(
                         Spacer(Modifier.height(12.dp))
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("Customer display on second screen", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text(tr(com.minimart.pos.R.string.cust_display), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                                 Text("Shows the live cart on an attached HDMI or dual-screen display. The Customer tile on Home also works full-screen on this device.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                             }
                             Switch(checked = secondScreen, onCheckedChange = { scope.launch { settingsRepo.setCustomerDisplayEnabled(it) } },
                                 colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border, uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
                         }
                         Spacer(Modifier.height(12.dp))
-                        Text("Drawer kick pin", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                        Text(tr(com.minimart.pos.R.string.drawer_pin), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                         Text("Try pin 5 if the drawer does not open on pin 2.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
                             FilterChip(selected = kickPin == 0, onClick = { scope.launch { settingsRepo.setCashDrawerPin(0) } }, label = { Text("Pin 2") })
@@ -325,12 +325,12 @@ fun SettingsScreen(
                 }
 
                 // ── Bluetooth Scanner ─────────────────────────────────────────
-                DSection("Bluetooth Barcode Scanner", Icons.Default.QrCodeScanner, initiallyExpanded = false) {
+                DSection(tr(com.minimart.pos.R.string.set_bt_scanner), Icons.Default.QrCodeScanner, initiallyExpanded = false) {
                     val beepContext = androidx.compose.ui.platform.LocalContext.current
                     var beepOn by remember { mutableStateOf(com.minimart.pos.util.ScanFeedback.isOn(beepContext)) }
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Beep on scan", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                            Text(tr(com.minimart.pos.R.string.beep_scan), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                             Text("A short beep when an item is added, and a lower double beep when a scan is not found or out of stock. Follows the notification volume.", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                         }
                         Switch(checked = beepOn, onCheckedChange = { beepOn = it; com.minimart.pos.util.ScanFeedback.setOn(beepContext, it) },
@@ -364,7 +364,7 @@ fun SettingsScreen(
                                 Icon(Icons.Default.Bluetooth, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
                                 Text(name, color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                                 Box(Modifier.clip(RoundedCornerShape(6.dp)).background(DT.Green.copy(0.15f)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                                    Text("Paired", color = DT.Green, style = MaterialTheme.typography.labelSmall)
+                                    Text(tr(com.minimart.pos.R.string.paired), color = DT.Green, style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         }
@@ -374,9 +374,9 @@ fun SettingsScreen(
                 }
 
                 // ── Expiry Alerts ─────────────────────────────────────────────
-                DSection("Expiry Alerts", Icons.Default.CalendarToday,
+                DSection(tr(com.minimart.pos.R.string.set_expiry), Icons.Default.CalendarToday,
                     summary = "$expiryAlertMonths ${if (expiryAlertMonths == 1) "month" else "months"} ahead") {
-                    Text("Alert me when products expire within:", color = DT.SubText,
+                    Text(tr(com.minimart.pos.R.string.alert_expire_within), color = DT.SubText,
                         style = MaterialTheme.typography.bodySmall)
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
@@ -411,7 +411,7 @@ fun SettingsScreen(
                 // ── Multi-Device Sync (LAN) ───────────────────────────────────
                 if (isOwner) {
                     val syncState by syncVm.state.collectAsStateWithLifecycle()
-                    DSection("Multi-Device Sync (LAN)", Icons.Default.Sync,
+                    DSection(tr(com.minimart.pos.R.string.set_sync), Icons.Default.Sync,
                         summary = if (syncState.serverRunning) "Server running" else "Off",
                         initiallyExpanded = false) {
                         Text("Device ID: ${syncState.deviceId.take(8)}…", color = DT.SubText, fontSize = 11.sp)
@@ -423,11 +423,11 @@ fun SettingsScreen(
                         // This device as server
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("Act as Sync Server", color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                                Text(tr(com.minimart.pos.R.string.act_sync_server), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                                 if (syncState.serverRunning)
                                     Text("Server IP: ${syncState.serverIp}:9876", color = DT.Teal, fontSize = 11.sp)
                                 else
-                                    Text("Other devices can connect to this one", color = DT.SubText, fontSize = 11.sp)
+                                    Text(tr(com.minimart.pos.R.string.others_connect), color = DT.SubText, fontSize = 11.sp)
                             }
                             Switch(
                                 checked = syncState.serverRunning,
@@ -453,7 +453,7 @@ fun SettingsScreen(
                                     Spacer(Modifier.height(4.dp))
                                     Text(com.minimart.pos.util.PairingCode.grouped(syncState.mySecret), color = DT.Ink, fontSize = 20.sp,
                                         fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
-                                    Text("Sync between phones is encrypted with this code.", color = DT.SubText, fontSize = 11.sp)
+                                    Text(tr(com.minimart.pos.R.string.sync_encrypted), color = DT.SubText, fontSize = 11.sp)
                                     var confirmReset by remember { mutableStateOf(false) }
                                     TextButton(onClick = { confirmReset = true }, contentPadding = PaddingValues(0.dp)) {
                                         Text(if (syncState.mySecret.length < com.minimart.pos.util.PairingCode.LENGTH) "Upgrade to a stronger code" else "Make a new code",
@@ -462,10 +462,10 @@ fun SettingsScreen(
                                     if (confirmReset) AlertDialog(
                                         onDismissRequest = { confirmReset = false },
                                         containerColor = DT.Surface,
-                                        title = { Text("Make a new pairing code?", color = DT.Ink) },
-                                        text = { Text("Every till must enter the new code before it can sync again.", color = DT.SubText) },
-                                        confirmButton = { TextButton(onClick = { syncVm.resetPairingCode(); confirmReset = false }) { Text("Make new code", color = DT.Teal) } },
-                                        dismissButton = { TextButton(onClick = { confirmReset = false }) { Text("Cancel", color = DT.SubText) } }
+                                        title = { Text(tr(com.minimart.pos.R.string.make_new_code_q), color = DT.Ink) },
+                                        text = { Text(tr(com.minimart.pos.R.string.new_code_help), color = DT.SubText) },
+                                        confirmButton = { TextButton(onClick = { syncVm.resetPairingCode(); confirmReset = false }) { Text(tr(com.minimart.pos.R.string.make_new_code), color = DT.Teal) } },
+                                        dismissButton = { TextButton(onClick = { confirmReset = false }) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
                                     )
                                 }
                             }
@@ -476,12 +476,12 @@ fun SettingsScreen(
                         Spacer(Modifier.height(14.dp))
 
                         // Connect to another server
-                        Text("Connect to Server", color = DT.Ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text(tr(com.minimart.pos.R.string.connect_server), color = DT.Ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(6.dp))
                         OutlinedTextField(
                             value = syncState.peerIp,
                             onValueChange = { syncVm.setPeerIp(it) },
-                            label = { Text("Server IP address", color = DT.SubText) },
+                            label = { Text(tr(com.minimart.pos.R.string.server_ip), color = DT.SubText) },
                             placeholder = { Text("e.g. 192.168.1.100", color = DT.SubText.copy(0.5f)) },
                             leadingIcon = { Icon(Icons.Default.Wifi, null, tint = DT.SubText) },
                             singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Next), modifier = Modifier.fillMaxWidth(),
@@ -493,7 +493,7 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = syncState.peerKey,
                             onValueChange = { syncVm.setPeerKey(it.filter(Char::isDigit).take(16)) },
-                            label = { Text("Pairing code", color = DT.SubText) },
+                            label = { Text(tr(com.minimart.pos.R.string.pairing_code), color = DT.SubText) },
                             placeholder = { Text("Pairing code shown on the server", color = DT.SubText.copy(0.5f)) },
                             leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.SubText) },
                             singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(),
@@ -520,7 +520,7 @@ fun SettingsScreen(
                                 } else {
                                     Icon(Icons.Default.Sync, null, tint = DT.Ink, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Sync Now", color = DT.Ink, fontSize = 13.sp)
+                                    Text(tr(com.minimart.pos.R.string.sync_now), color = DT.Ink, fontSize = 13.sp)
                                 }
                             }
                         }
@@ -543,7 +543,7 @@ fun SettingsScreen(
                                     color = DT.SubText, fontSize = 11.sp)
                                 OutlinedButton(onClick = { syncVm.retryRefused() },
                                     enabled = !syncState.isSyncing && syncState.peerIp.isNotBlank() && syncState.peerKey.isNotBlank(),
-                                    shape = RoundedCornerShape(10.dp)) { Text("Retry refused sales", color = DT.Red, fontSize = 12.sp) }
+                                    shape = RoundedCornerShape(10.dp)) { Text(tr(com.minimart.pos.R.string.retry_refused), color = DT.Red, fontSize = 12.sp) }
                             }
                         }
                     }
@@ -556,7 +556,7 @@ fun SettingsScreen(
                         focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
                         focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                         focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg)
-                    DSection("Cloud dashboard (multi-store)", Icons.Default.Sync,
+                    DSection(tr(com.minimart.pos.R.string.set_cloud), Icons.Default.Sync,
                         summary = if (cs.connected) "Connected" else "Off",
                         initiallyExpanded = false) {
                         Text(if (cs.hosted)
@@ -583,22 +583,22 @@ fun SettingsScreen(
                             Button(onClick = { cloudVm.connect() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.Surface2)) {
                                 if (cs.busy) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
-                                else Text("Connect & upload", color = DT.Ink, fontSize = 13.sp)
+                                else Text(tr(com.minimart.pos.R.string.connect_upload), color = DT.Ink, fontSize = 13.sp)
                             }
                         } else {
                             Text(if (cs.lastPushAt > 0) "Last upload: " + java.text.SimpleDateFormat("d MMM, HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(java.util.Date(cs.lastPushAt)) else "Not uploaded yet",
                                 color = DT.Ink, fontSize = 12.sp)
                             Spacer(Modifier.height(4.dp))
-                            Text("Uploads automatically every few hours and when a shift is closed.", color = DT.SubText, fontSize = 11.sp)
+                            Text(tr(com.minimart.pos.R.string.upload_auto), color = DT.SubText, fontSize = 11.sp)
                             Spacer(Modifier.height(10.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Button(onClick = { cloudVm.uploadNow() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.Surface2)) {
                                     if (cs.busy) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
-                                    else Text("Upload now", color = DT.Ink, fontSize = 13.sp)
+                                    else Text(tr(com.minimart.pos.R.string.upload_now), color = DT.Ink, fontSize = 13.sp)
                                 }
                                 OutlinedButton(onClick = { cloudVm.disconnect() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp)) {
-                                    Text("Disconnect", color = DT.Red, fontSize = 13.sp)
+                                    Text(tr(com.minimart.pos.R.string.disconnect), color = DT.Red, fontSize = 13.sp)
                                 }
                             }
                         }
@@ -619,7 +619,7 @@ fun SettingsScreen(
 
                 // ── Data & Backup ─────────────────────────────────────────────
                 if (isOwner) {
-                    DSection("Data & Backup", Icons.Default.Storage, summary = "Backup · Restore · Share", initiallyExpanded = false) {
+                    DSection(tr(com.minimart.pos.R.string.set_backup), Icons.Default.Storage, summary = "Backup · Restore · Share", initiallyExpanded = false) {
                         var backupStatus by remember { mutableStateOf<String?>(null) }
                         var isBackingUp  by remember { mutableStateOf(false) }
                         var backupFiles  by remember { mutableStateOf<List<java.io.File>>(emptyList()) }
@@ -664,16 +664,16 @@ fun SettingsScreen(
                             AlertDialog(
                                 onDismissRequest = { showBackupDialog = false },
                                 containerColor = DT.Surface,
-                                title = { Text("Create Backup", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+                                title = { Text(tr(com.minimart.pos.R.string.create_backup), color = DT.OnSurface, fontWeight = FontWeight.Bold) },
                                 text = {
                                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Text("Add a passphrase to encrypt the backup (recommended if you share or upload it). " +
                                             "Leave blank for an unencrypted backup. An encrypted backup cannot be opened without its passphrase.",
                                             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
-                                        OutlinedTextField(pass, { pass = it }, label = { Text("Passphrase (optional)") }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
+                                        OutlinedTextField(pass, { pass = it }, label = { Text(tr(com.minimart.pos.R.string.pass_optional)) }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
                                             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                             colors = dColors(), modifier = Modifier.fillMaxWidth())
-                                        if (pass.isNotEmpty()) OutlinedTextField(pass2, { pass2 = it }, label = { Text("Repeat passphrase") }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
+                                        if (pass.isNotEmpty()) OutlinedTextField(pass2, { pass2 = it }, label = { Text(tr(com.minimart.pos.R.string.repeat_pass)) }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
                                             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                             colors = dColors(), modifier = Modifier.fillMaxWidth())
                                         if (pass.isNotEmpty()) passError?.let { Text(it, color = DT.Red, style = MaterialTheme.typography.labelSmall) }
@@ -707,9 +707,9 @@ fun SettingsScreen(
                                             }
                                         },
                                         colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)
-                                    ) { Text("Back up", color = DT.Ink) }
+                                    ) { Text(tr(com.minimart.pos.R.string.back_up), color = DT.Ink) }
                                 },
-                                dismissButton = { TextButton(onClick = { showBackupDialog = false }) { Text("Cancel", color = DT.SubText) } }
+                                dismissButton = { TextButton(onClick = { showBackupDialog = false }) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
                             )
                         }
                         LaunchedEffect(Unit) { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context) }
@@ -719,13 +719,13 @@ fun SettingsScreen(
                                 shape = RoundedCornerShape(10.dp), colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
                                 if (isBackingUp) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                                 else Icon(Icons.Default.Backup, null, tint = DT.Ink, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp)); Text("Backup", color = DT.Ink)
+                                Spacer(Modifier.width(6.dp)); Text(tr(com.minimart.pos.R.string.backup), color = DT.Ink)
                             }
                             OutlinedButton(onClick = { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context); showRestore = true },
                                 modifier = Modifier.weight(1f), shape = RoundedCornerShape(10.dp),
                                 border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) {
                                 Icon(Icons.Default.Restore, null, tint = DT.OnSurface, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp)); Text("Restore", color = DT.OnSurface)
+                                Spacer(Modifier.width(6.dp)); Text(tr(com.minimart.pos.R.string.restore), color = DT.OnSurface)
                             }
                         }
                         backupStatus?.let { Text(it, color = if ("saved" in it) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall) }
@@ -735,7 +735,7 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = DT.Green.copy(0.85f))) {
                                 Icon(Icons.Default.Share, null, tint = DT.Ink, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp)); Text("Save a copy off this phone", color = DT.Ink, fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.width(6.dp)); Text(tr(com.minimart.pos.R.string.save_copy_off), color = DT.Ink, fontWeight = FontWeight.Bold)
                             }
                         }
                         val integrityRunning by integrityVm.running.collectAsStateWithLifecycle()
@@ -745,7 +745,7 @@ fun SettingsScreen(
                             if (integrityRunning) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = DT.Teal, strokeWidth = 2.dp)
                             else Icon(Icons.Default.FactCheck, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Check data (sales, stock, balances)", color = DT.Teal, style = MaterialTheme.typography.labelSmall)
+                            Text(tr(com.minimart.pos.R.string.check_data), color = DT.Teal, style = MaterialTheme.typography.labelSmall)
                         }
                         if (integrityReport != null || integrityFailed != null) {
                             AlertDialog(onDismissRequest = { integrityVm.dismiss() }, containerColor = DT.Surface,
@@ -762,24 +762,24 @@ fun SettingsScreen(
                                         }
                                     }
                                 },
-                                confirmButton = { TextButton(onClick = { integrityVm.dismiss() }) { Text("OK", color = DT.Teal) } })
+                                confirmButton = { TextButton(onClick = { integrityVm.dismiss() }) { Text(tr(com.minimart.pos.R.string.ok), color = DT.Teal) } })
                         }
                         if (backupFiles.isNotEmpty()) {
                             TextButton(onClick = { com.minimart.pos.util.BackupManager.shareBackup(context, backupFiles.first()) },
                                 contentPadding = PaddingValues(0.dp)) {
                                 Icon(Icons.Default.Share, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Share Latest Backup (USB/OTG/Cloud)", color = DT.Teal, style = MaterialTheme.typography.labelSmall)
+                                Text(tr(com.minimart.pos.R.string.share_backup), color = DT.Teal, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                         if (showRestore) {
                             AlertDialog(onDismissRequest = { showRestore = false }, containerColor = DT.Surface,
-                                title = { Text("Restore Database", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+                                title = { Text(tr(com.minimart.pos.R.string.restore_db), color = DT.OnSurface, fontWeight = FontWeight.Bold) },
                                 text = {
                                     Column {
-                                        Text("Select a backup to restore.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                                        Text(tr(com.minimart.pos.R.string.select_backup), color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                                         Spacer(Modifier.height(8.dp))
-                                        if (backupFiles.isEmpty()) Text("No backups found.", color = DT.Red, style = MaterialTheme.typography.labelSmall)
+                                        if (backupFiles.isEmpty()) Text(tr(com.minimart.pos.R.string.no_backups), color = DT.Red, style = MaterialTheme.typography.labelSmall)
                                         else backupFiles.take(5).forEach { f ->
                                             TextButton(onClick = {
                                                 // Stage the file and show a real confirmation step
@@ -801,7 +801,7 @@ fun SettingsScreen(
                                 },
                                 confirmButton = {
                                     OutlinedButton(onClick = { showRestore = false }, shape = RoundedCornerShape(12.dp),
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) }
                                 })
                         }
 
@@ -813,11 +813,11 @@ fun SettingsScreen(
                             AlertDialog(
                                 onDismissRequest = { pendingRestoreFile = null },
                                 containerColor = DT.Surface,
-                                title = { Text("Restore This Backup?", color = DT.Ink, fontWeight = FontWeight.Bold) },
+                                title = { Text(tr(com.minimart.pos.R.string.restore_q), color = DT.Ink, fontWeight = FontWeight.Bold) },
                                 text = {
                                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                         Text("\"${f.name}\" will replace ALL current data — every sale, product, and customer added since this backup was made will be lost. This cannot be undone. The app will restart.", color = DT.SubText)
-                                        if (encrypted) OutlinedTextField(restorePass, { restorePass = it }, label = { Text("Backup passphrase") }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
+                                        if (encrypted) OutlinedTextField(restorePass, { restorePass = it }, label = { Text(tr(com.minimart.pos.R.string.backup_pass)) }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
                                             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                             colors = dColors(), modifier = Modifier.fillMaxWidth())
                                     }
@@ -854,12 +854,12 @@ fun SettingsScreen(
                                     ) {
                                         Icon(Icons.Default.Restore, null, modifier = Modifier.size(16.dp))
                                         Spacer(Modifier.width(4.dp))
-                                        Text("Restore & Replace", fontWeight = FontWeight.Bold)
+                                        Text(tr(com.minimart.pos.R.string.restore_replace), fontWeight = FontWeight.Bold)
                                     }
                                 },
                                 dismissButton = {
                                     OutlinedButton(onClick = { pendingRestoreFile = null }, shape = RoundedCornerShape(12.dp),
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) }
                                 }
                             )
                         }
@@ -873,7 +873,7 @@ fun SettingsScreen(
                 }
 
                 // ── Account ───────────────────────────────────────────────────
-                DSection("Account", Icons.Default.ManageAccounts) {
+                DSection(tr(com.minimart.pos.R.string.set_account), Icons.Default.ManageAccounts) {
                     if (rm.canManageUsers(currentRole)) {
                         DMenuRow("User Management", Icons.Default.Group, DT.OnSurface) { onUsers() }
                         HDivider()
@@ -892,8 +892,8 @@ fun SettingsScreen(
                     val biometricOnForThisUser = loggedInUserId != null && loggedInUserId == biometricUserId
                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Fingerprint / Face Login", color = DT.OnSurface, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
-                            Text("For this account on this device only", color = DT.SubText, fontSize = 11.sp)
+                            Text(tr(com.minimart.pos.R.string.bio_login), color = DT.OnSurface, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                            Text(tr(com.minimart.pos.R.string.this_account_only), color = DT.SubText, fontSize = 11.sp)
                         }
                         Switch(
                             checked = biometricOnForThisUser,
@@ -926,7 +926,7 @@ fun SettingsScreen(
 
     if (showPrinterDialog) {
         AlertDialog(onDismissRequest = { showPrinterDialog = false }, containerColor = DT.Surface,
-            title = { Text("Select Printer", color = DT.OnSurface) },
+            title = { Text(tr(com.minimart.pos.R.string.select_printer), color = DT.OnSurface) },
             text = {
                 Column {
                     if (pairedDevices.isEmpty()) Text("No paired Bluetooth printers found. Pair in phone Settings first.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
@@ -948,6 +948,6 @@ fun SettingsScreen(
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showPrinterDialog = false }) { Text("Close", color = DT.SubText) } })
+            confirmButton = { TextButton(onClick = { showPrinterDialog = false }) { Text(tr(com.minimart.pos.R.string.close), color = DT.SubText) } })
     }
 }

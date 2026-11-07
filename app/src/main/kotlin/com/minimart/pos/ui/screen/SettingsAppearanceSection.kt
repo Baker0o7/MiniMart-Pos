@@ -52,8 +52,8 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun AppearanceSettingsSection(settingsRepo: SettingsRepository) {
     val scope = rememberCoroutineScope()
-    DSection("Appearance", Icons.Default.Palette, summary = com.minimart.pos.ui.theme.DT.accent.label) {
-        Text("Choose dark or light, then the colour used for buttons, headers and highlights.",
+    DSection(tr(com.minimart.pos.R.string.set_appearance), Icons.Default.Palette, summary = com.minimart.pos.ui.theme.DT.accent.label) {
+        Text(tr(com.minimart.pos.R.string.appearance_help),
             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(10.dp))
         Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

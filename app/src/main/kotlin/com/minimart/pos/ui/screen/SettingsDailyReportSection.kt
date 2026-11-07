@@ -35,7 +35,7 @@ internal fun DailyReportSettingsSection(settingsRepo: SettingsRepository) {
     val hour by settingsRepo.dailyReportHour.collectAsState(initial = 20)
     val saved by settingsRepo.ownerReportPhone.collectAsState(initial = "")
     var phone by rememberSaveable(saved) { mutableStateOf(saved) }
-    DSection("Daily report", Icons.Default.Summarize,
+    DSection(tr(com.minimart.pos.R.string.set_daily), Icons.Default.Summarize,
         summary = if (on) "Every day at ${hourLabel(hour)}" else "Off", initiallyExpanded = false) {
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
             .toggleable(value = on, role = Role.Switch) { v ->
@@ -45,14 +45,14 @@ internal fun DailyReportSettingsSection(settingsRepo: SettingsRepository) {
                 }
             }, verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Send me a daily summary", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+                Text(tr(com.minimart.pos.R.string.daily_summary), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
                 Text("Every day at the time below, this phone shows a notification with the day's sales, cash and M-Pesa, refunds, expenses, profit and anything that needs attention. Tap Share or SMS owner on it to send the text on. Allow notifications for MiniMart in Android settings if you do not see it.",
                     color = DT.SubText, style = MaterialTheme.typography.bodySmall)
             }
             Spacer(Modifier.width(12.dp))
             Switch(checked = on, onCheckedChange = null)
         }
-        Text("Time", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+        Text(tr(com.minimart.pos.R.string.time), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             HOURS.forEach { h ->
                 FilterChip(selected = h == hour, onClick = {
@@ -64,14 +64,14 @@ internal fun DailyReportSettingsSection(settingsRepo: SettingsRepository) {
             }
         }
         OutlinedTextField(value = phone, onValueChange = { phone = it.filterIndexed { i, c -> c.isDigit() || (i == 0 && c == '+') }.take(16) },
-            label = { Text("Owner's phone for the SMS button (optional)") }, singleLine = true,
+            label = { Text(tr(com.minimart.pos.R.string.owner_phone)) }, singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             modifier = Modifier.fillMaxWidth())
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { scope.launch { settingsRepo.setOwnerReportPhone(phone) } },
-                modifier = Modifier.heightIn(min = 48.dp), enabled = phone != saved) { Text("Save number") }
+                modifier = Modifier.heightIn(min = 48.dp), enabled = phone != saved) { Text(tr(com.minimart.pos.R.string.save_number)) }
             OutlinedButton(onClick = { DailyReportWorker.runNow(context) }, modifier = Modifier.heightIn(min = 48.dp)) {
-                Text("Send a test now")
+                Text(tr(com.minimart.pos.R.string.send_test))
             }
         }
     }

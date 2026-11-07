@@ -22,12 +22,12 @@ internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
     val reports by settingsRepo.telemetryOptIn.collectAsState(initial = false)
     val kiosk by settingsRepo.kioskMode.collectAsState(initial = false)
     val scope = rememberCoroutineScope()
-    DSection("Privacy", Icons.Default.VisibilityOff, summary = if (on) "Screenshots blocked" else "Screenshots allowed", initiallyExpanded = false) {
+    DSection(tr(com.minimart.pos.R.string.set_privacy), Icons.Default.VisibilityOff, summary = if (on) "Screenshots blocked" else "Screenshots allowed", initiallyExpanded = false) {
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
             .toggleable(value = on, role = Role.Switch) { v -> scope.launch { settingsRepo.setBlockScreenshots(v) } },
             verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Block screenshots", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+                Text(tr(com.minimart.pos.R.string.block_screens), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
                 Text("Stops screenshots and screen recording of the app, and hides it in the recent-apps list. Turn on for a till that customers or staff can pick up. You will not be able to screenshot the app for support either.",
                     color = DT.SubText, style = MaterialTheme.typography.bodySmall)
             }
@@ -41,7 +41,7 @@ internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
             },
             verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Send crash and speed reports", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+                Text(tr(com.minimart.pos.R.string.send_reports), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
                 Text("Off by default. When on, the app sends the developer a report if it crashes, and how long things like completing a sale take, so problems get fixed sooner. Reports contain the phone model, Android version and the error. They never contain sales, customers, prices or PINs.",
                     color = DT.SubText, style = MaterialTheme.typography.bodySmall)
             }
@@ -52,7 +52,7 @@ internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
             .toggleable(value = kiosk, role = Role.Switch) { v -> scope.launch { settingsRepo.setKioskMode(v) } },
             verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Kiosk mode", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+                Text(tr(com.minimart.pos.R.string.kiosk), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
                 Text("Locks the phone or tablet to MiniMart and keeps the screen on, so staff cannot wander off into other apps. Android asks you to confirm once. To leave it, switch this off here, or hold Back and Overview together.",
                     color = DT.SubText, style = MaterialTheme.typography.bodySmall)
             }

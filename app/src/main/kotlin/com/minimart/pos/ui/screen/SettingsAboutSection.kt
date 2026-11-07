@@ -30,7 +30,7 @@ internal fun AboutSettingsSection(syncOn: Boolean, cloudOn: Boolean, webhook: Mp
     val context = LocalContext.current
     val instantMpesaOn = webhook.state.collectAsStateWithLifecycle().value.enabled
     var copied by remember { mutableStateOf(false) }
-    DSection("About & support", Icons.Default.Info, summary = "Version ${BuildConfig.VERSION_NAME}", initiallyExpanded = false) {
+    DSection(tr(com.minimart.pos.R.string.set_about), Icons.Default.Info, summary = "Version ${BuildConfig.VERSION_NAME}", initiallyExpanded = false) {
         Text("MiniMart POS ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
         Text("Free and open source under the Apache License 2.0. Your sales, customers and stock stay on this phone unless you turn on sync or the cloud dashboard.",
             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
@@ -42,11 +42,11 @@ internal fun AboutSettingsSection(syncOn: Boolean, cloudOn: Boolean, webhook: Mp
                 val text = SupportInfo.format(facts(context, syncOn, cloudOn, instantMpesaOn))
                 (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("MiniMart support info", text))
                 copied = true
-            }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Copy support info") }
-            OutlinedButton(onClick = { open(context, SupportInfo.ISSUES_URL) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Report a problem") }
+            }, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.copy_support)) }
+            OutlinedButton(onClick = { open(context, SupportInfo.ISSUES_URL) }, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.report_problem)) }
         }
-        OutlinedButton(onClick = { open(context, SupportInfo.REPO_URL) }, modifier = Modifier.padding(top = 8.dp).heightIn(min = 48.dp)) { Text("Project page and source") }
-        if (copied) Text("Copied. It lists the app version and phone model only, nothing about your shop.", color = DT.Green, style = MaterialTheme.typography.bodySmall,
+        OutlinedButton(onClick = { open(context, SupportInfo.REPO_URL) }, modifier = Modifier.padding(top = 8.dp).heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.project_page)) }
+        if (copied) Text(tr(com.minimart.pos.R.string.copied_support), color = DT.Green, style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(top = 6.dp))
     }
 }
@@ -77,11 +77,11 @@ private fun UpdateBlock(vm: com.minimart.pos.ui.viewmodel.UpdateViewModel) {
     val context = LocalContext.current
     val state = vm.state.collectAsStateWithLifecycle().value
     var auto by remember { mutableStateOf(vm.autoCheck) }
-    Text("App updates", color = DT.OnSurface, style = MaterialTheme.typography.titleSmall)
+    Text(tr(com.minimart.pos.R.string.upd_title), color = DT.OnSurface, style = MaterialTheme.typography.titleSmall)
     when (state) {
-        is com.minimart.pos.update.UpdateState.Idle -> Text("Not checked yet.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
-        is com.minimart.pos.update.UpdateState.Checking -> Text("Checking…", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
-        is com.minimart.pos.update.UpdateState.UpToDate -> Text("You have the latest version.", color = DT.Green, style = MaterialTheme.typography.bodySmall)
+        is com.minimart.pos.update.UpdateState.Idle -> Text(tr(com.minimart.pos.R.string.upd_not_checked), color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+        is com.minimart.pos.update.UpdateState.Checking -> Text(tr(com.minimart.pos.R.string.upd_checking), color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+        is com.minimart.pos.update.UpdateState.UpToDate -> Text(tr(com.minimart.pos.R.string.upd_latest), color = DT.Green, style = MaterialTheme.typography.bodySmall)
         is com.minimart.pos.update.UpdateState.Available -> {
             Text("Version ${state.release.tag.removePrefix("v")} is available (${state.asset.size / 1_000_000} MB).", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
             if (state.release.notes.isNotBlank()) Text(state.release.notes, color = DT.SubText, style = MaterialTheme.typography.bodySmall)
@@ -91,7 +91,7 @@ private fun UpdateBlock(vm: com.minimart.pos.ui.viewmodel.UpdateViewModel) {
             Text("Downloading… ${state.percent}%", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
             LinearProgressIndicator(progress = { state.percent / 100f }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp))
         }
-        is com.minimart.pos.update.UpdateState.Installing -> Text("Almost done: confirm the update on the Android screen.", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
+        is com.minimart.pos.update.UpdateState.Installing -> Text(tr(com.minimart.pos.R.string.upd_confirm), color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
         is com.minimart.pos.update.UpdateState.NeedsPermission -> Text("Android needs your permission before MiniMart can install its own updates. Tap the button, switch on \"Allow from this source\", then come back and tap Install again.", color = DT.Amber, style = MaterialTheme.typography.bodySmall)
         is com.minimart.pos.update.UpdateState.Failed -> Text(state.message, color = DT.Red, style = MaterialTheme.typography.bodySmall)
     }
@@ -105,10 +105,10 @@ private fun UpdateBlock(vm: com.minimart.pos.ui.viewmodel.UpdateViewModel) {
             }, modifier = Modifier.heightIn(min = 48.dp)) { Text(if (state is com.minimart.pos.update.UpdateState.Failed) "Try again" else "Download and install") }
         }
         val busy = state is com.minimart.pos.update.UpdateState.Checking || state is com.minimart.pos.update.UpdateState.Downloading
-        OutlinedButton(onClick = { vm.check() }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { Text("Check for updates") }
+        OutlinedButton(onClick = { vm.check() }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.upd_check)) }
     }
     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-        Text("Check once a day in the background", color = DT.OnSurface, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+        Text(tr(com.minimart.pos.R.string.upd_daily), color = DT.OnSurface, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
         Switch(checked = auto, onCheckedChange = { auto = it; vm.autoCheck = it })
     }
 }
