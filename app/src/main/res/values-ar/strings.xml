@@ -209,7 +209,7 @@
     <string name="how_paid">كيف دفع العملاء</string>
     <string name="sales_history">سجل المبيعات</string>
     <string name="search_receipt">ابحث برقم الإيصال أو الرمز أو الملاحظات…</string>
-    <string name="void">إلغاء البيع</string>
+    <string name="void_sale">إلغاء البيع</string>
     <string name="void_sale_q">إلغاء عملية البيع؟</string>
     <string name="try_receipt">جرّب رقم الإيصال أو رمز إم-بيسا أو الملاحظات</string>
 </resources>

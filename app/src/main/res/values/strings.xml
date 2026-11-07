@@ -197,7 +197,7 @@
     <string name="how_paid">How customers paid</string>
     <string name="sales_history">Sales History</string>
     <string name="search_receipt">Search by receipt, ref, notes…</string>
-    <string name="void">Void</string>
+    <string name="void_sale">Void</string>
     <string name="void_sale_q">Void Sale?</string>
     <string name="try_receipt">Try receipt number, M-Pesa ref, or notes</string>
 </resources>

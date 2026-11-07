@@ -211,7 +211,7 @@ private fun SaleHistoryRow(
                 Button(onClick = { onVoid(); showVoidConfirm = false },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = DT.Red)) {
-                    Text(tr(com.minimart.pos.R.string.void), color = DT.Ink, fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.void_sale), color = DT.Ink, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -283,7 +283,7 @@ private fun SaleHistoryRow(
                 ) {
                     Icon(Icons.Default.Cancel, null, tint = DT.Red, modifier = Modifier.size(12.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text(tr(com.minimart.pos.R.string.void), color = DT.Red, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    Text(tr(com.minimart.pos.R.string.void_sale), color = DT.Red, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
