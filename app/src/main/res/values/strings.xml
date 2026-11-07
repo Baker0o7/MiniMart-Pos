@@ -441,4 +441,7 @@
     <string name="cat_takeover_title">Another shop already sends the list</string>
     <string name="cat_takeover_body">Make this shop the main shop instead? The other shop will stop being the main shop.</string>
     <string name="cat_takeover_yes">Make this the main shop</string>
+    <string name="wiz_habit_backup">Make a backup every day (Store health reminds you).</string>
+    <string name="wiz_habit_shift">Close your shift each evening and count the drawer.</string>
+    <string name="wiz_habit_mpesa">Turn on M-Pesa tracking to match payments to sales.</string>
 </resources>

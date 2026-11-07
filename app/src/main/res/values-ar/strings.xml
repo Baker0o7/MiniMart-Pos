@@ -453,4 +453,7 @@
     <string name="cat_takeover_title">متجر آخر يرسل القائمة بالفعل</string>
     <string name="cat_takeover_body">هل تجعل هذا المتجر هو المتجر الرئيسي بدلًا منه؟ سيتوقف المتجر الآخر عن كونه المتجر الرئيسي.</string>
     <string name="cat_takeover_yes">اجعل هذا المتجر الرئيسي</string>
+    <string name="wiz_habit_backup">انسخ بياناتك احتياطيًا كل يوم (صحة المتجر تذكّرك).</string>
+    <string name="wiz_habit_shift">أغلق ورديتك كل مساء وعُدّ النقد في الدرج.</string>
+    <string name="wiz_habit_mpesa">فعّل تتبع إم-بيسا لمطابقة المدفوعات بالمبيعات.</string>
 </resources>
