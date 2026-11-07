@@ -5,6 +5,17 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.28.0] - 2026-11-07
+
+- **Cash count matches the drawer.** On the Add expense form, switch on "Paid in cash from the till" when you take money from the drawer. The end-of-shift cash count then expects that much less, and cash refunds of earlier shifts' sales are subtracted too. The Z-report shows both. If you forget to switch it on, the count will still show a shortage. Refunds made before this update are not counted.
+- **Harder-to-guess PINs.** New PINs can no longer be repeated digits (1111), digits in a row (1234, 9876), a repeated pair (1212) or a very common PIN. Existing PINs keep working until they are changed.
+- **Accounts for your accountant.** In Reports, the new table button sends two spreadsheet files for the period: a journal and a profit and loss, with VAT shown separately. If item costs were not recorded, the profit and loss warns that profit is overstated.
+- **How reliable a forecast is.** Inventory Insights now shows how close the forecast was for each product over the last week.
+- **Out-of-date warning on till phones.** A till phone that has not synced for 12 hours shows a note on the health screen. After 2 days, or if it never synced, Home shows a "tap to sync" banner. The health screen also counts changes made on two phones at once.
+- **Printer problems are easier to spot.** The app remembers recent print failures, tries one reconnect before giving up, and the hardware screen says when the printer last worked and suggests sharing a PDF or WhatsApp receipt.
+- **More stable start-up.** If the app keeps closing right after opening, background work is held back for two minutes so you can still sell.
+- **Update note.** This update changes the database. Back up first, as usual.
+
 ## [1.27.1] - 2026-11-06
 
 - **Sign-in screen follows the light theme.** In Light (or Phone setting while the phone is light), the PIN screen now uses the same pale colours as the rest of the app instead of staying dark.
