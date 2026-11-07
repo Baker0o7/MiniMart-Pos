@@ -5,7 +5,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.minimart.pos.R
 
-/** Short helpers so screen code reads `tr(R.string.checkout)`; text lives in res/values*/strings.xml (English and Arabic). */
+/** Short helpers so screen code reads `tr(R.string.checkout)`; text lives in the res values and values-ar string files (English and Arabic). */
 @Composable
 internal fun tr(id: Int, vararg args: Any): String = stringResource(id, *args)
 
