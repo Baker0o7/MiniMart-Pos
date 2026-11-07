@@ -29,4 +29,6 @@ class UpdateInstallReceiver : BroadcastReceiver() {
             else -> updates.installFailed("Android could not install the update. Nothing was changed.")
         }
     }
+
+    companion object { const val ACTION = "com.minimart.pos.UPDATE_INSTALL_RESULT" }
 }
