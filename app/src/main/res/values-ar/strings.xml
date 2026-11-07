@@ -441,4 +441,16 @@
     <string name="only_on_record">المسجَّل %1$s فقط</string>
     <string name="step_of">الخطوة %1$d من 3</string>
     <string name="avg_basket_fmt">متوسط السلة %1$s</string>
+    <string name="cat_title">قائمة المنتجات المشتركة</string>
+    <string name="cat_help">حافظ على الأسماء والأسعار والضريبة متطابقة في جميع متاجرك. متجر واحد هو المتجر الرئيسي ويرسل قائمته، وتستقبلها المتاجر الأخرى. لا تتم مشاركة المخزون أو المبيعات أو العملاء أبدًا.</string>
+    <string name="cat_off">إيقاف</string>
+    <string name="cat_main">المتجر الرئيسي (يرسل)</string>
+    <string name="cat_follow">يتبع المتجر الرئيسي</string>
+    <string name="cat_publish_now">شارك القائمة الآن</string>
+    <string name="cat_get_now">احصل على القائمة الآن</string>
+    <string name="cat_follow_warn">سيتم استبدال تغييرات الاسم والسعر التي تُجرى في هذا المتجر بقائمة المتجر الرئيسي.</string>
+    <string name="cat_last">آخر فحص: %1$s</string>
+    <string name="cat_takeover_title">متجر آخر يرسل القائمة بالفعل</string>
+    <string name="cat_takeover_body">هل تجعل هذا المتجر هو المتجر الرئيسي بدلًا منه؟ سيتوقف المتجر الآخر عن كونه المتجر الرئيسي.</string>
+    <string name="cat_takeover_yes">اجعل هذا المتجر الرئيسي</string>
 </resources>

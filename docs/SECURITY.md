@@ -21,6 +21,12 @@ What protects a shop's till, and what does not yet.
 * Needs `REQUEST_INSTALL_PACKAGES`; the owner allows it once in Android settings. The receiver is not exported.
 * Gap: an attacker who controls the GitHub repo *and* the signing key could ship a bad update. Keep the release keystore safe.
 
+## Shared product list (cloud)
+* Optional and off by default (Settings, Cloud dashboard, Shared product list). One shop sends names, prices, tax and supplier details; the owner's other shops receive them. Stock, batches, expiry, sales and customers are never part of it.
+* It uses the shop's own secret like the daily upload, and the server (`cloud/catalog_setup.sql`) only lets a shop read or change the list of the owner it belongs to. A second shop can only take over as the sender after the owner confirms in the app.
+* Everything received is untrusted: `CatalogRules` drops items with bad barcodes, empty names, negative or huge prices, or tax outside 0-100%, strips control characters and caps lengths. A list that is empty or mostly unreadable is refused whole. Answers over 8 MB are cut off.
+* Gap: a following shop's own name and price edits are overwritten at the next sync. That is the point of the feature, and the Settings screen says so.
+
 ## Known gaps
 * **PIN lockout uses the phone's clock.** Setting the clock forward ends a lockout early. PINs are also checked against `PinPolicy` (no repeated digits, runs, repeated pairs or the commonest PINs), which makes the first guesses useless, but a short numeric PIN is still weak against someone with unlimited time.
 * **If the Keystore key is lost** (a phone reset around the app, a damaged Keystore), the encrypted database cannot be opened. The app puts the file aside (`minimart_pos.db.unreadable-*`), starts empty and says so; restore a manual backup. Keep a manual backup off the phone.

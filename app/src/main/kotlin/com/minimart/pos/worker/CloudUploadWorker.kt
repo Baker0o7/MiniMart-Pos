@@ -17,14 +17,15 @@ class CloudUploadWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
     private val config: CloudConfig,
-    private val reporter: CloudReporter
+    private val reporter: CloudReporter,
+    private val catalog: com.minimart.pos.cloud.CatalogSync
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         if (!config.isConfigured) return Result.success()
         return try {
             when (reporter.push()) {
-                CloudResult.Ok -> Result.success()
+                CloudResult.Ok -> { runCatching { catalog.syncInBackground() }; Result.success() }
                 is CloudResult.Failed -> if (RetryPolicy.CLOUD.shouldRetry(runAttemptCount)) Result.retry() else Result.success()
             }
         } catch (_: Exception) {

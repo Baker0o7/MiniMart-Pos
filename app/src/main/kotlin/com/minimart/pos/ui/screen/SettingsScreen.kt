@@ -611,6 +611,7 @@ fun SettingsScreen(
                                     Text(tr(com.minimart.pos.R.string.disconnect), color = DT.Red, fontSize = 13.sp)
                                 }
                             }
+                            CatalogShareBlock(cs, cloudVm)
                         }
                         cs.message?.let {
                             Spacer(Modifier.height(6.dp))

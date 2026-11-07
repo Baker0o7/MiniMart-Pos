@@ -23,17 +23,26 @@ data class CloudUiState(
     val busy: Boolean = false,
     val message: String? = null,
     val isError: Boolean = false,
-    val lastPushAt: Long = 0L
+    val lastPushAt: Long = 0L,
+    /** Shared product list: 0 off, 1 main shop (publishes), 2 follows the main shop. */
+    val catalogRole: Int = 0,
+    val catalogBusy: Boolean = false,
+    val catalogMessage: String? = null,
+    val catalogError: Boolean = false,
+    val catalogAt: Long = 0L,
+    val takeOverPrompt: Boolean = false
 )
 
 @HiltViewModel
 class CloudViewModel @Inject constructor(
     private val config: CloudConfig,
-    private val reporter: CloudReporter
+    private val reporter: CloudReporter,
+    private val catalog: com.minimart.pos.cloud.CatalogSync
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
-        CloudUiState(hosted = config.usesHosted, url = config.url, anonKey = config.anonKey, connected = config.isConfigured, lastPushAt = config.lastPushAt)
+        CloudUiState(hosted = config.usesHosted, url = config.url, anonKey = config.anonKey, connected = config.isConfigured, lastPushAt = config.lastPushAt,
+            catalogRole = config.catalogRole, catalogAt = config.catalogAt)
     )
     val state: StateFlow<CloudUiState> = _state.asStateFlow()
 
@@ -81,6 +90,29 @@ class CloudViewModel @Inject constructor(
         config.disconnect()
         _state.update { it.copy(connected = false, message = "Disconnected. Reconnecting registers this phone as a new store.", isError = false, lastPushAt = 0L) }
     }
+
+    fun setCatalogRole(role: Int) {
+        config.catalogRole = role
+        _state.update { it.copy(catalogRole = role, catalogMessage = null, takeOverPrompt = false) }
+    }
+
+    /** Publishes (main shop) or fetches (following shop) right now. */
+    fun catalogNow(takeOver: Boolean = false) {
+        val role = config.catalogRole
+        if (role == 0) return
+        _state.update { it.copy(catalogBusy = true, catalogMessage = null, takeOverPrompt = false) }
+        viewModelScope.launch {
+            val r = if (role == 1) catalog.publish(takeOver = takeOver, force = true) else catalog.pull()
+            _state.update {
+                when (r) {
+                    is com.minimart.pos.cloud.CatalogOutcome.Done -> it.copy(catalogBusy = false, catalogMessage = r.detail, catalogError = false, catalogAt = config.catalogAt)
+                    is com.minimart.pos.cloud.CatalogOutcome.Failed -> it.copy(catalogBusy = false, catalogMessage = r.message, catalogError = true, takeOverPrompt = r.anotherPublisher)
+                }
+            }
+        }
+    }
+
+    fun dismissTakeOver() = _state.update { it.copy(takeOverPrompt = false) }
 
     private fun fail(msg: String) = _state.update { it.copy(message = msg, isError = true) }
 }

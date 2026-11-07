@@ -429,4 +429,16 @@
     <string name="only_on_record">Only %1$s on record</string>
     <string name="step_of">Step %1$d of 3</string>
     <string name="avg_basket_fmt">Average basket %1$s</string>
+    <string name="cat_title">Shared product list</string>
+    <string name="cat_help">Keep names, prices and tax the same in all your shops. One shop is the main shop and sends its list; the others receive it. Stock, sales and customers are never shared.</string>
+    <string name="cat_off">Off</string>
+    <string name="cat_main">Main shop (sends)</string>
+    <string name="cat_follow">Follows main shop</string>
+    <string name="cat_publish_now">Share list now</string>
+    <string name="cat_get_now">Get list now</string>
+    <string name="cat_follow_warn">Name and price changes made in this shop will be replaced by the main shop\'s list.</string>
+    <string name="cat_last">Last checked: %1$s</string>
+    <string name="cat_takeover_title">Another shop already sends the list</string>
+    <string name="cat_takeover_body">Make this shop the main shop instead? The other shop will stop being the main shop.</string>
+    <string name="cat_takeover_yes">Make this the main shop</string>
 </resources>
