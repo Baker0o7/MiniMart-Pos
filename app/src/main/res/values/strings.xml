@@ -116,4 +116,31 @@
         <item quantity="one">%d item is low on stock</item>
         <item quantity="other">%d items are low on stock</item>
     </plurals>
+    <string name="delete">Delete</string>
+    <string name="confirm">Confirm</string>
+    <string name="inventory">Inventory</string>
+    <string name="search_name_barcode">Search by name or barcode</string>
+    <string name="delete_product_q">Delete product?</string>
+    <string name="clear_filters">Clear filters</string>
+    <string name="adjust_stock">Adjust stock</string>
+    <string name="add_first_product">Add your first product</string>
+    <string name="save">Save</string>
+    <string name="add_credit">Add Credit</string>
+    <string name="notes_optional">Notes (optional)</string>
+    <string name="try_other_search">Try a different name or phone number</string>
+    <string name="tap_add_person">Tap the add-person button to register your first customer</string>
+    <string name="no_customers_yet">No customers yet</string>
+    <string name="no_credit_history">No credit history yet</string>
+    <string name="customers">Customers</string>
+    <string name="credit_history">Credit History</string>
+    <string name="ok">OK</string>
+    <string name="products">Products</string>
+    <string name="search_name_barcode_sku">Search name, barcode or SKU</string>
+    <string name="lose_typed">What you typed for this product will be lost.</string>
+    <string name="supplier">Supplier</string>
+    <string name="sold_by_weight">Sold by weight</string>
+    <string name="leave_unsaved_q">Leave without saving?</string>
+    <string name="keep_editing">Keep editing</string>
+    <string name="discard">Discard</string>
+    <string name="batch_expiry">Batch &amp; expiry</string>
 </resources>

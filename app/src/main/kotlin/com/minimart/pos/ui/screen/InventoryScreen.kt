@@ -74,7 +74,7 @@ fun InventoryScreen(
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
             GradientHeader(
-                title = "Inventory",
+                title = tr(com.minimart.pos.R.string.inventory),
                 subtitle = "${products.size} products • ${lowStock.size} low stock",
                 onBack = onBack,
                 actions = {
@@ -110,7 +110,7 @@ fun InventoryScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = vm::setSearchQuery,
-                placeholder = { Text("Search by name or barcode", color = DT.SubText) },
+                placeholder = { Text(tr(com.minimart.pos.R.string.search_name_barcode), color = DT.SubText) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) IconButton(onClick = { vm.setSearchQuery("") }) {
@@ -180,7 +180,7 @@ fun InventoryScreen(
                                 )
                                 if (filtering) {
                                     TextButton(onClick = { vm.setSearchQuery(""); vm.setCategory(null); lowOnly = false },
-                                        modifier = Modifier.heightIn(min = 48.dp)) { Text("Clear filters", color = DT.Teal) }
+                                        modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.clear_filters), color = DT.Teal) }
                                 } else {
                                     Text("Add the things you sell, with their price and how many you have, and they will show up here and at the till.",
                                         color = DT.SubText, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
@@ -190,7 +190,7 @@ fun InventoryScreen(
                                             colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White)) {
                                             Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                                             Spacer(Modifier.width(6.dp))
-                                            Text("Add your first product", fontWeight = FontWeight.Bold)
+                                            Text(tr(com.minimart.pos.R.string.add_first_product), fontWeight = FontWeight.Bold)
                                         }
                                     }
                                 }
@@ -313,7 +313,7 @@ private fun InventoryRow(
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
             containerColor = DT.Surface,
-            title = { Text("Delete product?", color = DT.Ink, fontWeight = FontWeight.Bold) },
+            title = { Text(tr(com.minimart.pos.R.string.delete_product_q), color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = { Text("\"${product.name}\" will be permanently removed. This cannot be undone.", color = DT.SubText) },
             confirmButton = {
                 Button(
@@ -323,12 +323,12 @@ private fun InventoryRow(
                 ) {
                     Icon(Icons.Default.Delete, null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Delete", fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.delete), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showDeleteConfirm = false }, shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+                    border = BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) }
             }
         )
     }
@@ -372,7 +372,7 @@ private fun StockAdjustDialog(product: Product, onDismiss: () -> Unit, onAdjust:
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = DT.Surface,
-        title = { Text("Adjust stock", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+        title = { Text(tr(com.minimart.pos.R.string.adjust_stock), color = DT.OnSurface, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("${product.name} — current: ${product.stockLabel}", color = DT.SubText, fontSize = 13.sp)
@@ -406,11 +406,11 @@ private fun StockAdjustDialog(product: Product, onDismiss: () -> Unit, onAdjust:
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White,
                     disabledContainerColor = DT.Teal.copy(0.4f), disabledContentColor = Color.White.copy(0.7f))
-            ) { Text("Confirm", fontWeight = FontWeight.Bold) }
+            ) { Text(tr(com.minimart.pos.R.string.confirm), fontWeight = FontWeight.Bold) }
         },
         dismissButton = {
             OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+                border = BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) }
         }
     )
 }

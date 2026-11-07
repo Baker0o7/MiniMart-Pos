@@ -128,4 +128,31 @@
         <item quantity="many">%d منتجًا منخفض المخزون</item>
         <item quantity="other">%d منتج منخفض المخزون</item>
     </plurals>
+    <string name="delete">حذف</string>
+    <string name="confirm">تأكيد</string>
+    <string name="inventory">المخزون</string>
+    <string name="search_name_barcode">ابحث بالاسم أو الباركود</string>
+    <string name="delete_product_q">حذف المنتج؟</string>
+    <string name="clear_filters">مسح عوامل التصفية</string>
+    <string name="adjust_stock">تعديل المخزون</string>
+    <string name="add_first_product">أضف أول منتج لك</string>
+    <string name="save">حفظ</string>
+    <string name="add_credit">إضافة رصيد</string>
+    <string name="notes_optional">ملاحظات (اختياري)</string>
+    <string name="try_other_search">جرّب اسمًا أو رقم هاتف مختلفًا</string>
+    <string name="tap_add_person">اضغط زر إضافة شخص لتسجيل أول عميل</string>
+    <string name="no_customers_yet">لا يوجد عملاء بعد</string>
+    <string name="no_credit_history">لا يوجد سجل دين بعد</string>
+    <string name="customers">العملاء</string>
+    <string name="credit_history">سجل الدين</string>
+    <string name="ok">حسنًا</string>
+    <string name="products">المنتجات</string>
+    <string name="search_name_barcode_sku">ابحث بالاسم أو الباركود أو الرمز</string>
+    <string name="lose_typed">سيتم فقدان ما كتبته لهذا المنتج.</string>
+    <string name="supplier">المورد</string>
+    <string name="sold_by_weight">يُباع بالوزن</string>
+    <string name="leave_unsaved_q">المغادرة دون حفظ؟</string>
+    <string name="keep_editing">متابعة التعديل</string>
+    <string name="discard">تجاهل</string>
+    <string name="batch_expiry">الدفعة وتاريخ الانتهاء</string>
 </resources>

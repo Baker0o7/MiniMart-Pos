@@ -92,7 +92,7 @@ fun ProductListScreen(
     Box(modifier = Modifier.fillMaxSize().background(DT.Bg)) {
         Column(Modifier.fillMaxSize()) {
             // ── Header (this screen used to show two stacked "Products" titles) ──
-            GradientHeader(title = "Products", subtitle = subtitle, onBack = onBack) {
+            GradientHeader(title = tr(com.minimart.pos.R.string.products), subtitle = subtitle, onBack = onBack) {
                 if (canEditPrices) {
                     HeaderPillButton("Add", Icons.Default.Add) { editProduct = null; showAddDialog = true }
                 }
@@ -103,7 +103,7 @@ fun ProductListScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = vm::setSearchQuery,
-                placeholder = { Text("Search name, barcode or SKU", color = DT.SubText) },
+                placeholder = { Text(tr(com.minimart.pos.R.string.search_name_barcode_sku), color = DT.SubText) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) IconButton(onClick = { vm.setSearchQuery("") }) {
@@ -166,7 +166,7 @@ fun ProductListScreen(
                                 }, color = DT.SubText, fontWeight = FontWeight.SemiBold)
                                 if (filtering) {
                                     TextButton(onClick = { vm.setSearchQuery(""); vm.setCategory(null); lowOnly = false }) {
-                                        Text("Clear filters", color = DT.Teal)
+                                        Text(tr(com.minimart.pos.R.string.clear_filters), color = DT.Teal)
                                     }
                                 } else if (canEditPrices) {
                                     Button(onClick = { editProduct = null; showAddDialog = true },
@@ -174,7 +174,7 @@ fun ProductListScreen(
                                         colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White)) {
                                         Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                                         Spacer(Modifier.width(6.dp))
-                                        Text("Add your first product", fontWeight = FontWeight.Bold)
+                                        Text(tr(com.minimart.pos.R.string.add_first_product), fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -266,7 +266,7 @@ private fun ProductRow(product: Product, currency: String, canEdit: Boolean, onE
     }
     if (showDeleteConfirm) {
         AlertDialog(onDismissRequest = { showDeleteConfirm = false }, containerColor = DT.Surface,
-            title = { Text("Delete product?", color = DT.Ink, fontWeight = FontWeight.Bold) },
+            title = { Text(tr(com.minimart.pos.R.string.delete_product_q), color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = { Text("\"${product.name}\" will be removed from your catalogue. Past sales keep their records.", color = DT.SubText) },
             confirmButton = {
                 Button(
@@ -276,12 +276,12 @@ private fun ProductRow(product: Product, currency: String, canEdit: Boolean, onE
                 ) {
                     Icon(Icons.Default.Delete, null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Delete", fontWeight = FontWeight.Bold)
+                    Text(tr(com.minimart.pos.R.string.delete), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showDeleteConfirm = false }, shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) }
+                    border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) }
             })
     }
 }
@@ -357,10 +357,10 @@ fun AddEditProductDialog(
     if (askDiscard) {
         AlertDialog(
             onDismissRequest = { askDiscard = false }, containerColor = DT.Surface,
-            title = { Text("Leave without saving?", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
-            text = { Text("What you typed for this product will be lost.", color = DT.SubText) },
-            confirmButton = { TextButton(onClick = { askDiscard = false }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Keep editing", color = DT.TealLight) } },
-            dismissButton = { TextButton(onClick = { askDiscard = false; onDismiss() }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Discard", color = DT.Red) } }
+            title = { Text(tr(com.minimart.pos.R.string.leave_unsaved_q), color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+            text = { Text(tr(com.minimart.pos.R.string.lose_typed), color = DT.SubText) },
+            confirmButton = { TextButton(onClick = { askDiscard = false }, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.keep_editing), color = DT.TealLight) } },
+            dismissButton = { TextButton(onClick = { askDiscard = false; onDismiss() }, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.discard), color = DT.Red) } }
         )
     }
     val cameraPermission = rememberPermissionState(android.Manifest.permission.CAMERA)
@@ -418,9 +418,9 @@ fun AddEditProductDialog(
                 TextButton(onClick = {
                     pickerState.selectedDateMillis?.let { expiryDateStr = formatExpiry(pickerDayToLocalStart(it)) }
                     showExpiryPicker = false
-                }) { Text("OK", color = DT.Teal) }
+                }) { Text(tr(com.minimart.pos.R.string.ok), color = DT.Teal) }
             },
-            dismissButton = { TextButton(onClick = { showExpiryPicker = false }) { Text("Cancel", color = DT.SubText) } }
+            dismissButton = { TextButton(onClick = { showExpiryPicker = false }) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
         ) { DatePicker(state = pickerState, colors = pickerColors) }
     }
 
@@ -477,7 +477,7 @@ fun AddEditProductDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text("Sold by weight", color = DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                            Text(tr(com.minimart.pos.R.string.sold_by_weight), color = DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                             Text("Priced per kg; weight comes from the scale label or is typed at the till",
                                 color = DT.SubText, fontSize = 11.sp)
                         }
@@ -544,7 +544,7 @@ fun AddEditProductDialog(
                     }
 
                     Spacer(Modifier.height(4.dp))
-                    Text("Supplier", color = DT.SubText, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                    Text(tr(com.minimart.pos.R.string.supplier), color = DT.SubText, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                     DarkField(supplierName, { supplierName = it }, "Supplier name", Modifier.fillMaxWidth(),
                         focusRequester = supplierNameFocus, nextFocusRequester = supplierPhoneFocus)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -555,7 +555,7 @@ fun AddEditProductDialog(
                     }
 
                     Spacer(Modifier.height(4.dp))
-                    Text("Batch & expiry", color = DT.SubText, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                    Text(tr(com.minimart.pos.R.string.batch_expiry), color = DT.SubText, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         DarkField(batchNumber, { batchNumber = it }, "Batch no.", Modifier.weight(1f),
                             focusRequester = batchFocus, nextFocusRequester = expiryFocus)
@@ -577,7 +577,7 @@ fun AddEditProductDialog(
                         onClick = requestClose, modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)
-                    ) { Text("Cancel", color = DT.SubText) }
+                    ) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) }
                     Button(
                         onClick = {
                             // Editing copies the existing product so fields this form doesn't show
@@ -615,7 +615,7 @@ fun AddEditProductDialog(
                     ) {
                         Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Save", fontWeight = FontWeight.ExtraBold)
+                        Text(tr(com.minimart.pos.R.string.save), fontWeight = FontWeight.ExtraBold)
                     }
                 }
             }

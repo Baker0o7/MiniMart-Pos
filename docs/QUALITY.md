@@ -45,4 +45,4 @@ Honest status. "Zero bugs" cannot be proven by tests; this lists what is enforce
 Not covered: any of this on a real phone, printer or second till.
 
 ## Languages
-English and Arabic (right to left). The owner picks in Settings → Language; `AppLanguage` stores it and `MainActivity.attachBaseContext` applies it. New text goes in `res/values/strings.xml` **and** `res/values-ar/strings.xml` and is read with `tr(R.string.x)`; Arabic plurals need all six forms. Translated so far: login, language picker, Home and Checkout. The rest of the screens still use English text and are being moved over in batches.
+English and Arabic (right to left). The owner picks in Settings → Language; `AppLanguage` stores it and `MainActivity.attachBaseContext` applies it. New text goes in `res/values/strings.xml` **and** `res/values-ar/strings.xml` and is read with `tr(R.string.x)`; Arabic plurals need all six forms. Translated so far: login, language picker, Home, Checkout, Inventory, Products and Customers (headings, buttons, search boxes, empty states). The rest of the screens still use English text and are being moved over in batches.

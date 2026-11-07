@@ -70,7 +70,7 @@ fun CustomerScreen(
                     }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Customers", color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                        Text(tr(com.minimart.pos.R.string.customers), color = Color.White, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
                         Text("${state.customers.size} registered", color = Color.White.copy(0.7f), fontSize = 12.sp)
                     }
                     IconButton(onClick = { showAddDialog = true },
@@ -112,10 +112,10 @@ fun CustomerScreen(
                         Icon(Icons.Default.People, null, modifier = Modifier.size(64.dp), tint = DT.SubText.copy(0.25f))
                         if (state.query.isNotBlank()) {
                             Text("No customers match \"${state.query}\"", color = DT.SubText, fontWeight = FontWeight.SemiBold)
-                            Text("Try a different name or phone number", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
+                            Text(tr(com.minimart.pos.R.string.try_other_search), color = DT.SubText.copy(0.6f), fontSize = 12.sp)
                         } else {
-                            Text("No customers yet", color = DT.SubText, fontWeight = FontWeight.SemiBold)
-                            Text("Tap the add-person button to register your first customer", color = DT.SubText.copy(0.6f), fontSize = 12.sp)
+                            Text(tr(com.minimart.pos.R.string.no_customers_yet), color = DT.SubText, fontWeight = FontWeight.SemiBold)
+                            Text(tr(com.minimart.pos.R.string.tap_add_person), color = DT.SubText.copy(0.6f), fontSize = 12.sp)
                         }
                     }
                 }
@@ -260,9 +260,9 @@ private fun CustomerDetailSheet(
             },
             confirmButton = {
                 Button(onClick = { showDeleteConfirm = false; onDelete() },
-                    colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)) { Text("Delete") }
+                    colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)) { Text(tr(com.minimart.pos.R.string.delete)) }
             },
-            dismissButton = { TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel", color = DT.SubText) } }
+            dismissButton = { TextButton(onClick = { showDeleteConfirm = false }) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
         )
     }
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = DT.Surface,
@@ -317,12 +317,12 @@ private fun CustomerDetailSheet(
                     colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
                     Icon(Icons.Default.AddCard, null, tint = DT.Ink, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Add Credit", fontWeight = FontWeight.Bold, color = DT.Ink)
+                    Text(tr(com.minimart.pos.R.string.add_credit), fontWeight = FontWeight.Bold, color = DT.Ink)
                 }
             }
             // Transaction history
             if (transactions.isNotEmpty()) {
-                item { Text("Credit History", color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
+                item { Text(tr(com.minimart.pos.R.string.credit_history), color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
                 items(transactions.take(20)) { tx ->
                     Row(modifier = Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp)).background(DT.Surface2)
@@ -349,7 +349,7 @@ private fun CustomerDetailSheet(
                     }
                 }
             } else {
-                item { Text("No credit history yet", color = DT.SubText, fontSize = 13.sp) }
+                item { Text(tr(com.minimart.pos.R.string.no_credit_history), color = DT.SubText, fontSize = 13.sp) }
             }
             item { Spacer(Modifier.height(20.dp)) }
         }
@@ -406,9 +406,9 @@ private fun AddCustomerDialog(customer: Customer?, onDismiss: () -> Unit, onSave
                 visitCount = customer?.visitCount ?: 0)) },
                 enabled = name.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Green),
-                shape = RoundedCornerShape(12.dp)) { Text("Save", color = DT.Ink, fontWeight = FontWeight.Bold) }
+                shape = RoundedCornerShape(12.dp)) { Text(tr(com.minimart.pos.R.string.save), color = DT.Ink, fontWeight = FontWeight.Bold) }
         },
-        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
     )
 }
 
@@ -452,7 +452,7 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
                     }
                 }
                 OutlinedTextField(value = notes, onValueChange = { notes = it },
-                    label = { Text("Notes (optional)", color = DT.SubText) }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+                    label = { Text(tr(com.minimart.pos.R.string.notes_optional), color = DT.SubText) }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences, imeAction = androidx.compose.ui.text.input.ImeAction.Done),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
                         focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
@@ -463,8 +463,8 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
             Button(onClick = { onAdd(amount.toDoubleOrNull() ?: 0.0, notes.trim()) },
                 enabled = (amount.toDoubleOrNull() ?: 0.0) > 0,
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Green, contentColor = Color.White, disabledContainerColor = DT.Green.copy(0.45f), disabledContentColor = Color.White.copy(0.7f)),
-                shape = RoundedCornerShape(12.dp)) { Text("Add Credit", color = DT.Ink, fontWeight = FontWeight.ExtraBold) }
+                shape = RoundedCornerShape(12.dp)) { Text(tr(com.minimart.pos.R.string.add_credit), color = DT.Ink, fontWeight = FontWeight.ExtraBold) }
         },
-        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
     )
 }
