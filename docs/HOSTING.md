@@ -16,3 +16,9 @@ Dashboard → create account → confirm email → **Add a shop** → type the c
 * Phones prove themselves with a random secret, stored only as a bcrypt hash. Codes are single use and expire.
 * Owners can delete a shop or their whole account (`owner_delete_account`) from the dashboard.
 * You hold every owner's sales summaries (no customer names or receipts). That means looking after backups, access to the Supabase project, a privacy notice and a way to answer deletion requests. Supabase's free plan pauses idle projects and has no backups; use a paid plan for real shops.
+
+## Dashboard features and companion mode
+* **Range** (7, 14 or 30 days), **store comparison** (each shop's share of revenue), **top products**, **Export CSV** of the daily figures for the selected shops, and an **English / Arabic** switch (Arabic flips the page right to left). The page refreshes itself every 5 minutes while open.
+* **Companion mode:** the dashboard is an installable web page. Open it in Chrome on a phone and choose *Add to Home screen*; it then opens like an app. Only the page itself (`index.html`, icon) is cached by `sw.js`; no shop data and no sign-in is stored offline, so without a connection it shows the sign-in or an error. It needs `https` hosting (GitHub Pages and Netlify are fine).
+* **Top products** come from the phones: `topProducts` (name, quantity, revenue, profit) was added to the snapshot in 1.31.0. Phones on older versions simply show "No data yet" until they update.
+* CSV cells that start with `=`, `+`, `-` or `@` are prefixed so a spreadsheet will not run them as formulas.

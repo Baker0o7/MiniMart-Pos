@@ -99,6 +99,13 @@ class CloudSnapshotBuilder @Inject constructor(
                     .put("stock", if (it.isWeighed) it.stockKg else it.stock.toDouble()))
             }
 
+        // Best sellers for the dashboard: product names and totals only (no customers, no receipts).
+        val topProducts = JSONArray()
+        stats.sortedByDescending { it.revenue }.take(10).forEach {
+            topProducts.put(JSONObject().put("name", it.productName.take(60)).put("qty", it.qty).put("revenue", it.revenue)
+                .put("profit", if (it.costedRevenue > 0) it.costedRevenue - it.cost else JSONObject.NULL))
+        }
+
         val shiftArr = JSONArray()
         shifts.getRecentShifts(now - 14L * 24 * 60 * 60 * 1000).first().take(20).forEach { s ->
             val closed = s.status == ShiftStatus.CLOSED
@@ -123,6 +130,7 @@ class CloudSnapshotBuilder @Inject constructor(
                 .put("costValue", prods.sumOf { (if (it.isWeighed) it.stockKg else it.stock.toDouble()) * it.costPrice })
                 .put("retailValue", prods.sumOf { (if (it.isWeighed) it.stockKg * it.pricePerKg else it.stock * it.price) })
                 .put("lowStock", lowStock).put("expiring", expiring))
+            .put("topProducts", topProducts)
             .put("shifts", shiftArr)
             // Newest activity-log hash and entry count (no content): a copy outside the phone that proves the log was not trimmed.
             .put("auditAnchor", audit.anchorText() ?: JSONObject.NULL)

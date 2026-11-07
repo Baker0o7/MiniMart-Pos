@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MiniMart Dashboard</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1419">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
 :root{--bg:#0f1419;--s1:#171e26;--s2:#1f2933;--bd:#2b3744;--tx:#e8eef4;--sub:#8a9bab;--teal:#19c3a6;--red:#ff6b6b;--amb:#ffb84d;--grn:#4cd48a}
 @media (prefers-color-scheme:light){:root{--bg:#f3f6f9;--s1:#fff;--s2:#eef2f6;--bd:#d8e0e8;--tx:#16202a;--sub:#5d6f80;--teal:#0a9c84;--red:#d64545;--amb:#b8741a;--grn:#1c9a5a}}
@@ -17,8 +20,8 @@ button{cursor:pointer;background:var(--teal);color:#fff;border:0;font-weight:600
 .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:14px}
 .kpi{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:12px}.kpi b{display:block;font-size:20px;margin-top:2px}.kpi span{color:var(--sub);font-size:12px}
 .two{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-table{width:100%;border-collapse:collapse}td,th{padding:7px 6px;border-bottom:1px solid var(--bd);text-align:left;font-size:13px}th{color:var(--sub);font-weight:600}
-td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse}td,th{padding:7px 6px;border-bottom:1px solid var(--bd);text-align:start;font-size:13px}th{color:var(--sub);font-weight:600}
+td.n,th.n{text-align:end;font-variant-numeric:tabular-nums}
 .warn{color:var(--amb)}.bad{color:var(--red)}.ok{color:var(--grn)}.sub{color:var(--sub)}.small{font-size:12px}
 #login{max-width:380px;margin:12vh auto}#login input{width:100%;margin-bottom:10px}
 svg text{fill:var(--sub);font-size:10px}
@@ -41,11 +44,14 @@ svg text{fill:var(--sub);font-size:10px}
 </div>
 <div id="app" hidden>
   <div class="bar"><h1>MiniMart Dashboard</h1><span class="sp"></span>
-    <select id="store"></select><button class="ghost" id="refresh">Refresh</button><button class="ghost" id="out">Sign out</button></div>
+    <select id="store"></select>
+    <select id="range" aria-label="Range"><option value="7">7 d</option><option value="14">14 d</option><option value="30" selected>30 d</option></select>
+    <select id="lang" aria-label="Language"><option value="en">English</option><option value="ar">العربية</option></select>
+    <button class="ghost" id="csv" data-t="b_csv">Export CSV</button><button class="ghost" id="refresh" data-t="b_refresh">Refresh</button><button class="ghost" id="out" data-t="b_out">Sign out</button></div>
   <div id="stale"></div>
   <div class="grid" id="kpis"></div>
-  <div class="card"><h2>Daily sales (last 30 days)</h2><div id="chart"></div></div>
-  <div class="card" id="storesCard"><h2>Stores</h2><div id="stores"></div>
+  <div class="card"><h2 data-t="h_daily">Daily sales (last 30 days)</h2><div id="chart"></div></div>
+  <div class="card" id="storesCard"><h2 data-t="h_stores">Stores</h2><div id="stores"></div><div id="cmp" style="margin-top:12px"></div>
     <details style="margin-top:12px"><summary class="small">Manage stores</summary>
       <div id="manage" style="margin-top:8px"></div>
       <p class="small sub" style="margin-top:10px">Removing a store deletes its uploaded data and key. <span id="addHelp">To add or re-add a store, make a new setup code, then enter it in that store's app (Settings → Cloud dashboard).</span></p>
@@ -53,13 +59,14 @@ svg text{fill:var(--sub);font-size:10px}
       <div id="acct" hidden style="margin-top:14px"><button class="ghost" id="delacct">Delete my account and all data</button></div>
     </details></div>
   <div class="two">
-    <div class="card"><h2>Payment mix (30 days)</h2><div id="mix"></div></div>
-    <div class="card"><h2>Profit &amp; expenses (30 days)</h2><div id="profit"></div></div>
-    <div class="card"><h2>Low stock</h2><div id="low"></div></div>
-    <div class="card"><h2>Expiring soon</h2><div id="exp"></div></div>
+    <div class="card"><h2 data-t="h_top">Top products (30 days)</h2><div id="top"></div></div>
+    <div class="card"><h2 data-t="h_mix">Payment mix (30 days)</h2><div id="mix"></div></div>
+    <div class="card"><h2 data-t="h_profit">Profit &amp; expenses (30 days)</h2><div id="profit"></div></div>
+    <div class="card"><h2 data-t="h_low">Low stock</h2><div id="low"></div></div>
+    <div class="card"><h2 data-t="h_exp">Expiring soon</h2><div id="exp"></div></div>
   </div>
-  <div class="card"><h2>Shifts &amp; Z-report status</h2><div id="shifts"></div></div>
-  <div class="card"><h2>Voids &amp; refunds (30 days)</h2><div id="vr"></div></div>
+  <div class="card"><h2 data-t="h_shifts">Shifts &amp; Z-report status</h2><div id="shifts"></div></div>
+  <div class="card"><h2 data-t="h_vr">Voids &amp; refunds (30 days)</h2><div id="vr"></div></div>
 </div>
 </div>
 <script src="config.js" onerror="void 0"></script>
@@ -71,6 +78,17 @@ const ls={get:k=>{try{return localStorage.getItem(k)||""}catch(e){return ""}},se
 let sb=null,rows=[],myStores=[];
 const HOSTED=!!(window.MINIMART_CLOUD&&/^https:\/\//.test(window.MINIMART_CLOUD.url||"")&&(window.MINIMART_CLOUD.key||""));
 const cfg=()=>HOSTED?{url:window.MINIMART_CLOUD.url.replace(/\/+$/,""),key:window.MINIMART_CLOUD.key}:{url:ls.get("mm_url"),key:ls.get("mm_key")};
+const I18N={ar:{
+ h_daily:"المبيعات اليومية",h_stores:"المتاجر",h_mix:"طرق الدفع",h_profit:"الربح والمصروفات",h_low:"مخزون منخفض",h_exp:"تنتهي صلاحيتها قريبًا",h_shifts:"الورديات وتقارير Z",h_vr:"الإلغاءات والمرتجعات",h_top:"أفضل المنتجات (30 يومًا)",
+ b_csv:"تصدير CSV",b_refresh:"تحديث",b_out:"تسجيل الخروج",
+ today:"اليوم",days:"أيام",sales:"مبيعات",avg:"متوسط السلة",expenses:"المصروفات",profit:"الربح التقديري",credit:"ديون العملاء",stock:"قيمة المخزون (بالتكلفة)",
+ store:"المتجر",low:"مخزون منخفض",last:"آخر رفع",share:"حصة المتجر من الإيرادات",product:"المنتج",qty:"الكمية",revenue:"الإيرادات",none:"لا بيانات بعد"}};
+let LANG=(()=>{try{return localStorage.getItem("mm_lang")||((navigator.language||"").startsWith("ar")?"ar":"en")}catch(e){return "en"}})();
+const t=(k,en)=>LANG==="ar"&&I18N.ar[k]?I18N.ar[k]:(en??k);
+function applyLang(){
+  document.documentElement.lang=LANG;document.documentElement.dir=LANG==="ar"?"rtl":"ltr";$("lang").value=LANG;
+  document.querySelectorAll("[data-t]").forEach(e=>{if(!e.dataset.en)e.dataset.en=e.textContent;e.textContent=t(e.dataset.t,e.dataset.en)});
+}
 const fmt=n=>Math.round(n||0).toLocaleString();
 const dt=ms=>ms?new Date(ms).toLocaleString([], {day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"-";
 const ago=ms=>{const h=(Date.now()-ms)/36e5;return h<1?Math.max(1,Math.round(h*60))+" min ago":h<48?Math.round(h)+" h ago":Math.round(h/24)+" d ago"};
@@ -133,6 +151,16 @@ $("rotate").onclick=async()=>{
   $("newcode").innerHTML=error?'<span class="bad">'+esc(error.message.includes("owner_rotate")?"Run the latest cloud/supabase_setup.sql first.":error.message)+'</span>':'New setup code (shown once — copy it now):<br><b>'+esc(data)+'</b>';
 };
 $("store").onchange=render;
+$("range").onchange=render;
+$("lang").onchange=()=>{LANG=$("lang").value;ls.set("mm_lang",LANG);applyLang();if(rows.length)render()};
+$("csv").onclick=()=>{
+  const q=v=>{v=String(v??"");if(/^[=+\-@\t\r]/.test(v))v="'"+v;return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const head=["store","day","revenue","transactions","cash","mpesa","card","credit","discounts","voids","voidTotal","refunds","refundTotal","expenses"];
+  const lines=[head.join(",")];
+  sel().forEach(r=>(r.payload.daily||[]).forEach(x=>lines.push([r.store_name,x.day,...head.slice(2).map(k=>x[k]??0)].map(q).join(","))));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv"}));
+  a.download="minimart-daily-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
 
 async function load(){
   if(HOSTED){
@@ -159,7 +187,7 @@ function render(){
   const stale=rs.filter(r=>Date.now()-new Date(r.pushed_at)>864e5);
   $("stale").innerHTML=stale.length?'<div class="card warn">No upload in over 24h from: '+stale.map(r=>esc(r.store_name)+" ("+ago(new Date(r.pushed_at))+")").join(", ")+'</div>':"";
   const today=new Date();const key=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-  const days=[];for(let i=29;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);days.push(key(d))}
+  const N=+$("range").value||30;const days=[];for(let i=N-1;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);days.push(key(d))}
   const agg={};days.forEach(d=>agg[d]={revenue:0,tx:0,expenses:0});
   const tot={cash:0,mpesa:0,card:0,credit:0,voids:0,voidTotal:0,refunds:0,refundTotal:0,discounts:0};
   rs.forEach(r=>(r.payload.daily||[]).forEach(x=>{
@@ -167,25 +195,25 @@ function render(){
     for(const k in tot) tot[k]+=+x[k]||0;
   }));
   const rev=n=>days.slice(-n).reduce((a,d)=>a+agg[d].revenue,0);
-  const tx30=days.reduce((a,d)=>a+agg[d].tx,0), exp30=days.reduce((a,d)=>a+agg[d].expenses,0), rev30=rev(30);
+  const tx30=days.reduce((a,d)=>a+agg[d].tx,0), exp30=days.reduce((a,d)=>a+agg[d].expenses,0), rev30=rev(N);
   const cr=sum(rs,r=>r.payload.profit?.costedRevenue), cc=sum(rs,r=>r.payload.profit?.costedCost);
   const gross=cr-cc, cov=rev30>0?Math.min(1,cr/rev30):0;
   const tile=(l,v,s)=>'<div class="kpi"><span>'+l+'</span><b>'+v+'</b>'+(s?'<span>'+s+'</span>':'')+'</div>';
   $("kpis").innerHTML=
-    tile("Today",fmt(agg[days[29]].revenue)+" "+cur,agg[days[29]].tx+" sales")+
-    tile("Last 7 days",fmt(rev(7)))+tile("Last 30 days",fmt(rev30),fmt(tx30)+" sales")+
-    tile("Avg basket",tx30?fmt(rev30/tx30):"-")+
-    tile("Expenses (30d)",fmt(exp30))+
-    tile("Est. profit (30d)",fmt(gross-exp30),"gross "+fmt(gross)+" − expenses")+
-    tile("Credit owed",fmt(sum(rs,r=>r.payload.customerCredit)))+
-    tile("Stock value (cost)",fmt(sum(rs,r=>r.payload.stock?.costValue)),fmt(sum(rs,r=>r.payload.stock?.productCount))+" products");
+    tile(t("today","Today"),fmt(agg[days[days.length-1]].revenue)+" "+cur,agg[days[days.length-1]].tx+" "+t("sales","sales"))+
+    tile(N+" "+t("days","days"),fmt(rev30),fmt(tx30)+" "+t("sales","sales"))+
+    tile(t("avg","Avg basket"),tx30?fmt(rev30/tx30):"-")+
+    tile(t("expenses","Expenses")+" ("+N+"d)",fmt(exp30))+
+    tile(t("profit","Est. profit")+" ("+N+"d)",fmt(gross-exp30),"gross "+fmt(gross)+" − expenses")+
+    tile(t("credit","Credit owed"),fmt(sum(rs,r=>r.payload.customerCredit)))+
+    tile(t("stock","Stock value (cost)"),fmt(sum(rs,r=>r.payload.stock?.costValue)),fmt(sum(rs,r=>r.payload.stock?.productCount))+" products");
   chart(days,agg);
   $("manage").innerHTML=rows.map(r=>'<div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0;gap:8px"><span>'+esc(r.store_name)+'</span><button class="ghost" data-del="'+esc(r.store_id)+'" data-name="'+esc(r.store_name)+'">Remove</button></div>').join("")||'<div class="empty">No stores.</div>';
   bindDeletes();
-  $("stores").innerHTML='<table><tr><th>Store</th><th class="n">Today</th><th class="n">7d</th><th class="n">30d</th><th class="n">Low stock</th><th>Last upload</th></tr>'+
+  $("stores").innerHTML='<table><tr><th>'+t("store","Store")+'</th><th class="n">'+t("today","Today")+'</th><th class="n">7d</th><th class="n">'+N+'d</th><th class="n">'+t("low","Low stock")+'</th><th>'+t("last","Last upload")+'</th></tr>'+
     rows.map(r=>{const m={};(r.payload.daily||[]).forEach(x=>m[x.day]=x.revenue);
       const s=n=>days.slice(-n).reduce((a,d)=>a+(m[d]||0),0);const old=Date.now()-new Date(r.pushed_at)>864e5;
-      return '<tr><td>'+esc(r.store_name)+'</td><td class="n">'+fmt(s(1))+'</td><td class="n">'+fmt(s(7))+'</td><td class="n">'+fmt(s(30))+'</td><td class="n '+((r.payload.stock?.lowStock||[]).length?'warn':'')+'">'+(r.payload.stock?.lowStock||[]).length+'</td><td class="'+(old?'warn':'sub')+'">'+ago(new Date(r.pushed_at))+'</td></tr>'}).join("")+'</table>';
+      return '<tr><td>'+esc(r.store_name)+'</td><td class="n">'+fmt(s(1))+'</td><td class="n">'+fmt(s(7))+'</td><td class="n">'+fmt(s(N))+'</td><td class="n '+((r.payload.stock?.lowStock||[]).length?'warn':'')+'">'+(r.payload.stock?.lowStock||[]).length+'</td><td class="'+(old?'warn':'sub')+'">'+ago(new Date(r.pushed_at))+'</td></tr>'}).join("")+'</table>';
   const mixT=tot.cash+tot.mpesa+tot.card+tot.credit;
   $("mix").innerHTML=mixT?[["Cash",tot.cash],["M-Pesa",tot.mpesa],["Card",tot.card],["Credit",tot.credit]].map(([l,v])=>
     '<div style="margin:6px 0"><div class="small" style="display:flex;justify-content:space-between"><span>'+l+'</span><span>'+fmt(v)+' · '+Math.round(v/mixT*100)+'%</span></div><div style="height:8px;background:var(--s2);border-radius:6px"><div style="height:8px;width:'+(v/mixT*100)+'%;background:var(--teal);border-radius:6px"></div></div></div>').join(""):'<div class="empty">No sales yet.</div>';
@@ -200,6 +228,16 @@ function render(){
   $("shifts").innerHTML=sh.length?'<table><tr><th>Cashier</th>'+(multi?'<th>Store</th>':'')+'<th>Opened</th><th>Status</th><th class="n">Sales</th><th class="n">Expected</th><th class="n">Counted</th><th class="n">Variance</th></tr>'+
     sh.slice(0,40).map(x=>{const v=x.variance;return '<tr><td>'+esc(x.cashier)+'</td>'+(multi?'<td>'+esc(x.r.store_name)+'</td>':'')+'<td>'+dt(x.clockIn)+'</td><td class="'+(x.open?'warn':'ok')+'">'+(x.open?'Open':'Closed '+dt(x.clockOut))+'</td><td class="n">'+fmt(x.totalSales)+'</td><td class="n">'+(x.expectedCash==null?'-':fmt(x.expectedCash))+'</td><td class="n">'+(x.countedCash==null?'-':fmt(x.countedCash))+'</td><td class="n '+(v==null?'':Math.abs(v)<1?'ok':'bad')+'">'+(v==null?'-':(v>0?'+':'')+fmt(v))+'</td></tr>'}).join("")+'</table>':'<div class="empty">No shifts uploaded.</div>';
   $("vr").innerHTML='<table><tr><td>Voided sales</td><td class="n">'+fmt(tot.voids)+' · '+fmt(tot.voidTotal)+'</td></tr><tr><td>Refunds</td><td class="n">'+fmt(tot.refunds)+' · '+fmt(tot.refundTotal)+'</td></tr><tr><td>Discounts given</td><td class="n">'+fmt(tot.discounts)+'</td></tr></table>';
+  // Best sellers across the selected stores (the phones send their last 30 days).
+  const tp={};rs.forEach(r=>(r.payload.topProducts||[]).forEach(x=>{const o=tp[x.name]||(tp[x.name]={name:x.name,qty:0,revenue:0});o.qty+=+x.qty||0;o.revenue+=+x.revenue||0}));
+  const topList=Object.values(tp).sort((a,b)=>b.revenue-a.revenue).slice(0,10);
+  $("top").innerHTML=topList.length?'<table><tr><th>'+t("product","Product")+'</th><th class="n">'+t("qty","Qty")+'</th><th class="n">'+t("revenue","Revenue")+'</th></tr>'+
+    topList.map(x=>'<tr><td>'+esc(x.name)+'</td><td class="n">'+fmt(x.qty)+'</td><td class="n">'+fmt(x.revenue)+'</td></tr>').join("")+'</table>':'<div class="empty">'+t("none","No data yet. It appears after the next upload from the phone.")+'</div>';
+  // Store comparison: each shop's share of the revenue in the chosen range.
+  const per=rows.map(r=>{const m={};(r.payload.daily||[]).forEach(x=>m[x.day]=x.revenue);return {n:r.store_name,v:days.reduce((a,d)=>a+(m[d]||0),0)}}).sort((a,b)=>b.v-a.v);
+  const tv=per.reduce((a,x)=>a+x.v,0);
+  $("cmp").innerHTML=per.length>1&&tv>0?'<div class="small sub" style="margin-bottom:4px">'+t("share","Share of revenue")+' ('+N+'d)</div>'+per.map(x=>
+    '<div style="margin:5px 0"><div class="small" style="display:flex;justify-content:space-between"><span>'+esc(x.n)+'</span><span>'+fmt(x.v)+' · '+Math.round(x.v/tv*100)+'%</span></div><div style="height:8px;background:var(--s2);border-radius:4px"><div style="height:8px;width:'+Math.round(x.v/tv*100)+'%;background:var(--teal);border-radius:4px"></div></div></div>').join(""):"";
 }
 
 function bindDeletes(){
@@ -220,7 +258,12 @@ function chart(days,agg){
     if(i%5===0) s+='<text x="'+x+'" y="'+(H+14)+'">'+d.slice(5)+'</text>'});
   $("chart").innerHTML=s+'</svg>';
 }
+applyLang();
 start();
+// Keep an open dashboard (for example on a shop-counter tablet) fresh without a tap.
+setInterval(()=>{if(sb&&!document.hidden&&!$("app").hidden)load()},300000);
+// Companion mode: lets a phone install the page to its home screen. Only the page itself is cached, never any shop data.
+if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
 </html>
