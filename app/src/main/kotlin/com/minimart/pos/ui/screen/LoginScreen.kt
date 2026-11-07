@@ -67,6 +67,9 @@ fun LoginScreen(
     LaunchedEffect(lockedOut) { if (lockedOut) pin = "" }
 
     // Biometric
+    val bioTitle = tr(com.minimart.pos.R.string.login_bio_title)
+    val bioSubtitle = tr(com.minimart.pos.R.string.login_bio_subtitle)
+    val bioUsePin = tr(com.minimart.pos.R.string.login_bio_use_pin)
     fun launchBiometric() {
         // Bug fix: previously showed the prompt for ANY device with biometric hardware
         // enrolled, regardless of whether any account had opted in — and on success,
@@ -85,8 +88,8 @@ fun LoginScreen(
                     }
                 })
             prompt.authenticate(BiometricPrompt.PromptInfo.Builder()
-                .setTitle(context.getString(com.minimart.pos.R.string.login_bio_title)).setSubtitle(context.getString(com.minimart.pos.R.string.login_bio_subtitle))
-                .setNegativeButtonText(context.getString(com.minimart.pos.R.string.login_bio_use_pin)).build())
+                .setTitle(bioTitle).setSubtitle(bioSubtitle)
+                .setNegativeButtonText(bioUsePin).build())
         } catch (_: Exception) {}
     }
     LaunchedEffect(state.biometricEnabled) { if (state.biometricEnabled) launchBiometric() }
@@ -227,7 +230,7 @@ fun LoginScreen(
                     // Attempts warning
                     if (state.failedAttempts in 1 until MAX_ATTEMPTS && !lockedOut) {
                         val remaining = MAX_ATTEMPTS - state.failedAttempts
-                        Text(LocalContext.current.resources.getQuantityString(com.minimart.pos.R.plurals.login_attempts_left, remaining, remaining),
+                        Text(androidx.compose.ui.res.pluralStringResource(com.minimart.pos.R.plurals.login_attempts_left, remaining, remaining),
                             color = DT.Amber, fontSize = 12.sp)
                     }
                 }
