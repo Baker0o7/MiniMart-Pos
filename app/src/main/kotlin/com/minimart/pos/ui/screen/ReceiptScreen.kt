@@ -184,27 +184,27 @@ fun ReceiptScreen(
                         Spacer(Modifier.height(8.dp))
                         sale?.discountAmount?.takeIf { it > 0 }?.let { d ->
                             Row(Modifier.fillMaxWidth()) {
-                                Text("Discount", color = DT.Amber, modifier = Modifier.weight(1f), fontSize = 12.sp)
+                                Text(tr(com.minimart.pos.R.string.discount), color = DT.Amber, modifier = Modifier.weight(1f), fontSize = 12.sp)
                                 Text("- ${money(d)}", color = DT.Amber, fontSize = 12.sp)
                             }
                             Spacer(Modifier.height(3.dp))
                         }
                         sale?.taxAmount?.takeIf { it > 0 }?.let { t ->
                             Row(Modifier.fillMaxWidth()) {
-                                Text("VAT (incl.)", color = DT.SubText, modifier = Modifier.weight(1f), fontSize = 11.sp)
+                                Text(tr(com.minimart.pos.R.string.vat_incl), color = DT.SubText, modifier = Modifier.weight(1f), fontSize = 11.sp)
                                 Text(money(t), color = DT.SubText, fontSize = 11.sp)
                             }
                             Spacer(Modifier.height(4.dp))
                         }
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text("TOTAL", color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp,
+                            Text(tr(com.minimart.pos.R.string.total_caps), color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp,
                                 modifier = Modifier.weight(1f), letterSpacing = 1.sp)
                             Text(money(sale?.totalAmount ?: 0.0), color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 22.sp)
                         }
                         sale?.changeGiven?.takeIf { it > 0 }?.let { c ->
                             Spacer(Modifier.height(3.dp))
                             Row(Modifier.fillMaxWidth()) {
-                                Text("Change", color = DT.Green, modifier = Modifier.weight(1f), fontSize = 12.sp)
+                                Text(tr(com.minimart.pos.R.string.change), color = DT.Green, modifier = Modifier.weight(1f), fontSize = 12.sp)
                                 Text(money(c), color = DT.Green, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
@@ -262,7 +262,7 @@ fun ReceiptScreen(
                         ) {
                             Icon(Icons.AutoMirrored.Filled.Undo, null, tint = DT.Amber, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Refund", color = DT.Amber, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text(tr(com.minimart.pos.R.string.refund), color = DT.Amber, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                         }
                         OutlinedButton(
                             onClick = { showVoidDialog = true },
@@ -274,7 +274,7 @@ fun ReceiptScreen(
                             if (state.isProcessing) CircularProgressIndicator(modifier = Modifier.size(14.dp), color = DT.Red, strokeWidth = 2.dp)
                             else Icon(Icons.Default.Cancel, null, tint = DT.Red, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Void", color = DT.Red, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text(tr(com.minimart.pos.R.string.void_sale), color = DT.Red, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                         }
                     }
                 }
@@ -295,7 +295,7 @@ fun ReceiptScreen(
                 border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) {
                 Icon(Icons.Default.Home, null, tint = DT.SubText, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Home", color = DT.SubText, fontSize = 14.sp)
+                Text(tr(com.minimart.pos.R.string.nav_home), color = DT.SubText, fontSize = 14.sp)
             }
             Button(onClick = onNewSale,
                 modifier = Modifier.weight(1.6f).height(50.dp).semantics { contentDescription = "New sale" },
@@ -303,7 +303,7 @@ fun ReceiptScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
                 Icon(Icons.Default.QrCode, null, tint = DT.Ink, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("New Sale", fontWeight = FontWeight.Bold, color = DT.Ink, fontSize = 15.sp)
+                Text(tr(com.minimart.pos.R.string.new_sale), fontWeight = FontWeight.Bold, color = DT.Ink, fontSize = 15.sp)
             }
         }
     }
@@ -333,7 +333,7 @@ internal fun ReasonDialog(title: String, subtitle: String, color: Color,
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(subtitle, color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                 OutlinedTextField(value = reason, onValueChange = { reason = it },
-                    label = { Text("Reason (required)", color = DT.SubText) },
+                    label = { Text(tr(com.minimart.pos.R.string.reason_required), color = DT.SubText) },
                     singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Sentences, imeAction = androidx.compose.ui.text.input.ImeAction.Done), modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -345,10 +345,10 @@ internal fun ReasonDialog(title: String, subtitle: String, color: Color,
         confirmButton = {
             Button(onClick = { onConfirm(reason.trim()) }, enabled = reason.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = color)) {
-                Text("Confirm", color = if (color == DT.Red || DT.light) Color.White else Color.Black, fontWeight = FontWeight.Bold)
+                Text(tr(com.minimart.pos.R.string.confirm), color = if (color == DT.Red || DT.light) Color.White else Color.Black, fontWeight = FontWeight.Bold)
             }
         },
-        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text("Cancel", color = DT.SubText) } })
+        dismissButton = { OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } })
 }
 
 private fun statusColor(status: SaleStatus?) = when (status) {

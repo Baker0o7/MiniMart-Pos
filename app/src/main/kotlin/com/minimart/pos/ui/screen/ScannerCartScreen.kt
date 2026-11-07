@@ -78,13 +78,13 @@ fun ScannerCartScreen(
         AlertDialog(
             onDismissRequest = { showClearConfirm = false },
             containerColor = DT.Surface,
-            title = { Text("Clear the cart?", color = DT.Ink, fontWeight = FontWeight.Bold) },
+            title = { Text(tr(com.minimart.pos.R.string.clear_cart_q), color = DT.Ink, fontWeight = FontWeight.Bold) },
             text = { Text("All ${state.items.size} item(s) will be removed.", color = DT.SubText) },
             confirmButton = {
                 Button(onClick = { showClearConfirm = false; vm.clearCart() },
-                    colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)) { Text("Clear") }
+                    colors = ButtonDefaults.buttonColors(containerColor = DT.Red, contentColor = Color.White)) { Text(tr(com.minimart.pos.R.string.clear)) }
             },
-            dismissButton = { TextButton(onClick = { showClearConfirm = false }) { Text("Keep items", color = DT.SubText) } }
+            dismissButton = { TextButton(onClick = { showClearConfirm = false }) { Text(tr(com.minimart.pos.R.string.keep_items), color = DT.SubText) } }
         )
     }
     val currency by vm.currency.collectAsStateWithLifecycle()
@@ -168,7 +168,7 @@ fun ScannerCartScreen(
                         }
                         Spacer(Modifier.weight(1f))
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("New Sale", color = Color.White,
+                            Text(tr(com.minimart.pos.R.string.new_sale), color = Color.White,
                                 fontWeight = FontWeight.Bold, fontSize = 20.sp)
                             AnimatedContent(
                                 targetState = if (state.itemCount > 0)
@@ -220,11 +220,11 @@ fun ScannerCartScreen(
                 AlertDialog(
                     onDismissRequest = { showHeld = false },
                     containerColor = DT.Surface,
-                    title = { Text("Held sales", color = DT.Ink, fontWeight = FontWeight.Bold) },
+                    title = { Text(tr(com.minimart.pos.R.string.held_sales), color = DT.Ink, fontWeight = FontWeight.Bold) },
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             if (state.items.isNotEmpty())
-                                Text("Hold or finish the current sale before resuming another.", color = DT.Amber, fontSize = 12.sp)
+                                Text(tr(com.minimart.pos.R.string.hold_first), color = DT.Amber, fontSize = 12.sp)
                             held.reversed().forEach { h ->
                                 Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(DT.Surface2)
                                     .padding(start = 12.dp, top = 6.dp, bottom = 6.dp, end = 4.dp),
@@ -243,12 +243,12 @@ fun ScannerCartScreen(
                                         onClick = { vm.resumeHeld(h.id); showHeld = false },
                                         shape = RoundedCornerShape(10.dp),
                                         colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White)
-                                    ) { Text("Resume") }
+                                    ) { Text(tr(com.minimart.pos.R.string.resume)) }
                                 }
                             }
                         }
                     },
-                    confirmButton = { TextButton(onClick = { showHeld = false }) { Text("Close", color = DT.SubText) } }
+                    confirmButton = { TextButton(onClick = { showHeld = false }) { Text(tr(com.minimart.pos.R.string.close), color = DT.SubText) } }
                 )
             }
 
@@ -256,7 +256,7 @@ fun ScannerCartScreen(
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { searchText = it; searchVm.setQuery(it) },
-                placeholder = { Text("Barcode or product name", color = DT.SubText) },
+                placeholder = { Text(tr(com.minimart.pos.R.string.barcode_or_name), color = DT.SubText) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText.copy(0.6f), modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (searchText.isNotEmpty())
@@ -413,11 +413,11 @@ fun ScannerCartScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Icon(Icons.Default.ShoppingCart, null,
                             modifier = Modifier.size(64.dp), tint = DT.SubText.copy(0.25f))
-                        Text("Cart is empty", color = DT.SubText,
+                        Text(tr(com.minimart.pos.R.string.cart_empty), color = DT.SubText,
                             fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                        Text("Scan a barcode, or search by name or barcode above",
+                        Text(tr(com.minimart.pos.R.string.scan_or_search),
                             color = DT.SubText.copy(0.9f), fontSize = 13.sp, textAlign = TextAlign.Center)
-                        Text("Tap a quantity to type it, e.g. 24 cans",
+                        Text(tr(com.minimart.pos.R.string.tap_qty_help),
                             color = DT.SubText.copy(0.8f), fontSize = 12.sp, textAlign = TextAlign.Center)
                     }
                 }
@@ -434,7 +434,7 @@ fun ScannerCartScreen(
                     Row(modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("TOTAL", color = DT.SubText, fontSize = 11.sp,
+                            Text(tr(com.minimart.pos.R.string.total_caps), color = DT.SubText, fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
                             Text("$currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}",
                                 color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 26.sp)
@@ -450,7 +450,7 @@ fun ScannerCartScreen(
                         ) {
                             Icon(Icons.Default.ShoppingCart, null, tint = DT.Ink, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("Checkout", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = DT.Ink)
+                            Text(tr(com.minimart.pos.R.string.checkout), fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = DT.Ink)
                         }
                     }
                     // ∞ + Scan row
@@ -473,7 +473,7 @@ fun ScannerCartScreen(
                                 Icon(Icons.Default.AllInclusive, null,
                                     tint = if (continuousScan) Color.White else DT.SubText,
                                     modifier = Modifier.size(22.dp))
-                                Text("Multi-scan", fontSize = 11.sp, maxLines = 1, softWrap = false,
+                                Text(tr(com.minimart.pos.R.string.multi_scan), fontSize = 11.sp, maxLines = 1, softWrap = false,
                                     color = if (continuousScan) Color.White else DT.SubText)
                             }
                         }
@@ -512,15 +512,15 @@ fun ScannerCartScreen(
             AlertDialog(
                 onDismissRequest = { vm.clearUnknownBarcode() },
                 containerColor = DT.Surface,
-                title = { Text("Product not found", color = DT.Ink, fontWeight = FontWeight.Bold) },
+                title = { Text(tr(com.minimart.pos.R.string.product_not_found), color = DT.Ink, fontWeight = FontWeight.Bold) },
                 text = { Text("No product has the barcode $unknown. Add it now and put it in this sale?", color = DT.SubText) },
                 confirmButton = {
                     Button(onClick = { addingUnknown = true }, shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White)) {
-                        Text("Add product", fontWeight = FontWeight.Bold)
+                        Text(tr(com.minimart.pos.R.string.add_product), fontWeight = FontWeight.Bold)
                     }
                 },
-                dismissButton = { TextButton(onClick = { vm.clearUnknownBarcode() }) { Text("Not now", color = DT.SubText) } }
+                dismissButton = { TextButton(onClick = { vm.clearUnknownBarcode() }) { Text(tr(com.minimart.pos.R.string.not_now), color = DT.SubText) } }
             )
         } else {
             AddEditProductDialog(
@@ -600,7 +600,7 @@ private fun CartItemCard(
                             verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Edit, null, tint = DT.Teal, modifier = Modifier.size(14.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Edit weight", color = DT.Teal, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Text(tr(com.minimart.pos.R.string.edit_weight), color = DT.Teal, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         }
                     } else {
                         Box(modifier = Modifier.clip(RoundedCornerShape(50.dp))
@@ -660,7 +660,7 @@ private fun QuantityDialog(name: String, current: Int, inStock: Int, onDismiss: 
                 OutlinedTextField(
                     value = field,
                     onValueChange = { field = it.copy(text = it.text.filter(Char::isDigit).take(5)) },
-                    label = { Text("Quantity", color = DT.SubText) },
+                    label = { Text(tr(com.minimart.pos.R.string.quantity), color = DT.SubText) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { if (value != null && value > 0) onSet(value) }),
@@ -679,10 +679,10 @@ private fun QuantityDialog(name: String, current: Int, inStock: Int, onDismiss: 
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Green, contentColor = Color.White,
                     disabledContainerColor = DT.Green.copy(0.45f), disabledContentColor = Color.White.copy(0.7f))) {
-                Text("Set", fontWeight = FontWeight.ExtraBold)
+                Text(tr(com.minimart.pos.R.string.set), fontWeight = FontWeight.ExtraBold)
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
     )
 }
 
@@ -706,7 +706,7 @@ private fun WeightDialog(product: Product, initialKg: Double, currency: String,
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = sanitizeDecimalInput(it, maxDecimals = 3, maxWhole = 4) },
-                    label = { Text("Weight (kg)", color = DT.SubText) },
+                    label = { Text(tr(com.minimart.pos.R.string.weight_kg), color = DT.SubText) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { kg?.let(onConfirm) }),
@@ -716,7 +716,7 @@ private fun WeightDialog(product: Product, initialKg: Double, currency: String,
                         focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                         cursorColor = DT.Teal, focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Price", color = DT.SubText, fontSize = 13.sp)
+                    Text(tr(com.minimart.pos.R.string.price), color = DT.SubText, fontSize = 13.sp)
                     Text("$currency ${String.format(java.util.Locale.US, "%,.2f", price)}", color = DT.Teal, fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
                 }
                 // Informational only — selling is never blocked on weighed stock.
@@ -729,10 +729,10 @@ private fun WeightDialog(product: Product, initialKg: Double, currency: String,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Green, contentColor = Color.White,
                     disabledContainerColor = DT.Green.copy(0.45f), disabledContentColor = Color.White.copy(0.7f))) {
-                Text("Add to cart", fontWeight = FontWeight.ExtraBold)
+                Text(tr(com.minimart.pos.R.string.add_to_cart), fontWeight = FontWeight.ExtraBold)
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) } }
     )
 }
 

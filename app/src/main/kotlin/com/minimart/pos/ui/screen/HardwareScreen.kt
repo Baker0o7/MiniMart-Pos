@@ -69,7 +69,7 @@ fun HardwareScreen(onBack: () -> Unit, vm: HardwareViewModel = hiltViewModel()) 
                 }
             }
             item {
-                Text("Tests send a short page to the printer and a signal to the drawer. Nothing is changed in your sales data.",
+                Text(tr(com.minimart.pos.R.string.hw_tests_help),
                     color = DT.SubText, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp))
             }
         }

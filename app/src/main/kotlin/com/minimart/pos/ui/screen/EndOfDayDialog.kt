@@ -29,7 +29,7 @@ fun EndOfDayDialog(onDismiss: () -> Unit, onAction: (HealthAction) -> Unit, vm: 
         containerColor = DT.Surface,
         title = {
             Column {
-                Text("End of day", color = DT.OnSurface, fontWeight = FontWeight.ExtraBold)
+                Text(tr(com.minimart.pos.R.string.end_of_day), color = DT.OnSurface, fontWeight = FontWeight.ExtraBold)
                 if (!s.loading) Text(
                     when {
                         !s.canFinish -> "Something must be done before you close"
@@ -56,7 +56,7 @@ fun EndOfDayDialog(onDismiss: () -> Unit, onAction: (HealthAction) -> Unit, vm: 
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close", color = DT.Teal, fontWeight = FontWeight.Bold) } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr(com.minimart.pos.R.string.close), color = DT.Teal, fontWeight = FontWeight.Bold) } }
     )
 }
 
