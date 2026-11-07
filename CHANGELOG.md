@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.29.0] - 2026-11-07
+
+- **Update the app from inside the app.** Open Settings, then About & support, and tap "Check for updates". If a new version is out you see what changed and can tap "Download and install"; Android then asks you to confirm. The first time, Android asks you to allow MiniMart to install updates. Home shows a card when an update is waiting, and the app checks once a day by itself (you can turn that off). Your sales and settings are kept. Use Wi-Fi if you can, because the download uses data.
+
 ## [1.28.0] - 2026-11-07
 
 - **Cash count matches the drawer.** On the Add expense form, switch on "Paid in cash from the till" when you take money from the drawer. The end-of-shift cash count then expects that much less, and cash refunds of earlier shifts' sales are subtracted too. The Z-report shows both. If you forget to switch it on, the count will still show a shortage. Refunds made before this update are not counted.
