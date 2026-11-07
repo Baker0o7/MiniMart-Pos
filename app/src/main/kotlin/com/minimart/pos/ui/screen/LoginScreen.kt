@@ -85,8 +85,8 @@ fun LoginScreen(
                     }
                 })
             prompt.authenticate(BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Biometric Login").setSubtitle("Use fingerprint or face")
-                .setNegativeButtonText("Use PIN").build())
+                .setTitle(context.getString(com.minimart.pos.R.string.login_bio_title)).setSubtitle(context.getString(com.minimart.pos.R.string.login_bio_subtitle))
+                .setNegativeButtonText(context.getString(com.minimart.pos.R.string.login_bio_use_pin)).build())
         } catch (_: Exception) {}
     }
     LaunchedEffect(state.biometricEnabled) { if (state.biometricEnabled) launchBiometric() }
@@ -137,7 +137,7 @@ fun LoginScreen(
                 Text("MiniMart ", color = ink, fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
                 Text("POS", color = emerald, fontWeight = FontWeight.ExtraBold, fontSize = 30.sp)
             }
-            Text("Point of Sale System", color = ink.copy(0.85f), fontSize = 14.sp)
+            Text(tr(com.minimart.pos.R.string.login_tagline), color = ink.copy(0.85f), fontSize = 14.sp)
             Spacer(Modifier.height(6.dp))
             Box(Modifier.width(44.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(emerald))
             Spacer(Modifier.height(12.dp))
@@ -151,12 +151,12 @@ fun LoginScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
-                    Text("Welcome Back 👋", color = ink,
+                    Text(tr(com.minimart.pos.R.string.login_welcome), color = ink,
                         fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
 
                     // Username (pill)
                     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Username", color = emerald, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                        Text(tr(com.minimart.pos.R.string.login_username), color = emerald, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(start = 6.dp))
                         OutlinedTextField(value = username, onValueChange = { username = it },
                             leadingIcon = { Icon(Icons.Default.Person, null, tint = emerald) },
@@ -174,14 +174,14 @@ fun LoginScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically) {
-                            Text("PIN", color = ink.copy(0.85f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                            Text(tr(com.minimart.pos.R.string.login_pin), color = ink.copy(0.85f), fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.padding(start = 6.dp))
                             TextButton(onClick = { showPin = !showPin },
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
                                 Icon(if (showPin) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                     null, tint = emerald, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text(if (showPin) "Hide" else "Show", color = emerald, fontSize = 13.sp)
+                                Text(if (showPin) tr(com.minimart.pos.R.string.hide) else tr(com.minimart.pos.R.string.show), color = emerald, fontSize = 13.sp)
                             }
                         }
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -209,7 +209,7 @@ fun LoginScreen(
                             .padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Lock, null, tint = DT.Red, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("Too many attempts. Wait ${lockoutSeconds}s", color = DT.Red, fontSize = 13.sp)
+                            Text(tr(com.minimart.pos.R.string.login_locked, lockoutSeconds), color = DT.Red, fontSize = 13.sp)
                         }
                     }
 
@@ -227,7 +227,7 @@ fun LoginScreen(
                     // Attempts warning
                     if (state.failedAttempts in 1 until MAX_ATTEMPTS && !lockedOut) {
                         val remaining = MAX_ATTEMPTS - state.failedAttempts
-                        Text("$remaining attempt${if (remaining != 1) "s" else ""} remaining",
+                        Text(LocalContext.current.resources.getQuantityString(com.minimart.pos.R.plurals.login_attempts_left, remaining, remaining),
                             color = DT.Amber, fontSize = 12.sp)
                     }
                 }
@@ -283,7 +283,7 @@ fun LoginScreen(
                 if (state.isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(22.dp), color = emerald, strokeWidth = 2.dp)
                     Spacer(Modifier.width(10.dp))
-                    Text("Signing in…", color = ink.copy(0.7f), fontSize = 13.sp)
+                    Text(tr(com.minimart.pos.R.string.login_signing_in), color = ink.copy(0.7f), fontSize = 13.sp)
                 } else if (state.biometricEnabled) {
                     Box(modifier = Modifier.size(48.dp).clip(CircleShape)
                         .background(glassLo)
@@ -293,7 +293,7 @@ fun LoginScreen(
                         Icon(Icons.Default.Fingerprint, null, tint = emerald, modifier = Modifier.size(26.dp))
                     }
                     Spacer(Modifier.width(12.dp))
-                    Text("Use biometric", color = ink.copy(0.7f), fontSize = 13.sp)
+                    Text(tr(com.minimart.pos.R.string.login_use_biometric), color = ink.copy(0.7f), fontSize = 13.sp)
                 }
             }
         }

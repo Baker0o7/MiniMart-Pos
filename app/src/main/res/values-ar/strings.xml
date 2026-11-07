@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MiniMart POS</string>
+    <string name="scan_hint">وجّه الكاميرا نحو الباركود</string>
+    <string name="no_products">لا توجد منتجات</string>
+    <string name="cart_empty">السلة فارغة</string>
+    <string name="sale_complete">تمت عملية البيع!</string>
+    <string name="login_bio_title">تسجيل الدخول بالبصمة</string>
+    <string name="login_bio_subtitle">استخدم بصمة الإصبع أو الوجه</string>
+    <string name="login_bio_use_pin">استخدم الرمز السري</string>
+    <string name="login_tagline">نظام نقاط البيع</string>
+    <string name="login_welcome">أهلاً بعودتك 👋</string>
+    <string name="login_username">اسم المستخدم</string>
+    <string name="login_pin">الرمز السري</string>
+    <string name="hide">إخفاء</string>
+    <string name="show">إظهار</string>
+    <string name="login_locked">محاولات كثيرة. انتظر %1$d ثانية</string>
+    <string name="login_signing_in">جارٍ تسجيل الدخول…</string>
+    <string name="login_use_biometric">استخدم البصمة</string>
+    <string name="language_title">اللغة</string>
+    <string name="language_help">اختر لغة التطبيق. تظهر العربية من اليمين إلى اليسار. تتم إعادة تحميل هذه الشاشة لتطبيق اللغة.</string>
+    <string name="language_follow_phone">مثل لغة الهاتف</string>
+    <string name="language_summary_phone">مثل لغة الهاتف</string>
+    <plurals name="login_attempts_left">
+        <item quantity="zero">لا توجد محاولات متبقية</item>
+        <item quantity="one">بقيت محاولة واحدة</item>
+        <item quantity="two">بقيت محاولتان</item>
+        <item quantity="few">بقيت %d محاولات</item>
+        <item quantity="many">بقيت %d محاولة</item>
+        <item quantity="other">بقيت %d محاولة</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="zero">لا عناصر</item>
+        <item quantity="one">عنصر واحد</item>
+        <item quantity="two">عنصران</item>
+        <item quantity="few">%d عناصر</item>
+        <item quantity="many">%d عنصرًا</item>
+        <item quantity="other">%d عنصر</item>
+    </plurals>
+</resources>

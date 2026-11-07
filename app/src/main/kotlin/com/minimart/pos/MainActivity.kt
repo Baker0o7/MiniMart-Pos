@@ -104,6 +104,10 @@ class MainActivity : ComponentActivity() {
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* nothing to do */ }
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(com.minimart.pos.util.AppLanguage.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)

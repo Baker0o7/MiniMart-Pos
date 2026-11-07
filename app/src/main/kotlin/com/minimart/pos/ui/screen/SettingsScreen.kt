@@ -406,6 +406,7 @@ fun SettingsScreen(
 
                 // ── Appearance ────────────────────────────────────────────────
                 AppearanceSettingsSection(settingsRepo)
+                LanguageSettingsSection()
 
                 // ── Multi-Device Sync (LAN) ───────────────────────────────────
                 if (isOwner) {

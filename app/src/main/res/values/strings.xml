@@ -5,4 +5,28 @@
     <string name="no_products">No products found</string>
     <string name="cart_empty">Cart is empty</string>
     <string name="sale_complete">Sale Complete!</string>
+    <string name="login_bio_title">Biometric Login</string>
+    <string name="login_bio_subtitle">Use fingerprint or face</string>
+    <string name="login_bio_use_pin">Use PIN</string>
+    <string name="login_tagline">Point of Sale System</string>
+    <string name="login_welcome">Welcome Back 👋</string>
+    <string name="login_username">Username</string>
+    <string name="login_pin">PIN</string>
+    <string name="hide">Hide</string>
+    <string name="show">Show</string>
+    <string name="login_locked">Too many attempts. Wait %1$ds</string>
+    <string name="login_signing_in">Signing in…</string>
+    <string name="login_use_biometric">Use biometric</string>
+    <string name="language_title">Language</string>
+    <string name="language_help">Choose the language of the app. Arabic is shown right to left. The app restarts this screen to apply it.</string>
+    <string name="language_follow_phone">Same as the phone</string>
+    <string name="language_summary_phone">Same as the phone</string>
+    <plurals name="login_attempts_left">
+        <item quantity="one">%d attempt remaining</item>
+        <item quantity="other">%d attempts remaining</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
 </resources>
