@@ -5,6 +5,12 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.31.1] - 2026-11-08
+
+- **Safer PIN lockout.** After too many wrong PINs the till stays locked for the full time, even if someone changes the phone's date or time.
+- **Safer web dashboard.** The dashboard page now carries its own copy of the code it needs instead of loading it from a public website, and blocks any other code from running. Upload the whole `cloud/dashboard` folder again to get this.
+- **A note on M-Pesa text messages.** A determined person can fake the sender name on a text message, so for payments you cannot afford to be wrong about, use instant M-Pesa (webhook) or STK push.
+
 ## [1.31.0] - 2026-11-08
 
 - **Share your product list between shops.** In Settings, Cloud dashboard, choose "Shared product list". One shop is the main shop and sends its names, prices, tax and supplier details; your other shops follow it. Stock, sales and customers are never shared, and a following shop's own price edits are replaced by the main shop's list. You need to run the new `cloud/catalog_setup.sql` once in your online database first.
