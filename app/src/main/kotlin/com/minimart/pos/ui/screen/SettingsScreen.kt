@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.bluetooth.BluetoothDevice
@@ -505,7 +506,7 @@ fun SettingsScreen(
                             value = syncState.peerKey,
                             onValueChange = { syncVm.setPeerKey(it.filter(Char::isDigit).take(16)) },
                             label = { Text(tr(com.minimart.pos.R.string.pairing_code), color = DT.SubText) },
-                            placeholder = { Text("Pairing code shown on the server", color = DT.SubText.copy(0.5f)) },
+                            placeholder = { Text(Lang.t("Pairing code shown on the server", "رمز الاقتران الظاهر على الخادم"), color = DT.SubText.copy(0.5f)) },
                             leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.SubText) },
                             singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(

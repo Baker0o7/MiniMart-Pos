@@ -1,5 +1,6 @@
 package com.minimart.pos.display
 
+import com.minimart.pos.util.Lang
 import android.app.Presentation
 import android.content.Context
 import android.os.Bundle
@@ -110,19 +111,19 @@ fun CustomerDisplayContent(s: CustomerDisplayState) {
                     verticalArrangement = Arrangement.Center) {
                     Icon(Icons.Default.CheckCircle, null, tint = Teal, modifier = Modifier.size(96.dp))
                     Spacer(Modifier.height(16.dp))
-                    Text("Thank you!", color = Color.White, fontSize = 44.sp, fontWeight = FontWeight.ExtraBold)
+                    Text(Lang.t("Thank you!", "شكرًا لك!"), color = Color.White, fontSize = 44.sp, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.height(8.dp))
                     Text("Paid ${money(s.currency, s.total)}", color = Sub, fontSize = 24.sp)
                     if (s.change > 0.005) {
                         Spacer(Modifier.height(18.dp))
-                        Text("Your change", color = Sub, fontSize = 20.sp)
+                        Text(Lang.t("Your change", "الباقي لك"), color = Sub, fontSize = 20.sp)
                         Text(money(s.currency, s.change), color = Teal, fontSize = 48.sp, fontWeight = FontWeight.ExtraBold)
                     }
                 }
                 s.lines.isEmpty() -> Column(Modifier.weight(1f).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center) {
-                    Text("Welcome", color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("Your items will appear here", color = Sub, fontSize = 22.sp, textAlign = TextAlign.Center)
+                    Text(Lang.t("Welcome", "مرحبًا"), color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.ExtraBold)
+                    Text(Lang.t("Your items will appear here", "ستظهر مشترياتك هنا"), color = Sub, fontSize = 22.sp, textAlign = TextAlign.Center)
                 }
                 else -> {
                     LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -142,13 +143,13 @@ fun CustomerDisplayContent(s: CustomerDisplayState) {
                     Spacer(Modifier.height(12.dp))
                     if (s.discount > 0.005) {
                         Row(Modifier.fillMaxWidth()) {
-                            Text("Discount", color = Sub, fontSize = 18.sp, modifier = Modifier.weight(1f))
+                            Text(Lang.t("Discount", "الخصم"), color = Sub, fontSize = 18.sp, modifier = Modifier.weight(1f))
                             Text("-${money(s.currency, s.discount)}", color = Teal, fontSize = 18.sp)
                         }
                         Spacer(Modifier.height(6.dp))
                     }
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text("TOTAL", color = Sub, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        Text(Lang.t("TOTAL", "الإجمالي"), color = Sub, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         Text(money(s.currency, s.total), color = Color.White, fontSize = 44.sp, fontWeight = FontWeight.ExtraBold,
                             maxLines = 1)
                     }

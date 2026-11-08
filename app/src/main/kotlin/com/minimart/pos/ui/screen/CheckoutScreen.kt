@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -508,16 +509,16 @@ fun CheckoutScreen(
                                 if (!stkConfirmed) {
                                     val a = mpesaAssessment
                                     val (msg, col) = when (a.verdict) {
-                                        com.minimart.pos.data.repository.MpesaVerdict.VERIFIED -> "Verified: $currency ${String.format(java.util.Locale.US, "%,.2f", a.receivedAmount ?: 0.0)} received with this code" to DT.Green
-                                        com.minimart.pos.data.repository.MpesaVerdict.STALE -> com.minimart.pos.util.Lang.t(
+                                        com.minimart.pos.data.repository.MpesaVerdict.VERIFIED -> Lang.t("Verified: $currency ${String.format(java.util.Locale.US, "%,.2f", a.receivedAmount ?: 0.0)} received with this code", "تم التحقق: استُلم $currency ${String.format(java.util.Locale.US, "%,.2f", a.receivedAmount ?: 0.0)} بهذا الرمز") to DT.Green
+                                        com.minimart.pos.data.repository.MpesaVerdict.STALE -> Lang.t(
                                             "This payment arrived hours ago. Check it belongs to this customer, not an earlier one",
                                             "وصلت هذه الدفعة قبل ساعات. تأكد أنها لهذا العميل وليست لعميل سابق") to DT.Amber
-                                        com.minimart.pos.data.repository.MpesaVerdict.UNDERPAID -> "This payment was only $currency ${String.format(java.util.Locale.US, "%,.2f", a.receivedAmount ?: 0.0)}, less than the amount due" to DT.Red
-                                        com.minimart.pos.data.repository.MpesaVerdict.ALREADY_USED -> "This code was already used for another sale" to DT.Red
-                                        com.minimart.pos.data.repository.MpesaVerdict.BAD_FORMAT -> "Code looks wrong: letters and digits only, 6–20 characters" to DT.Red
-                                        com.minimart.pos.data.repository.MpesaVerdict.NOT_RECEIVED -> "No payment with this code has arrived on this phone yet" to DT.Amber
-                                        com.minimart.pos.data.repository.MpesaVerdict.UNCHECKED -> (if (mpesaStrict) "Turn on payment tracking to verify codes" else "Not checked (payment tracking is off)") to DT.SubText
-                                        com.minimart.pos.data.repository.MpesaVerdict.EMPTY -> (if (mpesaStrict) "Enter the M-Pesa code to complete this sale" else "") to DT.Amber
+                                        com.minimart.pos.data.repository.MpesaVerdict.UNDERPAID -> Lang.t("This payment was only $currency ${String.format(java.util.Locale.US, "%,.2f", a.receivedAmount ?: 0.0)}, less than the amount due", "هذه الدفعة $currency ${String.format(java.util.Locale.US, "%,.2f", a.receivedAmount ?: 0.0)} فقط، وهي أقل من المبلغ المطلوب") to DT.Red
+                                        com.minimart.pos.data.repository.MpesaVerdict.ALREADY_USED -> Lang.t("This code was already used for another sale", "هذا الرمز مستخدم بالفعل في عملية بيع أخرى") to DT.Red
+                                        com.minimart.pos.data.repository.MpesaVerdict.BAD_FORMAT -> Lang.t("Code looks wrong: letters and digits only, 6–20 characters", "الرمز يبدو خاطئًا: أحرف وأرقام فقط، من 6 إلى 20 خانة") to DT.Red
+                                        com.minimart.pos.data.repository.MpesaVerdict.NOT_RECEIVED -> Lang.t("No payment with this code has arrived on this phone yet", "لم تصل بعد أي دفعة بهذا الرمز إلى هذا الهاتف") to DT.Amber
+                                        com.minimart.pos.data.repository.MpesaVerdict.UNCHECKED -> (if (mpesaStrict) Lang.t("Turn on payment tracking to verify codes", "شغّل تتبع الدفعات للتحقق من الرموز") else Lang.t("Not checked (payment tracking is off)", "لم يتم التحقق (تتبع الدفعات متوقف)")) to DT.SubText
+                                        com.minimart.pos.data.repository.MpesaVerdict.EMPTY -> (if (mpesaStrict) Lang.t("Enter the M-Pesa code to complete this sale", "أدخل رمز M-Pesa لإتمام هذه العملية") else "") to DT.Amber
                                     }
                                     if (msg.isNotEmpty()) Text(msg, color = col, fontSize = 12.sp, modifier = Modifier.padding(start = 4.dp))
                                 }

@@ -1,5 +1,6 @@
 package com.minimart.pos.ui
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.minimart.pos.ui.theme.DT
@@ -142,10 +143,10 @@ fun MiniMartNavGraph(
         var confirmPin by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = {},
-            title = { Text("Set a new PIN") },
+            title = { Text(Lang.t("Set a new PIN", "عيّن رمزًا سريًا جديدًا")) },
             text = {
                 Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                    Text("You signed in with the default PIN (1234). Choose a new PIN to protect this till.")
+                    Text(Lang.t("You signed in with the default PIN (1234). Choose a new PIN to protect this till.", "سجّلت الدخول بالرمز الافتراضي (1234). اختر رمزًا جديدًا لحماية هذا الصندوق."))
                     OutlinedTextField(newPin, { newPin = it.filter(Char::isDigit).take(8) }, label = { Text(androidx.compose.ui.res.stringResource(com.minimart.pos.R.string.new_pin)) },
                         singleLine = true, visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword))
@@ -155,7 +156,7 @@ fun MiniMartNavGraph(
                     authState.pinChangeError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 }
             },
-            confirmButton = { TextButton(onClick = { authVm.changeOwnPin(newPin, confirmPin) }) { Text("Save PIN") } }
+            confirmButton = { TextButton(onClick = { authVm.changeOwnPin(newPin, confirmPin) }) { Text(Lang.t("Save PIN", "حفظ الرمز")) } }
         )
     }
     val cartVm: CartViewModel = hiltViewModel()
