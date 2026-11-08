@@ -5,6 +5,14 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.32.0] - 2026-11-09
+
+- **Old M-Pesa payment warning.** If a payment arrived hours before the sale it is being used for, the till now asks you to check it belongs to this customer, not an earlier one. It is a warning only, so a customer who paid ahead can still be served.
+- **Cash-up.** The next shift now starts with the float the last shift counted (you can change it), and sales, cash paid out and refunds are all cut off at the same moment when a shift closes.
+- **Exact totals.** The Z-report, the credit overview and supplier part-payments now add money to the cent, so no stray fractions of a cent.
+- **Preparing exact-cent storage.** Sales now also keep their total in whole cents. Nothing looks different; this is the first step of a safer way of storing money. Your data is upgraded automatically the first time you open the new version.
+- **Arabic.** Fixed the wording of "ago" for two minutes, hours and days.
+
 ## [1.31.2] - 2026-11-09
 
 - **More of the app in Arabic.** The rest of Settings, Analytics, Stock insights and M-Pesa now show in Arabic, along with many sentences that include amounts and names.
