@@ -1,7 +1,7 @@
 // Caches only this page's own files so the dashboard opens quickly and installs to a home screen.
 // It never touches requests to other sites (the database, the sign-in service), so no shop data is stored here.
-const CACHE = "minimart-dashboard-shell-v1";
-const SHELL = ["./", "index.html", "manifest.webmanifest", "icon.svg"];
+const CACHE = "minimart-dashboard-shell-v2";
+const SHELL = ["./", "index.html", "app.js", "vendor/supabase.js", "manifest.webmanifest", "icon.svg"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));

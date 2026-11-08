@@ -25,3 +25,5 @@ Dashboard → create account → confirm email → **Add a shop** → type the c
 
 ## Shared product list between shops
 Run `cloud/catalog_setup.sql` once, after `multitenant_setup.sql`. Then, in the app, on one shop choose Settings → Cloud dashboard → Shared product list → *Main shop (sends)*, and on the others *Follows main shop*. The phones share the list every few hours with the daily upload, or at once with the button. Only names, prices, tax and supplier details are shared; each shop keeps its own stock. The SQL was tested on a local PostgreSQL 16 with a stand-in for Supabase's `auth` schema (publish, fetch, one sender per owner, take-over, two owners kept apart, wrong secret, and the public key being unable to read the table).
+
+The dashboard no longer needs the internet for its script: `vendor/supabase.js` is bundled. Upload the whole `cloud/dashboard` folder including `app.js` and `vendor/`.

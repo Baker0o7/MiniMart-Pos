@@ -267,13 +267,13 @@ class AuthViewModel @Inject constructor(
         // of the app; it now reacts to the stored deadline and only ticks while actually locked.
         viewModelScope.launch {
             settingsRepo.lockoutUntilMs.catch { emit(0L) }.collectLatest { until ->
-                var remainingMs = until - System.currentTimeMillis()
+                var remainingMs = if (until > 0L) settingsRepo.lockoutRemainingMs() else 0L
                 if (remainingMs > 0) {
                     val attempts = settingsRepo.failedAttempts.first()
                     while (remainingMs > 0) {
                         _uiState.update { it.copy(isLockedOut = true, lockoutRemainingSeconds = ((remainingMs + 999) / 1000).toInt(), failedAttempts = attempts) }
                         kotlinx.coroutines.delay(1000)
-                        remainingMs = until - System.currentTimeMillis()
+                        remainingMs = settingsRepo.lockoutRemainingMs()
                     }
                     // Update the UI first: clearing the lockout re-emits this flow and cancels us.
                     _uiState.update { it.copy(isLockedOut = false, lockoutRemainingSeconds = 0, failedAttempts = 0) }
@@ -290,8 +290,7 @@ class AuthViewModel @Inject constructor(
             // Bug fix: lockout used to be enforced only by disabling the UI client-side —
             // nothing stopped a direct vm.login() call (or a restarted app) from bypassing
             // it. Now re-checked against the persisted deadline before every attempt.
-            val until = settingsRepo.lockoutUntilMs.first()
-            if (until > System.currentTimeMillis()) {
+            if (settingsRepo.lockoutRemainingMs() > 0L) {
                 _uiState.update { it.copy(error = "Too many attempts. Please wait.") }
                 return@launch
             }
@@ -319,7 +318,7 @@ class AuthViewModel @Inject constructor(
                     val attempts = settingsRepo.recordFailedAttempt(MAX_ATTEMPTS, LOCKOUT_DURATION_MS)
                     val nowLocked = attempts >= MAX_ATTEMPTS
                     val lockedForSec = if (nowLocked)
-                        (((settingsRepo.lockoutUntilMs.first() - System.currentTimeMillis()) + 999) / 1000).toInt().coerceAtLeast(1)
+                        (((settingsRepo.lockoutRemainingMs()) + 999) / 1000).toInt().coerceAtLeast(1)
                     else 0
                     auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_FAILED,
                         user = username, detail = "Attempt $attempts of $MAX_ATTEMPTS${if (nowLocked) " — LOCKED OUT" else ""}")

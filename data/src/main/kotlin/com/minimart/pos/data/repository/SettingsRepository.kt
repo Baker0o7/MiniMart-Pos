@@ -66,6 +66,8 @@ class SettingsRepository @Inject constructor(
         val KEY_FAILED_ATTEMPTS  = intPreferencesKey("failed_pin_attempts")
         val KEY_LOCKOUT_UNTIL    = longPreferencesKey("lockout_until_epoch_ms")
         val KEY_LOCKOUT_ROUNDS   = intPreferencesKey("lockout_rounds")
+        val KEY_LOCKOUT_DURATION = longPreferencesKey("lockout_duration_ms")
+        val KEY_LOCKOUT_ELAPSED  = longPreferencesKey("lockout_start_elapsed_ms")
         // Bug fix: SyncServer had ZERO authentication — any device on the same WiFi
         // network could read pending sync data or inject arbitrary fabricated entries
         // with no barrier at all. This key holds a per-device, auto-generated shared
@@ -230,10 +232,20 @@ class SettingsRepository @Inject constructor(
                 val rounds = prefs[KEY_LOCKOUT_ROUNDS] ?: 0
                 val duration = (lockoutDurationMs * (1L shl rounds.coerceIn(0, 5))).coerceAtMost(15 * 60_000L)
                 prefs[KEY_LOCKOUT_UNTIL] = System.currentTimeMillis() + duration
+                prefs[KEY_LOCKOUT_DURATION] = duration
+                prefs[KEY_LOCKOUT_ELAPSED] = android.os.SystemClock.elapsedRealtime()
                 prefs[KEY_LOCKOUT_ROUNDS] = rounds + 1
             }
         }
         return newCount
+    }
+
+    /** Milliseconds of lockout left. Uses the since-boot clock so changing the phone's date cannot shorten it (see LockoutClock). */
+    suspend fun lockoutRemainingMs(): Long {
+        val p = context.dataStore.data.first()
+        return com.minimart.pos.util.LockoutClock.remainingMs(
+            p[KEY_LOCKOUT_UNTIL] ?: 0L, p[KEY_LOCKOUT_DURATION] ?: 0L, p[KEY_LOCKOUT_ELAPSED] ?: -1L,
+            System.currentTimeMillis(), android.os.SystemClock.elapsedRealtime())
     }
 
     /** A correct PIN: forgive the escalation too, not just the current attempt count. */
