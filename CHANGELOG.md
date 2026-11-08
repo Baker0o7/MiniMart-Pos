@@ -5,6 +5,12 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.31.2] - 2026-11-09
+
+- **More of the app in Arabic.** The rest of Settings, Analytics, Stock insights and M-Pesa now show in Arabic, along with many sentences that include amounts and names.
+- **Messages the app writes itself are in Arabic too.** Error advice, the health check, backup "how long ago" and password strength, the daily report you send to the owner, and the low-stock and expiry notifications.
+- Receipts and printed reports are still in English. They need a printer test first.
+
 ## [1.31.1] - 2026-11-08
 
 - **Safer PIN lockout.** After too many wrong PINs the till stays locked for the full time, even if someone changes the phone's date or time.
