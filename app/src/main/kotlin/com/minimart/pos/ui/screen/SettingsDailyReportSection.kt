@@ -46,7 +46,7 @@ internal fun DailyReportSettingsSection(settingsRepo: SettingsRepository) {
             }, verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(tr(com.minimart.pos.R.string.daily_summary), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
-                Text("Every day at the time below, this phone shows a notification with the day's sales, cash and M-Pesa, refunds, expenses, profit and anything that needs attention. Tap Share or SMS owner on it to send the text on. Allow notifications for MiniMart in Android settings if you do not see it.",
+                Text(tr(com.minimart.pos.R.string.daily_help),
                     color = DT.SubText, style = MaterialTheme.typography.bodySmall)
             }
             Spacer(Modifier.width(12.dp))

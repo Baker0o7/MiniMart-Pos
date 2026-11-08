@@ -30,9 +30,9 @@ internal fun AboutSettingsSection(syncOn: Boolean, cloudOn: Boolean, webhook: Mp
     val context = LocalContext.current
     val instantMpesaOn = webhook.state.collectAsStateWithLifecycle().value.enabled
     var copied by remember { mutableStateOf(false) }
-    DSection(tr(com.minimart.pos.R.string.set_about), Icons.Default.Info, summary = "Version ${BuildConfig.VERSION_NAME}", initiallyExpanded = false) {
+    DSection(tr(com.minimart.pos.R.string.set_about), Icons.Default.Info, summary = tr(com.minimart.pos.R.string.version_fmt, BuildConfig.VERSION_NAME), initiallyExpanded = false) {
         Text("MiniMart POS ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
-        Text("Free and open source under the Apache License 2.0. Your sales, customers and stock stay on this phone unless you turn on sync or the cloud dashboard.",
+        Text(tr(com.minimart.pos.R.string.about_free),
             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(10.dp))
         UpdateBlock(updates)
@@ -83,16 +83,16 @@ private fun UpdateBlock(vm: com.minimart.pos.ui.viewmodel.UpdateViewModel) {
         is com.minimart.pos.update.UpdateState.Checking -> Text(tr(com.minimart.pos.R.string.upd_checking), color = DT.SubText, style = MaterialTheme.typography.bodySmall)
         is com.minimart.pos.update.UpdateState.UpToDate -> Text(tr(com.minimart.pos.R.string.upd_latest), color = DT.Green, style = MaterialTheme.typography.bodySmall)
         is com.minimart.pos.update.UpdateState.Available -> {
-            Text("Version ${state.release.tag.removePrefix("v")} is available (${state.asset.size / 1_000_000} MB).", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
+            Text(tr(com.minimart.pos.R.string.upd_available, state.release.tag.removePrefix("v"), state.asset.size / 1_000_000), color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
             if (state.release.notes.isNotBlank()) Text(state.release.notes, color = DT.SubText, style = MaterialTheme.typography.bodySmall)
-            Text("Use Wi-Fi if you can; the download uses your data otherwise. Your sales and settings are kept.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+            Text(tr(com.minimart.pos.R.string.upd_wifi), color = DT.SubText, style = MaterialTheme.typography.bodySmall)
         }
         is com.minimart.pos.update.UpdateState.Downloading -> {
-            Text("Downloading… ${state.percent}%", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
+            Text(tr(com.minimart.pos.R.string.upd_downloading, state.percent), color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
             LinearProgressIndicator(progress = { state.percent / 100f }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp))
         }
         is com.minimart.pos.update.UpdateState.Installing -> Text(tr(com.minimart.pos.R.string.upd_confirm), color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
-        is com.minimart.pos.update.UpdateState.NeedsPermission -> Text("Android needs your permission before MiniMart can install its own updates. Tap the button, switch on \"Allow from this source\", then come back and tap Install again.", color = DT.Amber, style = MaterialTheme.typography.bodySmall)
+        is com.minimart.pos.update.UpdateState.NeedsPermission -> Text(tr(com.minimart.pos.R.string.upd_perm), color = DT.Amber, style = MaterialTheme.typography.bodySmall)
         is com.minimart.pos.update.UpdateState.Failed -> Text(state.message, color = DT.Red, style = MaterialTheme.typography.bodySmall)
     }
     val canInstall = state is com.minimart.pos.update.UpdateState.Available || state is com.minimart.pos.update.UpdateState.NeedsPermission ||

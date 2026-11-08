@@ -425,7 +425,7 @@ fun CheckoutScreen(
                                                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
                                                     .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(12.dp))
                                                     .padding(12.dp)) {
-                                                    Text("Select a customer with a phone number to send STK push",
+                                                    Text(tr(com.minimart.pos.R.string.stk_select_cust),
                                                         color = DT.SubText, fontSize = 13.sp)
                                                 }
                                             }
@@ -463,11 +463,11 @@ fun CheckoutScreen(
                                                         Spacer(Modifier.width(8.dp))
                                                         Text(tr(com.minimart.pos.R.string.payment_confirmed), color = DT.Green, fontWeight = FontWeight.Bold)
                                                     }
-                                                    Text("Ref: ${stkState.mpesaReceiptNumber ?: ""}", color = DT.OnSurface, fontSize = 13.sp)
+                                                    Text(tr(com.minimart.pos.R.string.ref_fmt, stkState.mpesaReceiptNumber ?: ""), color = DT.OnSurface, fontSize = 13.sp)
                                                     // Safaricom's status query doesn't return the receipt code, so a short code
                                                     // is made for this payment. Typing the SMS code instead links the sale to the
                                                     // tracked payment.
-                                                    Text("Safaricom confirmed the payment. To link it to the SMS record, replace the ref below with the code from the customer's M-Pesa message.",
+                                                    Text(tr(com.minimart.pos.R.string.stk_confirmed_note),
                                                         color = DT.SubText, fontSize = 12.sp)
                                                 }
                                             }
@@ -575,7 +575,7 @@ fun CheckoutScreen(
                                                 Spacer(Modifier.width(8.dp))
                                                 Column(Modifier.weight(1f)) {
                                                     Text("${selectedCustomer?.name ?: "Customer"} will owe $currency ${String.format(java.util.Locale.US, "%,.2f", state.total - creditBalance)}", color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                                                    Text("Purchase on credit — balance goes to -$currency ${String.format(java.util.Locale.US, "%,.2f", state.total - creditBalance)}", color = DT.SubText, fontSize = 11.sp)
+                                                    Text(tr(com.minimart.pos.R.string.credit_note, currency, String.format(java.util.Locale.US, "%,.2f", state.total - creditBalance)), color = DT.SubText, fontSize = 11.sp)
                                                 }
                                             }
                                         }
@@ -930,7 +930,7 @@ private fun CustomerSearchSheet(
                                 }, shape = RoundedCornerShape(12.dp), border = androidx.compose.foundation.BorderStroke(1.dp, DT.Teal)) {
                                     Icon(Icons.Default.PersonAdd, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Add \"${query.trim()}\" as a new customer", color = DT.Teal, fontSize = 13.sp)
+                                    Text(tr(com.minimart.pos.R.string.add_as_new, query.trim()), color = DT.Teal, fontSize = 13.sp)
                                 }
                             }
                         }

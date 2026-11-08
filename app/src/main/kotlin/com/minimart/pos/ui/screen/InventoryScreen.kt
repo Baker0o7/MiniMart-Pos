@@ -182,7 +182,7 @@ fun InventoryScreen(
                                     TextButton(onClick = { vm.setSearchQuery(""); vm.setCategory(null); lowOnly = false },
                                         modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.clear_filters), color = DT.Teal) }
                                 } else {
-                                    Text("Add the things you sell, with their price and how many you have, and they will show up here and at the till.",
+                                    Text(tr(com.minimart.pos.R.string.inv_empty_help),
                                         color = DT.SubText, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
                                     if (canEditPrices) {
                                         Button(onClick = { editProduct = null; showAddDialog = true },

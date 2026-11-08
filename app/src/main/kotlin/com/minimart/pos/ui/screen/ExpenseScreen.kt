@@ -518,7 +518,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
                 )
                 OutlinedTextField(
                     value = amount, onValueChange = { amount = sanitizeMoneyInput(it) },
-                    label = { Text("Amount ($currency) *", color = DT.SubText) },
+                    label = { Text(tr(com.minimart.pos.R.string.amount_cur_req, currency), color = DT.SubText) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth(),
@@ -558,7 +558,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
                     verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(tr(com.minimart.pos.R.string.paid_from_till), color = DT.OnSurface, fontSize = 14.sp)
-                        Text("Turn on if you took this money out of the cash drawer, so the cash count still balances.",
+                        Text(tr(com.minimart.pos.R.string.exp_drawer_help),
                             color = DT.SubText, fontSize = 11.sp)
                     }
                     Switch(checked = fromDrawer && !yesterday, onCheckedChange = null, enabled = !yesterday)

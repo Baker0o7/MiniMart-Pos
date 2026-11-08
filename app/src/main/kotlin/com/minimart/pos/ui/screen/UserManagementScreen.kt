@@ -417,7 +417,7 @@ private fun ChangePinDialog(userName: String, onDismiss: () -> Unit, onSave: (St
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = DT.Surface,
-        title = { Text("Change PIN — $userName", color = DT.OnSurface, fontWeight = FontWeight.Bold) },
+        title = { Text(tr(com.minimart.pos.R.string.change_pin_fmt, userName), color = DT.OnSurface, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 DarkInput(newPin, { if (it.length <= 6 && it.all(Char::isDigit)) newPin = it },

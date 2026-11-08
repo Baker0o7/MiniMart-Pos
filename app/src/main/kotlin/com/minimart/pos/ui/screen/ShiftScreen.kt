@@ -283,7 +283,7 @@ private fun TodayCashCard(today: List<Shift>, currency: String) {
                 Text(label, color = color, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
             if (day.openShifts.isNotEmpty())
-                Text("Not counted yet: ${day.openShifts.joinToString(", ")} (still clocked in).", color = DT.Amber, fontSize = 12.sp)
+                Text(tr(com.minimart.pos.R.string.not_counted, day.openShifts.joinToString(", ")), color = DT.Amber, fontSize = 12.sp)
         }
     }
 }
@@ -486,7 +486,7 @@ private fun ShiftSummaryDialog(shift: Shift, currency: String, showVariance: Boo
                 }
                 if (shift.notes.isNotBlank()) {
                     HorizontalDivider(color = DT.Border)
-                    Text("Notes: ${shift.notes}", style = MaterialTheme.typography.bodySmall, color = DT.SubText)
+                    Text(tr(com.minimart.pos.R.string.notes_fmt, shift.notes ?: ""), style = MaterialTheme.typography.bodySmall, color = DT.SubText)
                 }
             }
         },

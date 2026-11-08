@@ -478,7 +478,7 @@ fun AddEditProductDialog(
                     ) {
                         Column(Modifier.weight(1f)) {
                             Text(tr(com.minimart.pos.R.string.sold_by_weight), color = DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                            Text("Priced per kg; weight comes from the scale label or is typed at the till",
+                            Text(tr(com.minimart.pos.R.string.pl_perkg_help),
                                 color = DT.SubText, fontSize = 11.sp)
                         }
                         Switch(checked = isWeighed, onCheckedChange = null,
@@ -506,7 +506,7 @@ fun AddEditProductDialog(
                     if (sellPrice > 0.0 && costValue > 0.0) {
                         val profit = sellPrice - costValue
                         val margin = profit / sellPrice * 100
-                        Text("Profit $currency ${String.format(java.util.Locale.US, "%,.2f", profit)} per ${if (isWeighed) "kg" else "unit"}  •  margin ${String.format(java.util.Locale.US, "%.0f", margin)}%",
+                        Text(tr(com.minimart.pos.R.string.profit_line, currency, String.format(java.util.Locale.US, "%,.2f", profit), tr(if (isWeighed) com.minimart.pos.R.string.per_kg else com.minimart.pos.R.string.per_unit), String.format(java.util.Locale.US, "%.0f", margin)),
                             color = if (profit >= 0) DT.Green else DT.Red, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
 

@@ -28,7 +28,7 @@ internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
             verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(tr(com.minimart.pos.R.string.block_screens), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
-                Text("Stops screenshots and screen recording of the app, and hides it in the recent-apps list. Turn on for a till that customers or staff can pick up. You will not be able to screenshot the app for support either.",
+                Text(tr(com.minimart.pos.R.string.priv_block),
                     color = DT.SubText, style = MaterialTheme.typography.bodySmall)
             }
             Spacer(Modifier.width(12.dp))
@@ -42,7 +42,7 @@ internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
             verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(tr(com.minimart.pos.R.string.send_reports), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
-                Text("Off by default. When on, the app sends the developer a report if it crashes, and how long things like completing a sale take, so problems get fixed sooner. Reports contain the phone model, Android version and the error. They never contain sales, customers, prices or PINs.",
+                Text(tr(com.minimart.pos.R.string.priv_reports),
                     color = DT.SubText, style = MaterialTheme.typography.bodySmall)
             }
             Spacer(Modifier.width(12.dp))
@@ -53,7 +53,7 @@ internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
             verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(tr(com.minimart.pos.R.string.kiosk), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
-                Text("Locks the phone or tablet to MiniMart and keeps the screen on, so staff cannot wander off into other apps. Android asks you to confirm once. To leave it, switch this off here, or hold Back and Overview together.",
+                Text(tr(com.minimart.pos.R.string.priv_kiosk),
                     color = DT.SubText, style = MaterialTheme.typography.bodySmall)
             }
             Spacer(Modifier.width(12.dp))

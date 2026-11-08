@@ -86,7 +86,7 @@ fun CustomerScreen(
             OutlinedTextField(
                 value = state.query,
                 onValueChange = { vm.setQuery(it) },
-                placeholder = { Text("Search by name or phone", color = DT.SubText) },
+                placeholder = { Text(tr(com.minimart.pos.R.string.search_cust), color = DT.SubText) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (state.query.isNotEmpty()) {
@@ -343,7 +343,7 @@ private fun CustomerDetailSheet(
                         Column(horizontalAlignment = Alignment.End) {
                             Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format(java.util.Locale.US, "%,.2f", tx.amount)}",
                                 color = if (tx.amount > 0) DT.Green else DT.Red, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("Bal: $currency ${String.format(java.util.Locale.US, "%,.2f", tx.balanceAfter)}",
+                            Text(tr(com.minimart.pos.R.string.bal_fmt, currency, String.format(java.util.Locale.US, "%,.2f", tx.balanceAfter)),
                                 color = DT.SubText, fontSize = 11.sp)
                         }
                     }

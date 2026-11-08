@@ -116,7 +116,7 @@ private fun ProblemListCard(problems: List<com.minimart.pos.util.ProblemEntry>, 
             Text("${df.format(java.util.Date(p.lastAt))}  ${p.doing}: ${p.kind}${if (p.count > 1) " (x${p.count})" else ""}",
                 color = DT.OnSurface, fontSize = 12.sp)
         }
-        if (problems.size > 8) Text("and ${problems.size - 8} more. Share to see them all.", color = DT.SubText, fontSize = 12.sp)
+        if (problems.size > 8) Text(tr(com.minimart.pos.R.string.more_problems, problems.size - 8), color = DT.SubText, fontSize = 12.sp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onShare, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.share_list)) }
             OutlinedButton(onClick = onClear, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.clear)) }

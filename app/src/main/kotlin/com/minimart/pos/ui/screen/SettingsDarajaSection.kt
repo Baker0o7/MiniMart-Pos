@@ -64,12 +64,12 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
     var showPasskey         by remember { mutableStateOf(false) }
     var darajaSaved         by remember { mutableStateOf(false) }
 
-    DSection("M-Pesa STK Push (Daraja API)", Icons.Default.Send,
+    DSection(tr(com.minimart.pos.R.string.daraja_title), Icons.Default.Send,
         summary = if (initialDaraja.consumerKey.isBlank()) "Not set up" else if (darajaSandbox) "Sandbox" else "Production",
         initiallyExpanded = false) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
-            Text("Environment", color = DT.OnSurface, fontSize = 14.sp)
+            Text(tr(com.minimart.pos.R.string.environment), color = DT.OnSurface, fontSize = 14.sp)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(if (darajaSandbox) "Sandbox" else "Production",
                     color = if (darajaSandbox) DT.Amber else DT.Green,
@@ -94,8 +94,8 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
         Spacer(Modifier.height(4.dp))
         OutlinedTextField(
             value = darajaConsumerSecret, onValueChange = { darajaConsumerSecret = it },
-            label = { Text("Consumer Secret", color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
-            placeholder = { if (secretSaved.first) Text("Saved. Type to replace", color = DT.SubText.copy(0.6f)) },
+            label = { Text(tr(com.minimart.pos.R.string.consumer_secret), color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
+            placeholder = { if (secretSaved.first) Text(tr(com.minimart.pos.R.string.saved_replace), color = DT.SubText.copy(0.6f)) },
             leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
             trailingIcon = {
                 IconButton(onClick = { showSecret = !showSecret }) {
@@ -110,8 +110,8 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
         Spacer(Modifier.height(4.dp))
         OutlinedTextField(
             value = darajaPasskey, onValueChange = { darajaPasskey = it },
-            label = { Text("Lipa na M-Pesa Passkey", color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
-            placeholder = { if (secretSaved.second) Text("Saved. Type to replace", color = DT.SubText.copy(0.6f)) },
+            label = { Text(tr(com.minimart.pos.R.string.passkey), color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
+            placeholder = { if (secretSaved.second) Text(tr(com.minimart.pos.R.string.saved_replace), color = DT.SubText.copy(0.6f)) },
             leadingIcon = { Icon(Icons.Default.Key, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
             trailingIcon = {
                 IconButton(onClick = { showPasskey = !showPasskey }) {
@@ -123,7 +123,7 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
             singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp), colors = dColors()
         )
-        if (!secureAvailable) Text("Secure storage is unavailable on this phone, so M-Pesa keys cannot be saved safely.",
+        if (!secureAvailable) Text(tr(com.minimart.pos.R.string.secure_unavail),
             color = DT.Red, style = MaterialTheme.typography.labelSmall)
         saveError?.let { Text(it, color = DT.Red, style = MaterialTheme.typography.labelSmall) }
         Spacer(Modifier.height(8.dp))

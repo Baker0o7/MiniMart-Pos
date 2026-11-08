@@ -134,7 +134,7 @@ fun ReceiptScreen(
                     }
                 }
                 if ((isVoided || isRefunded) && !sale?.notes.isNullOrBlank())
-                    Text("Reason: ${sale?.notes}", color = DT.SubText, fontSize = 11.sp)
+                    Text(tr(com.minimart.pos.R.string.reason_fmt, sale?.notes ?: ""), color = DT.SubText, fontSize = 11.sp)
 
                 // ── Receipt card ─────────────────────────────────────────────
                 if (items.isNotEmpty()) {

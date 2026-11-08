@@ -76,7 +76,7 @@ fun DateRangeDialog(onDismiss: () -> Unit, onConfirm: (startMs: Long, endMs: Lon
                     Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onDismiss) { Text("Cancel", color = DT.SubText) }
+                    TextButton(onClick = onDismiss) { Text(tr(com.minimart.pos.R.string.cancel), color = DT.SubText) }
                     TextButton(
                         enabled = ready,
                         onClick = {
@@ -84,7 +84,7 @@ fun DateRangeDialog(onDismiss: () -> Unit, onConfirm: (startMs: Long, endMs: Lon
                             val e = localDayStart(state.selectedEndDateMillis!!) + 24L * 60 * 60 * 1000 - 1
                             onConfirm(s, maxOf(s, e))
                         }
-                    ) { Text("Apply", color = if (ready) DT.Teal else DT.SubText) }
+                    ) { Text(tr(com.minimart.pos.R.string.apply), color = if (ready) DT.Teal else DT.SubText) }
                 }
             }
         }

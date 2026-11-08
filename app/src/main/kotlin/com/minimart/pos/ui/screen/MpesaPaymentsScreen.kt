@@ -128,7 +128,7 @@ fun MpesaPaymentsScreen(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text(tr(com.minimart.pos.R.string.require_verified), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                Text("An M-Pesa sale can only be completed with a code that matches a payment received on this phone (tracking must be on). Payments confirmed by STK push are exempt. Text-message sender names can be faked, so for large payments also check the money in your M-Pesa balance.",
+                                Text(tr(com.minimart.pos.R.string.mpesa_strict_help),
                                     color = DT.SubText, fontSize = 12.sp)
                             }
                             Spacer(Modifier.width(10.dp))
@@ -202,7 +202,7 @@ private fun ReconciliationCard(recon: com.minimart.pos.util.MpesaReconciliation?
             Icon(if (ok) Icons.Default.CheckCircle else Icons.Default.WarningAmber, null, tint = tone, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f)) {
-                Text("Reconciliation · $periodLabel", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text(tr(com.minimart.pos.R.string.recon_fmt, periodLabel), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 Text(
                     if (ok) "${recon.matched.size} sale(s) matched to a payment. Nothing to fix."
                     else "${recon.problemCount} thing(s) to check",
@@ -267,7 +267,7 @@ private fun VerifyCard(check: MpesaCheck?, currency: String, onVerify: (String) 
             Spacer(Modifier.width(8.dp))
             Text(tr(com.minimart.pos.R.string.verify_payment), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
-        Text("Type the transaction code from the customer's message. It is only confirmed if this phone received it from M-Pesa itself.",
+        Text(tr(com.minimart.pos.R.string.mpesa_type_code),
             color = DT.SubText, fontSize = 12.sp)
         OutlinedTextField(
             value = code,

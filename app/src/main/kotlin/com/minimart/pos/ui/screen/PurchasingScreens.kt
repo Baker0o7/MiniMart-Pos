@@ -149,7 +149,7 @@ fun PurchaseOrdersScreen(
                             Text("${row.itemCount} item${if (row.itemCount == 1) "" else "s"} · ${dateFmt.format(Date(row.order.createdAt))}", color = DT.SubText, fontSize = 12.sp, modifier = Modifier.weight(1f))
                             Text("$currency ${formatPrice(row.total)}", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
-                        if (row.balance > 0) Text("Balance $currency ${formatPrice(row.balance)}", color = DT.Amber, fontSize = 12.sp)
+                        if (row.balance > 0) Text(tr(com.minimart.pos.R.string.po_balance_fmt, currency, formatPrice(row.balance)), color = DT.Amber, fontSize = 12.sp)
                     }
                 }
             }
@@ -179,7 +179,7 @@ fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewMode
                 ) {
                     Icon(Icons.Default.Download, null, tint = DT.TealLight)
                     Spacer(Modifier.width(10.dp))
-                    Text("Import ${state.importableSuppliers} supplier${if (state.importableSuppliers == 1) "" else "s"} from your products",
+                    Text(androidx.compose.ui.res.pluralStringResource(com.minimart.pos.R.plurals.import_suppliers, state.importableSuppliers, state.importableSuppliers),
                         color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
@@ -322,7 +322,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                     Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DT.Surface).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(s.supplier?.name ?: "Supplier", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            if (s.orderedAt > 0) Text("Sent ${dateFmt.format(Date(s.orderedAt))}", color = DT.SubText, fontSize = 12.sp)
+                            if (s.orderedAt > 0) Text(tr(com.minimart.pos.R.string.po_sent_fmt, dateFmt.format(Date(s.orderedAt))), color = DT.SubText, fontSize = 12.sp)
                         }
                         StatusPill(s.status)
                         val phone = s.supplier?.phone.orEmpty()
@@ -355,9 +355,9 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                                 if (l.weighed) "Qty (kg)" else "Qty", Modifier.weight(1f), KeyboardType.Decimal)
                             PoField(l.costText, { vm.setCost(i, sanitizeMoneyInput(it)) }, "Unit cost", Modifier.weight(1f), KeyboardType.Decimal)
                         }
-                        Text("Line total $currency ${formatPrice(l.total)}", color = DT.SubText, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+                        Text(tr(com.minimart.pos.R.string.po_line_total, currency, formatPrice(l.total)), color = DT.SubText, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
                     } else {
-                        Text("Ordered ${plainNumber(l.qty, 3)} · Received ${plainNumber(l.receivedQty, 3)} · @ ${formatPrice(l.cost)}",
+                        Text(tr(com.minimart.pos.R.string.po_line_fmt, plainNumber(l.qty, 3), plainNumber(l.receivedQty, 3), formatPrice(l.cost)),
                             color = if (l.remaining > 0) DT.Amber else DT.Green, fontSize = 13.sp)
                         Text("$currency ${formatPrice(l.total)}", color = DT.SubText, fontSize = 12.sp)
                     }
@@ -444,7 +444,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
             title = { Text(tr(com.minimart.pos.R.string.pay_supplier), color = DT.OnSurface) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Balance: $currency ${formatPrice(s.balance)}", color = DT.SubText, fontSize = 13.sp)
+                    Text(tr(com.minimart.pos.R.string.po_balance_colon, currency, formatPrice(s.balance)), color = DT.SubText, fontSize = 13.sp)
                     PoField(amount, { amount = sanitizeMoneyInput(it) }, "Amount paid", Modifier.fillMaxWidth(), KeyboardType.Decimal)
                 }
             },

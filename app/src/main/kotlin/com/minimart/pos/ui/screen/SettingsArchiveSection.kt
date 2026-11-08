@@ -29,11 +29,11 @@ internal fun ArchiveSettingsSection(ownerGate: OwnerGateViewModel, vm: ArchiveVi
     var confirm by remember { mutableStateOf(false) }
     var denied by remember { mutableStateOf<String?>(null) }
 
-    DSection("Archive old sales", Icons.Default.Archive, summary = "Keep the app fast", initiallyExpanded = false) {
-        Text("Sales stay on the phone for at least a year. Older ones can be moved to a file you keep, which keeps reports and checkout quick on a busy shop. Backups still cover everything on the phone.",
+    DSection(tr(com.minimart.pos.R.string.arc_title), Icons.Default.Archive, summary = tr(com.minimart.pos.R.string.arc_summary), initiallyExpanded = false) {
+        Text(tr(com.minimart.pos.R.string.arc_help),
             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(10.dp))
-        Text("Archive sales older than", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+        Text(tr(com.minimart.pos.R.string.arc_older), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(12, 24, 36).forEach { m ->
                 FilterChip(selected = s.months == m, onClick = { vm.setMonths(m) }, label = { Text(if (m == 12) "1 year" else "${m / 12} years") })
@@ -58,7 +58,7 @@ internal fun ArchiveSettingsSection(ownerGate: OwnerGateViewModel, vm: ArchiveVi
                     runCatching { context.startActivity(Intent.createChooser(send, "Save archive").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
                 },
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
-            ) { Icon(Icons.Default.Share, null); Spacer(Modifier.width(8.dp)); Text("Share archive file") }
+            ) { Icon(Icons.Default.Share, null); Spacer(Modifier.width(8.dp)); Text(tr(com.minimart.pos.R.string.arc_share)) }
         }
     }
 
@@ -66,15 +66,15 @@ internal fun ArchiveSettingsSection(ownerGate: OwnerGateViewModel, vm: ArchiveVi
         val plan = s.plan
         AlertDialog(
             onDismissRequest = { confirm = false },
-            title = { Text("Archive ${plan?.sales ?: 0} sale(s)?") },
-            text = { Text("They will be written to a file first and removed from this phone only after the file is checked. Reports and lifetime totals will no longer include them. Make sure you keep the file safe; it cannot be undone.") },
+            title = { Text(tr(com.minimart.pos.R.string.arc_q, plan?.sales ?: 0)) },
+            text = { Text(tr(com.minimart.pos.R.string.arc_warn)) },
             confirmButton = {
                 TextButton(onClick = {
                     confirm = false
                     scope.launch { if (ownerGate.allow("archive old sales")) vm.archive() else denied = "Only the owner can do this" }
-                }) { Text("Archive") }
+                }) { Text(tr(com.minimart.pos.R.string.arc_btn)) }
             },
-            dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { confirm = false }) { Text(tr(com.minimart.pos.R.string.cancel)) } }
         )
     }
 }

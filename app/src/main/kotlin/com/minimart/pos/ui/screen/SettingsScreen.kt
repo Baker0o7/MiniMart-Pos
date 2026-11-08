@@ -424,9 +424,9 @@ fun SettingsScreen(
                     DSection(tr(com.minimart.pos.R.string.set_sync), Icons.Default.Sync,
                         summary = if (syncState.serverRunning) "Server running" else "Off",
                         initiallyExpanded = false) {
-                        Text("Device ID: ${syncState.deviceId.take(8)}…", color = DT.SubText, fontSize = 11.sp)
+                        Text(tr(com.minimart.pos.R.string.device_id_fmt, syncState.deviceId.take(8)), color = DT.SubText, fontSize = 11.sp)
                         Spacer(Modifier.height(6.dp))
-                        Text("One device is the main device (it acts as server). Other tills enter its address and code: they send their sales to it, then receive its products, stock and customer balances. Manage products on the main device. Sales made before a till was paired are not sent.",
+                        Text(tr(com.minimart.pos.R.string.sync_help),
                             color = DT.SubText, fontSize = 11.sp, lineHeight = 15.sp)
                         Spacer(Modifier.height(10.dp))
 
@@ -540,7 +540,7 @@ fun SettingsScreen(
                         }
                         if (syncState.lastSyncAt > 0L) {
                             Spacer(Modifier.height(4.dp))
-                            Text("Last synced " + java.text.SimpleDateFormat("d MMM, HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(java.util.Date(syncState.lastSyncAt)),
+                            Text(tr(com.minimart.pos.R.string.last_synced, java.text.SimpleDateFormat("d MMM, HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(java.util.Date(syncState.lastSyncAt))),
                                 color = DT.SubText, fontSize = 11.sp)
                         }
                         if (syncState.conflictCount > 0) {
@@ -549,7 +549,7 @@ fun SettingsScreen(
                                 verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text("${syncState.conflictCount} sale${if (syncState.conflictCount == 1) "" else "s"} refused by the main device",
                                     color = DT.Red, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                Text("These sales are only on this phone, so the main device's totals and stock are missing them. Retry after fixing the cause (for example a product or M-Pesa code problem); the reason is shown after a retry.",
+                                Text(tr(com.minimart.pos.R.string.refused_help),
                                     color = DT.SubText, fontSize = 11.sp)
                                 OutlinedButton(onClick = { syncVm.retryRefused() },
                                     enabled = !syncState.isSyncing && syncState.peerIp.isNotBlank() && syncState.peerKey.isNotBlank(),
@@ -576,10 +576,10 @@ fun SettingsScreen(
                         Spacer(Modifier.height(10.dp))
                         if (!cs.connected) {
                             if (!cs.hosted) {
-                                OutlinedTextField(cs.url, cloudVm::setUrl, label = { Text("Project URL (https://…supabase.co)") },
+                                OutlinedTextField(cs.url, cloudVm::setUrl, label = { Text(tr(com.minimart.pos.R.string.proj_url)) },
                                     singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Next), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
                                 Spacer(Modifier.height(8.dp))
-                                OutlinedTextField(cs.anonKey, cloudVm::setAnonKey, label = { Text("Anon (public) key") },
+                                OutlinedTextField(cs.anonKey, cloudVm::setAnonKey, label = { Text(tr(com.minimart.pos.R.string.anon_key)) },
                                     singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
                                 Spacer(Modifier.height(8.dp))
                             }
@@ -630,7 +630,7 @@ fun SettingsScreen(
 
                 // ── Data & Backup ─────────────────────────────────────────────
                 if (isOwner) {
-                    DSection(tr(com.minimart.pos.R.string.set_backup), Icons.Default.Storage, summary = "Backup · Restore · Share", initiallyExpanded = false) {
+                    DSection(tr(com.minimart.pos.R.string.set_backup), Icons.Default.Storage, summary = tr(com.minimart.pos.R.string.backup_summary), initiallyExpanded = false) {
                         var backupStatus by remember { mutableStateOf<String?>(null) }
                         var isBackingUp  by remember { mutableStateOf(false) }
                         var backupFiles  by remember { mutableStateOf<List<java.io.File>>(emptyList()) }
@@ -650,7 +650,7 @@ fun SettingsScreen(
                             .border(1.dp, healthColor.copy(0.4f), RoundedCornerShape(12.dp)).padding(12.dp)) {
                             Text(headline, color = healthColor, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                             Text(backupHealth, color = DT.SubText, fontSize = 11.sp)
-                            Text("A copy is made automatically about once a day (the latest 7 are kept). Copies on this phone are lost if the phone is lost or broken, so save one somewhere else too.",
+                            Text(tr(com.minimart.pos.R.string.backup_auto_help),
                                 color = DT.SubText, fontSize = 11.sp)
                         }
                         Spacer(Modifier.height(8.dp))
@@ -678,8 +678,7 @@ fun SettingsScreen(
                                 title = { Text(tr(com.minimart.pos.R.string.create_backup), color = DT.OnSurface, fontWeight = FontWeight.Bold) },
                                 text = {
                                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        Text("Add a passphrase to encrypt the backup (recommended if you share or upload it). " +
-                                            "Leave blank for an unencrypted backup. An encrypted backup cannot be opened without its passphrase.",
+                                        Text(tr(com.minimart.pos.R.string.backup_pass_help),
                                             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                                         OutlinedTextField(pass, { pass = it }, label = { Text(tr(com.minimart.pos.R.string.pass_optional)) }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
                                             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),

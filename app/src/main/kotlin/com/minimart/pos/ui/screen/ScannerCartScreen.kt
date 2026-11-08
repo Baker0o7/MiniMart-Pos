@@ -513,7 +513,7 @@ fun ScannerCartScreen(
                 onDismissRequest = { vm.clearUnknownBarcode() },
                 containerColor = DT.Surface,
                 title = { Text(tr(com.minimart.pos.R.string.product_not_found), color = DT.Ink, fontWeight = FontWeight.Bold) },
-                text = { Text("No product has the barcode $unknown. Add it now and put it in this sale?", color = DT.SubText) },
+                text = { Text(tr(com.minimart.pos.R.string.unknown_barcode, unknown), color = DT.SubText) },
                 confirmButton = {
                     Button(onClick = { addingUnknown = true }, shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White)) {

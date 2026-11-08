@@ -108,7 +108,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                         }
                     }
                     KpiTile("Sales", s.transactions.toString(), DT.OnSurface, Modifier.weight(1f).fillMaxHeight()) {
-                        Text("avg basket $cur ${money(s.avgBasket)}", color = DT.SubText, fontSize = 11.sp)
+                        Text(tr(com.minimart.pos.R.string.an_avg_basket, cur, money(s.avgBasket)), color = DT.SubText, fontSize = 11.sp)
                     }
                 }
                 Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -119,7 +119,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     }
                     KpiTile("Net profit", "$cur ${money(s.netProfit)}",
                         if (s.netProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f).fillMaxHeight()) {
-                        Text("after $cur ${money(s.expenses)} expenses", color = DT.SubText, fontSize = 11.sp)
+                        Text(tr(com.minimart.pos.R.string.an_after_exp, cur, money(s.expenses)), color = DT.SubText, fontSize = 11.sp)
                     }
                 }
                 if (s.costCoverage < 0.9) {
@@ -130,8 +130,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     ) {
                         Icon(Icons.Default.Info, null, tint = DT.Amber, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Only ${String.format(Locale.US, "%.0f", s.costCoverage * 100)}% of sales have a cost price, so profit is overstated. " +
-                            "Add cost prices to your products for accurate profit.",
+                        Text(tr(com.minimart.pos.R.string.an_cov_profit, String.format(Locale.US, "%.0f", s.costCoverage * 100)),
                             color = DT.Amber, fontSize = 11.sp)
                     }
                 }
@@ -309,7 +308,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                 }
                 if (s.costCoverage < 0.9) {
                     Spacer(Modifier.height(8.dp))
-                    Text("Only ${String.format(Locale.US, "%.0f", s.costCoverage * 100)}% of sales have a cost price, so this list is partial. Add cost prices to your products for the full picture.",
+                    Text(tr(com.minimart.pos.R.string.an_cov_list, String.format(Locale.US, "%.0f", s.costCoverage * 100)),
                         color = DT.SubText, fontSize = 11.sp)
                 }
             }
@@ -351,16 +350,16 @@ private fun AnalyticsBody(s: AnalyticsState) {
                 }
                 if (s.staff.any { it.flagged }) {
                     Spacer(Modifier.height(4.dp))
-                    Text("Amber means well above the shop's usual rate. It is worth a conversation, not a conclusion: new staff, a busy day or a supplier problem can all cause it.",
+                    Text(tr(com.minimart.pos.R.string.an_amber),
                         color = DT.SubText, fontSize = 11.sp)
                 }
             }
         }
         s.leakage?.let { l -> item {
             AnalyticsCard("Where money leaks") {
-                if (l.discounts > 0.0) Text("Discounts given: $cur ${money(l.discounts)} (${String.format(Locale.US, "%.1f", l.discountShare * 100)}% of what you would have sold)",
+                if (l.discounts > 0.0) Text(tr(com.minimart.pos.R.string.an_discounts, cur, money(l.discounts), String.format(Locale.US, "%.1f", l.discountShare * 100)),
                     color = DT.OnSurface, fontSize = 13.sp)
-                if (l.reversedCount > 0) Text("Sales taken back: ${l.reversedCount} worth $cur ${money(l.reversedValue)} (${String.format(Locale.US, "%.1f", l.reversalRate * 100)}% of sales)",
+                if (l.reversedCount > 0) Text(tr(com.minimart.pos.R.string.an_takenback, l.reversedCount, cur, money(l.reversedValue), String.format(Locale.US, "%.1f", l.reversalRate * 100)),
                     color = DT.OnSurface, fontSize = 13.sp)
                 Spacer(Modifier.height(4.dp))
                 Text(tr(com.minimart.pos.R.string.discounts_normal), color = DT.SubText, fontSize = 11.sp)
@@ -370,8 +369,8 @@ private fun AnalyticsBody(s: AnalyticsState) {
         s.typicalWeek?.let { week -> item {
             AnalyticsCard("Your typical week") {
                 val total = week.sum()
-                Text("About $cur ${money(total)} a week", color = DT.OnSurface, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                Text("Based on the last ${s.range.days} days. Use it to plan stock and staff.", color = DT.SubText, fontSize = 11.sp)
+                Text(tr(com.minimart.pos.R.string.an_week, cur, money(total)), color = DT.OnSurface, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text(tr(com.minimart.pos.R.string.an_based, s.range.days), color = DT.SubText, fontSize = 11.sp)
                 Spacer(Modifier.height(8.dp))
                 BarChart(week.map { it.toFloat() }, highlight = week.indices.maxByOrNull { week[it] } ?: -1,
                     modifier = Modifier.fillMaxWidth().height(70.dp),

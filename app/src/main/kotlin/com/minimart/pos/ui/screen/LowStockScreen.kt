@@ -142,8 +142,8 @@ private fun LowStockCard(
                     trackColor = DT.Border
                 )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Current: ${if (product.isWeighed) product.stockLabel else "${product.stock} ${product.unit}"}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
-                    Text("Threshold: ${product.lowStockThreshold}", color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                    Text(tr(com.minimart.pos.R.string.current_fmt, if (product.isWeighed) product.stockLabel else "${product.stock} ${product.unit}"), color = DT.SubText, style = MaterialTheme.typography.labelSmall)
+                    Text(tr(com.minimart.pos.R.string.threshold_fmt, product.lowStockThreshold), color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                 }
             }
 
@@ -151,7 +151,7 @@ private fun LowStockCard(
             if (product.reorderQuantity > 0) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Icon(Icons.Default.Inventory2, null, tint = DT.Teal, modifier = Modifier.size(14.dp))
-                    Text("Reorder ${product.reorderQuantity} ${product.unit}", color = DT.Teal,
+                    Text(tr(com.minimart.pos.R.string.reorder_fmt, product.reorderQuantity, product.unit), color = DT.Teal,
                         style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                 }
             }

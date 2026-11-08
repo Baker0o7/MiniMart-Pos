@@ -206,7 +206,7 @@ private fun SaleHistoryRow(
             onDismissRequest = { showVoidConfirm = false },
             containerColor = DT.Surface,
             title = { Text(tr(com.minimart.pos.R.string.void_sale_q), color = DT.Ink, fontWeight = FontWeight.Bold) },
-            text = { Text("Receipt #${sale.receiptNumber}\n${currency} ${String.format(java.util.Locale.US, "%,.2f", sale.totalAmount)}\n\nThis cannot be undone.", color = DT.SubText) },
+            text = { Text(tr(com.minimart.pos.R.string.void_confirm, sale.receiptNumber, currency, String.format(java.util.Locale.US, "%,.2f", sale.totalAmount)), color = DT.SubText) },
             confirmButton = {
                 Button(onClick = { onVoid(); showVoidConfirm = false },
                     shape = RoundedCornerShape(12.dp),

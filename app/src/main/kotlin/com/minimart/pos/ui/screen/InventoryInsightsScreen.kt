@@ -49,7 +49,7 @@ fun InventoryInsightsScreen(onBack: () -> Unit, vm: InventoryInsightsViewModel =
 
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
         GradientHeader(
-            title = "Stock Insights",
+            title = tr(com.minimart.pos.R.string.stock_insights),
             subtitle = "${ins.skuCount} products • ${ins.reorder.size} to reorder",
             onBack = onBack,
             actions = {
@@ -145,7 +145,7 @@ fun InventoryInsightsScreen(onBack: () -> Unit, vm: InventoryInsightsViewModel =
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text("${ins.currency} ${money(c.retailValue)}", color = DT.TealLight, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                Text("cost ${money(c.costValue)}", color = DT.SubText, fontSize = 11.sp)
+                                Text(tr(com.minimart.pos.R.string.cost_fmt, money(c.costValue)), color = DT.SubText, fontSize = 11.sp)
                             }
                         }
                     }
@@ -216,7 +216,7 @@ private fun ReorderRow(r: InsightRow) = RowCard {
             Text(r.product.supplierName, color = DT.SubText, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
     Column(horizontalAlignment = Alignment.End) {
-        Text("Order", color = DT.SubText, fontSize = 11.sp)
+        Text(tr(com.minimart.pos.R.string.order_lbl), color = DT.SubText, fontSize = 11.sp)
         Text("${r.suggestedQty}", color = DT.TealLight, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
         if (r.orderCost > 0) Text("≈ ${money(r.orderCost)}", color = DT.SubText, fontSize = 11.sp)
     }
@@ -246,6 +246,6 @@ private fun FastRow(r: InsightRow) = RowCard {
     }
     Column(horizontalAlignment = Alignment.End) {
         Text(plainNumber(r.sold30), color = DT.Green, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-        Text("sold (30d)", color = DT.SubText, fontSize = 11.sp)
+        Text(tr(com.minimart.pos.R.string.sold_30d), color = DT.SubText, fontSize = 11.sp)
     }
 }

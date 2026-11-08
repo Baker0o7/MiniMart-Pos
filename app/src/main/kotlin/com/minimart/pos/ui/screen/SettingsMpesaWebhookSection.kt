@@ -66,32 +66,32 @@ class MpesaWebhookViewModel @Inject constructor(private val client: MpesaWebhook
 internal fun MpesaWebhookSettingsSection(vm: MpesaWebhookViewModel = hiltViewModel()) {
     val s by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    DSection("Instant M-Pesa (webhook)", Icons.Default.Bolt, summary = if (s.enabled) "On" else "Off", initiallyExpanded = false) {
-        Text("Safaricom tells your cloud project about each payment the moment it happens, and this phone picks it up within about 15 minutes, or at once when you open the M-Pesa list. It works even if the phone was off or had no SMS. Needs the Cloud dashboard connected and a Daraja C2B account (see cloud/mpesa_webhook.sql and the README).",
+    DSection(tr(com.minimart.pos.R.string.hook_title), Icons.Default.Bolt, summary = if (s.enabled) tr(com.minimart.pos.R.string.on) else tr(com.minimart.pos.R.string.off), initiallyExpanded = false) {
+        Text(tr(com.minimart.pos.R.string.hook_help),
             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(10.dp))
         if (!s.available) {
-            Text("Connect the cloud dashboard first (the section above).", color = DT.Amber, style = MaterialTheme.typography.bodySmall)
+            Text(tr(com.minimart.pos.R.string.hook_connect_first), color = DT.Amber, style = MaterialTheme.typography.bodySmall)
         } else {
             if (s.enabled) {
                 s.url?.let { url ->
-                    Text("Address to register with Safaricom (Confirmation and Validation URL):", color = DT.OnSurface, style = MaterialTheme.typography.bodySmall)
+                    Text(tr(com.minimart.pos.R.string.hook_addr), color = DT.OnSurface, style = MaterialTheme.typography.bodySmall)
                     SelectionContainer { Text(url, color = DT.TealLight, style = MaterialTheme.typography.bodySmall) }
                     OutlinedButton(onClick = {
                         val clip = ClipData.newPlainText("Webhook address", url)
                         // The address holds a secret: ask Android not to show it in the clipboard preview.
                         clip.description.extras = android.os.PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
                         (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(clip)
-                    }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Copy address") }
-                    Text("Keep this address private: anyone who has it can add payments to your list.", color = DT.SubText, style = MaterialTheme.typography.bodySmall)
+                    }, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.copy_addr)) }
+                    Text(tr(com.minimart.pos.R.string.hook_private), color = DT.SubText, style = MaterialTheme.typography.bodySmall)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
-                    Button(onClick = vm::fetchNow, enabled = !s.busy, modifier = Modifier.heightIn(min = 48.dp)) { Text("Fetch now") }
-                    OutlinedButton(onClick = vm::enable, enabled = !s.busy, modifier = Modifier.heightIn(min = 48.dp)) { Text("New address") }
-                    TextButton(onClick = vm::disable, enabled = !s.busy, modifier = Modifier.heightIn(min = 48.dp)) { Text("Turn off", color = DT.Red) }
+                    Button(onClick = vm::fetchNow, enabled = !s.busy, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.fetch_now)) }
+                    OutlinedButton(onClick = vm::enable, enabled = !s.busy, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.new_addr)) }
+                    TextButton(onClick = vm::disable, enabled = !s.busy, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.turn_off), color = DT.Red) }
                 }
             } else {
-                Button(onClick = vm::enable, enabled = !s.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Turn on") }
+                Button(onClick = vm::enable, enabled = !s.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.turn_on)) }
             }
             if (s.busy) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp), color = DT.Teal)
         }

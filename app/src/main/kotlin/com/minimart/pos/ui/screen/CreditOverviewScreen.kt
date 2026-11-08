@@ -270,7 +270,7 @@ private fun CreditTxRow(tx: CreditTransaction, currency: String) {
             Text("${if (tx.amount > 0) "+" else ""}$currency ${String.format(java.util.Locale.US, "%,.2f", tx.amount)}",
                 color = if (tx.amount > 0) DT.Green else DT.Red,
                 fontWeight = FontWeight.Bold, fontSize = 13.sp)
-            Text("Bal: $currency ${String.format(java.util.Locale.US, "%,.2f", tx.balanceAfter)}", color = DT.SubText, fontSize = 11.sp)
+            Text(tr(com.minimart.pos.R.string.bal_fmt, currency, String.format(java.util.Locale.US, "%,.2f", tx.balanceAfter)), color = DT.SubText, fontSize = 11.sp)
         }
     }
 }

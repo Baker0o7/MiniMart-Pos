@@ -359,7 +359,7 @@ fun DashboardScreen(
                 TileColumnsPicker(actionColumns, onPick = { n -> colScope.launch { settingsRepo?.setActionColumns(n) } })
             }
             if (showManageActions) item {
-                Text("Drag a tile to move it, or tap one and then tap where it should go. The red × hides a tile.", color = Sub, fontSize = 12.sp,
+                Text(tr(com.minimart.pos.R.string.dash_drag_help), color = Sub, fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp))
             }
             // Hidden tiles are brought back from here, while arranging, so Home stays uncluttered the rest of the time.
@@ -371,7 +371,7 @@ fun DashboardScreen(
                         modifier = Modifier.padding(horizontal = 12.dp).heightIn(min = 48.dp)) {
                         Icon(Icons.Default.Restore, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Restore $hiddenCount hidden tile${if (hiddenCount == 1) "" else "s"}", color = DT.Teal, fontSize = 13.sp)
+                        Text(androidx.compose.ui.res.pluralStringResource(com.minimart.pos.R.plurals.dash_restore_tiles, hiddenCount, hiddenCount), color = DT.Teal, fontSize = 13.sp)
                     }
                 }
             }
