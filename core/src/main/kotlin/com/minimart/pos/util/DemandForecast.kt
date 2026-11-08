@@ -22,9 +22,9 @@ data class Forecast(
 /** How well the method would have predicted the most recent days, so a forecast can say how far to trust it. */
 data class ForecastAccuracy(val daysChecked: Int, val percentOff: Int, val unitsPerDayOff: Double) {
     fun label(): String = when {
-        percentOff <= 15 -> "Forecast has been accurate (within $percentOff%) lately"
-        percentOff <= 35 -> "Forecast is usually within $percentOff% - use it as a guide"
-        else -> "Sales are hard to predict (off by about $percentOff%) - order with care"
+        percentOff <= 15 -> Lang.t("Forecast has been accurate (within $percentOff%) lately", "التوقعات كانت دقيقة مؤخرًا (ضمن $percentOff%)")
+        percentOff <= 35 -> Lang.t("Forecast is usually within $percentOff% - use it as a guide", "التوقعات عادةً ضمن $percentOff% - استخدمها كدليل")
+        else -> Lang.t("Sales are hard to predict (off by about $percentOff%) - order with care", "يصعب توقع المبيعات (بفارق حوالي $percentOff%) - اطلب بحذر")
     }
 }
 

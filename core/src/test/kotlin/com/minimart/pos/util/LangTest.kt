@@ -56,3 +56,14 @@ class LangFreshnessTest {
         assertEquals("2 hours", SyncFreshness.ageText(2 * 3_600_000L))
     }
 }
+
+class LangForecastTest {
+    @AfterEach fun reset() { Lang.arabic = false }
+
+    @Test fun `forecast accuracy sentence follows the language`() {
+        val en = ForecastAccuracy(7, 10, 1.0).label()
+        Lang.arabic = true
+        val ar = ForecastAccuracy(7, 10, 1.0).label()
+        assertTrue(en != ar && ar.any { it in '؀'..'ۿ' })
+    }
+}
