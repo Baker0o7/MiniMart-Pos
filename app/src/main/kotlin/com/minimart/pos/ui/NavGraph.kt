@@ -1,5 +1,6 @@
 package com.minimart.pos.ui
 
+import com.minimart.pos.ui.components.Text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.minimart.pos.ui.theme.DT
 import androidx.compose.animation.*
@@ -519,7 +520,7 @@ private fun BottomNavBar(
                     .background(DT.Red)
                     .border(1.5.dp, DT.NavSurface, CircleShape),
                     contentAlignment = Alignment.Center) {
-                    androidx.compose.material3.Text(
+                    com.minimart.pos.ui.components.Text(
                         text = if (cartItemCount > 9) "9+" else cartItemCount.toString(),
                         color = Color.White, fontSize = 11.sp,
                         fontWeight = FontWeight.ExtraBold,

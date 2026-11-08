@@ -67,3 +67,22 @@ class LangForecastTest {
         assertTrue(en != ar && ar.any { it in '؀'..'ۿ' })
     }
 }
+
+class ArabicDigitsTest {
+    @AfterEach fun reset() { Lang.arabic = false }
+
+    @Test fun `off by default`() = assertEquals("KSh 1,234.50", ArabicDigits.show("KSh 1,234.50"))
+
+    @Test fun `amounts counts and times use arabic digits`() {
+        Lang.arabic = true
+        assertEquals("KSh ١٬٢٣٤٫٥٠", ArabicDigits.show("KSh 1,234.50"))
+        assertEquals("١٢:٣٠ - ١٥%", ArabicDigits.show("12:30 - 15%"))
+    }
+
+    @Test fun `codes and unit-glued numbers stay as they are so they still match and scan`() {
+        Lang.arabic = true
+        assertEquals("SJK4H2LMNO", ArabicDigits.show("SJK4H2LMNO"))
+        assertEquals("٣ منتجات، 5kg", ArabicDigits.show("3 منتجات، 5kg"))
+        assertEquals("RCP-20250412-0001", ArabicDigits.show("RCP-20250412-0001").replace('٠'..'٩', '0'))
+    }
+}

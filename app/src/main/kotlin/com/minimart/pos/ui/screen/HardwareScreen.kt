@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.ui.components.Text
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings

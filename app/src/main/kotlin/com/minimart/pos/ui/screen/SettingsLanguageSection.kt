@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.ui.components.Text
 import android.app.Activity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable

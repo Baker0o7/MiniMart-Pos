@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.ui.components.Text
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
