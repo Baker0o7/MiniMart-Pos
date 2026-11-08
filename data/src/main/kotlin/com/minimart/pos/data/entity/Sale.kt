@@ -40,7 +40,14 @@ data class Sale(
     val notes: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     /** When the sale was refunded or voided (0 while completed, and for reversals made before v18). */
-    @ColumnInfo(defaultValue = "0") val statusChangedAt: Long = 0L
+    @ColumnInfo(defaultValue = "0") val statusChangedAt: Long = 0L,
+    /**
+     * Phase 1 of the move to whole-cent storage: the same amounts as [totalAmount] and [cashPortion], kept as exact
+     * integers. They are filled in when a sale is saved (see `SaleDao.insertSaleWithItems`) and by migration 18→19;
+     * the decimal columns stay the source of truth until a later release switches reads over.
+     */
+    @ColumnInfo(defaultValue = "0") val totalCents: Long = 0L,
+    @ColumnInfo(defaultValue = "0") val cashPortionCents: Long = 0L
 )
 
 // ─── Sale Line Item ───────────────────────────────────────────────────────────

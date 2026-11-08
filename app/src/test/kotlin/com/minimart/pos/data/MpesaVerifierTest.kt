@@ -22,4 +22,21 @@ class MpesaVerifierTest {
         assertTrue(MpesaVerifier.assess("SJK4H2LMNO", 100.0, 100.0, 0, true).passesStrict)
         assertFalse(MpesaVerifier.assess("SJK4H2LMNO", 100.0, null, 0, false).passesStrict)
     }
+
+    private val now = 1_000_000_000_000L
+    private fun at(ageMs: Long) = MpesaVerifier.assess("SJK4H2LMNO", 500.0, 500.0, 0, true, now - ageMs, now)
+
+    @Test fun recentPaymentVerifies() = assertEquals(MpesaVerdict.VERIFIED, at(10 * 60_000L).verdict)
+    @Test fun paymentFromHoursAgoIsStale() = assertEquals(MpesaVerdict.STALE, at(MpesaVerifier.STALE_AFTER_MS + 1).verdict)
+    @Test fun staleIsAWarningNotAStop() {
+        val a = at(MpesaVerifier.STALE_AFTER_MS + 1)
+        assertTrue(a.passesStrict)
+        assertFalse(a.isBlocking)
+    }
+    @Test fun unknownTimeIsNeverStale() {
+        assertEquals(MpesaVerdict.VERIFIED, MpesaVerifier.assess("SJK4H2LMNO", 500.0, 500.0, 0, true, null, now).verdict)
+        assertEquals(MpesaVerdict.VERIFIED, MpesaVerifier.assess("SJK4H2LMNO", 500.0, 500.0, 0, true, 0L, now).verdict)
+    }
+    @Test fun underpaidBeatsStale() =
+        assertEquals(MpesaVerdict.UNDERPAID, MpesaVerifier.assess("SJK4H2LMNO", 500.0, 100.0, 0, true, 1L, now).verdict)
 }

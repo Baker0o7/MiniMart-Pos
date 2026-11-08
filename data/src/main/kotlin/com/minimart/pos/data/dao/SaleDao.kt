@@ -232,7 +232,10 @@ interface SaleDao {
 
     @Transaction
     suspend fun insertSaleWithItems(sale: Sale, items: List<SaleItem>): Long {
-        val saleId = insertSale(sale)
+        val saleId = insertSale(sale.copy(
+            totalCents = com.minimart.pos.util.Money.fromDouble(sale.totalAmount).cents,
+            cashPortionCents = com.minimart.pos.util.Money.fromDouble(sale.cashPortion).cents
+        ))
         val itemsWithSaleId = items.map { it.copy(saleId = saleId) }
         insertSaleItems(itemsWithSaleId)
         return saleId

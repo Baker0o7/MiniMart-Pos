@@ -34,10 +34,11 @@ class MpesaCheckoutViewModel @Inject constructor(
         job = viewModelScope.launch {
             delay(250) // typing: wait for a pause
             val code = ref.trim()
-            val received = if (code.isEmpty()) null else runCatching { payments.findByCode(code)?.amount }.getOrNull()
+            val found = if (code.isEmpty()) null else runCatching { payments.findByCode(code) }.getOrNull()
+            val received = found?.amount
             val used = if (code.isEmpty()) 0 else runCatching { sales.mpesaRefUseCount(code) }.getOrDefault(0)
             val tracking = runCatching { settings.mpesaSmsTracking.first() }.getOrDefault(false)
-            _assessment.value = MpesaVerifier.assess(code, due, received, used, tracking)
+            _assessment.value = MpesaVerifier.assess(code, due, received, used, tracking, found?.receivedAt, System.currentTimeMillis())
         }
     }
 }

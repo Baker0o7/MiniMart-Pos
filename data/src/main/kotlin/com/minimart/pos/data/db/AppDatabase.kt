@@ -13,7 +13,7 @@ import javax.inject.Inject
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class, MpesaPayment::class,
         Supplier::class, PurchaseOrder::class, PurchaseOrderItem::class,
         com.minimart.pos.data.entity.StockBatch::class, com.minimart.pos.data.entity.SaleItemCost::class],
-    version = 18,
+    version = 19,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -159,6 +159,22 @@ object AppMigrations {
         }
     }
 
+    /** SQL that fills the cents columns of every existing sale from its decimal amounts. Shared with the test. */
+    const val BACKFILL_SALE_CENTS =
+        "UPDATE sales SET totalCents = CAST(ROUND(totalAmount * 100) AS INTEGER), cashPortionCents = CAST(ROUND(cashPortion * 100) AS INTEGER)"
+
+    /**
+     * v18 → v19, phase 1 of whole-cent money: sales get exact integer copies of the total and the cash share. The old
+     * decimal columns are untouched, so nothing can be lost and an older build's data still reads the same.
+     */
+    val MIGRATION_18_19 = object : androidx.room.migration.Migration(18, 19) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE sales ADD COLUMN totalCents INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE sales ADD COLUMN cashPortionCents INTEGER NOT NULL DEFAULT 0")
+            db.execSQL(BACKFILL_SALE_CENTS)
+        }
+    }
+
     /** Whole-amount money columns (not per-unit costs). Used by [MIGRATION_16_17] and its test. */
     val MONEY_COLUMNS: List<Pair<String, List<String>>> = listOf(
         "products" to listOf("price", "pricePerKg"),
@@ -173,7 +189,7 @@ object AppMigrations {
             "totalSales", "totalDiscounts", "expectedCash", "cashDiscrepancy")
     )
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18)
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19)
 }
 
 class AppTypeConverters {

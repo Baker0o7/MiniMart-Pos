@@ -508,6 +508,9 @@ fun CheckoutScreen(
                                     val a = mpesaAssessment
                                     val (msg, col) = when (a.verdict) {
                                         com.minimart.pos.data.repository.MpesaVerdict.VERIFIED -> "Verified: $currency ${String.format(java.util.Locale.US, "%,.2f", a.receivedAmount ?: 0.0)} received with this code" to DT.Green
+                                        com.minimart.pos.data.repository.MpesaVerdict.STALE -> com.minimart.pos.util.Lang.t(
+                                            "This payment arrived hours ago. Check it belongs to this customer, not an earlier one",
+                                            "وصلت هذه الدفعة قبل ساعات. تأكد أنها لهذا العميل وليست لعميل سابق") to DT.Amber
                                         com.minimart.pos.data.repository.MpesaVerdict.UNDERPAID -> "This payment was only $currency ${String.format(java.util.Locale.US, "%,.2f", a.receivedAmount ?: 0.0)}, less than the amount due" to DT.Red
                                         com.minimart.pos.data.repository.MpesaVerdict.ALREADY_USED -> "This code was already used for another sale" to DT.Red
                                         com.minimart.pos.data.repository.MpesaVerdict.BAD_FORMAT -> "Code looks wrong: letters and digits only, 6–20 characters" to DT.Red

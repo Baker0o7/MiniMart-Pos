@@ -49,3 +49,32 @@ class MoneyCentsTest : DbTestBase() {
         assertEquals(3.0, db.customerDao().getCustomerById(id)?.creditBalance ?: -1.0, 0.0)
     }
 }
+
+/** Phase 1 of whole-cent storage: sales carry exact integer copies of their total and cash share. */
+class SaleCentsTest : DbTestBase() {
+    private fun sale(total: Double, cash: Double) = com.minimart.pos.data.entity.Sale(
+        receiptNumber = "R-$total", subtotal = total, taxAmount = 0.0, totalAmount = total, amountPaid = total, changeGiven = 0.0,
+        cashPortion = cash, paymentMethod = com.minimart.pos.data.entity.PaymentMethod.CASH, cashierId = 1L)
+
+    @Test fun savingASaleStoresExactCents() = runBlocking {
+        val id = db.saleDao().insertSaleWithItems(sale(12.34, 12.34), emptyList())
+        val s = db.saleDao().getSaleWithItems(id)!!.sale
+        assertEquals(1234L, s.totalCents)
+        assertEquals(1234L, s.cashPortionCents)
+    }
+
+    @Test fun cumulativeFloatDriftStillGivesTheRightCents() = runBlocking {
+        val id = db.saleDao().insertSaleWithItems(sale(0.1 + 0.2, 0.0), emptyList())
+        assertEquals(30L, db.saleDao().getSaleWithItems(id)!!.sale.totalCents)
+    }
+
+    @Test fun migrationFillsCentsForExistingSales() = runBlocking {
+        val id = db.saleDao().insertSaleWithItems(sale(99.99, 50.0), emptyList())
+        val sdb = db.openHelper.writableDatabase
+        sdb.execSQL("UPDATE sales SET totalCents = 0, cashPortionCents = 0")
+        sdb.execSQL(AppMigrations.BACKFILL_SALE_CENTS)
+        val s = db.saleDao().getSaleWithItems(id)!!.sale
+        assertEquals(9999L, s.totalCents)
+        assertEquals(5000L, s.cashPortionCents)
+    }
+}
