@@ -28,6 +28,7 @@ object AppLanguage {
     /** A context whose resources use the saved language; the original when following the phone. */
     fun wrap(base: Context): Context {
         val code = saved(base)
+        applyToCore(code)
         if (code == SYSTEM) return base
         val locale = Locale.forLanguageTag(code)
         Locale.setDefault(locale)
@@ -35,6 +36,12 @@ object AppLanguage {
         config.setLocale(locale)
         config.setLayoutDirection(locale)
         return base.createConfigurationContext(config)
+    }
+
+    /** Tells `:core` (which builds some plain-language messages itself) which language to write them in. */
+    fun applyToCore(code: String) {
+        val lang = if (code == SYSTEM) Locale.getDefault().language else Locale.forLanguageTag(code).language
+        Lang.arabic = lang == "ar"
     }
 
     fun isRtl(code: String): Boolean = code.isNotEmpty() && android.text.TextUtils.getLayoutDirectionFromLocale(Locale.forLanguageTag(code)) == android.view.View.LAYOUT_DIRECTION_RTL

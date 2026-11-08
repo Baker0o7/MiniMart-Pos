@@ -26,6 +26,7 @@ class MiniMartApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        com.minimart.pos.util.AppLanguage.applyToCore(com.minimart.pos.util.AppLanguage.saved(this))
         com.minimart.pos.util.CrashRecorder.install(this)
         com.minimart.pos.util.ProblemRecorder.install(this)
         com.minimart.pos.util.ScanFeedback.install(this)

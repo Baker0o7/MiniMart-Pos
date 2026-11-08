@@ -21,12 +21,20 @@ object BackupAdvice {
     fun ago(thenMs: Long, nowMs: Long): String {
         val d = (nowMs - thenMs).coerceAtLeast(0L)
         return when {
-            d < MINUTE -> "just now"
-            d < HOUR -> (d / MINUTE).let { "$it minute${if (it == 1L) "" else "s"} ago" }
-            d < DAY -> (d / HOUR).let { "$it hour${if (it == 1L) "" else "s"} ago" }
-            d < 2 * DAY -> "yesterday"
-            else -> "${d / DAY} days ago"
+            d < MINUTE -> Lang.t("just now", "الآن")
+            d < HOUR -> (d / MINUTE).let { Lang.t("$it minute${if (it == 1L) "" else "s"} ago", arAgo(it, "دقيقة", "دقيقتين", "دقائق")) }
+            d < DAY -> (d / HOUR).let { Lang.t("$it hour${if (it == 1L) "" else "s"} ago", arAgo(it, "ساعة", "ساعتين", "ساعات")) }
+            d < 2 * DAY -> Lang.t("yesterday", "أمس")
+            else -> (d / DAY).let { Lang.t("$it days ago", arAgo(it, "يوم", "يومين", "أيام", "يومًا")) }
         }
+    }
+
+    /** Arabic counts: "منذ دقيقة", "منذ دقيقتين", "منذ 5 دقائق", "منذ 15 دقيقة" (11 and up use the singular). */
+    private fun arAgo(n: Long, one: String, two: String, few: String, many: String = one): String = when {
+        n == 1L -> "منذ $one"
+        n == 2L -> "منذ $two"
+        n in 3..10 -> "منذ $n $few"
+        else -> "منذ $n $many"
     }
 
     /** 0 = empty, 1 = weak, 2 = fair, 3 = strong. Length matters most, then mixing letters, digits and symbols. */
@@ -41,7 +49,12 @@ object BackupAdvice {
         }
     }
 
-    fun strengthLabel(level: Int) = when (level) { 1 -> "Weak: easy to guess"; 2 -> "Fair"; 3 -> "Strong"; else -> "" }
+    fun strengthLabel(level: Int) = when (level) {
+        1 -> Lang.t("Weak: easy to guess", "ضعيفة: سهلة التخمين")
+        2 -> Lang.t("Fair", "متوسطة")
+        3 -> Lang.t("Strong", "قوية")
+        else -> ""
+    }
 
     fun humanSize(bytes: Long): String = when {
         bytes < 1024 -> "$bytes B"
