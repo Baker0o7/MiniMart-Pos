@@ -41,9 +41,9 @@ object SyncFreshness {
         val mins = ms / MIN; val hours = ms / HOUR; val days = ms / (24 * HOUR)
         if (Lang.arabic) return when {
             mins < 1 -> "أقل من دقيقة"
-            mins < 60 -> arCount(mins, "دقيقة", "دقيقتان", "دقائق")
-            hours < 48 -> arCount(hours, "ساعة", "ساعتان", "ساعات")
-            else -> arCount(days, "يوم", "يومان", "أيام", "يومًا")
+            mins < 60 -> arCount(mins, "دقيقة", "دقيقتين", "دقائق")
+            hours < 48 -> arCount(hours, "ساعة", "ساعتين", "ساعات")
+            else -> arCount(days, "يوم", "يومين", "أيام", "يومًا")
         }
         return when {
             mins < 1 -> "less than a minute"

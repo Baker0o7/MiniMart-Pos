@@ -2,6 +2,7 @@ package com.minimart.pos.data.repository
 
 import com.minimart.pos.util.CashUp
 import com.minimart.pos.util.Money
+import com.minimart.pos.util.sumOfMoney
 import com.minimart.pos.util.sum
 import com.minimart.pos.data.dao.ShiftDao
 import com.minimart.pos.data.entity.PaymentMethod
@@ -141,7 +142,7 @@ class ShiftRepository @Inject constructor(
             .filter { it.cashierId == shift.cashierId }
         val voided = mine.filter { it.status == SaleStatus.VOIDED }
         val refunded = mine.filter { it.status == SaleStatus.REFUNDED }
-        val credit = mine.filter { it.status == SaleStatus.COMPLETED }.sumOf {
+        val credit = mine.filter { it.status == SaleStatus.COMPLETED }.sumOfMoney {
             when (it.paymentMethod) {
                 PaymentMethod.CREDIT -> it.totalAmount
                 PaymentMethod.MIXED -> (it.totalAmount - it.cashPortion).coerceAtLeast(0.0)
@@ -151,8 +152,8 @@ class ShiftRepository @Inject constructor(
         return ZReport(
             shift = shift,
             zNumber = "Z-" + shift.id.toString().padStart(4, '0'),
-            voidCount = voided.size, voidTotal = voided.sumOf { it.totalAmount },
-            refundCount = refunded.size, refundTotal = refunded.sumOf { it.totalAmount },
+            voidCount = voided.size, voidTotal = voided.sumOfMoney { it.totalAmount },
+            refundCount = refunded.size, refundTotal = refunded.sumOfMoney { it.totalAmount },
             creditSales = credit,
             noSaleOpens = settings.noSaleOpens(shift.id)
         )

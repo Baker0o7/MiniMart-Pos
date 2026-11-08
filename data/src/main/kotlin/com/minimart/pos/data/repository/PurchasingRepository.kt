@@ -1,5 +1,7 @@
 package com.minimart.pos.data.repository
 
+import com.minimart.pos.util.sumOfMoney
+import com.minimart.pos.util.Money
 import androidx.room.withTransaction
 import com.minimart.pos.data.dao.ProductDao
 import com.minimart.pos.data.dao.PurchasingDao
@@ -132,7 +134,9 @@ class PurchasingRepository @Inject constructor(
         val po = dao.getOrder(poId) ?: throw IllegalStateException("Order not found")
         if (po.status == PurchaseOrderStatus.DRAFT || po.status == PurchaseOrderStatus.CANCELLED)
             throw IllegalStateException("Send the order before recording a payment")
-        val total = dao.getItems(poId).sumOf { it.lineTotal }
-        dao.updateOrder(po.copy(amountPaid = (po.amountPaid + amount).coerceAtMost(total)))
+        // Cent-exact, so repeated part-payments cannot leave a stray fraction that keeps an order "unpaid".
+        val total = Money.fromDouble(dao.getItems(poId).sumOfMoney { it.lineTotal })
+        val paid = (Money.fromDouble(po.amountPaid) + Money.fromDouble(amount)).coerceAtMost(total)
+        dao.updateOrder(po.copy(amountPaid = paid.toDouble()))
     }
 }

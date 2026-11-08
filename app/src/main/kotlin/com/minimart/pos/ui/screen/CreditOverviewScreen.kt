@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.sumOfMoney
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -51,8 +52,8 @@ fun CreditOverviewScreen(
     val creditCustomers = state.customers
         .filter { it.creditBalance != 0.0 }
         .sortedWith(compareBy({ it.creditBalance >= 0 }, { -kotlin.math.abs(it.creditBalance) }))
-    val totalCredit   = creditCustomers.filter { it.creditBalance > 0 }.sumOf { it.creditBalance }
-    val totalOwed     = creditCustomers.filter { it.creditBalance < 0 }.sumOf { -it.creditBalance }
+    val totalCredit   = creditCustomers.filter { it.creditBalance > 0 }.sumOfMoney { it.creditBalance }
+    val totalOwed     = creditCustomers.filter { it.creditBalance < 0 }.sumOfMoney { -it.creditBalance }
     val totalOutstanding = totalCredit  // positive wallet balances held on behalf of customers
     var expandedId by remember { mutableStateOf<Long?>(null) }
     var showAddCreditDialog by remember { mutableStateOf<Customer?>(null) }
