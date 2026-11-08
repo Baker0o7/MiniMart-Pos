@@ -75,8 +75,10 @@ class ShiftRepository @Inject constructor(
         // Bug fix: was getSalesByDateRange (all statuses) filtered in Kotlin.
         // Use getCompletedSalesByDateRange to filter in SQL and avoid loading
         // VOIDED/REFUNDED sales into memory.
+        // One closing moment for sales, paid-outs and refunds, so a sale rung up in the last instant is counted once, not split.
+        val closeAt = System.currentTimeMillis()
         val completed: List<Sale> = saleRepo
-            .getCompletedSalesByDateRange(shift.clockIn, System.currentTimeMillis())
+            .getCompletedSalesByDateRange(shift.clockIn, closeAt)
             .first()
             .filter { it.cashierId == shift.cashierId }
 
@@ -104,7 +106,6 @@ class ShiftRepository @Inject constructor(
         // totalSales is every completed sale whatever the payment method; expectedCash is cash only.
         val totalSales = completed.map { m(it.totalAmount) }.sum()
         // Cash that left the drawer without being a sale: expenses paid from it, and refunds of earlier shifts' cash sales.
-        val closeAt = System.currentTimeMillis()
         val paidOut = expenseDao.drawerPaidBetween(shift.clockIn, closeAt, shift.cashierId).map { m(it.amount) }.sum()
         val cashRefunded = saleDao.cashReversedFromEarlier(shift.clockIn, closeAt, shift.cashierId)
             .map { CashUp.cashFromSale(it.paymentMethod.name, m(it.totalAmount), m(it.cashPortion)) }.sum()
@@ -113,7 +114,7 @@ class ShiftRepository @Inject constructor(
         val discrepancy = count.variance.toDouble()
 
         val closed = shift.copy(
-            clockOut        = System.currentTimeMillis(),
+            clockOut        = closeAt,
             closingFloat    = safeClosingFloat,
             totalCashSales  = cashSales.toDouble(),
             totalMpesaSales = mpesaSales.toDouble(),

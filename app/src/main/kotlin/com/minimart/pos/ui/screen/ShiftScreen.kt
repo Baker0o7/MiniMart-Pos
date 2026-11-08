@@ -152,6 +152,8 @@ fun ShiftScreen(
     if (showClockInDialog) {
         ClockInDialog(
             currency = state.currency,
+            // Most tills start the next shift with what the last shift counted, so offer that (the owner can change it).
+            suggestedFloat = state.allShifts.filter { it.status == ShiftStatus.CLOSED }.maxByOrNull { it.clockOut ?: 0L }?.closingFloat,
             onDismiss = { showClockInDialog = false },
             onClockIn = { float -> vm.clockIn(float); showClockInDialog = false }
         )
@@ -329,8 +331,10 @@ private fun ShiftHistoryRow(shift: Shift, currency: String, onClick: () -> Unit)
 // ─── Clock In Dialog ──────────────────────────────────────────────────────────
 
 @Composable
-private fun ClockInDialog(currency: String, onDismiss: () -> Unit, onClockIn: (Double) -> Unit) {
-    var openingFloat by remember { mutableStateOf("") }
+private fun ClockInDialog(currency: String, suggestedFloat: Double?, onDismiss: () -> Unit, onClockIn: (Double) -> Unit) {
+    var openingFloat by remember {
+        mutableStateOf(suggestedFloat?.takeIf { it > 0.0 }?.let { String.format(java.util.Locale.US, "%.2f", it) } ?: "")
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = com.minimart.pos.ui.theme.DT.Bg,

@@ -78,3 +78,27 @@ class SaleCentsTest : DbTestBase() {
         assertEquals(5000L, s.cashPortionCents)
     }
 }
+
+/** The real 18→19 step, run against a table shaped like a v18 `sales` table that holds old data. */
+class Migration18To19Test : DbTestBase() {
+    @Test fun addsAndFillsTheCentsColumnsWithoutTouchingTheOldOnes() {
+        val factory = androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory()
+        val ctx = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val helper = factory.create(
+            androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration.builder(ctx).name(null)
+                .callback(object : androidx.sqlite.db.SupportSQLiteOpenHelper.Callback(18) {
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        db.execSQL("CREATE TABLE sales (id INTEGER PRIMARY KEY, totalAmount REAL NOT NULL, cashPortion REAL NOT NULL)")
+                    }
+                    override fun onUpgrade(db: SupportSQLiteDatabase, o: Int, n: Int) {}
+                }).build())
+        val sdb = helper.writableDatabase
+        sdb.execSQL("INSERT INTO sales VALUES (1, 1234.56, 200.0), (2, 0.29, 0.0), (3, 19.99, 19.99)")
+        AppMigrations.MIGRATION_18_19.migrate(sdb)
+        sdb.query("SELECT totalAmount, totalCents, cashPortionCents FROM sales ORDER BY id").use { c ->
+            val rows = generateSequence { if (c.moveToNext()) Triple(c.getDouble(0), c.getLong(1), c.getLong(2)) else null }.toList()
+            assertEquals(listOf(Triple(1234.56, 123456L, 20000L), Triple(0.29, 29L, 0L), Triple(19.99, 1999L, 1999L)), rows)
+        }
+        helper.close()
+    }
+}
