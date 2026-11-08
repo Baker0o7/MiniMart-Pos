@@ -1,5 +1,6 @@
 package com.minimart.pos.worker
 
+import com.minimart.pos.util.Lang
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -55,7 +56,7 @@ class LowStockWorker @AssistedInject constructor(
             if (lowStockProducts.isNotEmpty()) {
                 createNotificationChannel()
                 val names = lowStockProducts.take(5).joinToString(", ") { "${it.name} (${it.stockLabel})" }
-                val more = if (lowStockProducts.size > 5) " +${lowStockProducts.size - 5} more" else ""
+                val more = if (lowStockProducts.size > 5) Lang.t(" +${lowStockProducts.size - 5} more", " +${lowStockProducts.size - 5} أخرى") else ""
 
                 val intent = Intent(applicationContext, MainActivity::class.java).apply {
                     // Bring the running app forward (MainActivity.onNewIntent) instead of CLEAR_TASK,
@@ -70,9 +71,9 @@ class LowStockWorker @AssistedInject constructor(
 
                 val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
                     .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                    .setContentTitle("⚠️ Low Stock Alert — ${lowStockProducts.size} items")
+                    .setContentTitle(Lang.t("⚠️ Low Stock Alert — ${lowStockProducts.size} items", "⚠️ تنبيه مخزون منخفض — ${lowStockProducts.size} منتجات"))
                     .setContentText("$names$more")
-                    .setStyle(NotificationCompat.BigTextStyle().bigText("Low on stock:\n$names$more"))
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(Lang.t("Low on stock:", "مخزون منخفض:") + "\n$names$more"))
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setContentIntent(pendingIntent)
                     .setAutoCancel(true)
@@ -89,9 +90,9 @@ class LowStockWorker @AssistedInject constructor(
 
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
-            CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH
+            CHANNEL_ID, Lang.t(CHANNEL_NAME, "تنبيهات المخزون المنخفض"), NotificationManager.IMPORTANCE_HIGH
         ).apply {
-            description = "Alerts when products are running low on stock"
+            description = Lang.t("Alerts when products are running low on stock", "تنبيهات عند اقتراب نفاد المنتجات")
             enableVibration(true)
         }
         val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

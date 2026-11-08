@@ -42,3 +42,17 @@ class LangTest {
         assertEquals("كل شيء سليم", HardwareDiagnostics.headline(emptyList()))
     }
 }
+
+class LangFreshnessTest {
+    @AfterEach fun reset() { Lang.arabic = false }
+
+    @Test fun `sync age and daily report switch language`() {
+        Lang.arabic = true
+        assertEquals("ساعتان", SyncFreshness.ageText(2 * 3_600_000L))
+        assertEquals("5 دقائق", SyncFreshness.ageText(5 * 60_000L))
+        val r = SyncFreshness.assess(true, 0L, 1_000L)!!
+        assertTrue(r.headline.any { it in '؀'..'ۿ' })
+        Lang.arabic = false
+        assertEquals("2 hours", SyncFreshness.ageText(2 * 3_600_000L))
+    }
+}

@@ -26,6 +26,7 @@ import com.minimart.pos.data.repository.SettingsRepository
 import com.minimart.pos.ui.viewmodel.reconcileRange
 import com.minimart.pos.util.DailySummary
 import com.minimart.pos.util.DailySummaryInput
+import com.minimart.pos.util.Lang
 import com.minimart.pos.util.Money
 import com.minimart.pos.util.sum
 import dagger.assisted.Assisted
@@ -145,8 +146,8 @@ class DailyReportWorker @AssistedInject constructor(
 
     private suspend fun post(input: DailySummaryInput) {
         val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(NotificationChannel(CHANNEL_ID, "Daily report", NotificationManager.IMPORTANCE_DEFAULT)
-            .apply { description = "The owner's end-of-day business summary" })
+        nm.createNotificationChannel(NotificationChannel(CHANNEL_ID, Lang.t("Daily report", "التقرير اليومي"), NotificationManager.IMPORTANCE_DEFAULT)
+            .apply { description = Lang.t("The owner's end-of-day business summary", "ملخص نهاية اليوم لصاحب المتجر") })
         val body = DailySummary.body(input)
         val open = PendingIntent.getActivity(applicationContext, 3,
             Intent(applicationContext, MainActivity::class.java).apply {
@@ -154,7 +155,7 @@ class DailyReportWorker @AssistedInject constructor(
                 putExtra(MainActivity.EXTRA_NAVIGATE_TO, "reports")
             }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val share = PendingIntent.getActivity(applicationContext, 4,
-            Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, body), "Send report"),
+            Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, body), Lang.t("Send report", "إرسال التقرير")),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -162,13 +163,13 @@ class DailyReportWorker @AssistedInject constructor(
             .setContentText(body.lineSequence().drop(1).firstOrNull().orEmpty())
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setContentIntent(open).setAutoCancel(true)
-            .addAction(0, "Share", share)
+            .addAction(0, Lang.t("Share", "مشاركة"), share)
         val phone = settings.ownerReportPhone.first()
         if (phone.isNotBlank()) {
             val sms = PendingIntent.getActivity(applicationContext, 5,
                 Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$phone")).putExtra("sms_body", body),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-            builder.addAction(0, "SMS owner", sms)
+            builder.addAction(0, Lang.t("SMS owner", "رسالة للمالك"), sms)
         }
         nm.notify(NOTIFICATION_ID, builder.build())
     }

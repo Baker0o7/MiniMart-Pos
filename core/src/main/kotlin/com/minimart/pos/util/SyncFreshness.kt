@@ -21,30 +21,44 @@ object SyncFreshness {
     /** Null when this phone does not sync with another one (nothing can be stale). */
     fun assess(configured: Boolean, lastSyncAt: Long, now: Long, pending: Int = 0, openConflicts: Int = 0): FreshnessReport? {
         if (!configured) return null
-        val conflictNote = if (openConflicts > 0) " $openConflicts disagreement(s) between phones were settled automatically; see the activity log." else ""
-        if (lastSyncAt <= 0L) return FreshnessReport(Freshness.NEVER, HealthLevel.WARN, "Never synced",
-            "This phone has not synced with the main phone yet, so its prices and stock may be out of date.$conflictNote", true)
+        val conflictNote = if (openConflicts > 0) Lang.t(" $openConflicts disagreement(s) between phones were settled automatically; see the activity log.", " تمت تسوية $openConflicts اختلاف بين الهواتف تلقائيًا؛ راجع سجل النشاط.") else ""
+        if (lastSyncAt <= 0L) return FreshnessReport(Freshness.NEVER, HealthLevel.WARN, Lang.t("Never synced", "لم تتم المزامنة قط"),
+            Lang.t("This phone has not synced with the main phone yet, so its prices and stock may be out of date.", "لم يتزامن هذا الهاتف مع الهاتف الرئيسي بعد، لذا قد تكون أسعاره ومخزونه قديمة.") + conflictNote, true)
         val ageMs = (now - lastSyncAt).coerceAtLeast(0L)
         val hours = ageMs / HOUR
         val age = ageText(ageMs)
         return when {
-            hours >= STALE_AFTER_HOURS -> FreshnessReport(Freshness.STALE, HealthLevel.BAD, "Out of date: last synced $age ago",
-                "Prices, stock and customer balances here may be wrong. Connect to the main phone's Wi-Fi and sync before relying on them.$conflictNote", true)
-            hours >= AGING_AFTER_HOURS -> FreshnessReport(Freshness.AGING, HealthLevel.WARN, "Last synced $age ago",
-                "Still fine for selling. Sync when you are next near the main phone to pick up price and stock changes.$conflictNote", false)
-            else -> FreshnessReport(Freshness.FRESH, HealthLevel.GOOD, if (hours == 0L && ageMs < 5 * MIN) "Just synced" else "Synced $age ago",
-                (if (pending > 0) "$pending sale(s) will go across on the next sync." else "Up to date.") + conflictNote, false)
+            hours >= STALE_AFTER_HOURS -> FreshnessReport(Freshness.STALE, HealthLevel.BAD, Lang.t("Out of date: last synced $age ago", "قديمة: آخر مزامنة منذ $age"),
+                Lang.t("Prices, stock and customer balances here may be wrong. Connect to the main phone's Wi-Fi and sync before relying on them.", "قد تكون الأسعار والمخزون وأرصدة العملاء هنا خاطئة. اتصل بواي فاي الهاتف الرئيسي وزامن قبل الاعتماد عليها.") + conflictNote, true)
+            hours >= AGING_AFTER_HOURS -> FreshnessReport(Freshness.AGING, HealthLevel.WARN, Lang.t("Last synced $age ago", "آخر مزامنة منذ $age"),
+                Lang.t("Still fine for selling. Sync when you are next near the main phone to pick up price and stock changes.", "ما زال مناسبًا للبيع. زامن عندما تكون قرب الهاتف الرئيسي لتلتقط تغييرات الأسعار والمخزون.") + conflictNote, false)
+            else -> FreshnessReport(Freshness.FRESH, HealthLevel.GOOD, if (hours == 0L && ageMs < 5 * MIN) Lang.t("Just synced", "تمت المزامنة للتو") else Lang.t("Synced $age ago", "تمت المزامنة منذ $age"),
+                (if (pending > 0) Lang.t("$pending sale(s) will go across on the next sync.", "سيتم إرسال $pending عملية بيع في المزامنة التالية.") else Lang.t("Up to date.", "محدّث.")) + conflictNote, false)
         }
     }
 
     fun ageText(ms: Long): String {
         val mins = ms / MIN; val hours = ms / HOUR; val days = ms / (24 * HOUR)
+        if (Lang.arabic) return when {
+            mins < 1 -> "أقل من دقيقة"
+            mins < 60 -> arCount(mins, "دقيقة", "دقيقتان", "دقائق")
+            hours < 48 -> arCount(hours, "ساعة", "ساعتان", "ساعات")
+            else -> arCount(days, "يوم", "يومان", "أيام", "يومًا")
+        }
         return when {
             mins < 1 -> "less than a minute"
             mins < 60 -> "$mins minute${if (mins == 1L) "" else "s"}"
             hours < 48 -> "$hours hour${if (hours == 1L) "" else "s"}"
             else -> "$days days"
         }
+    }
+
+    /** Arabic count phrase: one and two use their own forms, 3-10 take the plural, 11 and up the singular. */
+    private fun arCount(n: Long, one: String, two: String, few: String, many: String = one): String = when {
+        n == 1L -> one
+        n == 2L -> two
+        n in 3..10 -> "$n $few"
+        else -> "$n $many"
     }
 
     private const val MIN = 60_000L

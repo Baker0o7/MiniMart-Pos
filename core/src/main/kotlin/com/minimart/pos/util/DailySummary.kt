@@ -30,38 +30,39 @@ data class DailySummaryInput(
  */
 object DailySummary {
     fun title(i: DailySummaryInput): String =
-        if (i.salesCount == 0) "${i.storeName}: no sales today"
-        else "${i.storeName}: ${i.currency} ${money(i.revenue)} from ${i.salesCount} sale${if (i.salesCount == 1) "" else "s"}"
+        if (i.salesCount == 0) Lang.t("${i.storeName}: no sales today", "${i.storeName}: لا مبيعات اليوم")
+        else Lang.t("${i.storeName}: ${i.currency} ${money(i.revenue)} from ${i.salesCount} sale${if (i.salesCount == 1) "" else "s"}",
+            "${i.storeName}: ${i.currency} ${money(i.revenue)} من ${i.salesCount} عملية بيع")
 
     fun body(i: DailySummaryInput): String = buildString {
         line("${i.storeName} - ${i.dateLabel}")
         if (i.salesCount == 0) {
-            line("No sales were recorded today.")
+            line(Lang.t("No sales were recorded today.", "لم تُسجَّل أي مبيعات اليوم."))
         } else {
-            line("Sales: ${i.currency} ${money(i.revenue)} (${i.salesCount})")
-            val parts = listOf("Cash" to i.cash, "M-Pesa" to i.mpesa, "Card" to i.card, "On credit" to i.onCredit)
+            line(Lang.t("Sales", "المبيعات") + ": ${i.currency} ${money(i.revenue)} (${i.salesCount})")
+            val parts = listOf(Lang.t("Cash", "نقدًا") to i.cash, "M-Pesa" to i.mpesa, Lang.t("Card", "بطاقة") to i.card, Lang.t("On credit", "بالآجل") to i.onCredit)
                 .filter { it.second.isPositive() }
             parts.forEach { (name, amount) -> line("  $name: ${i.currency} ${money(amount)}") }
         }
         if (i.refundsCount > 0 || i.voidsCount > 0) {
-            line("Refunded: ${i.refundsCount}, voided: ${i.voidsCount}")
+            line(Lang.t("Refunded: ${i.refundsCount}, voided: ${i.voidsCount}", "مستردة: ${i.refundsCount}، ملغاة: ${i.voidsCount}"))
         }
-        if (i.expenses.isPositive()) line("Expenses: ${i.currency} ${money(i.expenses)}")
+        if (i.expenses.isPositive()) line(Lang.t("Expenses", "المصروفات") + ": ${i.currency} ${money(i.expenses)}")
         i.profit?.let { p ->
-            line("Profit (items with a cost): ${i.currency} ${money(p)}")
-            if (i.expenses.isPositive()) line("After expenses: ${i.currency} ${money(p - i.expenses)}")
+            line(Lang.t("Profit (items with a cost)", "الربح (للمنتجات ذات التكلفة)") + ": ${i.currency} ${money(p)}")
+            if (i.expenses.isPositive()) line(Lang.t("After expenses", "بعد المصروفات") + ": ${i.currency} ${money(p - i.expenses)}")
         }
         if (i.topProducts.isNotEmpty()) {
-            line("Top sellers: " + i.topProducts.take(3).joinToString(", ") { "${it.first} x${it.second}" })
+            line(Lang.t("Top sellers", "الأكثر مبيعًا") + ": " + i.topProducts.take(3).joinToString(", ") { "${it.first} x${it.second}" })
         }
         val alerts = buildList {
             if (i.unclaimedMpesaCount > 0)
-                add("${i.unclaimedMpesaCount} M-Pesa payment${if (i.unclaimedMpesaCount == 1) "" else "s"} received but not matched to a sale")
-            if (i.lowStockCount > 0) add("${i.lowStockCount} product${if (i.lowStockCount == 1) "" else "s"} low on stock")
-            if (i.pendingSync > 0) add("${i.pendingSync} sale record${if (i.pendingSync == 1) "" else "s"} not yet synced")
+                add(Lang.t("${i.unclaimedMpesaCount} M-Pesa payment${if (i.unclaimedMpesaCount == 1) "" else "s"} received but not matched to a sale", "${i.unclaimedMpesaCount} دفعة M-Pesa مستلمة غير مربوطة بعملية بيع"))
+            if (i.lowStockCount > 0) add(Lang.t("${i.lowStockCount} product${if (i.lowStockCount == 1) "" else "s"} low on stock", "${i.lowStockCount} منتج منخفض المخزون"))
+            if (i.pendingSync > 0) add(Lang.t("${i.pendingSync} sale record${if (i.pendingSync == 1) "" else "s"} not yet synced", "${i.pendingSync} سجل بيع لم يُزامن بعد"))
         }
         if (alerts.isNotEmpty()) {
-            line("Needs attention:")
+            line(Lang.t("Needs attention:", "يحتاج إلى اهتمام:"))
             alerts.forEach { line("  - $it") }
         }
     }.trimEnd()

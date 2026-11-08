@@ -1,5 +1,6 @@
 package com.minimart.pos.worker
 
+import com.minimart.pos.util.Lang
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -77,28 +78,28 @@ class ExpiryAlertWorker @AssistedInject constructor(
                 )
 
                 val title = buildString {
-                    if (expired.isNotEmpty()) append("⛔ ${expired.size} EXPIRED")
+                    if (expired.isNotEmpty()) append(Lang.t("⛔ ${expired.size} EXPIRED", "⛔ ${expired.size} منتهية الصلاحية"))
                     if (expired.isNotEmpty() && expiring.isNotEmpty()) append(" • ")
-                    if (expiring.isNotEmpty()) append("⚠️ ${expiring.size} expiring in ${months}mo")
+                    if (expiring.isNotEmpty()) append(Lang.t("⚠️ ${expiring.size} expiring in ${months}mo", "⚠️ ${expiring.size} تنتهي خلال ${months} أشهر"))
                 }
 
                 val body = buildString {
                     if (expired.isNotEmpty()) {
-                        append("Expired: ")
+                        append(Lang.t("Expired: ", "منتهية الصلاحية: "))
                         append(expired.take(3).joinToString(", ") { it.name })
-                        if (expired.size > 3) append(" +${expired.size - 3} more")
+                        if (expired.size > 3) append(Lang.t(" +${expired.size - 3} more", " +${expired.size - 3} أخرى"))
                         append("\n")
                     }
                     if (expiring.isNotEmpty()) {
-                        append("Expiring soon: ")
+                        append(Lang.t("Expiring soon: ", "تنتهي قريبًا: "))
                         append(expiring.take(3).joinToString(", ") { p ->
                             // Bug fix: (1000 * 60 * 60 * 24) is Int multiplication that
                             // silently wraps on dates far in the future (>24 days as Int
                             // overflows around 248 days). Use Long literals throughout.
                             val days = ((p.expiryDate - now) / (1000L * 60 * 60 * 24)).toInt()
-                            "${p.name} (${days}d)"
+                            "${p.name} (${days}${Lang.t("d", " يوم")})"
                         })
-                        if (expiring.size > 3) append(" +${expiring.size - 3} more")
+                        if (expiring.size > 3) append(Lang.t(" +${expiring.size - 3} more", " +${expiring.size - 3} أخرى"))
                     }
                 }
 
@@ -122,8 +123,8 @@ class ExpiryAlertWorker @AssistedInject constructor(
     }
 
     private fun createChannel() {
-        val ch = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH).apply {
-            description = "Alerts for products nearing or past expiry date"
+        val ch = NotificationChannel(CHANNEL_ID, Lang.t(CHANNEL_NAME, "تنبيهات الصلاحية"), NotificationManager.IMPORTANCE_HIGH).apply {
+            description = Lang.t("Alerts for products nearing or past expiry date", "تنبيهات للمنتجات التي تقترب من انتهاء صلاحيتها أو انتهت")
             enableVibration(true)
         }
         val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
