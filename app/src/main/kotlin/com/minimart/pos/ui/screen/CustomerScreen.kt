@@ -323,7 +323,7 @@ private fun CustomerDetailSheet(
             // Transaction history
             if (transactions.isNotEmpty()) {
                 item { Text(tr(com.minimart.pos.R.string.credit_history), color = DT.Ink, fontWeight = FontWeight.Bold, fontSize = 15.sp) }
-                items(transactions.take(20)) { tx ->
+                items(transactions.take(20), key = { it.id }) { tx ->
                     Row(modifier = Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp)).background(DT.Surface2)
                         .border(1.dp, DT.Border, RoundedCornerShape(12.dp))
