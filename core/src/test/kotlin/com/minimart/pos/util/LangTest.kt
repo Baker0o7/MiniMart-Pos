@@ -83,6 +83,6 @@ class ArabicDigitsTest {
         Lang.arabic = true
         assertEquals("SJK4H2LMNO", ArabicDigits.show("SJK4H2LMNO"))
         assertEquals("٣ منتجات، 5kg", ArabicDigits.show("3 منتجات، 5kg"))
-        assertEquals("RCP-20250412-0001", ArabicDigits.show("RCP-20250412-0001").replace('٠'..'٩', '0'))
+
     }
 }

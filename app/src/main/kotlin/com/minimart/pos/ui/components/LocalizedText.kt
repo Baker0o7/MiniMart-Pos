@@ -42,8 +42,11 @@ fun Text(
     onTextLayout: ((TextLayoutResult) -> Unit)? = null,
     style: TextStyle = LocalTextStyle.current
 ) = M3Text(
-    ArabicDigits.show(text), modifier, color, fontSize, fontStyle, fontWeight, fontFamily, letterSpacing,
-    textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, minLines, onTextLayout = onTextLayout, style = style
+    text = ArabicDigits.show(text),
+    modifier = modifier, color = color, fontSize = fontSize, fontStyle = fontStyle, fontWeight = fontWeight,
+    fontFamily = fontFamily, letterSpacing = letterSpacing, textDecoration = textDecoration, textAlign = textAlign,
+    lineHeight = lineHeight, overflow = overflow, softWrap = softWrap, maxLines = maxLines, minLines = minLines,
+    onTextLayout = onTextLayout, style = style
 )
 
 @Composable
@@ -67,7 +70,9 @@ fun Text(
     style: TextStyle = LocalTextStyle.current
 ) = M3Text(
     // Same length character for character, so the styled spans still line up.
-    AnnotatedString(ArabicDigits.show(text.text), text.spanStyles, text.paragraphStyles), modifier, color, fontSize, fontStyle,
-    fontWeight, fontFamily, letterSpacing, textDecoration, textAlign, lineHeight, overflow, softWrap, maxLines, minLines,
-    onTextLayout = onTextLayout, style = style
+    text = AnnotatedString(ArabicDigits.show(text.text), text.spanStyles, text.paragraphStyles),
+    modifier = modifier, color = color, fontSize = fontSize, fontStyle = fontStyle, fontWeight = fontWeight,
+    fontFamily = fontFamily, letterSpacing = letterSpacing, textDecoration = textDecoration, textAlign = textAlign,
+    lineHeight = lineHeight, overflow = overflow, softWrap = softWrap, maxLines = maxLines, minLines = minLines,
+    onTextLayout = onTextLayout ?: {}, style = style
 )
