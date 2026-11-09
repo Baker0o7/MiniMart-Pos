@@ -5,6 +5,12 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.32.1] - 2026-11-09
+
+- **Arabic numbers.** In Arabic mode, amounts, counts, percentages and times now show in Arabic digits (١٢٣). Codes such as M-Pesa references, and anything you type, keep their normal digits so they still match and scan.
+- **More Arabic words.** The customer display, the "set a new PIN" screen and the M-Pesa hints at checkout.
+- **PDF receipts and business reports in Arabic.** The words are in Arabic; the layout and digits in the PDF stay as before. Printed (thermal) receipts are still in English.
+
 ## [1.32.0] - 2026-11-09
 
 - **Old M-Pesa payment warning.** If a payment arrived hours before the sale it is being used for, the till now asks you to check it belongs to this customer, not an earlier one. It is a warning only, so a customer who paid ahead can still be served.
