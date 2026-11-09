@@ -28,6 +28,8 @@ object DatabaseModule {
         // Encrypts the shop database on first run after the update (and creates new ones encrypted). Null means
         // "stay plain", for example when the phone's key store is unusable; the reason is shown in Settings.
         val passphrase = com.minimart.pos.util.DbEncryption.prepare(context)
+        // Before Room can run an upgrade, keep a copy of the database as it is now.
+        com.minimart.pos.util.UpgradeCopy.runBeforeOpen(context)
         return Room.databaseBuilder(
         context,
         AppDatabase::class.java,
