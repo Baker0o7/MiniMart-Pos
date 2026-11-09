@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.contentDescription
@@ -174,7 +175,7 @@ fun ScannerCartScreen(
                             AnimatedContent(
                                 targetState = if (state.itemCount > 0)
                                     "${state.itemCount} item${if (state.itemCount != 1) "s" else ""}  •  $currency ${String.format(java.util.Locale.US, "%,.2f", state.total)}"
-                                else "Scan or search items",
+                                else Lang.t("Scan or search items", "امسح أو ابحث عن الأصناف"),
                                 transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
                                 label = "sub"
                             ) { subtitle ->
@@ -237,7 +238,7 @@ fun ScannerCartScreen(
                                         Text("$currency ${String.format(java.util.Locale.US, "%,.2f", h.total)}", color = DT.SubText, fontSize = 12.sp)
                                     }
                                     IconButton(onClick = { vm.discardHeld(h.id) }) {
-                                        Icon(Icons.Default.Delete, "Discard held sale", tint = DT.SubText)
+                                        Icon(Icons.Default.Delete, Lang.t("Discard held sale", "تجاهل عملية البيع المعلّقة"), tint = DT.SubText)
                                     }
                                     Button(
                                         enabled = state.items.isEmpty(),
@@ -262,7 +263,7 @@ fun ScannerCartScreen(
                 trailingIcon = {
                     if (searchText.isNotEmpty())
                         IconButton(onClick = { submitSearch() }) {
-                            Icon(Icons.AutoMirrored.Filled.Send, "Search", tint = DT.Teal, modifier = Modifier.size(20.dp))
+                            Icon(Icons.AutoMirrored.Filled.Send, Lang.t("Search", "بحث"), tint = DT.Teal, modifier = Modifier.size(20.dp))
                         }
                 },
                 singleLine = true,
@@ -354,7 +355,7 @@ fun ScannerCartScreen(
                                     .background(if (torchOn) Color(0xFFFFC107) else Color.Black.copy(0.6f)),
                                     contentAlignment = Alignment.Center) {
                                     Icon(if (torchOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
-                                        if (torchOn) "Turn flash off" else "Turn flash on",
+                                        if (torchOn) Lang.t("Turn flash off", "إيقاف الفلاش") else Lang.t("Turn flash on", "تشغيل الفلاش"),
                                         tint = if (torchOn) Color.Black else Color.White, modifier = Modifier.size(18.dp))
                                 }
                             }
@@ -362,7 +363,7 @@ fun ScannerCartScreen(
                         IconButton(onClick = { showScanner = false }) {
                             Box(Modifier.size(32.dp).clip(CircleShape).background(Color.Black.copy(0.6f)),
                                 contentAlignment = Alignment.Center) {
-                                Icon(Icons.Default.Close, "Close scanner", tint = Color.White, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.Close, Lang.t("Close scanner", "إغلاق الماسح"), tint = Color.White, modifier = Modifier.size(16.dp))
                             }
                         }
                     }
@@ -464,7 +465,7 @@ fun ScannerCartScreen(
                             .background(if (continuousScan) DT.Teal else DT.Surface2)
                             .border(1.dp, if (continuousScan) DT.Teal else DT.Border, RoundedCornerShape(16.dp))
                             .semantics(mergeDescendants = true) {
-                                contentDescription = "Keep scanning after each item"
+                                contentDescription = Lang.t("Keep scanning after each item", "متابعة المسح بعد كل صنف")
                                 stateDescription = if (continuousScan) "On" else "Off"
                             }
                             .clickable(role = androidx.compose.ui.semantics.Role.Switch, indication = null,
@@ -494,7 +495,7 @@ fun ScannerCartScreen(
                                     if (showScanner) Icons.Default.Close else Icons.Default.QrCode, null,
                                     tint = DT.Ink, modifier = Modifier.size(22.dp))
                                 Text(
-                                    if (showScanner) "Close Scanner" else "Scan Barcode",
+                                    if (showScanner) Lang.t("Close Scanner", "إغلاق الماسح") else Lang.t("Scan Barcode", "مسح الباركود"),
                                     color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
                             }
                         }
@@ -610,7 +611,7 @@ private fun CartItemCard(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = { onQtyChange(item.quantity - 1) },
                                     modifier = Modifier.size(38.dp)) {
-                                    Icon(Icons.Default.Remove, "Decrease", tint = DT.Ink, modifier = Modifier.size(15.dp))
+                                    Icon(Icons.Default.Remove, Lang.t("Decrease", "إنقاص"), tint = DT.Ink, modifier = Modifier.size(15.dp))
                                 }
                                 // Tap the number to type a quantity (24 cans = one tap instead of 24)
                                 Text(item.quantity.toString(), color = DT.Ink,
@@ -623,7 +624,7 @@ private fun CartItemCard(
                                         .padding(vertical = 8.dp))
                                 IconButton(onClick = { onQtyChange(item.quantity + 1) },
                                     modifier = Modifier.size(38.dp)) {
-                                    Icon(Icons.Default.Add, "Increase", tint = DT.Ink, modifier = Modifier.size(15.dp))
+                                    Icon(Icons.Default.Add, Lang.t("Increase", "زيادة"), tint = DT.Ink, modifier = Modifier.size(15.dp))
                                 }
                             }
                         }
@@ -636,7 +637,7 @@ private fun CartItemCard(
                             interactionSource = remember { MutableInteractionSource() },
                             onClick = onRemove),
                         contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Delete, "Remove item", tint = DT.Red, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Delete, Lang.t("Remove item", "إزالة الصنف"), tint = DT.Red, modifier = Modifier.size(18.dp))
                     }
                 }
             }

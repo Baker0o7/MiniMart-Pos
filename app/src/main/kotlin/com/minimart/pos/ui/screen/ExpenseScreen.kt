@@ -91,7 +91,7 @@ fun ExpenseScreen(onBack: () -> Unit, vm: ExpenseViewModel = hiltViewModel()) {
                 title = tr(com.minimart.pos.R.string.expenses_pl),
                 subtitle = periodLabel,
                 onBack = onBack,
-                actions = { HeaderPillButton("Add", Icons.Default.Add) { showAddDialog = true } }
+                actions = { HeaderPillButton(Lang.t("Add", "إضافة"), Icons.Default.Add) { showAddDialog = true } }
             )
 
             FeedbackBanner(
