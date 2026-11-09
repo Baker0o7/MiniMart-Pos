@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import com.minimart.pos.util.sumOfMoney
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -318,8 +319,8 @@ private fun groupByDay(expenses: List<Expense>): List<DayGroup> {
             DayGroup(
                 dayStart = dayStart,
                 label = when (dayStart) {
-                    today -> "Today"
-                    yesterday -> "Yesterday"
+                    today -> Lang.t("Today", "اليوم")
+                    yesterday -> Lang.t("Yesterday", "أمس")
                     else -> dateFormat.format(Date(dayStart))
                 },
                 total = list.sumOfMoney { it.amount },
@@ -369,7 +370,7 @@ private fun ExpenseListTab(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("${expenses.size} ${if (expenses.size == 1) "expense" else "expenses"}",
+                    Text(Lang.t("${expenses.size} ${if (expenses.size == 1) "expense" else "expenses"}", "${expenses.size} مصروف"),
                         color = DT.SubText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     Text(expenseAmount(currency, total), color = DT.Red,
                         fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
@@ -549,8 +550,8 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
 
                 Text(tr(com.minimart.pos.R.string.date), color = DT.SubText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ExpenseChip("Today", !yesterday) { yesterday = false }
-                    ExpenseChip("Yesterday", yesterday) { yesterday = true }
+                    ExpenseChip(Lang.t("Today", "اليوم"), !yesterday) { yesterday = false }
+                    ExpenseChip(Lang.t("Yesterday", "أمس"), yesterday) { yesterday = true }
                 }
 
                 // Cash taken from the till for this expense is subtracted from what the cash-up expects to find.

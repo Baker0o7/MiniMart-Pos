@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.Intent
@@ -80,7 +81,7 @@ fun InventoryScreen(
                 onBack = onBack,
                 actions = {
                     if (canEditPrices && onInsights != null) {
-                        HeaderPillButton("Insights", Icons.Default.Insights, onInsights)
+                        HeaderPillButton(Lang.t("Insights", "تحليلات"), Icons.Default.Insights, onInsights)
                         Spacer(Modifier.width(8.dp))
                     }
                     if (canEditPrices) HeaderPillButton("Add", Icons.Default.Add) { editProduct = null; showAddDialog = true }
@@ -98,11 +99,11 @@ fun InventoryScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                SummaryTile("Listed", shown.size.toString(), DT.TealLight, Modifier.weight(1f))
-                SummaryTile("Low stock", lowStock.size.toString(),
+                SummaryTile(Lang.t("Listed", "المعروضة"), shown.size.toString(), DT.TealLight, Modifier.weight(1f))
+                SummaryTile(Lang.t("Low stock", "مخزون منخفض"), lowStock.size.toString(),
                     if (lowStock.isEmpty()) DT.Green else DT.Amber, Modifier.weight(1f))
                 if (canEditPrices) {
-                    SummaryTile("Stock value", "$currency ${String.format(Locale.US, "%,.0f", stockValue)}",
+                    SummaryTile(Lang.t("Stock value", "قيمة المخزون"), "$currency ${String.format(Locale.US, "%,.0f", stockValue)}",
                         DT.OnSurface, Modifier.weight(1.6f))
                 }
             }
@@ -115,7 +116,7 @@ fun InventoryScreen(
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) IconButton(onClick = { vm.setSearchQuery("") }) {
-                        Icon(Icons.Default.Close, "Clear search", tint = DT.SubText, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Close, Lang.t("Clear search", "مسح البحث"), tint = DT.SubText, modifier = Modifier.size(18.dp))
                     }
                 },
                 singleLine = true,
@@ -172,10 +173,10 @@ fun InventoryScreen(
                                 Icon(Icons.Default.Inventory2, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.6f))
                                 Text(
                                     when {
-                                        lowOnly && searchQuery.isBlank() -> "Nothing is running low"
+                                        lowOnly && searchQuery.isBlank() -> Lang.t("Nothing is running low", "لا شيء على وشك النفاد")
                                         searchQuery.isNotBlank() -> "No results for \"$searchQuery\""
-                                        selectedCat != null -> "Nothing in this category yet"
-                                        else -> "No products yet"
+                                        selectedCat != null -> Lang.t("Nothing in this category yet", "لا شيء في هذه الفئة بعد")
+                                        else -> Lang.t("No products yet", "لا توجد منتجات بعد")
                                     },
                                     color = DT.OnSurface, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center
                                 )
@@ -284,7 +285,7 @@ private fun InventoryRow(
                 Text(listOf(product.category, product.barcode).filter { it.isNotBlank() }.joinToString("  •  "),
                     color = DT.SubText, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (daysToExpiry != null && daysToExpiry <= 30) {
-                    Text(if (daysToExpiry < 0) "Expired" else "Expires in ${daysToExpiry}d",
+                    Text(if (daysToExpiry < 0) Lang.t("Expired", "منتهي الصلاحية") else Lang.t("Expires in ${daysToExpiry}d", "ينتهي خلال ${daysToExpiry} يوم"),
                         color = if (daysToExpiry < 0) DT.Red else DT.Amber, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
@@ -298,7 +299,7 @@ private fun InventoryRow(
         }
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            ActionBtn("Stock", DT.TealLight, onAdjustStock)
+            ActionBtn(Lang.t("Stock", "المخزون"), DT.TealLight, onAdjustStock)
             if (canEdit) ActionBtn("Edit", DT.Teal, onEdit)
             if (product.supplierPhone.isNotBlank()) ActionBtn("Call", DT.Teal, onCallSupplier)
             Spacer(Modifier.weight(1f))
@@ -378,8 +379,8 @@ private fun StockAdjustDialog(product: Product, onDismiss: () -> Unit, onAdjust:
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("${product.name} — current: ${product.stockLabel}", color = DT.SubText, fontSize = 13.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    CategoryChip("Add", isAddition, DT.Green) { isAddition = true }
-                    CategoryChip("Remove", !isAddition, DT.Red) { isAddition = false }
+                    CategoryChip(Lang.t("Add", "إضافة"), isAddition, DT.Green) { isAddition = true }
+                    CategoryChip(Lang.t("Remove", "سحب"), !isAddition, DT.Red) { isAddition = false }
                 }
                 OutlinedTextField(
                     value = amount,
@@ -387,7 +388,7 @@ private fun StockAdjustDialog(product: Product, onDismiss: () -> Unit, onAdjust:
                         amount = if (product.isWeighed) sanitizeDecimalInput(it, maxDecimals = 3, maxWhole = 5)
                         else it.filter(Char::isDigit).take(6)
                     },
-                    label = { Text(if (product.isWeighed) "Weight (kg)" else "Quantity", color = DT.SubText) },
+                    label = { Text(if (product.isWeighed) Lang.t("Weight (kg)", "الوزن (كجم)") else Lang.t("Quantity", "الكمية"), color = DT.SubText) },
                     keyboardOptions = KeyboardOptions(keyboardType = if (product.isWeighed) KeyboardType.Decimal else KeyboardType.Number),
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp), colors = fieldColors

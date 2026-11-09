@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
@@ -95,7 +96,7 @@ fun ProductListScreen(
             // ── Header (this screen used to show two stacked "Products" titles) ──
             GradientHeader(title = tr(com.minimart.pos.R.string.products), subtitle = subtitle, onBack = onBack) {
                 if (canEditPrices) {
-                    HeaderPillButton("Add", Icons.Default.Add) { editProduct = null; showAddDialog = true }
+                    HeaderPillButton(Lang.t("Add", "إضافة"), Icons.Default.Add) { editProduct = null; showAddDialog = true }
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -108,7 +109,7 @@ fun ProductListScreen(
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) IconButton(onClick = { vm.setSearchQuery("") }) {
-                        Icon(Icons.Default.Close, "Clear search", tint = DT.SubText)
+                        Icon(Icons.Default.Close, Lang.t("Clear search", "مسح البحث"), tint = DT.SubText)
                     }
                 },
                 singleLine = true,
@@ -162,8 +163,8 @@ fun ProductListScreen(
                                 Icon(Icons.Default.Inventory2, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.3f))
                                 Text(when {
                                     searchQuery.isNotBlank() -> "No results for \"$searchQuery\""
-                                    filtering -> "Nothing matches this filter"
-                                    else -> "No products yet"
+                                    filtering -> Lang.t("Nothing matches this filter", "لا شيء يطابق هذا الفلتر")
+                                    else -> Lang.t("No products yet", "لا توجد منتجات بعد")
                                 }, color = DT.SubText, fontWeight = FontWeight.SemiBold)
                                 if (filtering) {
                                     TextButton(onClick = { vm.setSearchQuery(""); vm.setCategory(null); lowOnly = false }) {
@@ -214,7 +215,7 @@ internal fun StockPill(product: Product) {
     val level = stockLevel(product)
     val color = when (level) { StockLevel.OUT -> DT.Red; StockLevel.LOW -> DT.Amber; StockLevel.OK -> DT.Green }
     val text = when (level) {
-        StockLevel.OUT -> "Out of stock"
+        StockLevel.OUT -> Lang.t("Out of stock", "نفد المخزون")
         StockLevel.LOW -> "${product.stockLabel} left"
         StockLevel.OK  -> "${product.stockLabel} in stock"
     }
@@ -247,7 +248,7 @@ private fun ProductRow(product: Product, currency: String, canEdit: Boolean, onE
                 Text(listOf(product.category, product.barcode).filter { it.isNotBlank() }.joinToString("  •  "),
                     color = DT.SubText, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (daysToExpiry != null && daysToExpiry <= 30) {
-                    Text(if (daysToExpiry < 0) "Expired" else "Expires in ${daysToExpiry}d",
+                    Text(if (daysToExpiry < 0) Lang.t("Expired", "منتهي الصلاحية") else Lang.t("Expires in ${daysToExpiry}d", "ينتهي خلال ${daysToExpiry} يوم"),
                         color = if (daysToExpiry < 0) DT.Red else DT.Amber, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
@@ -260,7 +261,7 @@ private fun ProductRow(product: Product, currency: String, canEdit: Boolean, onE
             }
             if (canEdit) {
                 IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Default.Delete, "Delete product", tint = DT.Red.copy(0.85f), modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Delete, Lang.t("Delete product", "حذف المنتج"), tint = DT.Red.copy(0.85f), modifier = Modifier.size(20.dp))
                 }
             }
         }
@@ -435,9 +436,9 @@ fun AddEditProductDialog(
                 // Title bar
                 Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 12.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    Text(if (product == null) "Add product" else "Edit product", color = DT.OnSurface,
+                    Text(if (product == null) Lang.t("Add product", "إضافة منتج") else Lang.t("Edit product", "تعديل المنتج"), color = DT.OnSurface,
                         fontWeight = FontWeight.ExtraBold, fontSize = 20.sp, modifier = Modifier.weight(1f))
-                    IconButton(onClick = requestClose) { Icon(Icons.Default.Close, "Close", tint = DT.SubText) }
+                    IconButton(onClick = requestClose) { Icon(Icons.Default.Close, Lang.t("Close", "إغلاق"), tint = DT.SubText) }
                 }
                 HorizontalDivider(color = DT.Border)
 
@@ -446,12 +447,12 @@ fun AddEditProductDialog(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        DarkField(barcode, { barcode = it.trim() }, "Barcode *", modifier = Modifier.weight(1f), nextFocusRequester = nameFocus)
+                        DarkField(barcode, { barcode = it.trim() }, Lang.t("Barcode *", "الباركود *"), modifier = Modifier.weight(1f), nextFocusRequester = nameFocus)
                         FilledIconButton(onClick = {
                             if (!cameraPermission.status.isGranted) cameraPermission.launchPermissionRequest()
                             else showScanner = !showScanner
                         }, colors = IconButtonDefaults.filledIconButtonColors(containerColor = DT.Teal)) {
-                            Icon(Icons.Default.QrCode, "Scan barcode", tint = DT.Ink)
+                            Icon(Icons.Default.QrCode, Lang.t("Scan barcode", "مسح الباركود"), tint = DT.Ink)
                         }
                     }
                     if (showScanner && cameraPermission.status.isGranted) {
@@ -460,11 +461,11 @@ fun AddEditProductDialog(
                                 onBarcodeDetected = { barcode = it; showScanner = false })
                             ScannerOverlay(modifier = Modifier.fillMaxSize())
                             IconButton(onClick = { showScanner = false }, modifier = Modifier.align(Alignment.TopEnd)) {
-                                Icon(Icons.Default.Close, "Close scanner", tint = DT.Ink)
+                                Icon(Icons.Default.Close, Lang.t("Close scanner", "إغلاق الماسح"), tint = DT.Ink)
                             }
                         }
                     }
-                    DarkField(name, { name = it }, "Product name *", focusRequester = nameFocus, nextFocusRequester = priceFocus)
+                    DarkField(name, { name = it }, Lang.t("Product name *", "اسم المنتج *"), focusRequester = nameFocus, nextFocusRequester = priceFocus)
 
                     // Sold by weight: fruit, grain, meat... priced per kg and weighed at the till or on a scale
                     Row(
@@ -488,19 +489,19 @@ fun AddEditProductDialog(
 
                     if (isWeighed) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            DarkField(pricePerKg, { pricePerKg = sanitizeMoneyInput(it) }, "Price per kg ($currency) *", Modifier.weight(1f),
+                            DarkField(pricePerKg, { pricePerKg = sanitizeMoneyInput(it) }, Lang.t("Price per kg ($currency) *", "السعر للكيلو ($currency) *"), Modifier.weight(1f),
                                 KeyboardType.Decimal, focusRequester = priceFocus, nextFocusRequester = costFocus)
-                            DarkField(costPrice, { costPrice = sanitizeMoneyInput(it) }, "Cost per kg", Modifier.weight(1f),
+                            DarkField(costPrice, { costPrice = sanitizeMoneyInput(it) }, Lang.t("Cost per kg", "التكلفة للكيلو"), Modifier.weight(1f),
                                 KeyboardType.Decimal, focusRequester = costFocus, nextFocusRequester = pluFocus)
                         }
-                        DarkField(pluCode, { pluCode = it.filter(Char::isDigit).take(5) }, "PLU code (1–5 digits) *",
+                        DarkField(pluCode, { pluCode = it.filter(Char::isDigit).take(5) }, Lang.t("PLU code (1–5 digits) *", "رمز PLU (من 1 إلى 5 أرقام) *"),
                             keyboardType = KeyboardType.Number, focusRequester = pluFocus, nextFocusRequester = stockFocus,
                             supportingText = "The 5 digits after the leading 2 on scale labels")
                     } else {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            DarkField(price, { price = sanitizeMoneyInput(it) }, "Price ($currency) *", Modifier.weight(1f),
+                            DarkField(price, { price = sanitizeMoneyInput(it) }, Lang.t("Price ($currency) *", "السعر ($currency) *"), Modifier.weight(1f),
                                 KeyboardType.Decimal, focusRequester = priceFocus, nextFocusRequester = costFocus)
-                            DarkField(costPrice, { costPrice = sanitizeMoneyInput(it) }, "Cost price", Modifier.weight(1f),
+                            DarkField(costPrice, { costPrice = sanitizeMoneyInput(it) }, Lang.t("Cost price", "سعر التكلفة"), Modifier.weight(1f),
                                 KeyboardType.Decimal, focusRequester = costFocus, nextFocusRequester = stockFocus)
                         }
                     }
@@ -514,14 +515,14 @@ fun AddEditProductDialog(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         DarkField(stock, {
                             stock = if (isWeighed) sanitizeDecimalInput(it, maxDecimals = 3, maxWhole = 6) else it.filter(Char::isDigit).take(7)
-                        }, if (isWeighed) "Stock (kg)" else "Stock", Modifier.weight(1f),
+                        }, if (isWeighed) Lang.t("Stock (kg)", "المخزون (كجم)") else Lang.t("Stock", "المخزون"), Modifier.weight(1f),
                             if (isWeighed) KeyboardType.Decimal else KeyboardType.Number,
                             focusRequester = stockFocus, nextFocusRequester = unitFocus)
-                        DarkField(unit, { unit = it }, "Unit", Modifier.weight(1f), focusRequester = unitFocus, nextFocusRequester = categoryFocus)
+                        DarkField(unit, { unit = it }, Lang.t("Unit", "الوحدة"), Modifier.weight(1f), focusRequester = unitFocus, nextFocusRequester = categoryFocus)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DarkField(category, { category = it }, "Category", Modifier.weight(1f), focusRequester = categoryFocus, nextFocusRequester = skuFocus)
-                        DarkField(sku, { sku = it }, "SKU", Modifier.weight(1f), focusRequester = skuFocus, nextFocusRequester = lowAtFocus)
+                        DarkField(category, { category = it }, Lang.t("Category", "الفئة"), Modifier.weight(1f), focusRequester = categoryFocus, nextFocusRequester = skuFocus)
+                        DarkField(sku, { sku = it }, Lang.t("SKU", "رمز SKU"), Modifier.weight(1f), focusRequester = skuFocus, nextFocusRequester = lowAtFocus)
                     }
                     // One tap for an existing category instead of retyping it (and creating "drinks" next to "Drinks")
                     if (categories.isNotEmpty()) {
@@ -538,34 +539,34 @@ fun AddEditProductDialog(
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DarkField(lowAt, { lowAt = it.filter(Char::isDigit).take(5) }, "Low-stock alert at", Modifier.weight(1f),
+                        DarkField(lowAt, { lowAt = it.filter(Char::isDigit).take(5) }, Lang.t("Low-stock alert at", "تنبيه المخزون المنخفض عند"), Modifier.weight(1f),
                             KeyboardType.Number, focusRequester = lowAtFocus, nextFocusRequester = vatFocus)
-                        DarkField(vat, { vat = sanitizeDecimalInput(it, maxDecimals = 2, maxWhole = 3) }, "VAT % (in price)", Modifier.weight(1f),
+                        DarkField(vat, { vat = sanitizeDecimalInput(it, maxDecimals = 2, maxWhole = 3) }, Lang.t("VAT % (in price)", "ضريبة القيمة المضافة % (ضمن السعر)"), Modifier.weight(1f),
                             KeyboardType.Decimal, focusRequester = vatFocus, nextFocusRequester = supplierNameFocus)
                     }
 
                     Spacer(Modifier.height(4.dp))
                     Text(tr(com.minimart.pos.R.string.supplier), color = DT.SubText, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
-                    DarkField(supplierName, { supplierName = it }, "Supplier name", Modifier.fillMaxWidth(),
+                    DarkField(supplierName, { supplierName = it }, Lang.t("Supplier name", "اسم المورد"), Modifier.fillMaxWidth(),
                         focusRequester = supplierNameFocus, nextFocusRequester = supplierPhoneFocus)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DarkField(supplierPhone, { supplierPhone = it }, "Supplier phone", Modifier.weight(1f),
+                        DarkField(supplierPhone, { supplierPhone = it }, Lang.t("Supplier phone", "هاتف المورد"), Modifier.weight(1f),
                             KeyboardType.Phone, focusRequester = supplierPhoneFocus, nextFocusRequester = reorderFocus)
-                        DarkField(reorderQty, { reorderQty = it.filter(Char::isDigit).take(6) }, "Reorder qty", Modifier.weight(1f),
+                        DarkField(reorderQty, { reorderQty = it.filter(Char::isDigit).take(6) }, Lang.t("Reorder qty", "كمية إعادة الطلب"), Modifier.weight(1f),
                             KeyboardType.Number, focusRequester = reorderFocus, nextFocusRequester = batchFocus)
                     }
 
                     Spacer(Modifier.height(4.dp))
                     Text(tr(com.minimart.pos.R.string.batch_expiry), color = DT.SubText, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DarkField(batchNumber, { batchNumber = it }, "Batch no.", Modifier.weight(1f),
+                        DarkField(batchNumber, { batchNumber = it }, Lang.t("Batch no.", "رقم الدفعة"), Modifier.weight(1f),
                             focusRequester = batchFocus, nextFocusRequester = expiryFocus)
-                        DarkField(expiryDateStr, { expiryDateStr = it.take(10) }, "Expiry (dd/MM/yy)", Modifier.weight(1f),
+                        DarkField(expiryDateStr, { expiryDateStr = it.take(10) }, Lang.t("Expiry (dd/MM/yy)", "الصلاحية (يوم/شهر/سنة)"), Modifier.weight(1f),
                             focusRequester = expiryFocus, isError = expiryMs == null,
-                            supportingText = if (expiryMs == null) "Use dd/MM/yy, or pick from the calendar" else null,
+                            supportingText = if (expiryMs == null) Lang.t("Use dd/MM/yy, or pick from the calendar", "استخدم يوم/شهر/سنة أو اختر من التقويم") else null,
                             trailingIcon = {
                                 IconButton(onClick = { showExpiryPicker = true }) {
-                                    Icon(Icons.Default.CalendarMonth, "Pick expiry date", tint = DT.Teal)
+                                    Icon(Icons.Default.CalendarMonth, Lang.t("Pick expiry date", "اختر تاريخ الصلاحية"), tint = DT.Teal)
                                 }
                             })
                     }

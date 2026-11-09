@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.animateContentSize
@@ -199,7 +200,7 @@ fun DashboardScreen(
                             .border(1.5.dp, TealGlow.copy(0.45f), CircleShape)
                             .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { onNavigateToSettings() },
                             contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Settings, "Settings", tint = DT.Glow, modifier = Modifier.size(23.dp))
+                            Icon(Icons.Default.Settings, Lang.t("Settings", "الإعدادات"), tint = DT.Glow, modifier = Modifier.size(23.dp))
                         }
                     }
                 }
@@ -291,7 +292,7 @@ fun DashboardScreen(
                 item { Spacer(Modifier.height(16.dp)) }
                 item {
                     DashAlert(Icons.Default.Sync, TealGlow, Color(0xFF05161A),
-                        "Update ${up.release.tag.removePrefix("v")} is available", "Open Settings, About & support, to install it", onNavigateToSettings)
+                        Lang.t("Update ${up.release.tag.removePrefix("v")} is available", "يتوفر التحديث ${up.release.tag.removePrefix("v")}"), Lang.t("Open Settings, About & support, to install it", "افتح الإعدادات ثم حول التطبيق والدعم للتثبيت"), onNavigateToSettings)
                 }
             }
             if (freshness != null && freshness.warnAtCheckout) {
@@ -689,7 +690,7 @@ private fun BoxScope.DashBadge(onRemove: () -> Unit) {
         .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = tr(com.minimart.pos.R.string.dash_hide_card), onClick = onRemove),
         contentAlignment = Alignment.Center) {
         Box(Modifier.size(20.dp).clip(CircleShape).background(RedGlow), contentAlignment = Alignment.Center) {
-            Icon(Icons.Default.Close, "Hide card", tint = White, modifier = Modifier.size(12.dp))
+            Icon(Icons.Default.Close, Lang.t("Hide card", "إخفاء البطاقة"), tint = White, modifier = Modifier.size(12.dp))
         }
     }
 }
