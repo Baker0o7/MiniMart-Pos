@@ -9,6 +9,7 @@ class UpgradeSafetyTest {
 
     @Test fun `copies once when a newer version first runs`() = assertTrue(UpgradeSafety.shouldCopy(137, 138, 20 * mb, 500 * mb))
     @Test fun `no copy on a fresh install`() = assertFalse(UpgradeSafety.shouldCopy(0, 138, 0, 500 * mb))
+    @Test fun `copies the first time after an app from before this safety existed`() = assertTrue(UpgradeSafety.shouldCopy(0, 138, 20 * mb, 500 * mb))
     @Test fun `no copy when the version did not change`() = assertFalse(UpgradeSafety.shouldCopy(138, 138, 20 * mb, 500 * mb))
     @Test fun `no copy when going back to an older build`() = assertFalse(UpgradeSafety.shouldCopy(139, 138, 20 * mb, 500 * mb))
     @Test fun `no copy when the phone is nearly full`() = assertFalse(UpgradeSafety.shouldCopy(137, 138, 20 * mb, 30 * mb))

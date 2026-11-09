@@ -10,11 +10,14 @@ import java.io.File
  * Keeps one safety copy of the shop database right before a new app version first opens it, so a failed upgrade
  * cannot cost the shop its sales history. The files are copied as they are (still encrypted), into a folder that is
  * replaced by the next upgrade, so it never grows. A failure here never stops the app from starting.
+ *
+ * It lands beside the automatic backups (named `pre-upgrade-v<build>.db`), so it shows in Settings > Data & Backup
+ * and can be restored with the same Restore button as any other backup, with all its safety checks.
  */
 object UpgradeCopy {
     private const val PREFS = "upgrade_safety"
     private const val KEY_LAST = "last_run_version"
-    private const val FOLDER = "pre-upgrade"
+    private const val PREFIX = "pre-upgrade-v"
 
     fun runBeforeOpen(context: Context) {
         try {
@@ -24,11 +27,11 @@ object UpgradeCopy {
             val parts = listOf(db, File(db.path + "-wal"), File(db.path + "-shm")).filter { it.exists() }
             val size = parts.sumOf { it.length() }
             if (UpgradeSafety.shouldCopy(last, BuildConfig.VERSION_CODE, size, db.parentFile?.usableSpace ?: 0L)) {
-                val dir = File(context.filesDir, FOLDER)
-                dir.deleteRecursively()
-                dir.mkdirs()
-                parts.forEach { it.copyTo(File(dir, it.name), overwrite = true) }
-                File(dir, "from_version.txt").writeText(last.toString())
+                val dir = File(context.filesDir, "auto_backups").apply { mkdirs() }
+                dir.listFiles { f -> f.name.startsWith("pre-upgrade-") }?.forEach { it.delete() }
+                val name = if (last == 0) "pre-upgrade-older.db" else "$PREFIX$last.db"
+                // The main file keeps its name's suffixes for the write-ahead companions, as the restore code expects.
+                parts.forEach { src -> src.copyTo(File(dir, name + src.name.removePrefix(db.name)), overwrite = true) }
             }
             prefs.edit().putInt(KEY_LAST, BuildConfig.VERSION_CODE).apply()
         } catch (e: Exception) {
