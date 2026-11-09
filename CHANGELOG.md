@@ -5,6 +5,12 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.32.2] - 2026-11-10
+
+- **A safety copy before every update.** Just before a new version opens your shop data for the first time, the app keeps a copy of it. You will find it in Settings > Data & Backup, named `pre-upgrade-...`, and the normal Restore button can bring it back. Each update replaces the previous copy, so it does not fill up your phone.
+- **Search in Settings.** Type part of a section name at the top of Settings and only the matching sections show.
+- **More Arabic.** The product form, Inventory, Expenses, the barcode scanner and the Home update banner now follow the app language.
+
 ## [1.32.1] - 2026-11-09
 
 - **Arabic numbers.** In Arabic mode, amounts, counts, percentages and times now show in Arabic digits (١٢٣). Codes such as M-Pesa references, and anything you type, keep their normal digits so they still match and scan.
