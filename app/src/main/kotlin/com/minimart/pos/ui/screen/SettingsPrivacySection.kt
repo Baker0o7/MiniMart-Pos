@@ -23,7 +23,7 @@ internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
     val reports by settingsRepo.telemetryOptIn.collectAsState(initial = false)
     val kiosk by settingsRepo.kioskMode.collectAsState(initial = false)
     val scope = rememberCoroutineScope()
-    DSection(tr(com.minimart.pos.R.string.set_privacy), Icons.Default.VisibilityOff, summary = if (on) "Screenshots blocked" else "Screenshots allowed", initiallyExpanded = false) {
+    DSection(tr(com.minimart.pos.R.string.set_privacy), Icons.Default.VisibilityOff, summary = if (on) com.minimart.pos.util.Lang.t("Screenshots blocked", "لقطات الشاشة محظورة") else com.minimart.pos.util.Lang.t("Screenshots allowed", "لقطات الشاشة مسموحة"), initiallyExpanded = false) {
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
             .toggleable(value = on, role = Role.Switch) { v -> scope.launch { settingsRepo.setBlockScreenshots(v) } },
             verticalAlignment = Alignment.CenterVertically) {

@@ -50,6 +50,17 @@ import kotlinx.coroutines.launch
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/**
+ * What the owner typed in the Settings search box. Sections whose title or summary do not contain it hide themselves
+ * and matching ones open, so no section needs to know about searching. Cleared when the screen is left.
+ */
+internal object SettingsSearch {
+    var query by mutableStateOf("")
+
+    fun matches(title: String, summary: String?): Boolean =
+        query.isBlank() || title.contains(query.trim(), ignoreCase = true) || summary?.contains(query.trim(), ignoreCase = true) == true
+}
+
 @Composable
 internal fun DSection(
     title: String,
@@ -59,7 +70,11 @@ internal fun DSection(
     content: @Composable ColumnScope.() -> Unit
 ) {
     // Remembered per title so a rotation doesn't snap every section back to its default.
-    var expanded by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
+    var openByHand by rememberSaveable(title) { mutableStateOf(initiallyExpanded) }
+    val searching = SettingsSearch.query.isNotBlank()
+    if (!SettingsSearch.matches(title, summary)) return
+    // While searching, a match is shown open; the saved open/closed choice comes back when the search is cleared.
+    val expanded = openByHand || searching
     Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(DT.Surface)
         .border(1.dp, DT.Border, RoundedCornerShape(18.dp))) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -69,9 +84,9 @@ internal fun DSection(
                         indication = null,
                         interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                         role = androidx.compose.ui.semantics.Role.Button,
-                        onClickLabel = if (expanded) "Collapse $title" else "Expand $title"
-                    ) { expanded = !expanded }
-                    .semantics(mergeDescendants = true) { stateDescription = if (expanded) "Expanded" else "Collapsed" },
+                        onClickLabel = if (expanded) com.minimart.pos.util.Lang.t("Collapse $title", "طيّ $title") else com.minimart.pos.util.Lang.t("Expand $title", "توسيع $title")
+                    ) { openByHand = !openByHand }
+                    .semantics(mergeDescendants = true) { stateDescription = if (expanded) com.minimart.pos.util.Lang.t("Expanded", "موسّع") else com.minimart.pos.util.Lang.t("Collapsed", "مطوي") },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(icon, null, tint = DT.Teal, modifier = Modifier.size(18.dp))
@@ -84,13 +99,34 @@ internal fun DSection(
                     }
                 }
                 Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    if (expanded) "Collapse" else "Expand", tint = DT.SubText, modifier = Modifier.size(22.dp))
+                    if (expanded) com.minimart.pos.util.Lang.t("Collapse", "طيّ") else com.minimart.pos.util.Lang.t("Expand", "توسيع"), tint = DT.SubText, modifier = Modifier.size(22.dp))
             }
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)) { content() }
             }
         }
     }
+}
+
+/** The search box at the top of Settings. */
+@Composable
+internal fun SettingsSearchBar() {
+    val hint = com.minimart.pos.util.Lang.t("Search settings", "ابحث في الإعدادات")
+    OutlinedTextField(
+        value = SettingsSearch.query, onValueChange = { SettingsSearch.query = it.take(40) },
+        placeholder = { Text(hint, color = DT.SubText) },
+        leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText) },
+        trailingIcon = {
+            if (SettingsSearch.query.isNotEmpty()) {
+                IconButton(onClick = { SettingsSearch.query = "" }, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Default.Close, com.minimart.pos.util.Lang.t("Clear search", "مسح البحث"), tint = DT.SubText)
+                }
+            }
+        },
+        singleLine = true, modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+        shape = RoundedCornerShape(14.dp), colors = dColors()
+    )
 }
 
 @Composable

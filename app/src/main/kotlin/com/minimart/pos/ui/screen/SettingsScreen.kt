@@ -121,7 +121,7 @@ fun SettingsScreen(
                     }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(currentUserName ?: "Signed in", color = DT.OnSurface, fontWeight = FontWeight.Bold,
+                        Text(currentUserName ?: com.minimart.pos.util.Lang.t("Signed in", "تم تسجيل الدخول"), color = DT.OnSurface, fontWeight = FontWeight.Bold,
                             fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(storeName.ifBlank { "MiniMart POS" }, color = DT.SubText, fontSize = 12.sp,
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -137,6 +137,10 @@ fun SettingsScreen(
                         }
                     }
                 }
+
+                // Search: hides the sections that do not match (see SettingsSearch).
+                DisposableEffect(Unit) { onDispose { SettingsSearch.query = "" } }
+                SettingsSearchBar()
 
                 // Cashier restriction notice
                 if (!isAdmin) {
