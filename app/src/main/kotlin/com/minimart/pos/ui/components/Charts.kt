@@ -53,8 +53,8 @@ fun BarChart(
 
     Box(modifier.semantics {
         contentDescription = description ?: buildString {
-            append("Bar chart, ${values.size} bars")
-            if (highlight in values.indices) append(". Highest: ${labels?.getOrNull(highlight).orEmpty()} ${valueLabel(values[highlight])}")
+            append(com.minimart.pos.util.Lang.t("Bar chart, ${values.size} bars", "مخطط أعمدة، ${values.size} أعمدة"))
+            if (highlight in values.indices) append(com.minimart.pos.util.Lang.t(". Highest:", ". الأعلى:") + " ${labels?.getOrNull(highlight).orEmpty()} ${valueLabel(values[highlight])}")
         }
     }) {
         Canvas(
