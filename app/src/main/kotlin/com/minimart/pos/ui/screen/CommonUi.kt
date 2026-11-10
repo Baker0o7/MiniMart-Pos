@@ -67,8 +67,65 @@ internal fun plainNumber(value: Double, maxDecimals: Int = 2): String {
 }
 
 /** "SUPPLIER" -> "Supplier", "PETTY_CASH" -> "Petty cash". */
+/** Readable name for an enum value (payment method, expense category, order status, activity event); Arabic when known. */
 internal fun prettyEnumName(name: String): String =
-    name.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
+    (if (com.minimart.pos.util.Lang.arabic) ENUM_AR[name.uppercase()] else null)
+        ?: name.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
+
+private val ENUM_AR = mapOf(
+    "DRAFT" to "مسودة",
+    "ORDERED" to "تم الطلب",
+    "PARTIAL" to "مستلم جزئيًا",
+    "RECEIVED" to "مستلم",
+    "CANCELLED" to "ملغى",
+    "SUPPLIER" to "مورد",
+    "ELECTRICITY" to "كهرباء",
+    "WATER" to "ماء",
+    "RENT" to "إيجار",
+    "SALARY" to "رواتب",
+    "TRANSPORT" to "نقل",
+    "PACKAGING" to "تغليف",
+    "CLEANING" to "تنظيف",
+    "MAINTENANCE" to "صيانة",
+    "TAXES" to "ضرائب",
+    "OTHER" to "أخرى",
+    "CASH" to "نقدًا",
+    "MPESA" to "M-Pesa",
+    "CARD" to "بطاقة",
+    "MIXED" to "مختلط",
+    "CREDIT" to "آجل",
+    "COMPLETED" to "مكتملة",
+    "REFUNDED" to "مستردة",
+    "VOIDED" to "ملغاة",
+    "LOGIN_SUCCESS" to "تسجيل دخول ناجح",
+    "LOGIN_FAILED" to "فشل تسجيل الدخول",
+    "LOGOUT" to "تسجيل خروج",
+    "SALE_COMPLETED" to "بيع مكتمل",
+    "SALE_VOIDED" to "إلغاء بيع",
+    "SALE_REFUNDED" to "استرجاع بيع",
+    "SYNC_CONFLICT" to "تعارض مزامنة",
+    "DISCOUNT_APPLIED" to "تطبيق خصم",
+    "CREDIT_ADDED" to "إضافة رصيد",
+    "CREDIT_USED" to "استخدام رصيد",
+    "USER_CREATED" to "إنشاء مستخدم",
+    "USER_DELETED" to "حذف مستخدم",
+    "PIN_CHANGED" to "تغيير الرمز السري",
+    "PRODUCT_CREATED" to "إضافة منتج",
+    "PRODUCT_EDITED" to "تعديل منتج",
+    "PRODUCT_DELETED" to "حذف منتج",
+    "STOCK_ADJUSTED" to "تعديل المخزون",
+    "NO_SALE" to "فتح الدرج بدون بيع",
+    "SHIFT_OPENED" to "فتح وردية",
+    "SHIFT_CLOSED" to "إغلاق وردية",
+    "BACKUP_CREATED" to "إنشاء نسخة احتياطية",
+    "BACKUP_FAILED" to "فشل النسخ الاحتياطي",
+    "BACKUP_RESTORED" to "استعادة نسخة احتياطية",
+    "DATA_CHECK" to "فحص البيانات",
+    "PERMISSION_DENIED" to "رفض الإذن",
+    "SETTINGS_CHANGED" to "تغيير الإعدادات",
+    "SESSION_EXPIRED" to "انتهاء الجلسة",
+    "LOG_ROTATED" to "تدوير السجل",
+)
 
 /**
  * Rounded-bottom gradient header used by the main screens: back button, title, optional subtitle

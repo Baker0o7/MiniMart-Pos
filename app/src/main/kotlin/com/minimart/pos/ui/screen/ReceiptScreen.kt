@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.*
@@ -118,7 +119,7 @@ fun ReceiptScreen(
                     Box(
                         modifier = Modifier.size(52.dp).scale(scale).clip(CircleShape)
                             .background(sc.copy(0.15f)).border(2.dp, sc, CircleShape)
-                            .semantics { contentDescription = "Sale status" },
+                            .semantics { contentDescription = Lang.t("Sale status", "حالة عملية البيع") },
                         contentAlignment = Alignment.Center
                     ) { Icon(statusIcon(sale?.status), null, tint = sc, modifier = Modifier.size(30.dp)) }
                     Spacer(Modifier.width(12.dp))
@@ -150,7 +151,7 @@ fun ReceiptScreen(
                                 Text(storeName, color = DT.Ink, fontWeight = FontWeight.ExtraBold, fontSize = 15.sp,
                                     maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                                 Text(
-                                    "${(state.cashierName ?: cashierName).ifBlank { "Admin" }} · " +
+                                    "${(state.cashierName ?: cashierName).ifBlank { Lang.t("Admin", "المدير") }} · " +
                                         (sale?.createdAt?.let { SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault()).format(Date(it)) } ?: ""),
                                     color = DT.SubText, fontSize = 11.sp, maxLines = 1,
                                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
@@ -226,7 +227,7 @@ fun ReceiptScreen(
                                 val data = receiptData() ?: return@launch
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                                 statusMsg = "✓ PDF: ${file.name}"
-                            } catch (e: Exception) { statusMsg = "The PDF could not be made. " + com.minimart.pos.util.ErrorAdvice.reason(e) }
+                            } catch (e: Exception) { statusMsg = Lang.t("The PDF could not be made. ", "تعذّر إنشاء ملف PDF. ") + com.minimart.pos.util.ErrorAdvice.reason(e) }
                             finally { isGeneratingPdf = false }
                         }
                     }
@@ -237,10 +238,10 @@ fun ReceiptScreen(
                                 val file = withContext(Dispatchers.IO) { PdfReceiptGenerator.generate(context, data) }
                                 val uri = PdfReceiptGenerator.getShareUri(context, file)
                                 PdfReceiptGenerator.shareViaWhatsApp(context, uri, storeName, money(sale?.totalAmount ?: 0.0))
-                            } catch (e: Exception) { statusMsg = "Sharing did not work. " + com.minimart.pos.util.ErrorAdvice.reason(e) }
+                            } catch (e: Exception) { statusMsg = Lang.t("Sharing did not work. ", "لم تنجح المشاركة. ") + com.minimart.pos.util.ErrorAdvice.reason(e) }
                         }
                     }
-                    ReceiptActionBtn(Modifier.weight(1f), Icons.Default.IosShare, "Share", DT.Teal) {
+                    ReceiptActionBtn(Modifier.weight(1f), Icons.Default.IosShare, Lang.t("Share", "مشاركة"), DT.Teal) {
                         scope.launch {
                             try {
                                 val data = receiptData() ?: return@launch
@@ -291,7 +292,7 @@ fun ReceiptScreen(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             OutlinedButton(onClick = onDashboard,
-                modifier = Modifier.weight(1f).height(50.dp).semantics { contentDescription = "Dashboard" },
+                modifier = Modifier.weight(1f).height(50.dp).semantics { contentDescription = Lang.t("Dashboard", "الرئيسية") },
                 shape = RoundedCornerShape(14.dp),
                 border = androidx.compose.foundation.BorderStroke(1.dp, DT.Border)) {
                 Icon(Icons.Default.Home, null, tint = DT.SubText, modifier = Modifier.size(18.dp))
@@ -299,7 +300,7 @@ fun ReceiptScreen(
                 Text(tr(com.minimart.pos.R.string.nav_home), color = DT.SubText, fontSize = 14.sp)
             }
             Button(onClick = onNewSale,
-                modifier = Modifier.weight(1.6f).height(50.dp).semantics { contentDescription = "New sale" },
+                modifier = Modifier.weight(1.6f).height(50.dp).semantics { contentDescription = Lang.t("New sale", "عملية بيع جديدة") },
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DT.Teal)) {
                 Icon(Icons.Default.QrCode, null, tint = DT.Ink, modifier = Modifier.size(20.dp))
@@ -311,14 +312,14 @@ fun ReceiptScreen(
 
     // Refund dialog
     if (showRefundDialog) {
-        ReasonDialog("Refund Sale", "Stock will be restored.", DT.Amber,
+        ReasonDialog(Lang.t("Refund Sale", "استرجاع عملية البيع"), Lang.t("Stock will be restored.", "سيُعاد المخزون."), DT.Amber,
             onDismiss = { showRefundDialog = false },
             onConfirm = { reason -> vm.refundSale(reason); showRefundDialog = false })
     }
 
     // Void dialog
     if (showVoidDialog) {
-        ReasonDialog("Void Sale", "This cannot be undone. Stock will be restored.", DT.Red,
+        ReasonDialog(Lang.t("Void Sale", "إلغاء عملية البيع"), Lang.t("This cannot be undone. Stock will be restored.", "لا يمكن التراجع عن هذا. سيُعاد المخزون."), DT.Red,
             onDismiss = { showVoidDialog = false },
             onConfirm = { reason -> vm.voidSale(reason); showVoidDialog = false })
     }
@@ -364,10 +365,10 @@ private fun statusIcon(status: SaleStatus?) = when (status) {
     else -> Icons.Default.CheckCircle
 }
 private fun statusLabel(status: SaleStatus?) = when (status) {
-    SaleStatus.COMPLETED -> "Sale Complete!"
-    SaleStatus.VOIDED -> "Sale Voided"
-    SaleStatus.REFUNDED -> "Sale Refunded"
-    else -> "Processing..."
+    SaleStatus.COMPLETED -> com.minimart.pos.util.Lang.t("Sale Complete!", "تمت عملية البيع!")
+    SaleStatus.VOIDED -> com.minimart.pos.util.Lang.t("Sale Voided", "أُلغيت عملية البيع")
+    SaleStatus.REFUNDED -> com.minimart.pos.util.Lang.t("Sale Refunded", "استُرجعت عملية البيع")
+    else -> com.minimart.pos.util.Lang.t("Processing...", "جارٍ المعالجة...")
 }
 
 @Composable
