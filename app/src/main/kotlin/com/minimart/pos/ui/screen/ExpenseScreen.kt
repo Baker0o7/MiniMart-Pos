@@ -488,7 +488,7 @@ private fun AddExpenseDialog(currency: String, onDismiss: () -> Unit, onSave: (E
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = DT.Surface,
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false), containerColor = DT.Surface,
         title = { Text(tr(com.minimart.pos.R.string.add_expense), color = DT.OnSurface, fontWeight = FontWeight.Bold) },
         text = {
             // Requested from inside the dialog's own content so the field is attached first;

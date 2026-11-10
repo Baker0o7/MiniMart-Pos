@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.*
@@ -373,8 +374,8 @@ private fun AddCustomerDialog(customer: Customer?, onDismiss: () -> Unit, onSave
     var email by remember { mutableStateOf(customer?.email ?: "") }
     var notes by remember { mutableStateOf(customer?.notes ?: "") }
 
-    AlertDialog(onDismissRequest = onDismiss, containerColor = DT.Surface,
-        title = { Text(if (customer == null) "New Customer" else "Edit Customer",
+    AlertDialog(onDismissRequest = onDismiss, properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false), containerColor = DT.Surface,
+        title = { Text(if (customer == null) Lang.t("New Customer", "عميل جديد") else Lang.t("Edit Customer", "تعديل العميل"),
             color = DT.Ink, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -412,7 +413,7 @@ internal fun AddCreditDialog(customer: Customer, currency: String = "KES", onDis
     var amount by remember { mutableStateOf("") }
     var notes  by remember { mutableStateOf("") }
 
-    AlertDialog(onDismissRequest = onDismiss, containerColor = DT.Surface,
+    AlertDialog(onDismissRequest = onDismiss, properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false), containerColor = DT.Surface,
         title = { Text(tr(com.minimart.pos.R.string.add_credit_named, customer.name), color = DT.Ink, fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

@@ -227,7 +227,7 @@ fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewMode
         var notes by remember(s) { mutableStateOf(s.notes) }
         AlertDialog(
             onDismissRequest = { editing = null },
-            containerColor = DT.Surface,
+            properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false), containerColor = DT.Surface,
             title = { Text(if (s.id == 0L) Lang.t("New supplier", "مورد جديد") else Lang.t("Edit supplier", "تعديل المورد"), color = DT.OnSurface) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -415,7 +415,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
         }
         var updateCosts by rememberSaveable { mutableStateOf(true) }
         AlertDialog(
-            onDismissRequest = { showReceive = false }, containerColor = DT.Surface,
+            onDismissRequest = { showReceive = false }, properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false), containerColor = DT.Surface,
             title = { Text(tr(com.minimart.pos.R.string.receive_goods), color = DT.OnSurface) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -442,7 +442,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
     if (showPay) {
         var amount by remember { mutableStateOf(if (s.balance > 0) plainNumber(s.balance) else "") }
         AlertDialog(
-            onDismissRequest = { showPay = false }, containerColor = DT.Surface,
+            onDismissRequest = { showPay = false }, properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false), containerColor = DT.Surface,
             title = { Text(tr(com.minimart.pos.R.string.pay_supplier), color = DT.OnSurface) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
