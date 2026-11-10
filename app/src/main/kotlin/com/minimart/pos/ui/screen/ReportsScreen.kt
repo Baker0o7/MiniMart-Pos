@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import com.minimart.pos.util.sumOfMoney
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -112,13 +113,13 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                             shareScope.launch {
                                 try {
                                     val files = vm.buildAccountingFiles(context)
-                                    com.minimart.pos.util.AccountingFiles.share(context, files, "Accounts for this period")
+                                    com.minimart.pos.util.AccountingFiles.share(context, files, Lang.t("Accounts for this period", "حسابات هذه الفترة"))
                                 } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, "Could not create the files. " + com.minimart.pos.util.ErrorAdvice.reason(e), android.widget.Toast.LENGTH_LONG).show()
+                                    android.widget.Toast.makeText(context, Lang.t("Could not create the files. ", "تعذّر إنشاء الملفات. ") + com.minimart.pos.util.ErrorAdvice.reason(e), android.widget.Toast.LENGTH_LONG).show()
                                 } finally { isSharing = false }
                             }
                         }
-                    ) { Icon(Icons.Default.TableChart, "Export for accountant as spreadsheet files", tint = Color.White, modifier = Modifier.size(24.dp)) }
+                    ) { Icon(Icons.Default.TableChart, Lang.t("Export for accountant as spreadsheet files", "تصدير للمحاسب كملفات جداول"), tint = Color.White, modifier = Modifier.size(24.dp)) }
                     // Share the business report as a PDF — straight to WhatsApp (EOD report for
                     // an accountant or partner).
                     IconButton(
@@ -134,7 +135,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                                     com.minimart.pos.util.BusinessReportPdf.shareViaWhatsApp(
                                         context, com.minimart.pos.util.BusinessReportPdf.getShareUri(context, file), data)
                                 } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, "Could not create the report. " + com.minimart.pos.util.ErrorAdvice.reason(e), android.widget.Toast.LENGTH_LONG).show()
+                                    android.widget.Toast.makeText(context, Lang.t("Could not create the report. ", "تعذّر إنشاء التقرير. ") + com.minimart.pos.util.ErrorAdvice.reason(e), android.widget.Toast.LENGTH_LONG).show()
                                 } finally {
                                     isSharing = false
                                 }
@@ -142,7 +143,7 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
                         }
                     ) {
                         if (isSharing) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Color.White)
-                        else Icon(Icons.Default.Share, "Share report via WhatsApp", tint = Color.White, modifier = Modifier.size(24.dp))
+                        else Icon(Icons.Default.Share, Lang.t("Share report via WhatsApp", "مشاركة التقرير عبر واتساب"), tint = Color.White, modifier = Modifier.size(24.dp))
                     }
                 })
                 Spacer(Modifier.height(10.dp))

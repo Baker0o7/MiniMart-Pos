@@ -288,27 +288,27 @@ fun CheckoutScreen(
             Spacer(Modifier.height(10.dp))
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                PaymentCard(Modifier.weight(1f), "Cash", Icons.Default.Money, PaymentMethod.CASH, selectedMethod) {
+                PaymentCard(Modifier.weight(1f), Lang.t("Cash", "نقدًا"), Icons.Default.Money, PaymentMethod.CASH, selectedMethod) {
                     selectedMethod = it; if (it != PaymentMethod.CASH) cashInput = ""
                 }
                 PaymentCard(Modifier.weight(1f), "M-Pesa", Icons.Default.PhoneAndroid, PaymentMethod.MPESA, selectedMethod) { selectedMethod = it }
                 if (canApplyDiscounts) {
                     val disc = state.discount
                     val has = disc > 0
-                    PayTile(Modifier.weight(1f), if (has) "-${plainNumber(disc)}" else "Discount", Icons.Default.Discount,
+                    PayTile(Modifier.weight(1f), if (has) "-${plainNumber(disc)}" else Lang.t("Discount", "الخصم"), Icons.Default.Discount,
                         active = false, accent = if (has) DT.Amber else null) { showDiscountDialog = true }
                 }
                 // Customer (optional) — picks / changes the customer; clear it from the strip below.
                 run {
                     val has = selectedCustomer != null
                     PayTile(Modifier.weight(1f),
-                        selectedCustomer?.name?.trim()?.substringBefore(' ')?.ifBlank { null } ?: "Customer",
+                        selectedCustomer?.name?.trim()?.substringBefore(' ')?.ifBlank { null } ?: Lang.t("Customer", "العميل"),
                         if (has) Icons.Default.Person else Icons.Default.PersonSearch,
                         active = false, accent = if (has) DT.Teal else null) { showCustomerSearch = true }
                 }
                 // Credit only shown when customer selected
                 AnimatedVisibility(visible = selectedCustomer != null, modifier = Modifier.weight(1f)) {
-                    PaymentCard(Modifier.fillMaxWidth(), "Credit", Icons.Default.AccountBalanceWallet,
+                    PaymentCard(Modifier.fillMaxWidth(), Lang.t("Credit", "آجل"), Icons.Default.AccountBalanceWallet,
                         PaymentMethod.CREDIT, selectedMethod,
                         enabled = true) { selectedMethod = it }
                 }
@@ -332,7 +332,7 @@ fun CheckoutScreen(
                         selectedCustomer = null
                         if (selectedMethod == PaymentMethod.CREDIT) selectedMethod = PaymentMethod.CASH
                     }) {
-                        Icon(Icons.Default.Close, "Remove customer", tint = DT.SubText, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Close, Lang.t("Remove customer", "إزالة العميل"), tint = DT.SubText, modifier = Modifier.size(18.dp))
                     }
                 }
             }
@@ -361,7 +361,7 @@ fun CheckoutScreen(
                                 val exactCash = if (state.total % 1.0 == 0.0) state.total.toLong().toString()
                                                 else String.format(java.util.Locale.US, "%.2f", state.total)
                                 val quickCash = buildList {
-                                    if (state.total > 0) add("Exact" to exactCash)
+                                    if (state.total > 0) add(Lang.t("Exact", "المبلغ بالضبط") to exactCash)
                                     // Round-up notes that actually cover the bill (next 50/100/500/1000),
                                     // instead of fixed amounts that are often below the total.
                                     val t = kotlin.math.ceil(state.total).toLong()
@@ -904,7 +904,7 @@ private fun CustomerSearchSheet(
                 placeholder = { Text(tr(com.minimart.pos.R.string.search_cust), color = DT.SubText) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Default.Close, "Clear search", tint = DT.SubText, modifier = Modifier.size(16.dp)) }
+                    Icon(Icons.Default.Close, Lang.t("Clear search", "مسح البحث"), tint = DT.SubText, modifier = Modifier.size(16.dp)) }
                 },
                 singleLine = true, modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = searchKeyboardOptions(), keyboardActions = searchKeyboardActions(),

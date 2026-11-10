@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.Intent
@@ -110,12 +111,12 @@ fun PurchaseOrdersScreen(
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
         GradientHeader(
             title = tr(com.minimart.pos.R.string.purchasing),
-            subtitle = if (state.totalOwed > 0) "Owed to suppliers: $currency ${formatPrice(state.totalOwed)}" else "Orders to suppliers",
+            subtitle = if (state.totalOwed > 0) Lang.t("Owed to suppliers: $currency ${formatPrice(state.totalOwed)}", "المستحق للموردين: $currency ${formatPrice(state.totalOwed)}") else Lang.t("Orders to suppliers", "طلبات الموردين"),
             onBack = onBack
         ) {
-            HeaderPillButton("Suppliers", Icons.Default.Store, onSuppliers)
+            HeaderPillButton(Lang.t("Suppliers", "الموردون"), Icons.Default.Store, onSuppliers)
             Spacer(Modifier.width(8.dp))
-            HeaderPillButton("New order", Icons.Default.Add) { onOpenOrder(0) }
+            HeaderPillButton(Lang.t("New order", "طلب جديد"), Icons.Default.Add) { onOpenOrder(0) }
         }
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             item { FilterChip(selected = state.filter == null, onClick = { vm.setFilter(null) }, label = { Text(tr(com.minimart.pos.R.string.all)) }) }
@@ -167,8 +168,8 @@ fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewMode
     var editing by remember { mutableStateOf<Supplier?>(null) }
 
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
-        GradientHeader("Suppliers", "${state.suppliers.size} active", onBack) {
-            HeaderPillButton("Add supplier", Icons.Default.Add) { editing = Supplier(name = "") }
+        GradientHeader(Lang.t("Suppliers", "الموردون"), Lang.t("${state.suppliers.size} active", "${state.suppliers.size} نشط"), onBack) {
+            HeaderPillButton(Lang.t("Add supplier", "إضافة مورد"), Icons.Default.Add) { editing = Supplier(name = "") }
         }
         FeedbackBanner(state.message, state.isError, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -200,7 +201,7 @@ fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewMode
                             if (s.phone.isNotBlank()) Text(s.phone, color = DT.SubText, fontSize = 13.sp)
                         }
                         if (s.phone.isNotBlank()) IconButton(onClick = { dial(context, s.phone) }) {
-                            Icon(Icons.Default.Call, "Call ${s.name}", tint = DT.Green)
+                            Icon(Icons.Default.Call, Lang.t("Call ${s.name}", "اتصال بـ ${s.name}"), tint = DT.Green)
                         }
                     }
                     if (row.openOrders > 0 || row.owed > 0) {
@@ -208,7 +209,7 @@ fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewMode
                         Text(
                             listOfNotNull(
                                 if (row.openOrders > 0) "${row.openOrders} open order${if (row.openOrders == 1) "" else "s"}" else null,
-                                if (row.owed > 0) "Owed $currency ${formatPrice(row.owed)}" else null
+                                if (row.owed > 0) Lang.t("Owed $currency ${formatPrice(row.owed)}", "مستحق $currency ${formatPrice(row.owed)}") else null
                             ).joinToString(" · "),
                             color = if (row.owed > 0) DT.Amber else DT.SubText, fontSize = 12.sp
                         )
@@ -227,14 +228,14 @@ fun SuppliersScreen(onBack: () -> Unit, currency: String, vm: PurchasingViewMode
         AlertDialog(
             onDismissRequest = { editing = null },
             containerColor = DT.Surface,
-            title = { Text(if (s.id == 0L) "New supplier" else "Edit supplier", color = DT.OnSurface) },
+            title = { Text(if (s.id == 0L) Lang.t("New supplier", "مورد جديد") else Lang.t("Edit supplier", "تعديل المورد"), color = DT.OnSurface) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PoField(name, { name = it.take(80) }, "Name", Modifier.fillMaxWidth())
-                    PoField(phone, { phone = it.take(20) }, "Phone", Modifier.fillMaxWidth(), KeyboardType.Phone)
-                    PoField(email, { email = it.take(80) }, "Email", Modifier.fillMaxWidth(), KeyboardType.Email)
-                    PoField(address, { address = it.take(120) }, "Address", Modifier.fillMaxWidth())
-                    PoField(notes, { notes = it.take(300) }, "Notes", Modifier.fillMaxWidth(), singleLine = false)
+                    PoField(name, { name = it.take(80) }, Lang.t("Name", "الاسم"), Modifier.fillMaxWidth())
+                    PoField(phone, { phone = it.take(20) }, Lang.t("Phone", "الهاتف"), Modifier.fillMaxWidth(), KeyboardType.Phone)
+                    PoField(email, { email = it.take(80) }, Lang.t("Email", "البريد الإلكتروني"), Modifier.fillMaxWidth(), KeyboardType.Email)
+                    PoField(address, { address = it.take(120) }, Lang.t("Address", "العنوان"), Modifier.fillMaxWidth())
+                    PoField(notes, { notes = it.take(300) }, Lang.t("Notes", "ملاحظات"), Modifier.fillMaxWidth(), singleLine = false)
                     if (s.id != 0L) TextButton(onClick = { vm.deactivateSupplier(s.id); editing = null }) {
                         Text(tr(com.minimart.pos.R.string.remove_supplier), color = DT.Red)
                     }
@@ -257,7 +258,7 @@ private fun buildShareText(s: PoEditorState, currency: String): String = buildSt
     val sup = s.supplier
     appendLine("${if (s.storeName.isNotBlank()) s.storeName + " — " else ""}Purchase order ${if (s.poId != 0L) poLabel(s.poId) else ""}".trim())
     appendLine("Date: ${dateFmt.format(Date(if (s.orderedAt > 0) s.orderedAt else System.currentTimeMillis()))}")
-    if (sup != null) appendLine("Supplier: ${sup.name}")
+    if (sup != null) appendLine(Lang.t("Supplier: ${sup.name}", "المورد: ${sup.name}"))
     appendLine()
     s.lines.forEachIndexed { i, l ->
         val qty = plainNumber(l.qty, 3)
@@ -266,8 +267,8 @@ private fun buildShareText(s: PoEditorState, currency: String): String = buildSt
         appendLine()
     }
     appendLine()
-    appendLine("Total: $currency ${formatPrice(s.total)}")
-    if (s.notes.isNotBlank()) { appendLine(); appendLine("Notes: ${s.notes}") }
+    appendLine(Lang.t("Total: $currency ${formatPrice(s.total)}", "الإجمالي: $currency ${formatPrice(s.total)}"))
+    if (s.notes.isNotBlank()) { appendLine(); appendLine(Lang.t("Notes: ${s.notes}", "ملاحظات: ${s.notes}")) }
 }.trimEnd()
 
 @Composable
@@ -283,13 +284,13 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
 
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
         GradientHeader(
-            title = if (s.poId == 0L) "New order" else poLabel(s.poId),
+            title = if (s.poId == 0L) Lang.t("New order", "طلب جديد") else poLabel(s.poId),
             subtitle = prettyEnumName(s.status.name),
             onBack = onBack
         ) {
-            if (s.lines.isNotEmpty() && s.supplier != null) HeaderPillButton("Share", Icons.Default.Share) {
+            if (s.lines.isNotEmpty() && s.supplier != null) HeaderPillButton(Lang.t("Share", "مشاركة"), Icons.Default.Share) {
                 val send = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, buildShareText(s, currency)) }
-                try { context.startActivity(Intent.createChooser(send, "Share order").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {}
+                try { context.startActivity(Intent.createChooser(send, Lang.t("Share order", "مشاركة الطلب")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {}
             }
         }
         FeedbackBanner(s.message, s.isError, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
@@ -308,7 +309,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                         ) {
                             Icon(Icons.Default.Store, null, tint = DT.TealLight)
                             Spacer(Modifier.width(10.dp))
-                            Text(s.supplier?.name ?: "Choose supplier", color = if (s.supplier == null) DT.SubText else DT.OnSurface,
+                            Text(s.supplier?.name ?: Lang.t("Choose supplier", "اختر المورد"), color = if (s.supplier == null) DT.SubText else DT.OnSurface,
                                 modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
                             Icon(Icons.Default.ArrowDropDown, null, tint = DT.SubText)
                         }
@@ -322,20 +323,20 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                 } else {
                     Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DT.Surface).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(s.supplier?.name ?: "Supplier", color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(s.supplier?.name ?: Lang.t("Supplier", "المورد"), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                             if (s.orderedAt > 0) Text(tr(com.minimart.pos.R.string.po_sent_fmt, dateFmt.format(Date(s.orderedAt))), color = DT.SubText, fontSize = 12.sp)
                         }
                         StatusPill(s.status)
                         val phone = s.supplier?.phone.orEmpty()
-                        if (phone.isNotBlank()) IconButton(onClick = { dial(context, phone) }) { Icon(Icons.Default.Call, "Call supplier", tint = DT.Green) }
+                        if (phone.isNotBlank()) IconButton(onClick = { dial(context, phone) }) { Icon(Icons.Default.Call, Lang.t("Call supplier", "اتصال بالمورد"), tint = DT.Green) }
                     }
                 }
             }
 
             if (s.editable) item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PoButton("Add item", { showPicker = true }, Modifier.weight(1f), filled = false)
-                    PoButton("Add low stock", { vm.addLowStock() }, Modifier.weight(1f), filled = false, color = DT.Amber)
+                    PoButton(Lang.t("Add item", "إضافة صنف"), { showPicker = true }, Modifier.weight(1f), filled = false)
+                    PoButton(Lang.t("Add low stock", "إضافة المخزون المنخفض"), { vm.addLowStock() }, Modifier.weight(1f), filled = false, color = DT.Amber)
                 }
             }
 
@@ -346,15 +347,15 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(l.name, color = DT.OnSurface, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
                         if (s.editable) IconButton(onClick = { vm.removeLine(i) }, modifier = Modifier.size(48.dp)) {
-                            Icon(Icons.Default.Close, "Remove ${l.name}", tint = DT.Red, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Close, Lang.t("Remove ${l.name}", "إزالة ${l.name}"), tint = DT.Red, modifier = Modifier.size(18.dp))
                         }
                     }
                     Spacer(Modifier.height(6.dp))
                     if (s.editable) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                             PoField(l.qtyText, { vm.setQty(i, sanitizeDecimalInput(it, if (l.weighed) 3 else 0, 6)) },
-                                if (l.weighed) "Qty (kg)" else "Qty", Modifier.weight(1f), KeyboardType.Decimal)
-                            PoField(l.costText, { vm.setCost(i, sanitizeMoneyInput(it)) }, "Unit cost", Modifier.weight(1f), KeyboardType.Decimal)
+                                if (l.weighed) Lang.t("Qty (kg)", "الكمية (كجم)") else Lang.t("Qty", "الكمية"), Modifier.weight(1f), KeyboardType.Decimal)
+                            PoField(l.costText, { vm.setCost(i, sanitizeMoneyInput(it)) }, Lang.t("Unit cost", "تكلفة الوحدة"), Modifier.weight(1f), KeyboardType.Decimal)
                         }
                         Text(tr(com.minimart.pos.R.string.po_line_total, currency, formatPrice(l.total)), color = DT.SubText, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
                     } else {
@@ -366,7 +367,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
             }
 
             item {
-                PoField(s.notes, vm::setNotes, "Notes (optional)", Modifier.fillMaxWidth(), singleLine = false, enabled = s.editable)
+                PoField(s.notes, vm::setNotes, Lang.t("Notes (optional)", "ملاحظات (اختياري)"), Modifier.fillMaxWidth(), singleLine = false, enabled = s.editable)
             }
 
             item {
@@ -385,22 +386,22 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
             when (s.status) {
                 PurchaseOrderStatus.DRAFT -> {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        PoButton("Save draft", vm::saveDraft, Modifier.weight(1f), filled = false)
-                        PoButton("Mark as sent", vm::markOrdered, Modifier.weight(1f))
+                        PoButton(Lang.t("Save draft", "حفظ المسودة"), vm::saveDraft, Modifier.weight(1f), filled = false)
+                        PoButton(Lang.t("Mark as sent", "تعليم كمُرسل"), vm::markOrdered, Modifier.weight(1f))
                     }
                     if (s.poId != 0L) TextButton(onClick = { confirm = "delete" }, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text(tr(com.minimart.pos.R.string.delete_draft), color = DT.Red) }
                 }
                 PurchaseOrderStatus.ORDERED, PurchaseOrderStatus.PARTIAL -> {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (s.canReceive) PoButton("Receive goods", { showReceive = true }, Modifier.weight(1f), color = DT.Green)
-                        PoButton("Record payment", { showPay = true }, Modifier.weight(1f), filled = false)
+                        if (s.canReceive) PoButton(Lang.t("Receive goods", "استلام البضاعة"), { showReceive = true }, Modifier.weight(1f), color = DT.Green)
+                        PoButton(Lang.t("Record payment", "تسجيل دفعة"), { showPay = true }, Modifier.weight(1f), filled = false)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (s.status == PurchaseOrderStatus.PARTIAL) PoButton("Close short", { confirm = "short" }, Modifier.weight(1f), filled = false, color = DT.Amber)
-                        if (s.lines.none { it.receivedQty > 0 }) PoButton("Cancel order", { confirm = "cancel" }, Modifier.weight(1f), filled = false, color = DT.Red)
+                        if (s.status == PurchaseOrderStatus.PARTIAL) PoButton(Lang.t("Close short", "إغلاق ناقصًا"), { confirm = "short" }, Modifier.weight(1f), filled = false, color = DT.Amber)
+                        if (s.lines.none { it.receivedQty > 0 }) PoButton(Lang.t("Cancel order", "إلغاء الطلب"), { confirm = "cancel" }, Modifier.weight(1f), filled = false, color = DT.Red)
                     }
                 }
-                PurchaseOrderStatus.RECEIVED -> if (s.balance > 0) PoButton("Record payment", { showPay = true }, Modifier.fillMaxWidth())
+                PurchaseOrderStatus.RECEIVED -> if (s.balance > 0) PoButton(Lang.t("Record payment", "تسجيل دفعة"), { showPay = true }, Modifier.fillMaxWidth())
                 PurchaseOrderStatus.CANCELLED -> {}
             }
         }
@@ -446,7 +447,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(tr(com.minimart.pos.R.string.po_balance_colon, currency, formatPrice(s.balance)), color = DT.SubText, fontSize = 13.sp)
-                    PoField(amount, { amount = sanitizeMoneyInput(it) }, "Amount paid", Modifier.fillMaxWidth(), KeyboardType.Decimal)
+                    PoField(amount, { amount = sanitizeMoneyInput(it) }, Lang.t("Amount paid", "المبلغ المدفوع"), Modifier.fillMaxWidth(), KeyboardType.Decimal)
                 }
             },
             confirmButton = {
@@ -460,7 +461,7 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
         val (title, body) = when (kind) {
             "delete" -> "Delete draft?" to "This draft will be removed."
             "cancel" -> "Cancel this order?" to "The order will be marked cancelled."
-            else -> "Close order short?" to "Remaining items will not be received and the order is marked received."
+            else -> Lang.t("Close order short?", "إغلاق الطلب ناقصًا؟") to Lang.t("Remaining items will not be received and the order is marked received.", "لن تُستلم الأصناف المتبقية ويُعلَّم الطلب كمستلم.")
         }
         AlertDialog(
             onDismissRequest = { confirm = null }, containerColor = DT.Surface,
@@ -489,7 +490,7 @@ private fun ProductPickerDialog(s: PoEditorState, onPick: (com.minimart.pos.data
         title = { Text(tr(com.minimart.pos.R.string.add_item), color = DT.OnSurface) },
         text = {
             Column {
-                PoField(q, { q = it.take(40) }, "Search products", Modifier.fillMaxWidth())
+                PoField(q, { q = it.take(40) }, Lang.t("Search products", "ابحث عن المنتجات"), Modifier.fillMaxWidth())
                 Spacer(Modifier.height(8.dp))
                 LazyColumn(Modifier.heightIn(max = 320.dp)) {
                     items(matches, key = { it.id }) { p ->

@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.screen
 
+import com.minimart.pos.util.Lang
 import com.minimart.pos.ui.components.Text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.AnimatedVisibility
@@ -111,7 +112,7 @@ fun SalesHistoryScreen(
     val df      = remember { SimpleDateFormat("dd/MM/yy HH:mm", Locale.getDefault()) }
     var pendingVoidId by remember { mutableStateOf<Long?>(null) }
     pendingVoidId?.let { id ->
-        ReasonDialog("Void Sale", "This cannot be undone. Stock will be restored.", DT.Red,
+        ReasonDialog(Lang.t("Void Sale", "إلغاء عملية البيع"), Lang.t("This cannot be undone. Stock will be restored.", "لا يمكن التراجع عن هذا. سيُعاد المخزون."), DT.Red,
             onDismiss = { pendingVoidId = null },
             onConfirm = { reason -> vm.voidSale(id, reason); pendingVoidId = null })
     }
@@ -135,7 +136,7 @@ fun SalesHistoryScreen(
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = DT.SubText, modifier = Modifier.size(20.dp)) },
                 trailingIcon = {
                     if (query.isNotEmpty()) IconButton(onClick = { vm.setQuery("") }) {
-                        Icon(Icons.Default.Close, "Clear search", tint = DT.SubText, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Default.Close, Lang.t("Clear search", "مسح البحث"), tint = DT.SubText, modifier = Modifier.size(18.dp))
                     }
                 },
                 singleLine = true,
@@ -153,15 +154,12 @@ fun SalesHistoryScreen(
             Spacer(Modifier.height(8.dp))
 
             if (sales.itemCount == 0 && sales.loadState.refresh !is LoadState.Loading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(Icons.Default.Receipt, null, modifier = Modifier.size(64.dp), tint = DT.SubText.copy(0.3f))
-                        Text(if (query.isNotBlank()) "No results for \"$query\"" else "No sales yet",
-                            color = DT.SubText, fontWeight = FontWeight.Medium)
-                        if (query.isNotBlank()) Text(tr(com.minimart.pos.R.string.try_receipt),
-                            color = DT.SubText.copy(0.6f), style = MaterialTheme.typography.bodySmall)
-                    }
-                }
+                EmptyState(
+                    Icons.Default.Receipt,
+                    if (query.isNotBlank()) Lang.t("No results for \"$query\"", "لا نتائج لـ \"$query\"") else Lang.t("No sales yet", "لا توجد مبيعات بعد"),
+                    Modifier.fillMaxSize(),
+                    hint = if (query.isNotBlank()) tr(com.minimart.pos.R.string.try_receipt) else null
+                )
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
