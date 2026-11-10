@@ -82,6 +82,20 @@ object AccountingExport {
         append(",,Totals,${amount(d)},${amount(c)},${if (d == c) "Balanced" else "DOES NOT BALANCE"}\r\n")
     }
 
+    /**
+     * One row per sale (date, receipt, payment method, net, VAT, total, M-Pesa code): the list an accountant matches
+     * against the bank and M-Pesa statements, and what most bookkeeping packages take as a sales import. Newest last.
+     */
+    fun salesCsv(sales: List<AcctSale>, zone: ZoneId, currency: String): String = buildString {
+        append("Date,Receipt,Payment method,Net ($currency),VAT ($currency),Total ($currency),M-Pesa code\r\n")
+        for (s in sales.sortedBy { it.at }) {
+            append(listOf(day(s.at, zone), cell(s.receipt), cell(pretty(s.method)), amount(s.total - s.tax), amount(s.tax), amount(s.total), cell(s.mpesaRef))
+                .joinToString(",")).append("\r\n")
+        }
+        val total = sales.fold(Money.ZERO) { a, s -> a + s.total }; val tax = sales.fold(Money.ZERO) { a, s -> a + s.tax }
+        append(",,Totals,${amount(total - tax)},${amount(tax)},${amount(total)},\r\n")
+    }
+
     fun profitAndLoss(sales: List<AcctSale>, expenses: List<AcctExpense>): ProfitAndLoss {
         var takings = Money.ZERO; var vat = Money.ZERO; var cost = Money.ZERO
         val byMethod = linkedMapOf<String, Money>()

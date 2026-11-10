@@ -12,12 +12,12 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Writes the accountant's CSV files (journal, profit and loss) into the app's own folder and shares them.
+ * Writes the accountant's CSV files (journal, profit and loss, sales list) into the app's own folder and shares them.
  * The files go in archives/exports, which the share provider already covers, so no new folder is exposed.
  * A byte-order mark is written first so Excel shows names and symbols correctly.
  */
 object AccountingFiles {
-    private const val KEEP = 8
+    private const val KEEP = 12
 
     fun write(
         context: Context, sales: List<Sale>, costs: Map<Long, Double>, expenses: List<Expense>,
@@ -33,11 +33,14 @@ object AccountingFiles {
         val journal = AccountingExport.journalCsv(AccountingExport.journal(acctSales, acctExpenses, ZoneId.systemDefault()), currency)
         val pnl = AccountingExport.profitAndLossCsv(AccountingExport.profitAndLoss(acctSales, acctExpenses), storeName, periodLabel, currency)
 
+        val salesCsv = AccountingExport.salesCsv(acctSales, ZoneId.systemDefault(), currency)
+
         val dir = File(context.filesDir, "archives/exports").apply { mkdirs() }
         val stamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date(now))
         val files = listOf(
             File(dir, "journal_$stamp.csv").also { it.writeBytes(BOM + journal.toByteArray(Charsets.UTF_8)) },
-            File(dir, "profit_and_loss_$stamp.csv").also { it.writeBytes(BOM + pnl.toByteArray(Charsets.UTF_8)) }
+            File(dir, "profit_and_loss_$stamp.csv").also { it.writeBytes(BOM + pnl.toByteArray(Charsets.UTF_8)) },
+            File(dir, "sales_$stamp.csv").also { it.writeBytes(BOM + salesCsv.toByteArray(Charsets.UTF_8)) }
         )
         dir.listFiles()?.sortedByDescending { it.lastModified() }?.drop(KEEP)?.forEach { it.delete() }
         return files
@@ -49,7 +52,7 @@ object AccountingFiles {
             type = "text/csv"; putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
             putExtra(Intent.EXTRA_SUBJECT, subject); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(send, "Send to your accountant").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        context.startActivity(Intent.createChooser(send, Lang.t("Send to your accountant", "إرسال إلى المحاسب")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
     private val BOM = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())

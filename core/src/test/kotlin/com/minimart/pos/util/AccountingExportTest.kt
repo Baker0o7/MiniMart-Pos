@@ -97,4 +97,19 @@ class AccountingExportTest {
         val l = AccountingExport.journal(listOf(sale("CASH", 10.0, ref = "LATE", at = t0 + 86_400_000L), sale("CASH", 10.0, ref = "EARLY")), emptyList(), z)
         assertEquals("EARLY", l.first().ref)
     }
+
+    @Test fun salesListHasOneRowPerSaleAndTotalsThatAddUp() {
+        val csv = AccountingExport.salesCsv(
+            listOf(sale("MPESA", 116.0, 16.0, ref = "R2", at = t0 + 1000), sale("CASH", 50.55, 0.0, ref = "R1")), z, "KSh")
+        val rows = csv.trim().split("\r\n")
+        assertEquals("Date,Receipt,Payment method,Net (KSh),VAT (KSh),Total (KSh),M-Pesa code", rows[0])
+        assertEquals("2025-11-05,R1,Cash,50.55,0.00,50.55,", rows[1])          // oldest first
+        assertEquals("2025-11-05,R2,Mpesa,100.00,16.00,116.00,", rows[2])
+        assertEquals(",,Totals,150.55,16.00,166.55,", rows[3])
+    }
+
+    @Test fun salesListDefusesFormulaLookingReceiptsAndCodes() {
+        val csv = AccountingExport.salesCsv(listOf(AcctSale(t0, "=1+1", "CASH", m(10.0), m(0.0), mpesaRef = "@x")), z, "KSh")
+        assertTrue(csv.contains("'=1+1") && csv.contains("'@x"), csv)
+    }
 }
