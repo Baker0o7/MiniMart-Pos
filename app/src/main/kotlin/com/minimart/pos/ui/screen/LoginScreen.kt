@@ -47,7 +47,6 @@ fun LoginScreen(
 ) {
     val state   = vm.uiState.collectAsStateWithLifecycle().value
     val context = LocalContext.current
-    val haptic  = androidx.compose.ui.platform.LocalHapticFeedback.current
 
     var username       by remember { mutableStateOf("admin") }
     var pin            by remember { mutableStateOf("") }
@@ -239,45 +238,17 @@ fun LoginScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // Numeric keypad — glass keys, bright ✓ and red ⌫
-            val keys = listOf("1","2","3","4","5","6","7","8","9","✓","0","⌫")
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                keys.chunked(3).forEach { row ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        row.forEach { key ->
-                            val keyBrush = when (key) {
-                                "✓"  -> Brush.verticalGradient(if (light) listOf(DT.Teal, DT.HeaderMid) else listOf(Color(0xFF2BE08A), Color(0xFF0E8A4E)))
-                                "⌫" -> Brush.verticalGradient(if (light) listOf(Color(0xFFFFE4E4), Color(0xFFFFCFCF)) else listOf(Color(0xFF5A1414), Color(0xFF330A0A)))
-                                else -> Brush.verticalGradient(listOf(glassHi, glassLo))
-                            }
-                            val keyBorder = when (key) {
-                                "✓"  -> if (light) DT.Teal else Color(0xFF6BF5B0)
-                                "⌫" -> if (light) Color(0xFFB71C1C) else Color(0xFFE5484D)
-                                else -> glassBd
-                            }
-                            Box(modifier = Modifier.weight(1f).aspectRatio(2.2f)
-                                .clip(RoundedCornerShape(18.dp))
-                                .background(keyBrush)
-                                .border(1.2.dp, keyBorder.copy(0.8f), RoundedCornerShape(18.dp))
-                                .clickable(role = androidx.compose.ui.semantics.Role.Button, enabled = !lockedOut,
-                                    indication = null, interactionSource = remember { MutableInteractionSource() }) {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-                                    when (key) {
-                                        "⌫" -> { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
-                                        "✓" -> { if (pin.isNotEmpty()) { vm.login(username, pin); pin = "" } }
-                                        else -> { if (pin.length < 6) pin += key }
-                                    }
-                                }, contentAlignment = Alignment.Center) {
-                                when (key) {
-                                    "⌫" -> Icon(Icons.AutoMirrored.Filled.Backspace, null, tint = if (light) Color(0xFFB71C1C) else Color(0xFFFF6B6B), modifier = Modifier.size(28.dp))
-                                    "✓" -> Icon(Icons.Default.Check, null, tint = Color.White, modifier = Modifier.size(34.dp))
-                                    else -> Text(key, color = ink, fontWeight = FontWeight.Bold, fontSize = 26.sp, textAlign = TextAlign.Center)
-                                }
-                            }
-                        }
+            // Numeric keypad (its own composable so a key tap does not redraw the whole screen)
+            val onKey = remember {
+                { key: String ->
+                    when (key) {
+                        "⌫" -> { if (pin.isNotEmpty()) pin = pin.dropLast(1) }
+                        "✓" -> { if (pin.isNotEmpty()) { vm.login(username, pin); pin = "" } }
+                        else -> { if (pin.length < 6) pin += key }
                     }
                 }
             }
+            LoginKeypad(light = light, glassHi = glassHi, glassLo = glassLo, glassBd = glassBd, ink = ink, enabled = !lockedOut, onKey = onKey)
 
             Spacer(Modifier.height(8.dp))
 
@@ -294,10 +265,62 @@ fun LoginScreen(
                         .border(1.dp, glassBd, CircleShape)
                         .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { launchBiometric() },
                         contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Fingerprint, null, tint = emerald, modifier = Modifier.size(26.dp))
+                        Icon(Icons.Default.Fingerprint, tr(com.minimart.pos.R.string.login_use_biometric), tint = emerald, modifier = Modifier.size(26.dp))
                     }
                     Spacer(Modifier.width(12.dp))
                     Text(tr(com.minimart.pos.R.string.login_use_biometric), color = ink.copy(0.7f), fontSize = 13.sp)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The PIN keypad. It always reads left to right, even in Arabic: a phone keypad has 1 2 3 on the top row everywhere, and
+ * mirroring it would put 3 2 1 there. Brushes are built once, and the keys read out as "delete" and "sign in" for TalkBack.
+ */
+@Composable
+private fun LoginKeypad(
+    light: Boolean, glassHi: Color, glassLo: Color, glassBd: Color, ink: Color,
+    enabled: Boolean, onKey: (String) -> Unit
+) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val keys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "✓", "0", "⌫")
+    val brushes = remember(light, glassHi, glassLo) {
+        mapOf(
+            "✓" to Brush.verticalGradient(if (light) listOf(DT.Teal, DT.HeaderMid) else listOf(Color(0xFF2BE08A), Color(0xFF0E8A4E))),
+            "⌫" to Brush.verticalGradient(if (light) listOf(Color(0xFFFFE4E4), Color(0xFFFFCFCF)) else listOf(Color(0xFF5A1414), Color(0xFF330A0A))),
+            "" to Brush.verticalGradient(listOf(glassHi, glassLo))
+        )
+    }
+    val deleteLabel = tr(com.minimart.pos.R.string.delete)
+    val signInLabel = com.minimart.pos.util.Lang.t("Sign in", "دخول")
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            keys.chunked(3).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    row.forEach { key ->
+                        val keyBorder = when (key) {
+                            "✓" -> if (light) DT.Teal else Color(0xFF6BF5B0)
+                            "⌫" -> if (light) Color(0xFFB71C1C) else Color(0xFFE5484D)
+                            else -> glassBd
+                        }
+                        Box(modifier = Modifier.weight(1f).aspectRatio(2.2f)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(brushes[key] ?: brushes.getValue(""))
+                            .border(1.2.dp, keyBorder.copy(0.8f), RoundedCornerShape(18.dp))
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button, enabled = enabled,
+                                indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                                onKey(key)
+                            }, contentAlignment = Alignment.Center) {
+                            when (key) {
+                                "⌫" -> Icon(Icons.AutoMirrored.Filled.Backspace, deleteLabel, tint = if (light) Color(0xFFB71C1C) else Color(0xFFFF6B6B), modifier = Modifier.size(28.dp))
+                                "✓" -> Icon(Icons.Default.Check, signInLabel, tint = Color.White, modifier = Modifier.size(34.dp))
+                                else -> Text(key, color = ink, fontWeight = FontWeight.Bold, fontSize = 26.sp, textAlign = TextAlign.Center)
+                            }
+                        }
+                    }
                 }
             }
         }
