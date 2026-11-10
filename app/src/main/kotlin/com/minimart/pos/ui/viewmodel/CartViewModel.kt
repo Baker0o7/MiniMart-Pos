@@ -430,6 +430,27 @@ class CartViewModel @Inject constructor(
 
     // ── Checkout ──────────────────────────────────────────────────────────────
 
+    /** True from the moment a checkout starts until its coroutine ends, so a second tap on Pay stays silent. */
+    @Volatile private var checkoutRunning = false
+
+    private suspend fun markCheckoutRunning() {
+        checkoutRunning = true
+        kotlin.coroutines.coroutineContext[kotlinx.coroutines.Job]?.invokeOnCompletion { checkoutRunning = false }
+    }
+
+    /**
+     * Pay was tapped while a scanned item was still being looked up. Before, that tap did nothing at all and the
+     * till looked frozen; now it says why. A double tap on Pay itself (a checkout already running) stays silent.
+     */
+    private fun tellScanIsBusy() {
+        if (checkoutRunning) return
+        _uiState.update {
+            it.copy(error = com.minimart.pos.util.Lang.t(
+                "Still adding the scanned item. Tap Pay again in a moment.",
+                "ما زال يجري إضافة الصنف الممسوح. اضغط دفع مرة أخرى بعد لحظة."))
+        }
+    }
+
     fun checkout(
         paymentMethod: PaymentMethod,
         amountPaid: Double,
