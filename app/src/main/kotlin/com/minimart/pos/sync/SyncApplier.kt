@@ -27,7 +27,8 @@ class SyncApplier @Inject constructor(
     private val syncDao: SyncDao,
     private val saleRepo: SaleRepository,
     private val userRepo: UserRepository,
-    private val audit: com.minimart.pos.util.AuditLogger
+    private val audit: com.minimart.pos.util.AuditLogger,
+    private val conflictAlerts: SyncConflictNotifier
 ) {
     /** Returns one result per entry: {"id":<till's log id>,"status":"ok|duplicate|rejected","error":...}. */
     suspend fun apply(entries: JSONArray): JSONArray {
@@ -104,6 +105,7 @@ class SyncApplier @Inject constructor(
                             user = "till sync",
                             detail = "Sale ${rev.receiptNumber} was already ${local.status.name.lowercase()} here; a till also ${rev.status.name.lowercase()} it (reason: ${rev.reason.ifBlank { "none given" }}). Kept: ${local.status.name.lowercase()}."
                         )
+                        conflictAlerts.reversalConflict(rev.receiptNumber, local.status.name, rev.status.name)
                     }
                 }
             }
