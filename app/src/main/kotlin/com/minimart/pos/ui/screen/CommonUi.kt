@@ -8,9 +8,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextButton
 import com.minimart.pos.ui.components.Text
@@ -206,4 +209,38 @@ internal fun CrashReportPrompt() {
             }
         }
     )
+}
+
+
+/**
+ * The one "nothing here yet" look used by the lists: a quiet icon, a plain title, an optional hint and an optional
+ * main action. Text stays at full contrast and the button at the 48dp touch size, so every empty list reads the same.
+ */
+@Composable
+internal fun EmptyState(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    modifier: Modifier = Modifier,
+    hint: String? = null,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null
+) {
+    Box(modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 32.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
+        Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally, verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)) {
+            Icon(icon, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.6f))
+            Text(title, color = DT.OnSurface, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            if (hint != null) Text(hint, color = DT.SubText, style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            if (actionLabel != null && onAction != null) {
+                Button(onClick = onAction, modifier = Modifier.heightIn(min = 48.dp),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = androidx.compose.ui.graphics.Color.White)) {
+                    Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(actionLabel, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                }
+            }
+        }
+    }
 }

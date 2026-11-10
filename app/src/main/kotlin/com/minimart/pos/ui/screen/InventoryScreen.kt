@@ -174,7 +174,7 @@ fun InventoryScreen(
                                 Text(
                                     when {
                                         lowOnly && searchQuery.isBlank() -> Lang.t("Nothing is running low", "لا شيء على وشك النفاد")
-                                        searchQuery.isNotBlank() -> "No results for \"$searchQuery\""
+                                        searchQuery.isNotBlank() -> Lang.t("No results for \"$searchQuery\"", "لا نتائج لـ \"$searchQuery\"")
                                         selectedCat != null -> Lang.t("Nothing in this category yet", "لا شيء في هذه الفئة بعد")
                                         else -> Lang.t("No products yet", "لا توجد منتجات بعد")
                                     },

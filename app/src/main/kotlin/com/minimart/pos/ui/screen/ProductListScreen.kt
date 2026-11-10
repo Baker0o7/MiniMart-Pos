@@ -162,7 +162,7 @@ fun ProductListScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Icon(Icons.Default.Inventory2, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.3f))
                                 Text(when {
-                                    searchQuery.isNotBlank() -> "No results for \"$searchQuery\""
+                                    searchQuery.isNotBlank() -> Lang.t("No results for \"$searchQuery\"", "لا نتائج لـ \"$searchQuery\"")
                                     filtering -> Lang.t("Nothing matches this filter", "لا شيء يطابق هذا الفلتر")
                                     else -> Lang.t("No products yet", "لا توجد منتجات بعد")
                                 }, color = DT.SubText, fontWeight = FontWeight.SemiBold)

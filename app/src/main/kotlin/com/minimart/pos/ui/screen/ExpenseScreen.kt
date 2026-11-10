@@ -339,20 +339,8 @@ private fun ExpenseListTab(
     var pendingDelete by remember { mutableStateOf<Expense?>(null) }
 
     if (expenses.isEmpty()) {
-        Box(Modifier.fillMaxSize().padding(bottom = 48.dp), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Icon(Icons.Default.Receipt, null, modifier = Modifier.size(56.dp), tint = DT.SubText.copy(0.3f))
-                Text(tr(com.minimart.pos.R.string.no_expenses), color = DT.SubText, fontWeight = FontWeight.SemiBold)
-                Text(tr(com.minimart.pos.R.string.expenses_help), color = DT.SubText.copy(0.7f), fontSize = 12.sp)
-                Spacer(Modifier.height(4.dp))
-                Button(onClick = onAdd, shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, contentColor = Color.White)) {
-                    Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(tr(com.minimart.pos.R.string.add_expense), fontWeight = FontWeight.Bold)
-                }
-            }
-        }
+        EmptyState(Icons.Default.Receipt, tr(com.minimart.pos.R.string.no_expenses), Modifier.fillMaxSize(),
+            hint = tr(com.minimart.pos.R.string.expenses_help), actionLabel = tr(com.minimart.pos.R.string.add_expense), onAction = onAdd)
     } else {
         val groups = remember(expenses) { groupByDay(expenses) }
         val total = remember(expenses) { expenses.sumOfMoney { it.amount } }

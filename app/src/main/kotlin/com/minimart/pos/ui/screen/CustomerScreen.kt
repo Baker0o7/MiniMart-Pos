@@ -108,18 +108,12 @@ fun CustomerScreen(
             )
 
             if (state.customers.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Icon(Icons.Default.People, null, modifier = Modifier.size(64.dp), tint = DT.SubText.copy(0.25f))
-                        if (state.query.isNotBlank()) {
-                            Text(tr(com.minimart.pos.R.string.no_match, state.query), color = DT.SubText, fontWeight = FontWeight.SemiBold)
-                            Text(tr(com.minimart.pos.R.string.try_other_search), color = DT.SubText.copy(0.6f), fontSize = 12.sp)
-                        } else {
-                            Text(tr(com.minimart.pos.R.string.no_customers_yet), color = DT.SubText, fontWeight = FontWeight.SemiBold)
-                            Text(tr(com.minimart.pos.R.string.tap_add_person), color = DT.SubText.copy(0.6f), fontSize = 12.sp)
-                        }
-                    }
-                }
+                if (state.query.isNotBlank())
+                    EmptyState(Icons.Default.People, tr(com.minimart.pos.R.string.no_match, state.query), Modifier.fillMaxSize(),
+                        hint = tr(com.minimart.pos.R.string.try_other_search))
+                else
+                    EmptyState(Icons.Default.People, tr(com.minimart.pos.R.string.no_customers_yet), Modifier.fillMaxSize(),
+                        hint = tr(com.minimart.pos.R.string.tap_add_person))
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
