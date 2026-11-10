@@ -5,6 +5,12 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.32.4] - 2026-11-10
+
+- **Forms keep what you typed.** Tapping outside a form pop-up (add expense, supplier, customer, pay supplier, receive goods, add credit) no longer closes it and loses your typing. Use Cancel or Back to close it.
+- **More Arabic.** Purchasing (orders and suppliers), Sales history, Reports buttons and the Checkout tiles now follow the app language.
+- **Sales history** now uses the same tidy empty list as Expenses and Customers.
+
 ## [1.32.3] - 2026-11-10
 
 - **Alert when two tills disagree.** If two tills refund or void the same sale in different ways, you now get a notification naming the sale and which one was kept (the first one, so money is never returned twice). Before, it was only in the activity log.
