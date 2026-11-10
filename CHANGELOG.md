@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.32.5] - 2026-11-10
+
+- **More Arabic.** Payment methods, expense categories, order statuses (Draft, Ordered, Received…) and the activity log's event names now show in Arabic when the app is in Arabic. The receipt screen's status, buttons and refund/void dialogs too.
+
 ## [1.32.4] - 2026-11-10
 
 - **Forms keep what you typed.** Tapping outside a form pop-up (add expense, supplier, customer, pay supplier, receive goods, add credit) no longer closes it and loses your typing. Use Cancel or Back to close it.
