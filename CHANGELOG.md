@@ -5,6 +5,12 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.32.3] - 2026-11-10
+
+- **Alert when two tills disagree.** If two tills refund or void the same sale in different ways, you now get a notification naming the sale and which one was kept (the first one, so money is never returned twice). Before, it was only in the activity log.
+- **Tidier empty lists.** Empty Expenses and Customers lists now look the same, with clearer text and a bigger button.
+- **Arabic.** The "No results for…" lines in Products and Inventory now follow the app language.
+
 ## [1.32.2] - 2026-11-10
 
 - **A safety copy before every update.** Just before a new version opens your shop data for the first time, the app keeps a copy of it. You will find it in Settings > Data & Backup, named `pre-upgrade-...`, and the normal Restore button can bring it back. Each update replaces the previous copy, so it does not fill up your phone.
