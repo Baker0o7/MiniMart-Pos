@@ -446,10 +446,11 @@ class CartViewModel @Inject constructor(
             // transaction. This check must run synchronously as the very first line,
             // before any suspension point, so the second call sees isLoading=true
             // immediately rather than racing to read a stale false value.
-            if (_uiState.value.isLoading) return@launch
+            if (_uiState.value.isLoading) { tellScanIsBusy(); return@launch }
             val state = _uiState.value
             if (state.isEmpty) return@launch
             _uiState.update { it.copy(isLoading = true) }
+            markCheckoutRunning()
 
             try {
                 val counter = settingsRepo.incrementReceiptCounter()
@@ -525,9 +526,10 @@ class CartViewModel @Inject constructor(
         viewModelScope.launch {
             // Bug fix: same double-checkout race as checkout() above — checkoutSplit()
             // had no guard at all (not even the isEmpty check checkout() has).
-            if (_uiState.value.isLoading) return@launch
+            if (_uiState.value.isLoading) { tellScanIsBusy(); return@launch }
             if (_uiState.value.isEmpty) return@launch
             _uiState.update { it.copy(isLoading = true) }
+            markCheckoutRunning()
             try {
                 val state = _uiState.value
                 // Never take more customer credit than the sale is worth (UI also caps this).
