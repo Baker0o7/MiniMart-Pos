@@ -35,8 +35,6 @@ private fun hourLabel(h: Int): String = HourLabel.of(h)
 
 private fun salesWord(n: Int): String = ArabicCount.phrase(n, "لا مبيعات", "عملية بيع واحدة", "عمليتا بيع", "عمليات بيع", "عملية بيع")
 
-private fun salesWord(n: Int): String = ArabicCount.phrase(n, "لا مبيعات", "عملية بيع واحدة", "عمليتا بيع", "عمليات بيع", "عملية بيع")
-
 /** The owner's view of today: takings, profit, how it was paid, and what needs attention. */
 @Composable
 fun TodayScreen(onBack: () -> Unit, onOpenHealth: () -> Unit, onOpenShifts: () -> Unit, vm: TodayViewModel = hiltViewModel()) {
