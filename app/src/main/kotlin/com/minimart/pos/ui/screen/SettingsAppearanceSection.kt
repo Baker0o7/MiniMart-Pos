@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
@@ -67,7 +68,7 @@ internal fun AppearanceSettingsSection(settingsRepo: SettingsRepository) {
                         DT.themeMode = m                                      // instant
                         scope.launch { settingsRepo.setThemeMode(m.name) }    // remembered
                     }
-                    .semantics { contentDescription = m.label + " theme" },
+                    .semantics { contentDescription = Lang.t("${m.label} theme", "المظهر: ${m.label}") },
                     contentAlignment = Alignment.Center) {
                     Text(m.label, color = if (on) Color.White else DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 }
@@ -86,15 +87,17 @@ internal fun AppearanceSettingsSection(settingsRepo: SettingsRepository) {
                             com.minimart.pos.ui.theme.DT.accent = a            // instant
                             scope.launch { settingsRepo.setAccent(a.name) }   // remembered
                         }
-                        .semantics { contentDescription = a.label + " colour" },
+                        .semantics { contentDescription = Lang.t("${a.label} colour", "اللون: ${a.label}") },
                     contentAlignment = Alignment.Center
                 ) { if (picked) Icon(Icons.Default.Check, null, tint = DT.Ink, modifier = Modifier.size(22.dp)) }
             }
         }
         Spacer(Modifier.height(14.dp))
-        ThemeSwitch("Deep black", "Dark theme only. Near-black backgrounds. Easier on the eyes at night and saves battery on OLED screens.",
+        ThemeSwitch(Lang.t("Deep black", "أسود عميق"),
+            Lang.t("Dark theme only. Near-black backgrounds. Easier on the eyes at night and saves battery on OLED screens.", "للوضع الداكن فقط. خلفيات شبه سوداء. أريح للعين ليلًا وتوفّر البطارية على شاشات OLED.") +
+                if (DT.light) Lang.t(" Not showing now, because the light theme is on.", " غير ظاهر الآن لأن الوضع الفاتح مفعّل.") else "",
             DT.amoled) { on -> DT.amoled = on; scope.launch { settingsRepo.setAmoled(on) } }
-        ThemeSwitch("High contrast", "Whiter text, brighter secondary text and stronger borders.",
+        ThemeSwitch(Lang.t("High contrast", "تباين عالٍ"), Lang.t("Whiter text, brighter secondary text and stronger borders.", "نص أوضح، ونص ثانوي أسطع، وحدود أقوى."),
             DT.highContrast) { on -> DT.highContrast = on; scope.launch { settingsRepo.setHighContrast(on) } }
     }
 }
@@ -110,6 +113,8 @@ private fun ThemeSwitch(title: String, hint: String, checked: Boolean, onChange:
             Text(hint, color = DT.SubText, style = MaterialTheme.typography.bodySmall)
         }
         Spacer(Modifier.width(12.dp))
-        Switch(checked = checked, onCheckedChange = null)
+        Switch(checked = checked, onCheckedChange = null,
+            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = DT.Teal, uncheckedTrackColor = DT.Border,
+                uncheckedThumbColor = DT.SubText, uncheckedBorderColor = DT.SubText.copy(0.6f)))
     }
 }

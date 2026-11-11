@@ -16,10 +16,11 @@ import kotlinx.coroutines.flow.*
 import java.util.Calendar
 import javax.inject.Inject
 
-enum class ReportPeriod(val label: String) {
-    TODAY("Today"), WEEK("Week"), MONTH("Month"),
+enum class ReportPeriod(private val en: String, private val ar: String) {
+    TODAY("Today", "اليوم"), WEEK("Week", "الأسبوع"), MONTH("Month", "الشهر"),
     /** User-picked date range (falls back to the last 90 days until one is chosen). */
-    CUSTOM("Custom")
+    CUSTOM("Custom", "مخصص");
+    val label: String get() = com.minimart.pos.util.Lang.t(en, ar)
 }
 
 data class ReportsUiState(

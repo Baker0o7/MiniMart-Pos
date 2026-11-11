@@ -379,10 +379,10 @@ fun ScannerCartScreen(
                     Text(if (state.items.isNotEmpty()) "Cart" else "", color = DT.Ink,
                         fontWeight = FontWeight.SemiBold, fontSize = 15.sp, modifier = Modifier.weight(1f))
                     if (held.isNotEmpty()) {
-                        CartChip("Held (${held.size})", Icons.Default.PlayCircle, DT.Amber) { showHeld = true }
+                        CartChip(Lang.t("Held (${held.size})", "معلّقة (${held.size})"), Icons.Default.PlayCircle, DT.Amber) { showHeld = true }
                     }
                     if (state.items.isNotEmpty()) {
-                        CartChip("Hold", Icons.Default.PauseCircle, DT.Teal) { vm.holdCurrentSale() }
+                        CartChip(Lang.t("Hold", "تعليق"), Icons.Default.PauseCircle, DT.Teal) { vm.holdCurrentSale() }
                         Box(modifier = Modifier.clip(RoundedCornerShape(8.dp))
                             .background(DT.Surface2).border(1.dp, DT.Border, RoundedCornerShape(8.dp))
                             .padding(horizontal = 10.dp, vertical = 6.dp)) {

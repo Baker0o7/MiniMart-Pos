@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
@@ -61,7 +62,7 @@ internal fun PrivacySettingsSection(settingsRepo: SettingsRepository) {
             Switch(checked = kiosk, onCheckedChange = null)
         }
         val context = androidx.compose.ui.platform.LocalContext.current
-        Text("Shop data on this phone: " + com.minimart.pos.util.DbEncryption.status(context),
+        Text(Lang.t("Shop data on this phone: ", "بيانات المتجر على هذا الهاتف: ") + com.minimart.pos.util.DbEncryption.status(context).let { st -> if (!Lang.arabic) st else when (st) { "Encrypted" -> "مشفّرة"; "Not checked yet" -> "لم تُفحص بعد"; else -> st } },
             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
     }
 }

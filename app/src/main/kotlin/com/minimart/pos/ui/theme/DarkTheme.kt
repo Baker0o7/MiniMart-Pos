@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.theme
 
 import androidx.compose.runtime.derivedStateOf
+import com.minimart.pos.util.Lang
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -57,7 +58,7 @@ private fun tinted(hue: Float, accent: Color, light: Color, neutral: Boolean = f
     )
 }
 
-enum class AppAccent(val label: String, val palette: Palette, val hue: Float = 174f, val neutral: Boolean = false) {
+enum class AppAccent(private val enLabel: String, val palette: Palette, val hue: Float = 174f, val neutral: Boolean = false) {
     TEAL("Teal", Palette(
         bg = Color(0xFF0A1A18), surface = Color(0xFF112420), surface2 = Color(0xFF163028), border = Color(0xFF1E4040),
         accent = Color(0xFF008376), accentLight = Color(0xFF4DB6AC), accentDim = Color(0xFF1E3D38),
@@ -74,14 +75,19 @@ enum class AppAccent(val label: String, val palette: Palette, val hue: Float = 1
     GREEN("Green", tinted(135f, Color(0xFF2E7D32), Color(0xFF81C784)), 135f),
     GRAPHITE("Graphite", tinted(205f, Color(0xFF546E7A), Color(0xFFB0BEC5), neutral = true), 205f, neutral = true);
 
+    /** Colour name in the app language. */
+    val label: String get() = if (Lang.arabic) (AR_NAMES[name] ?: enLabel) else enLabel
+
     companion object {
+        private val AR_NAMES = mapOf("TEAL" to "فيروزي", "BLUE" to "أزرق", "PURPLE" to "بنفسجي", "ORANGE" to "برتقالي", "ROSE" to "وردي", "GREEN" to "أخضر", "GRAPHITE" to "رمادي فحمي")
         fun fromName(name: String?): AppAccent = entries.firstOrNull { it.name == name } ?: TEAL
     }
 }
 
 /** How the app is coloured: always dark (the original look), always light, or whatever the phone is set to. */
-enum class ThemeMode(val label: String) {
-    DARK("Dark"), LIGHT("Light"), SYSTEM("Phone setting");
+enum class ThemeMode(private val en: String, private val ar: String) {
+    DARK("Dark", "داكن"), LIGHT("Light", "فاتح"), SYSTEM("Phone setting", "حسب الهاتف");
+    val label: String get() = Lang.t(en, ar)
     companion object { fun fromName(name: String?): ThemeMode = entries.firstOrNull { it.name == name } ?: DARK }
 }
 

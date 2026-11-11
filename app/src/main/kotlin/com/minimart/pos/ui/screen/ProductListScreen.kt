@@ -127,7 +127,7 @@ fun ProductListScreen(
 
             // ── Filter chips ──────────────────────────────────────────────────
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                item { DarkFilterChip("All", selectedCat == null && !lowOnly) { vm.setCategory(null); lowOnly = false } }
+                item { DarkFilterChip(Lang.t("All", "الكل"), selectedCat == null && !lowOnly) { vm.setCategory(null); lowOnly = false } }
                 if (lowStock.isNotEmpty()) {
                     item { DarkFilterChip("⚠ Low stock (${lowStock.size})", lowOnly, accent = DT.Amber) { lowOnly = !lowOnly } }
                 }

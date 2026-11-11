@@ -5,6 +5,14 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.32.7] - 2026-11-12
+
+- **More of the app in Arabic:** M-Pesa payments, Stock insights, Today, Analytics, the Settings summaries (printer, cash drawer, M-Pesa Daraja, sync, daily report), Account, Activity log, Hardware check, Store health, Barcode labels, and the period buttons (Today, Week, Month) all follow the language now. Counts use the right Arabic wording ("two payments", "no payments").
+- **Zero is easier to read in Arabic:** a plain zero now shows as 0 instead of the small dot, so "KES 0" and "0 payments" no longer look like "KES ." Server addresses and version numbers also keep normal digits so they can be typed into another phone.
+- **Appearance:** theme names and colour names are translated, the Deep black and High contrast switches match the other switches, and Deep black says so when it is not showing because the light theme is on.
+- **Home:** the "update available" banner is easier to read in the light theme, and its text is shorter.
+- Hours on charts read 12 ص / 6 م in Arabic.
+
 ## [1.32.6] - 2026-11-11
 
 - **Lock screen.** In Arabic the PIN keypad now reads 1 2 3 from the top left like any phone keypad (it was mirrored). Tapping a key is lighter on slow phones, and the delete, sign-in and fingerprint buttons can now be read out by TalkBack.

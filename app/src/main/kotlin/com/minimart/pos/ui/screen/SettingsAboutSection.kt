@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -32,7 +33,7 @@ internal fun AboutSettingsSection(syncOn: Boolean, cloudOn: Boolean, webhook: Mp
     val instantMpesaOn = webhook.state.collectAsStateWithLifecycle().value.enabled
     var copied by remember { mutableStateOf(false) }
     DSection(tr(com.minimart.pos.R.string.set_about), Icons.Default.Info, summary = tr(com.minimart.pos.R.string.version_fmt, BuildConfig.VERSION_NAME), initiallyExpanded = false) {
-        Text("MiniMart POS ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
+        Text("MiniMart POS ${BuildConfig.VERSION_NAME} (" + Lang.t("build", "الإصدار الداخلي") + " ${BuildConfig.VERSION_CODE})", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
         Text(tr(com.minimart.pos.R.string.about_free),
             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(10.dp))

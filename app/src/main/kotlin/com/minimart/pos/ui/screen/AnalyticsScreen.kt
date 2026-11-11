@@ -1,6 +1,9 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.HourLabel
+import com.minimart.pos.util.ArabicCount
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -80,7 +83,7 @@ fun AnalyticsScreen(onBack: () -> Unit, vm: AnalyticsViewModel = hiltViewModel()
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.Insights, null, tint = DT.SubText, modifier = Modifier.size(48.dp))
                     Spacer(Modifier.height(10.dp))
-                    Text("No sales in the last ${s.range.label}", color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
+                    Text(Lang.t("No sales in the last ${s.range.label}", "لا مبيعات خلال ${s.range.label}"), color = DT.OnSurface, fontWeight = FontWeight.SemiBold)
                     Text(tr(com.minimart.pos.R.string.trends_empty), color = DT.SubText,
                         fontSize = 13.sp, textAlign = TextAlign.Center)
                 }
@@ -154,7 +157,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                 }
                 Spacer(Modifier.height(6.dp))
                 val d = SimpleDateFormat("EEE d MMM", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(Date(s.trend[best].startMs))
-                Text("Best ${if (s.trendBucketDays == 1) "day" else "week from"}: $d • $cur ${money(values[best].toDouble())}",
+                Text((if (s.trendBucketDays == 1) Lang.t("Best day: ", "أفضل يوم: ") else Lang.t("Best week from: ", "أفضل أسبوع يبدأ: ")) + "$d • $cur ${money(values[best].toDouble())}",
                     color = DT.OnSurface, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
         }
@@ -188,15 +191,15 @@ private fun AnalyticsBody(s: AnalyticsState) {
                 val peak = values.indices.maxByOrNull { values[it] } ?: 0
                 BarChart(values, highlight = peak, modifier = Modifier.fillMaxWidth().height(80.dp),
                     labels = values.indices.map { hourLabel(it) },
-                    valueLabel = { v -> "${v.toInt()} sale${if (v.toInt() != 1) "s" else ""}" })
+                    valueLabel = { v -> ArabicCount.t(v.toInt(), "sale", "sales", "لا مبيعات", "عملية بيع واحدة", "عمليتا بيع", "عمليات بيع", "عملية بيع") })
                 Spacer(Modifier.height(6.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    listOf("12 AM", "6 AM", "12 PM", "6 PM", "11 PM").forEach {
+                    listOf(0, 6, 12, 18, 23).map { hourLabel(it) }.forEach {
                         Text(it, color = DT.SubText, fontSize = 11.sp)
                     }
                 }
                 Spacer(Modifier.height(6.dp))
-                Text("Peak: ${hourLabel(peak)}–${hourLabel((peak + 1) % 24)} • ${s.hourly[peak]} sale${if (s.hourly[peak] != 1) "s" else ""}",
+                Text(Lang.t("Peak: ", "الذروة: ") + "${hourLabel(peak)}–${hourLabel((peak + 1) % 24)} • " + ArabicCount.t(s.hourly[peak], "sale", "sales", "لا مبيعات", "عملية بيع واحدة", "عمليتا بيع", "عمليات بيع", "عملية بيع"),
                     color = DT.OnSurface, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
         }
@@ -211,13 +214,13 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     valueLabel = { v -> "$cur ${money(v.toDouble())}" })
                 Spacer(Modifier.height(6.dp))
                 Row(Modifier.fillMaxWidth()) {
-                    listOf("M", "T", "W", "T", "F", "S", "S").forEach {
+                    (if (Lang.arabic) listOf("ن", "ث", "ر", "خ", "ج", "س", "ح") else listOf("M", "T", "W", "T", "F", "S", "S")).forEach {
                         Text(it, color = DT.SubText, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
                     }
                 }
                 Spacer(Modifier.height(6.dp))
-                val names = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
-                Text("Strongest: ${names[best]} • $cur ${money(values[best].toDouble())}",
+                val names = if (Lang.arabic) listOf("الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد") else listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+                Text(Lang.t("Strongest: ", "الأقوى: ") + "${names[best]} • $cur ${money(values[best].toDouble())}",
                     color = DT.OnSurface, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
         }
@@ -271,7 +274,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     }
                 }
                 Spacer(Modifier.height(8.dp))
-                Text("Never run out of: ${abc.aProducts.take(5).joinToString()}${if (abc.aProducts.size > 5) " …" else ""}",
+                Text(Lang.t("Never run out of: ", "لا تدعها تنفد: ") + "${abc.aProducts.take(5).joinToString()}${if (abc.aProducts.size > 5) " …" else ""}",
                     color = DT.SubText, fontSize = 11.sp)
             }
         } }
@@ -379,7 +382,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     valueLabel = { v -> "$cur ${money(v.toDouble())}" })
                 Spacer(Modifier.height(4.dp))
                 Row(Modifier.fillMaxWidth()) {
-                    listOf("M", "T", "W", "T", "F", "S", "S").forEach {
+                    (if (Lang.arabic) listOf("ن", "ث", "ر", "خ", "ج", "س", "ح") else listOf("M", "T", "W", "T", "F", "S", "S")).forEach {
                         Text(it, color = DT.SubText, fontSize = 11.sp, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
                     }
                 }
@@ -388,10 +391,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
     }
 }
 
-private fun hourLabel(h: Int): String {
-    val h12 = if (h % 12 == 0) 12 else h % 12
-    return "$h12 ${if (h < 12) "AM" else "PM"}"
-}
+private fun hourLabel(h: Int): String = HourLabel.of(h)
 
 
 @Composable

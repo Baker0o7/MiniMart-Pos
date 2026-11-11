@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,7 +33,7 @@ import com.minimart.pos.ui.viewmodel.LabelPrintViewModel
 fun LabelPrintScreen(onBack: () -> Unit, vm: LabelPrintViewModel = hiltViewModel()) {
     val s by vm.uiState.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
-        GradientHeader("Barcode labels", "Thermal printer · ${s.totalLabels} selected", onBack)
+        GradientHeader(Lang.t("Barcode labels", "ملصقات الباركود"), Lang.t("Thermal printer · ${s.totalLabels} selected", "طابعة حرارية · المحدد: ${s.totalLabels}"), onBack)
         FeedbackBanner(s.message, s.isError, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 
         OutlinedTextField(

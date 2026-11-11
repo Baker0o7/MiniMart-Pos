@@ -175,7 +175,7 @@ fun SettingsScreen(
                         val storeValid = storeNameInput.isNotBlank() && cleanCurrency.isNotEmpty()
                         if (!storeValid) Text(tr(com.minimart.pos.R.string.store_empty), color = DT.Red,
                             style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(bottom = 6.dp))
-                        SaveButton("Save Store Settings", enabled = storeDirty && storeValid, color = DT.Teal) {
+                        SaveButton(Lang.t("Save Store Settings", "حفظ إعدادات المتجر"), enabled = storeDirty && storeValid, color = DT.Teal) {
                             scope.launch {
                                 settingsRepo.setStoreName(storeNameInput.trim())
                                 settingsRepo.setCurrency(cleanCurrency); currencyInput = cleanCurrency
@@ -191,14 +191,14 @@ fun SettingsScreen(
                 // ── Thermal Printer ───────────────────────────────────────────
                 if (isAdmin) {
                     DSection(tr(com.minimart.pos.R.string.set_printer), Icons.Default.Print,
-                        summary = if (printer.isConnected) (printerName ?: "Connected") else (printerName ?: "Not paired"),
+                        summary = if (printer.isConnected) (printerName ?: Lang.t("Connected", "متصلة")) else (printerName ?: Lang.t("Not paired", "غير مقترنة")),
                         initiallyExpanded = false) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(printerName ?: "No printer paired",
+                                Text(printerName ?: Lang.t("No printer paired", "لا توجد طابعة مقترنة"),
                                     color = if (printer.isConnected) DT.Teal else DT.SubText,
                                     fontWeight = FontWeight.SemiBold)
-                                Text(if (printer.isConnected) "Connected" else "Disconnected",
+                                Text(if (printer.isConnected) Lang.t("Connected", "متصلة") else Lang.t("Disconnected", "غير متصلة"),
                                     color = if (printer.isConnected) DT.Green else DT.Red,
                                     style = MaterialTheme.typography.labelSmall)
                             }
@@ -243,7 +243,7 @@ fun SettingsScreen(
                     LaunchedEffect(cashDrawerAddress) { drawerInput = cashDrawerAddress }
 
                     DSection(tr(com.minimart.pos.R.string.set_drawer), Icons.Default.LocalAtm,
-                        summary = if (cashDrawerOnSale) "Opens on cash sale" else "Manual only",
+                        summary = if (cashDrawerOnSale) Lang.t("Opens on cash sale", "يفتح عند البيع النقدي") else Lang.t("Manual only", "يدويًا فقط"),
                         initiallyExpanded = false) {
                         Text(tr(com.minimart.pos.R.string.drawer_autodetect),
                             color = DT.SubText, style = MaterialTheme.typography.labelSmall)
@@ -301,7 +301,7 @@ fun SettingsScreen(
                     val secondScreen by settingsRepo.customerDisplayEnabled.collectAsStateWithLifecycle(false)
                     val kickPin by settingsRepo.cashDrawerPin.collectAsStateWithLifecycle(0)
                     DSection(tr(com.minimart.pos.R.string.set_shift_display), Icons.Default.Tv,
-                        summary = if (blindClose) "Blind close on" else "Blind close off",
+                        summary = if (blindClose) Lang.t("Blind close on", "إخفاء المتوقع عند الإغلاق: مفعّل") else Lang.t("Blind close off", "إخفاء المتوقع عند الإغلاق: متوقف"),
                         initiallyExpanded = false) {
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
@@ -428,7 +428,7 @@ fun SettingsScreen(
                 if (isOwner) {
                     val syncState by syncVm.state.collectAsStateWithLifecycle()
                     DSection(tr(com.minimart.pos.R.string.set_sync), Icons.Default.Sync,
-                        summary = if (syncState.serverRunning) "Server running" else "Off",
+                        summary = if (syncState.serverRunning) Lang.t("Server running", "الخادم يعمل") else Lang.t("Off", "متوقف"),
                         initiallyExpanded = false) {
                         Text(tr(com.minimart.pos.R.string.device_id_fmt, syncState.deviceId.take(8)), color = DT.SubText, fontSize = 11.sp)
                         Spacer(Modifier.height(6.dp))
@@ -441,7 +441,7 @@ fun SettingsScreen(
                             Column(Modifier.weight(1f)) {
                                 Text(tr(com.minimart.pos.R.string.act_sync_server), color = DT.Ink, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
                                 if (syncState.serverRunning)
-                                    Text("Server IP: ${syncState.serverIp}:9876", color = DT.Teal, fontSize = 11.sp)
+                                    Text(Lang.t("Server IP: ", "عنوان الخادم: ") + "${syncState.serverIp}:9876", color = DT.Teal, fontSize = 11.sp)
                                 else
                                     Text(tr(com.minimart.pos.R.string.others_connect), color = DT.SubText, fontSize = 11.sp)
                             }
@@ -498,7 +498,7 @@ fun SettingsScreen(
                             value = syncState.peerIp,
                             onValueChange = { syncVm.setPeerIp(it) },
                             label = { Text(tr(com.minimart.pos.R.string.server_ip), color = DT.SubText) },
-                            placeholder = { Text("e.g. 192.168.1.100", color = DT.SubText.copy(0.5f)) },
+                            placeholder = { Text(Lang.t("e.g. 192.168.1.100", "مثال: 192.168.1.100"), color = DT.SubText.copy(0.5f)) },
                             leadingIcon = { Icon(Icons.Default.Wifi, null, tint = DT.SubText) },
                             singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Next), modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -573,7 +573,7 @@ fun SettingsScreen(
                         focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
                         focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg)
                     DSection(tr(com.minimart.pos.R.string.set_cloud), Icons.Default.Sync,
-                        summary = if (cs.connected) "Connected" else "Off",
+                        summary = if (cs.connected) Lang.t("Connected", "متصل") else Lang.t("Off", "متوقف"),
                         initiallyExpanded = false) {
                         Text(if (cs.hosted)
                             "Sends a daily summary (sales, stock alerts, expenses, shifts) of this store to your online dashboard so you can see all your shops in one place. Customer names and receipts are not sent. On the dashboard website, sign in, press \"Add a shop\", and type the code it shows below."
@@ -891,11 +891,11 @@ fun SettingsScreen(
                 // ── Account ───────────────────────────────────────────────────
                 DSection(tr(com.minimart.pos.R.string.set_account), Icons.Default.ManageAccounts) {
                     if (rm.canManageUsers(currentRole)) {
-                        DMenuRow("User Management", Icons.Default.Group, DT.OnSurface) { onUsers() }
+                        DMenuRow(Lang.t("User Management", "إدارة المستخدمين"), Icons.Default.Group, DT.OnSurface) { onUsers() }
                         HDivider()
                     }
                     if (rm.canManageShifts(currentRole)) {
-                        DMenuRow("Shift Management", Icons.Default.Schedule, DT.OnSurface) { onShifts() }
+                        DMenuRow(Lang.t("Shift Management", "إدارة الورديات"), Icons.Default.Schedule, DT.OnSurface) { onShifts() }
                         HDivider()
                     }
                     // Bug fix: this toggle is the ONLY place biometricUserId is ever set.
@@ -924,7 +924,7 @@ fun SettingsScreen(
                         )
                     }
                     HDivider()
-                    DMenuRow("Logout", Icons.AutoMirrored.Filled.Logout, DT.Red) { onLogout() }
+                    DMenuRow(Lang.t("Logout", "تسجيل الخروج"), Icons.AutoMirrored.Filled.Logout, DT.Red) { onLogout() }
                 }
 
                 val versionName = remember {

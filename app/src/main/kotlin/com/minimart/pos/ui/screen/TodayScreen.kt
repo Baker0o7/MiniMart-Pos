@@ -1,6 +1,9 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.HourLabel
+import com.minimart.pos.util.ArabicCount
+import com.minimart.pos.util.Lang
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -28,12 +31,11 @@ import java.util.Locale
 
 private fun money(currency: String, v: Double) = "$currency ${String.format(Locale.US, "%,.0f", v)}"
 
-private fun hourLabel(h: Int): String = when {
-    h == 0 -> "12 AM"
-    h < 12 -> "$h AM"
-    h == 12 -> "12 PM"
-    else -> "${h - 12} PM"
-}
+private fun hourLabel(h: Int): String = HourLabel.of(h)
+
+private fun salesWord(n: Int): String = ArabicCount.phrase(n, "لا مبيعات", "عملية بيع واحدة", "عمليتا بيع", "عمليات بيع", "عملية بيع")
+
+private fun salesWord(n: Int): String = ArabicCount.phrase(n, "لا مبيعات", "عملية بيع واحدة", "عمليتا بيع", "عمليات بيع", "عملية بيع")
 
 /** The owner's view of today: takings, profit, how it was paid, and what needs attention. */
 @Composable
@@ -44,8 +46,8 @@ fun TodayScreen(onBack: () -> Unit, onOpenHealth: () -> Unit, onOpenShifts: () -
         while (true) { vm.refresh(); kotlinx.coroutines.delay(20_000) }
     }
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
-        GradientHeader("Today", s.storeName.ifBlank { "How the shop is doing" }, onBack) {
-            HeaderPillButton("Refresh", Icons.Default.Refresh) { vm.refresh() }
+        GradientHeader(Lang.t("Today", "اليوم"), s.storeName.ifBlank { Lang.t("How the shop is doing", "كيف حال المتجر") }, onBack) {
+            HeaderPillButton(Lang.t("Refresh", "تحديث"), Icons.Default.Refresh) { vm.refresh() }
         }
         val sum = s.summary
         if (s.loading || sum == null) {
@@ -82,17 +84,17 @@ private fun Hero(sum: TodaySummary, currency: String) {
         val vs = sum.vsLastWeekPercent
         Text(
             when {
-                vs == null -> "${sum.count} sale(s) · no sales at this time last week to compare"
-                vs >= 0 -> "${sum.count} sale(s) · up $vs% on this time last week"
-                else -> "${sum.count} sale(s) · down ${-vs}% on this time last week"
+                vs == null -> Lang.t("${sum.count} sale(s) · no sales at this time last week to compare", "${salesWord(sum.count)} · لا مبيعات في هذا الوقت من الأسبوع الماضي للمقارنة")
+                vs >= 0 -> Lang.t("${sum.count} sale(s) · up $vs% on this time last week", "${salesWord(sum.count)} · ارتفاع $vs% عن هذا الوقت من الأسبوع الماضي")
+                else -> Lang.t("${sum.count} sale(s) · down ${-vs}% on this time last week", "${salesWord(sum.count)} · انخفاض ${-vs}% عن هذا الوقت من الأسبوع الماضي")
             },
             color = when { vs == null -> DT.SubText; vs >= 0 -> DT.Green; else -> DT.Amber }, fontSize = 13.sp, fontWeight = FontWeight.SemiBold
         )
         Spacer(Modifier.height(4.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Stat("Profit", money(currency, sum.profit), DT.Green, Modifier.weight(1f))
-            Stat("Expenses", money(currency, sum.expenses), DT.Amber, Modifier.weight(1f))
-            Stat("Net", money(currency, sum.netProfit), if (sum.netProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f))
+            Stat(Lang.t("Profit", "الربح"), money(currency, sum.profit), DT.Green, Modifier.weight(1f))
+            Stat(Lang.t("Expenses", "المصروفات"), money(currency, sum.expenses), DT.Amber, Modifier.weight(1f))
+            Stat(Lang.t("Net", "الصافي"), money(currency, sum.netProfit), if (sum.netProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f))
         }
         if (sum.count > 0) Text(tr(com.minimart.pos.R.string.avg_basket_fmt, money(currency, sum.averageBasket)), color = DT.SubText, fontSize = 12.sp)
     }
@@ -130,11 +132,11 @@ private fun Alerts(alerts: List<String>, onOpenHealth: () -> Unit, onOpenShifts:
 private fun Splits(sum: TodaySummary, currency: String) {
     Card {
         Text(tr(com.minimart.pos.R.string.how_paid), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-        val rows = listOf("Cash" to sum.cash, "M-Pesa" to sum.mpesa, "Card" to sum.card, "On credit" to sum.credit)
+        val rows = listOf(Lang.t("Cash", "نقدًا") to sum.cash, Lang.t("M-Pesa", "إم-بيسا") to sum.mpesa, Lang.t("Card", "بطاقة") to sum.card, Lang.t("On credit", "آجل") to sum.credit)
         val total = rows.sumOf { it.second }.coerceAtLeast(0.01)
         rows.forEach { (name, v) ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(name, color = DT.SubText, fontSize = 13.sp, modifier = Modifier.width(80.dp))
+                Text(name, color = DT.SubText, fontSize = 13.sp, modifier = Modifier.widthIn(min = 80.dp, max = 110.dp))
                 Box(Modifier.weight(1f).height(8.dp).clip(RoundedCornerShape(4.dp)).background(DT.Bg)) {
                     Box(Modifier.fillMaxHeight().fillMaxWidth((v / total).toFloat().coerceIn(0f, 1f)).background(DT.Teal))
                 }
@@ -150,20 +152,16 @@ private fun Hours(sum: TodaySummary) {
     Card {
         Text(tr(com.minimart.pos.R.string.sales_by_hour), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
         val peak = sum.busiestHour
-        Text(if (peak == null) "No sales yet today." else "Busiest hour: ${hourLabel(peak)}", color = DT.SubText, fontSize = 12.sp)
+        Text(if (peak == null) Lang.t("No sales yet today.", "لا مبيعات اليوم بعد.") else Lang.t("Busiest hour: ${hourLabel(peak)}", "أكثر ساعة ازدحامًا: ${hourLabel(peak)}"), color = DT.SubText, fontSize = 12.sp)
         BarChart(
             values = sum.hourly.map { it.toFloat() },
             highlight = peak ?: -1,
             labels = List(24) { hourLabel(it) },
             modifier = Modifier.fillMaxWidth().height(110.dp),
-            description = if (peak == null) "No sales yet today" else "Sales by hour. Busiest hour ${hourLabel(peak)}"
+            description = if (peak == null) Lang.t("No sales yet today", "لا مبيعات اليوم بعد") else Lang.t("Sales by hour. Busiest hour ${hourLabel(peak)}", "المبيعات حسب الساعة. أكثر ساعة ازدحامًا ${hourLabel(peak)}")
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("12 AM", color = DT.SubText, fontSize = 11.sp)
-            Text("6 AM", color = DT.SubText, fontSize = 11.sp)
-            Text("12 PM", color = DT.SubText, fontSize = 11.sp)
-            Text("6 PM", color = DT.SubText, fontSize = 11.sp)
-            Text("11 PM", color = DT.SubText, fontSize = 11.sp)
+            listOf(0, 6, 12, 18, 23).forEach { Text(hourLabel(it), color = DT.SubText, fontSize = 11.sp) }
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -59,7 +60,7 @@ fun StoreHealthScreen(
 ) {
     val s by vm.state.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
-        GradientHeader("Store health", if (s.loading) "Checking…" else s.headline, onBack) {
+        GradientHeader(Lang.t("Store health", "سلامة المتجر"), if (s.loading) Lang.t("Checking…", "جارٍ الفحص…") else s.headline, onBack) {
             HeaderPillButton("Check again", Icons.Default.Refresh) { vm.refresh() }
         }
         if (s.loading && s.checks.isEmpty()) {
@@ -138,7 +139,7 @@ private fun OverallBanner(level: HealthLevel, headline: String, checkedAt: Long)
         Spacer(Modifier.width(12.dp))
         Column {
             Text(headline, color = DT.OnSurface, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-            if (checkedAt > 0) Text("Checked ${BackupAdvice.ago(checkedAt, System.currentTimeMillis())}", color = DT.SubText, fontSize = 12.sp)
+            if (checkedAt > 0) Text(Lang.t("Checked ", "آخر فحص ") + BackupAdvice.ago(checkedAt, System.currentTimeMillis()), color = DT.SubText, fontSize = 12.sp)
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,7 +34,7 @@ import com.minimart.pos.ui.viewmodel.ActivityLogViewModel
 fun ActivityLogScreen(onBack: () -> Unit, vm: ActivityLogViewModel = hiltViewModel()) {
     val s by vm.state.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
-        GradientHeader("Activity log", "Who did what", onBack) {
+        GradientHeader(Lang.t("Activity log", "سجل النشاط"), Lang.t("Who did what", "من فعل ماذا"), onBack) {
             HeaderPillButton("Refresh", Icons.Default.Refresh) { vm.refresh() }
         }
         s.check?.let { c ->

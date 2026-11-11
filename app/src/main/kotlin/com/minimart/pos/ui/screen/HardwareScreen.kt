@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -47,8 +48,8 @@ fun HardwareScreen(onBack: () -> Unit, vm: HardwareViewModel = hiltViewModel()) 
     val appSettings = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
 
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
-        GradientHeader("Hardware check", if (s.loading) "Checking…" else s.headline, onBack) {
-            HeaderPillButton("Check again", Icons.Default.Refresh) { vm.refresh() }
+        GradientHeader(Lang.t("Hardware check", "فحص الأجهزة"), if (s.loading) Lang.t("Checking…", "جارٍ الفحص…") else s.headline, onBack) {
+            HeaderPillButton(Lang.t("Check again", "افحص مجددًا"), Icons.Default.Refresh) { vm.refresh() }
         }
         if (s.loading && s.checks.isEmpty()) {
             Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = DT.Teal) }

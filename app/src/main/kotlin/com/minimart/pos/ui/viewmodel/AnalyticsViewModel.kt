@@ -26,8 +26,9 @@ import kotlinx.coroutines.flow.*
 import java.util.Calendar
 import javax.inject.Inject
 
-enum class AnalyticsRange(val label: String, val days: Int) {
-    D7("7 days", 7), D30("30 days", 30), D90("90 days", 90)
+enum class AnalyticsRange(private val en: String, private val ar: String, val days: Int) {
+    D7("7 days", "7 أيام", 7), D30("30 days", "30 يومًا", 30), D90("90 days", "90 يومًا", 90);
+    val label: String get() = com.minimart.pos.util.Lang.t(en, ar)
 }
 
 /** One bar of the revenue trend (a day, or a week for the 90-day view). */

@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
@@ -66,13 +67,13 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
     var darajaSaved         by remember { mutableStateOf(false) }
 
     DSection(tr(com.minimart.pos.R.string.daraja_title), Icons.Default.Send,
-        summary = if (initialDaraja.consumerKey.isBlank()) "Not set up" else if (darajaSandbox) "Sandbox" else "Production",
+        summary = if (initialDaraja.consumerKey.isBlank()) Lang.t("Not set up", "غير مُعدّ") else if (darajaSandbox) Lang.t("Sandbox", "تجريبي") else Lang.t("Production", "فعلي"),
         initiallyExpanded = false) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
             Text(tr(com.minimart.pos.R.string.environment), color = DT.OnSurface, fontSize = 14.sp)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (darajaSandbox) "Sandbox" else "Production",
+                Text(if (darajaSandbox) Lang.t("Sandbox", "تجريبي") else Lang.t("Production", "فعلي"),
                     color = if (darajaSandbox) DT.Amber else DT.Green,
                     fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.width(6.dp))

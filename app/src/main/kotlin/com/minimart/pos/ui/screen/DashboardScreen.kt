@@ -292,7 +292,7 @@ fun DashboardScreen(
                 item { Spacer(Modifier.height(16.dp)) }
                 item {
                     DashAlert(Icons.Default.Sync, TealGlow, Color(0xFF05161A),
-                        Lang.t("Update ${up.release.tag.removePrefix("v")} is available", "يتوفر التحديث ${up.release.tag.removePrefix("v")}"), Lang.t("Open Settings, About & support, to install it", "افتح الإعدادات ثم حول التطبيق والدعم للتثبيت"), onNavigateToSettings)
+                        Lang.t("Update ${up.release.tag.removePrefix("v")} is available", "يتوفر التحديث ${up.release.tag.removePrefix("v")}"), Lang.t("Install it from Settings › About", "ثبّته من الإعدادات ‹ حول التطبيق"), onNavigateToSettings)
                 }
             }
             if (freshness != null && freshness.warnAtCheckout) {
@@ -667,7 +667,7 @@ private fun DashAlert(icon: ImageVector, glow: Color, bg: Color,
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(glow.copy(0.15f)),
                 contentAlignment = Alignment.Center) {
-                Icon(icon, null, tint = glow, modifier = Modifier.size(18.dp))
+                Icon(icon, null, tint = if (DT.light) androidx.compose.ui.graphics.lerp(glow, Color.Black, 0.45f) else glow, modifier = Modifier.size(18.dp))
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
@@ -677,7 +677,7 @@ private fun DashAlert(icon: ImageVector, glow: Color, bg: Color,
             Box(modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(glow.copy(0.15f))
                 .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = action)
                 .padding(horizontal = 12.dp, vertical = 7.dp)) {
-                Text(tr(com.minimart.pos.R.string.view), color = glow, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text(tr(com.minimart.pos.R.string.view), color = if (DT.light) androidx.compose.ui.graphics.lerp(glow, Color.Black, 0.5f) else glow, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }
         }
     }

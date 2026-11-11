@@ -1,6 +1,8 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.HourLabel
+import com.minimart.pos.util.Lang
 import android.content.Context
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -25,7 +27,7 @@ import com.minimart.pos.worker.DailyReportWorker
 import kotlinx.coroutines.launch
 
 private val HOURS = listOf(18, 19, 20, 21, 22)
-private fun hourLabel(h: Int) = if (h < 12) "$h am" else "${if (h == 12) 12 else h - 12} pm"
+private fun hourLabel(h: Int) = HourLabel.of(h)
 
 /** Owner-only: the end-of-day summary notification (what it contains is in DailySummary). */
 @Composable
@@ -37,7 +39,7 @@ internal fun DailyReportSettingsSection(settingsRepo: SettingsRepository) {
     val saved by settingsRepo.ownerReportPhone.collectAsState(initial = "")
     var phone by rememberSaveable(saved) { mutableStateOf(saved) }
     DSection(tr(com.minimart.pos.R.string.set_daily), Icons.Default.Summarize,
-        summary = if (on) "Every day at ${hourLabel(hour)}" else "Off", initiallyExpanded = false) {
+        summary = if (on) Lang.t("Every day at ${hourLabel(hour)}", "يوميًا في ${hourLabel(hour)}") else Lang.t("Off", "متوقف"), initiallyExpanded = false) {
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
             .toggleable(value = on, role = Role.Switch) { v ->
                 scope.launch {

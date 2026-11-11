@@ -15,7 +15,10 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
 
-enum class MpesaPeriod(val label: String) { TODAY("Today"), WEEK("Week"), MONTH("Month"), YEAR("Year") }
+enum class MpesaPeriod(private val en: String, private val ar: String) {
+    TODAY("Today", "اليوم"), WEEK("Week", "الأسبوع"), MONTH("Month", "الشهر"), YEAR("Year", "السنة");
+    val label: String get() = com.minimart.pos.util.Lang.t(en, ar)
+}
 
 data class MpesaTotals(val amount: Double = 0.0, val count: Int = 0)
 

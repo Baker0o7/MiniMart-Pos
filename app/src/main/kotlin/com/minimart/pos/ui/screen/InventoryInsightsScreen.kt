@@ -1,6 +1,8 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.ArabicCount
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.Intent
 import androidx.compose.foundation.background
@@ -36,8 +38,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private enum class InsightTab(val label: String) {
-    REORDER("Reorder"), DEAD("Dead stock"), FAST("Fast movers"), CATEGORIES("By category")
+private enum class InsightTab(private val en: String, private val ar: String) {
+    REORDER("Reorder", "إعادة الطلب"), DEAD("Dead stock", "مخزون راكد"), FAST("Fast movers", "الأكثر مبيعًا"), CATEGORIES("By category", "حسب الفئة");
+    val label: String get() = Lang.t(en, ar)
 }
 
 private fun money(v: Double) = String.format(Locale.US, "%,.0f", v)
@@ -51,16 +54,18 @@ fun InventoryInsightsScreen(onBack: () -> Unit, vm: InventoryInsightsViewModel =
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
         GradientHeader(
             title = tr(com.minimart.pos.R.string.stock_insights),
-            subtitle = "${ins.skuCount} products • ${ins.reorder.size} to reorder",
+            subtitle = Lang.t("${ins.skuCount} products • ${ins.reorder.size} to reorder",
+                ArabicCount.phrase(ins.skuCount, "لا منتجات", "منتج واحد", "منتجان", "منتجات", "منتجًا") + " • " +
+                    (if (ins.reorder.isEmpty()) "لا شيء لإعادة الطلب" else "${ins.reorder.size} لإعادة الطلب")),
             onBack = onBack,
             actions = {
-                if (ins.reorder.isNotEmpty()) HeaderPillButton("Share", Icons.Default.Share) {
+                if (ins.reorder.isNotEmpty()) HeaderPillButton(Lang.t("Share", "مشاركة"), Icons.Default.Share) {
                     val send = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_SUBJECT, "${ins.storeName} – reorder list")
                         putExtra(Intent.EXTRA_TEXT, reorderText(ins))
                     }
-                    try { context.startActivity(Intent.createChooser(send, "Share reorder list").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                    try { context.startActivity(Intent.createChooser(send, Lang.t("Share reorder list", "مشاركة قائمة إعادة الطلب")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
                     catch (_: Exception) { }
                 }
             }
@@ -79,13 +84,13 @@ fun InventoryInsightsScreen(onBack: () -> Unit, vm: InventoryInsightsViewModel =
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Tile("Stock at cost", "${ins.currency} ${money(ins.costValue)}", DT.OnSurface, Modifier.weight(1f))
-                        Tile("Stock at retail", "${ins.currency} ${money(ins.retailValue)}", DT.TealLight, Modifier.weight(1f))
+                        Tile(Lang.t("Stock at cost", "المخزون بسعر التكلفة"), "${ins.currency} ${money(ins.costValue)}", DT.OnSurface, Modifier.weight(1f))
+                        Tile(Lang.t("Stock at retail", "المخزون بسعر البيع"), "${ins.currency} ${money(ins.retailValue)}", DT.TealLight, Modifier.weight(1f))
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Tile("Potential profit", "${ins.currency} ${money(ins.potentialProfit)}",
+                        Tile(Lang.t("Potential profit", "الربح المتوقع"), "${ins.currency} ${money(ins.potentialProfit)}",
                             if (ins.potentialProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f))
-                        Tile("Out of stock", ins.outOfStock.toString(),
+                        Tile(Lang.t("Out of stock", "نفد من المخزون"), ins.outOfStock.toString(),
                             if (ins.outOfStock == 0) DT.Green else DT.Red, Modifier.weight(1f))
                     }
                 }
@@ -115,24 +120,24 @@ fun InventoryInsightsScreen(onBack: () -> Unit, vm: InventoryInsightsViewModel =
 
             when (tab) {
                 InsightTab.REORDER -> {
-                    item { Hint("Low on stock, or likely to run out within a week. Quantities aim for about two weeks of sales.") }
-                    if (ins.reorder.isEmpty()) item { Empty("Nothing needs reordering right now") }
+                    item { Hint(Lang.t("Low on stock, or likely to run out within a week. Quantities aim for about two weeks of sales.", "مخزونها منخفض أو قد ينفد خلال أسبوع. الكميات المقترحة تكفي لنحو أسبوعين من المبيعات.")) }
+                    if (ins.reorder.isEmpty()) item { Empty(Lang.t("Nothing needs reordering right now", "لا شيء يحتاج إلى إعادة طلب الآن")) }
                     items(ins.reorder, key = { it.product.id }) { ReorderRow(it) }
                 }
                 InsightTab.DEAD -> {
                     item {
-                        Hint("In stock but not sold for 30+ days. ${ins.currency} ${money(ins.deadCostValue)} of stock (at cost) is tied up here.")
+                        Hint(Lang.t("In stock but not sold for 30+ days. ${ins.currency} ${money(ins.deadCostValue)} of stock (at cost) is tied up here.", "متوفرة لكنها لم تُبع منذ أكثر من 30 يومًا. مخزون بقيمة ${ins.currency} ${money(ins.deadCostValue)} (بسعر التكلفة) مجمّد هنا."))
                     }
-                    if (ins.dead.isEmpty()) item { Empty("No dead stock — everything is moving") }
+                    if (ins.dead.isEmpty()) item { Empty(Lang.t("No dead stock — everything is moving", "لا مخزون راكد — كل شيء يُباع")) }
                     items(ins.dead, key = { it.product.id }) { DeadRow(it, ins.currency) }
                 }
                 InsightTab.FAST -> {
-                    item { Hint("Best sellers over the last 30 days, by quantity sold.") }
-                    if (ins.fast.isEmpty()) item { Empty("No sales in the last 30 days") }
+                    item { Hint(Lang.t("Best sellers over the last 30 days, by quantity sold.", "الأكثر مبيعًا خلال آخر 30 يومًا حسب الكمية المباعة.")) }
+                    if (ins.fast.isEmpty()) item { Empty(Lang.t("No sales in the last 30 days", "لا مبيعات خلال آخر 30 يومًا")) }
                     items(ins.fast, key = { it.product.id }) { FastRow(it) }
                 }
                 InsightTab.CATEGORIES -> {
-                    item { Hint("Value of the stock you hold in each category.") }
+                    item { Hint(Lang.t("Value of the stock you hold in each category.", "قيمة المخزون الذي تملكه في كل فئة.")) }
                     items(ins.categories, key = { it.category }) { c ->
                         Row(
                             Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DT.Surface)
@@ -142,7 +147,7 @@ fun InventoryInsightsScreen(onBack: () -> Unit, vm: InventoryInsightsViewModel =
                             Column(Modifier.weight(1f)) {
                                 Text(c.category, color = DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
                                     maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text("${c.items} product${if (c.items != 1) "s" else ""}", color = DT.SubText, fontSize = 11.sp)
+                                Text(ArabicCount.t(c.items, "product", "products", "لا منتجات", "منتج واحد", "منتجان", "منتجات", "منتجًا"), color = DT.SubText, fontSize = 11.sp)
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text("${ins.currency} ${money(c.retailValue)}", color = DT.TealLight, fontWeight = FontWeight.Bold, fontSize = 13.sp)
@@ -205,11 +210,11 @@ private fun ReorderRow(r: InsightRow) = RowCard {
     Column(Modifier.weight(1f)) {
         Text(r.product.name, color = DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
-        val cover = r.daysCover?.let { if (it < 1) "under a day left" else "~${it.toInt()} days left" } ?: "not selling lately"
-        Text("Have ${plainNumber(r.onHand)} ${unitOf(r)} • $cover", color = if (r.onHand <= 0) DT.Red else DT.Amber, fontSize = 11.sp)
+        val cover = r.daysCover?.let { if (it < 1) Lang.t("under a day left", "يكفي أقل من يوم") else Lang.t("~${it.toInt()} days left", "يكفي نحو ${it.toInt()} أيام") } ?: Lang.t("not selling lately", "لا مبيعات مؤخرًا")
+        Text("${Lang.t("Have", "المتوفر")} ${plainNumber(r.onHand)} ${unitOf(r)} • $cover", color = if (r.onHand <= 0) DT.Red else DT.Amber, fontSize = 11.sp)
         r.emptyInDays?.takeIf { r.onHand > 0 }?.let { d ->
             val day = java.text.SimpleDateFormat("EEE d MMM", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(Date(System.currentTimeMillis() + d * 86_400_000L))
-            Text("Forecast: runs out around $day" + if (r.forecastConfidence < 0.5) " (rough, little history)" else "",
+            Text(Lang.t("Forecast: runs out around $day", "المتوقع: ينفد تقريبًا في $day") + if (r.forecastConfidence < 0.5) Lang.t(" (rough, little history)", " (تقدير تقريبي، سجل قليل)") else "",
                 color = DT.SubText, fontSize = 11.sp)
             r.accuracy?.let { Text(it.label(), color = DT.SubText, fontSize = 10.sp) }
         }
@@ -228,13 +233,13 @@ private fun DeadRow(r: InsightRow, currency: String) = RowCard {
     Column(Modifier.weight(1f)) {
         Text(r.product.name, color = DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
-        val last = r.lastSoldAt?.let { "last sold ${SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(it))}" } ?: "never sold"
+        val last = r.lastSoldAt?.let { Lang.t("last sold ", "آخر بيع ") + SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(it)) } ?: Lang.t("never sold", "لم يُبع قط")
         Text("${plainNumber(r.onHand)} ${unitOf(r)} • $last", color = DT.SubText, fontSize = 11.sp)
     }
     Column(horizontalAlignment = Alignment.End) {
         val v = if (r.costValue > 0) r.costValue else r.retailValue
         Text("$currency ${money(v)}", color = DT.Amber, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-        Text(if (r.costValue > 0) "at cost" else "at retail", color = DT.SubText, fontSize = 11.sp)
+        Text(if (r.costValue > 0) Lang.t("at cost", "بسعر التكلفة") else Lang.t("at retail", "بسعر البيع"), color = DT.SubText, fontSize = 11.sp)
     }
 }
 
@@ -243,7 +248,7 @@ private fun FastRow(r: InsightRow) = RowCard {
     Column(Modifier.weight(1f)) {
         Text(r.product.name, color = DT.OnSurface, fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text("${plainNumber(r.avgDaily, 1)} ${unitOf(r)}/day • ${plainNumber(r.onHand)} in stock", color = DT.SubText, fontSize = 11.sp)
+        Text("${plainNumber(r.avgDaily, 1)} ${unitOf(r)}${Lang.t("/day", "/يوم")} • ${plainNumber(r.onHand)} ${Lang.t("in stock", "في المخزون")}", color = DT.SubText, fontSize = 11.sp)
     }
     Column(horizontalAlignment = Alignment.End) {
         Text(plainNumber(r.sold30), color = DT.Green, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)

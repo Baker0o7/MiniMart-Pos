@@ -86,3 +86,51 @@ class ArabicDigitsTest {
 
     }
 }
+
+class ArabicDigitsReadabilityTest {
+    @AfterEach fun reset() { Lang.arabic = false }
+
+    @Test fun `zero on its own stays a normal zero so it is not read as a bullet`() {
+        Lang.arabic = true
+        assertEquals("0 دفعة", ArabicDigits.show("0 دفعة"))
+        assertEquals("KES 0.00", ArabicDigits.show("KES 0.00"))
+        assertEquals("KES ١٠٬٦٦٩", ArabicDigits.show("KES 10,669"))
+    }
+
+    @Test fun `addresses and versions stay typeable`() {
+        Lang.arabic = true
+        assertEquals("192.168.1.5:9876", ArabicDigits.show("192.168.1.5:9876"))
+        assertEquals("الإصدار 1.32.6", ArabicDigits.show("الإصدار 1.32.6"))
+        assertEquals("١٢:٣٠", ArabicDigits.show("12:30"))
+    }
+}
+
+class ArabicCountTest {
+    @AfterEach fun reset() { Lang.arabic = false }
+    private fun p(n: Int) = ArabicCount.phrase(n, "لا دفعات", "دفعة واحدة", "دفعتان", "دفعات", "دفعة")
+
+    @Test fun `arabic noun follows the number`() {
+        assertEquals("لا دفعات", p(0))
+        assertEquals("دفعة واحدة", p(1))
+        assertEquals("دفعتان", p(2))
+        assertEquals("5 دفعات", p(5))
+        assertEquals("11 دفعة", p(11))
+    }
+
+    @Test fun `english keeps one and many`() {
+        assertEquals("1 payment", ArabicCount.t(1, "payment", "payments", "a", "b", "c", "d", "e"))
+        assertEquals("0 payments", ArabicCount.t(0, "payment", "payments", "a", "b", "c", "d", "e"))
+        Lang.arabic = true
+        assertEquals("a", ArabicCount.t(0, "payment", "payments", "a", "b", "c", "d", "e"))
+    }
+}
+
+class HourLabelTest {
+    @AfterEach fun reset() { Lang.arabic = false }
+
+    @Test fun `hours read as twelve hour clock in both languages`() {
+        assertEquals("12 AM", HourLabel.of(0)); assertEquals("1 PM", HourLabel.of(13)); assertEquals("12 PM", HourLabel.of(12))
+        Lang.arabic = true
+        assertEquals("12 ص", HourLabel.of(0)); assertEquals("6 م", HourLabel.of(18))
+    }
+}

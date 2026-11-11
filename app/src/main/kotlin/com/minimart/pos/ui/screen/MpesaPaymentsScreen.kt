@@ -1,6 +1,8 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.ArabicCount
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.Manifest
 import android.content.pm.PackageManager
@@ -79,7 +81,7 @@ fun MpesaPaymentsScreen(
         Column(Modifier.fillMaxSize()) {
             GradientHeader(
                 title = tr(com.minimart.pos.R.string.mpesa_payments),
-                subtitle = if (enabled && permitted) "Tracking incoming payments" else "Tracking is off",
+                subtitle = if (enabled && permitted) Lang.t("Tracking incoming payments", "تتبع المدفوعات الواردة") else Lang.t("Tracking is off", "التتبع متوقف"),
                 onBack = onBack
             )
             LazyColumn(
@@ -101,9 +103,9 @@ fun MpesaPaymentsScreen(
                                 Text(tr(com.minimart.pos.R.string.log_auto), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                                 Text(
                                     when {
-                                        denied -> "SMS permission was refused. Allow it in phone Settings › Apps › MiniMart POS."
-                                        enabled && !permitted -> "Needs SMS permission to read M-Pesa confirmations."
-                                        else -> "Reads M-Pesa confirmation texts on this phone. Texts from ordinary numbers are ignored."
+                                        denied -> Lang.t("SMS permission was refused. Allow it in phone Settings › Apps › MiniMart POS.", "تم رفض إذن الرسائل. اسمح به من إعدادات الهاتف ‹ التطبيقات ‹ MiniMart POS.")
+                                        enabled && !permitted -> Lang.t("Needs SMS permission to read M-Pesa confirmations.", "يحتاج إلى إذن الرسائل لقراءة تأكيدات إم-بيسا.")
+                                        else -> Lang.t("Reads M-Pesa confirmation texts on this phone. Texts from ordinary numbers are ignored.", "يقرأ رسائل تأكيد إم-بيسا على هذا الهاتف. تُتجاهل الرسائل الواردة من الأرقام العادية.")
                                     },
                                     color = if (denied || (enabled && !permitted)) DT.Amber else DT.SubText, fontSize = 12.sp
                                 )
@@ -174,7 +176,7 @@ fun MpesaPaymentsScreen(
                             Column(Modifier.fillMaxWidth().padding(vertical = 28.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(Icons.Default.PhoneAndroid, null, tint = DT.SubText.copy(0.4f), modifier = Modifier.size(52.dp))
                                 Spacer(Modifier.height(8.dp))
-                                Text(if (enabled && permitted) "No M-Pesa payments yet for ${period.label.lowercase()}" else "Turn on tracking to start logging payments",
+                                Text(if (enabled && permitted) Lang.t("No M-Pesa payments yet for ${period.label.lowercase()}", "لا توجد مدفوعات إم-بيسا بعد (${period.label})") else Lang.t("Turn on tracking to start logging payments", "شغّل التتبع لبدء تسجيل المدفوعات"),
                                     color = DT.SubText, fontSize = 13.sp)
                             }
                         }
@@ -205,37 +207,37 @@ private fun ReconciliationCard(recon: com.minimart.pos.util.MpesaReconciliation?
             Column(Modifier.weight(1f)) {
                 Text(tr(com.minimart.pos.R.string.recon_fmt, periodLabel), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 Text(
-                    if (ok) "${recon.matched.size} sale(s) matched to a payment. Nothing to fix."
-                    else "${recon.problemCount} thing(s) to check",
+                    if (ok) Lang.t("${recon.matched.size} sale(s) matched to a payment. Nothing to fix.", ArabicCount.phrase(recon.matched.size, "لا مبيعات", "عملية بيع واحدة", "عمليتا بيع", "عمليات بيع", "عملية بيع") + " مطابقة لدفعة. لا شيء يحتاج إلى إصلاح.")
+                    else Lang.t("${recon.problemCount} thing(s) to check", "${recon.problemCount} أمور تحتاج إلى مراجعة"),
                     color = tone, fontSize = 12.sp, fontWeight = FontWeight.SemiBold
                 )
             }
-            if (!ok) TextButton(onClick = { open = !open }) { Text(if (open) "Hide" else "Show", color = DT.Teal) }
+            if (!ok) TextButton(onClick = { open = !open }) { Text(if (open) Lang.t("Hide", "إخفاء") else Lang.t("Show", "عرض"), color = DT.Teal) }
         }
         if (!ok && open) {
             if (recon.unclaimedPayments.isNotEmpty()) {
-                ReconSection("Money received, no sale (${mpesaMoney(currency, recon.unclaimedTotal)})",
-                    "A customer paid but was not rung up, or the code was typed wrongly on a sale.")
+                ReconSection(Lang.t("Money received, no sale (${mpesaMoney(currency, recon.unclaimedTotal)})", "أموال مستلمة بلا عملية بيع (${mpesaMoney(currency, recon.unclaimedTotal)})"),
+                    Lang.t("A customer paid but was not rung up, or the code was typed wrongly on a sale.", "دفع العميل لكن لم تُسجَّل عملية بيع، أو أُدخل الرمز بشكل خاطئ في عملية بيع."))
                 recon.unclaimedPayments.take(8).forEach {
-                    ReconLine("${it.code} · ${it.sender.ifBlank { "unknown" }}", mpesaMoney(currency, it.amount))
+                    ReconLine("${it.code} · ${it.sender.ifBlank { Lang.t("unknown", "غير معروف") }}", mpesaMoney(currency, it.amount))
                 }
-                if (recon.unclaimedPayments.size > 8) ReconNote("+${recon.unclaimedPayments.size - 8} more")
+                if (recon.unclaimedPayments.size > 8) ReconNote(Lang.t("+${recon.unclaimedPayments.size - 8} more", "+${recon.unclaimedPayments.size - 8} أخرى"))
             }
             if (recon.unverifiedSales.isNotEmpty()) {
-                ReconSection("Sales with no payment message (${mpesaMoney(currency, recon.unverifiedTotal)})",
-                    "No message from M-Pesa was received for these codes on this phone. Check your M-Pesa balance before trusting them.")
+                ReconSection(Lang.t("Sales with no payment message (${mpesaMoney(currency, recon.unverifiedTotal)})", "مبيعات بلا رسالة دفع (${mpesaMoney(currency, recon.unverifiedTotal)})"),
+                    Lang.t("No message from M-Pesa was received for these codes on this phone. Check your M-Pesa balance before trusting them.", "لم تصل رسالة من إم-بيسا لهذه الرموز على هذا الهاتف. تحقق من رصيد إم-بيسا قبل الوثوق بها."))
                 recon.unverifiedSales.take(8).forEach { ReconLine("${it.receipt} · ${it.code}", mpesaMoney(currency, it.saleTotal)) }
-                if (recon.unverifiedSales.size > 8) ReconNote("+${recon.unverifiedSales.size - 8} more")
+                if (recon.unverifiedSales.size > 8) ReconNote(Lang.t("+${recon.unverifiedSales.size - 8} more", "+${recon.unverifiedSales.size - 8} أخرى"))
             }
             if (recon.mismatches.isNotEmpty()) {
-                ReconSection("Amount does not match", "The payment and the sale total differ.")
+                ReconSection(Lang.t("Amount does not match", "المبلغ غير مطابق"), Lang.t("The payment and the sale total differ.", "الدفعة وإجمالي عملية البيع مختلفان."))
                 recon.mismatches.take(8).forEach {
-                    ReconLine("${it.sale.receipt} · sale ${mpesaMoney(currency, it.sale.saleTotal)}",
-                        "paid ${mpesaMoney(currency, it.payment.amount)}")
+                    ReconLine("${it.sale.receipt} · ${Lang.t("sale", "بيع")} ${mpesaMoney(currency, it.sale.saleTotal)}",
+                        "${Lang.t("paid", "مدفوع")} ${mpesaMoney(currency, it.payment.amount)}")
                 }
             }
             if (recon.reusedCodes.isNotEmpty()) {
-                ReconSection("Same code on several sales", "One payment can only cover one sale.")
+                ReconSection(Lang.t("Same code on several sales", "الرمز نفسه في عدة عمليات بيع"), Lang.t("One payment can only cover one sale.", "الدفعة الواحدة تغطي عملية بيع واحدة فقط."))
                 recon.reusedCodes.forEach { (code, list) -> ReconLine(code, list.joinToString(", ") { it.receipt }) }
             }
         }
@@ -294,10 +296,10 @@ private fun VerifyCard(check: MpesaCheck?, currency: String, onVerify: (String) 
 
         when (check) {
             is MpesaCheck.Found -> FeedbackBanner(
-                "Verified: ${mpesaMoney(currency, check.payment.amount)} from ${check.payment.senderName.ifBlank { check.payment.senderPhone }} " +
-                    "at ${timeLabel(check.payment.receivedAt)}", isError = false)
+                Lang.t("Verified: ${mpesaMoney(currency, check.payment.amount)} from ${check.payment.senderName.ifBlank { check.payment.senderPhone }} at ${timeLabel(check.payment.receivedAt)}",
+                    "تم التحقق: ${mpesaMoney(currency, check.payment.amount)} من ${check.payment.senderName.ifBlank { check.payment.senderPhone }} في ${timeLabel(check.payment.receivedAt)}"), isError = false)
             is MpesaCheck.NotFound -> FeedbackBanner(
-                "${check.code} was not received on this phone from M-Pesa. Don't release goods until it shows here.", isError = true)
+                Lang.t("${check.code} was not received on this phone from M-Pesa. Don't release goods until it shows here.", "لم يصل ${check.code} من إم-بيسا إلى هذا الهاتف. لا تسلّم البضاعة حتى يظهر هنا."), isError = true)
             null -> {}
         }
     }
@@ -314,7 +316,7 @@ private fun TotalCard(period: MpesaPeriod, totals: com.minimart.pos.ui.viewmodel
         Text(mpesaMoney(currency, totals?.amount ?: 0.0), color = DT.Green, fontWeight = FontWeight.ExtraBold,
             fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         val n = totals?.count ?: 0
-        Text("$n ${if (n == 1) "payment" else "payments"}", color = DT.SubText, fontSize = 11.sp)
+        Text(ArabicCount.t(n, "payment", "payments", "لا دفعات", "دفعة واحدة", "دفعتان", "دفعات", "دفعة"), color = DT.SubText, fontSize = 11.sp)
     }
 }
 
@@ -330,11 +332,11 @@ private fun PaymentRow(p: MpesaPayment, currency: String, claimed: Boolean) {
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(p.senderName.ifBlank { p.senderPhone.ifBlank { "Unknown sender" } }, color = DT.OnSurface,
+            Text(p.senderName.ifBlank { p.senderPhone.ifBlank { Lang.t("Unknown sender", "مرسل غير معروف") } }, color = DT.OnSurface,
                 fontWeight = FontWeight.SemiBold, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(listOf(p.code, p.senderPhone.takeIf { it.isNotBlank() && p.senderName.isNotBlank() }).filterNotNull().joinToString(" • "),
                 color = DT.SubText, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(timeLabel(p.receivedAt) + if (claimed) "  •  matched to a sale" else "  •  not matched to a sale",
+            Text(timeLabel(p.receivedAt) + if (claimed) Lang.t("  •  matched to a sale", "  •  مطابقة لعملية بيع") else Lang.t("  •  not matched to a sale", "  •  غير مطابقة لعملية بيع"),
                 color = if (claimed) DT.SubText else DT.Amber, fontSize = 11.sp)
         }
         Spacer(Modifier.width(8.dp))
