@@ -5,6 +5,13 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.32.6] - 2026-11-11
+
+- **Lock screen.** In Arabic the PIN keypad now reads 1 2 3 from the top left like any phone keypad (it was mirrored). Tapping a key is lighter on slow phones, and the delete, sign-in and fingerprint buttons can now be read out by TalkBack.
+- **Accountant export.** Reports now also sends a sales list (one row per sale with net, VAT, total and the M-Pesa code), next to the journal and the profit and loss.
+- **Checkout.** If you tap Pay while a scanned item is still being added, the till now tells you to tap again, instead of doing nothing.
+- **Printed receipts.** Arabic product and customer names now print in Latin letters instead of "????", and Arabic digits print as normal digits.
+
 ## [1.32.5] - 2026-11-10
 
 - **More Arabic.** Payment methods, expense categories, order statuses (Draft, Ordered, Received…) and the activity log's event names now show in Arabic when the app is in Arabic. The receipt screen's status, buttons and refund/void dialogs too.
