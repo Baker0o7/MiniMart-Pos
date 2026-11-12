@@ -88,7 +88,7 @@ fun SettingsScreen(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) { pairedDevices = printer.getPairedPrinters(context); showPrinterDialog = true }
-        else printerStatus = "Allow Bluetooth access to find your printer"
+        else printerStatus = Lang.t("Allow Bluetooth access to find your printer", "اسمح بالوصول إلى البلوتوث للعثور على طابعتك")
     }
 
     // Re-sync the editable store fields whenever the saved values change.
@@ -160,7 +160,7 @@ fun SettingsScreen(
                 // ── Store Information ─────────────────────────────────────────
                 if (isAdmin) {
                     DSection(tr(com.minimart.pos.R.string.set_store_info), Icons.Default.Store) {
-                        DField(storeNameInput, { storeNameInput = it }, "Store Name", isText = true)
+                        DField(storeNameInput, { storeNameInput = it }, Lang.t("Store Name", "اسم المتجر"), isText = true)
                         Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                             Text(tr(com.minimart.pos.R.string.currency), color = DT.OnSurface, modifier = Modifier.weight(1f))
@@ -168,7 +168,7 @@ fun SettingsScreen(
                                 modifier = Modifier.width(90.dp), shape = RoundedCornerShape(10.dp), colors = dColors())
                         }
                         Spacer(Modifier.height(8.dp))
-                        DField(footerInput, { footerInput = it }, "Receipt Footer Message", isText = true)
+                        DField(footerInput, { footerInput = it }, Lang.t("Receipt Footer Message", "رسالة ذيل الإيصال"), isText = true)
                         Spacer(Modifier.height(12.dp))
                         val cleanCurrency = currencyInput.trim().uppercase().take(5)
                         val storeDirty = storeNameInput.trim() != storeName || cleanCurrency != currency || footerInput.trim() != receiptFooter
@@ -277,7 +277,7 @@ fun SettingsScreen(
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             OutlinedButton(onClick = {
                                 scope.launch {
-                                    testStatus = "Opening drawer..."
+                                    testStatus = Lang.t("Opening drawer...", "جارٍ فتح الدرج...")
                                     // Just send kick via printer if connected
                                     val r = printer.sendRaw(com.minimart.pos.printer.CashDrawerManager.kickCommand(settingsRepo.cashDrawerPin.first()))
                                     testStatus = if (r is com.minimart.pos.printer.PrintResult.Success) "✓ Drawer opened!" else "✗ Not connected to printer"
@@ -472,7 +472,7 @@ fun SettingsScreen(
                                     Text(tr(com.minimart.pos.R.string.sync_encrypted), color = DT.SubText, fontSize = 11.sp)
                                     var confirmReset by remember { mutableStateOf(false) }
                                     TextButton(onClick = { confirmReset = true }, contentPadding = PaddingValues(0.dp)) {
-                                        Text(if (syncState.mySecret.length < com.minimart.pos.util.PairingCode.LENGTH) "Upgrade to a stronger code" else "Make a new code",
+                                        Text(if (syncState.mySecret.length < com.minimart.pos.util.PairingCode.LENGTH) Lang.t("Upgrade to a stronger code", "ارتقِ إلى رمز أقوى") else Lang.t("Make a new code", "أنشئ رمزًا جديدًا"),
                                             color = DT.Teal, fontSize = 12.sp)
                                     }
                                     if (confirmReset) AlertDialog(
@@ -589,7 +589,7 @@ fun SettingsScreen(
                                     singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
                                 Spacer(Modifier.height(8.dp))
                             }
-                            OutlinedTextField(cs.setupCode, cloudVm::setSetupCode, label = { Text(if (cs.hosted) "Code from your dashboard (e.g. K7QM-4TX9)" else "Setup code") },
+                            OutlinedTextField(cs.setupCode, cloudVm::setSetupCode, label = { Text(if (cs.hosted) Lang.t("Code from your dashboard (e.g. K7QM-4TX9)", "الرمز من لوحة التحكم (مثال: K7QM-4TX9)") else Lang.t("Setup code", "رمز الإعداد")) },
                                 singleLine = true,
                                 keyboardOptions = if (cs.hosted)
                                     androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Done)
@@ -649,8 +649,8 @@ fun SettingsScreen(
                         val (healthColor, headline) = when (health) {
                             com.minimart.pos.util.BackupHealth.GOOD -> DT.Green to "Backed up ${com.minimart.pos.util.BackupAdvice.ago(snap.first, nowMs)}"
                             com.minimart.pos.util.BackupHealth.STALE -> DT.Amber to "Last backup was ${com.minimart.pos.util.BackupAdvice.ago(snap.first, nowMs)}"
-                            com.minimart.pos.util.BackupHealth.FAILED -> DT.Red to "The last backup failed"
-                            com.minimart.pos.util.BackupHealth.NONE -> DT.Amber to "No backup yet"
+                            com.minimart.pos.util.BackupHealth.FAILED -> DT.Red to Lang.t("The last backup failed", "فشلت آخر نسخة احتياطية")
+                            com.minimart.pos.util.BackupHealth.NONE -> DT.Amber to Lang.t("No backup yet", "لا توجد نسخة احتياطية بعد")
                         }
                         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(healthColor.copy(0.12f))
                             .border(1.dp, healthColor.copy(0.4f), RoundedCornerShape(12.dp)).padding(12.dp)) {
@@ -675,7 +675,7 @@ fun SettingsScreen(
                             var pass2 by remember { mutableStateOf("") }
                             val passError = when {
                                 pass.isNotEmpty() && pass.length < 6 -> "Use at least 6 characters"
-                                pass != pass2 -> "Passphrases do not match"
+                                pass != pass2 -> Lang.t("Passphrases do not match", "عبارتا المرور غير متطابقتين")
                                 else -> null
                             }
                             AlertDialog(
@@ -710,7 +710,7 @@ fun SettingsScreen(
                                             showBackupDialog = false
                                             isBackingUp = true
                                             scope.launch {
-                                                if (!ownerGate.allow("create a backup")) { backupStatus = "Only the owner can do this"; isBackingUp = false; return@launch }
+                                                if (!ownerGate.allow("create a backup")) { backupStatus = Lang.t("Only the owner can do this", "المالك فقط يمكنه ذلك"); isBackingUp = false; return@launch }
                                                 val r = com.minimart.pos.util.BackupManager.backup(context, chosen)
                                                 backupStatus = when (r) {
                                                     is com.minimart.pos.util.BackupResult.Success -> { backupFiles = com.minimart.pos.util.BackupManager.listBackups(context); lastBackupFile = r.file; r.message }
@@ -765,7 +765,7 @@ fun SettingsScreen(
                         }
                         if (integrityReport != null || integrityFailed != null) {
                             AlertDialog(onDismissRequest = { integrityVm.dismiss() }, containerColor = DT.Surface,
-                                title = { Text(if (integrityFailed != null) "Check could not run" else if (integrityReport?.ok == true) "No problems found" else "Problems found",
+                                title = { Text(if (integrityFailed != null) Lang.t("Check could not run", "تعذّر إجراء الفحص") else if (integrityReport?.ok == true) Lang.t("No problems found", "لم تُوجد مشكلات") else Lang.t("Problems found", "وُجدت مشكلات"),
                                     color = DT.OnSurface, fontWeight = FontWeight.Bold) },
                                 text = {
                                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -845,7 +845,7 @@ fun SettingsScreen(
                                             val pw = restorePass.ifEmpty { null }
                                             pendingRestoreFile = null
                                             scope.launch {
-                                                if (!ownerGate.allow("restore a backup")) { backupStatus = "Only the owner can do this"; return@launch }
+                                                if (!ownerGate.allow("restore a backup")) { backupStatus = Lang.t("Only the owner can do this", "المالك فقط يمكنه ذلك"); return@launch }
                                                 val r = com.minimart.pos.util.BackupManager.restore(context, f, pw)
                                                 backupStatus = when (r) {
                                                     is com.minimart.pos.util.BackupResult.Success -> r.message

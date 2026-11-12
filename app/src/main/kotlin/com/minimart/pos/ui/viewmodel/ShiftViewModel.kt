@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.entity.Shift
 import com.minimart.pos.data.repository.SettingsRepository
@@ -85,7 +86,7 @@ class ShiftViewModel @Inject constructor(
                 val userId = settingsRepo.loggedInUserId.first()
                 val user = userId?.let { userRepo.getUserById(it) }
                 if (userId == null || user == null) {
-                    _uiState.update { it.copy(isLoading = false, error = "Clock-in failed: no signed-in user") }
+                    _uiState.update { it.copy(isLoading = false, error = Lang.t("Clock-in failed: no signed-in user", "فشل بدء الوردية: لا يوجد مستخدم مسجّل الدخول")) }
                     return@launch
                 }
                 val shiftId = shiftRepo.clockIn(userId, user.displayName, openingFloat)
@@ -105,7 +106,7 @@ class ShiftViewModel @Inject constructor(
             try {
                 val shift = _uiState.value.activeShift
                 if (shift == null) {
-                    _uiState.update { it.copy(isLoading = false, error = "No open shift to close") }
+                    _uiState.update { it.copy(isLoading = false, error = Lang.t("No open shift to close", "لا توجد وردية مفتوحة لإغلاقها")) }
                     return@launch
                 }
                 val closed = shiftRepo.clockOut(shift.id, closingFloat, notes)
@@ -114,7 +115,7 @@ class ShiftViewModel @Inject constructor(
                     audit.log(com.minimart.pos.util.AuditEvent.SHIFT_CLOSED,
                         detail = "Counted ${money(closingFloat)}" + (closed?.let { " · expected ${money(it.expectedCash)} · variance ${money(it.cashDiscrepancy)}" } ?: ""))
                 }
-                _uiState.update { it.copy(isLoading = false, activeShift = null, lastClosedShift = closed, successMessage = "Shift ended") }
+                _uiState.update { it.copy(isLoading = false, activeShift = null, lastClosedShift = closed, successMessage = Lang.t("Shift ended", "انتهت الوردية")) }
                 if (cloudConfig.isConfigured) launch { runCatching { cloud.push() } }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Clock-out")) }
@@ -133,7 +134,7 @@ class ShiftViewModel @Inject constructor(
     fun printZReport(shiftId: Long) {
         viewModelScope.launch {
             val text = try { zText(shiftId) } catch (e: Exception) { null }
-            if (text == null) { _uiState.update { it.copy(error = "Report not found") }; return@launch }
+            if (text == null) { _uiState.update { it.copy(error = Lang.t("Report not found", "التقرير غير موجود")) }; return@launch }
             when (val r = printer.printPlainText(text)) {
                 is com.minimart.pos.printer.PrintResult.Success -> _uiState.update { it.copy(successMessage = "Z-report printed") }
                 is com.minimart.pos.printer.PrintResult.Error -> _uiState.update { it.copy(error = r.message + " — use Share instead") }
@@ -148,7 +149,7 @@ class ShiftViewModel @Inject constructor(
             if (r is com.minimart.pos.printer.DrawerResult.Success) {
                 val shift = _uiState.value.activeShift
                 if (noSale && shift != null) runCatching { settingsRepo.recordNoSaleOpen(shift.id); audit.log(com.minimart.pos.util.AuditEvent.NO_SALE, detail = "Drawer opened without a sale (shift #${shift.id})") }
-                _uiState.update { it.copy(successMessage = "Drawer opened") }
+                _uiState.update { it.copy(successMessage = Lang.t("Drawer opened", "تم فتح الدرج")) }
             } else if (r is com.minimart.pos.printer.DrawerResult.Error) {
                 _uiState.update { it.copy(error = "Drawer: ${r.msg}") }
             }

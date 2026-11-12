@@ -164,7 +164,7 @@ fun InventoryInsightsScreen(onBack: () -> Unit, vm: InventoryInsightsViewModel =
 private fun reorderText(ins: InventoryInsights): String = buildString {
     appendLine("${ins.storeName} – reorder list")
     appendLine(SimpleDateFormat("EEE d MMM yyyy", Locale.getDefault()).format(Date()))
-    ins.reorder.groupBy { it.product.supplierName.ifBlank { "No supplier set" } }.forEach { (supplier, rows) ->
+    ins.reorder.groupBy { it.product.supplierName.ifBlank { Lang.t("No supplier set", "لم يُحدَّد مورّد") } }.forEach { (supplier, rows) ->
         appendLine()
         val phone = rows.firstOrNull { it.product.supplierPhone.isNotBlank() }?.product?.supplierPhone
         val est = rows.sumOf { it.orderCost }

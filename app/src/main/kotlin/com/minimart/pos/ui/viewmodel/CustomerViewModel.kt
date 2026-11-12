@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.entity.CreditTransaction
 import com.minimart.pos.data.entity.Customer
@@ -67,7 +68,7 @@ class CustomerViewModel @Inject constructor(
     fun saveCustomer(customer: Customer) = viewModelScope.launch {
         try {
             repo.saveCustomer(customer)
-            _state.update { it.copy(message = "Customer saved") }
+            _state.update { it.copy(message = Lang.t("Customer saved", "تم حفظ العميل")) }
         } catch (e: Exception) {
             _state.update { it.copy(message = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
         }
@@ -105,7 +106,7 @@ class CustomerViewModel @Inject constructor(
         }
         try {
             repo.deleteCustomer(customer)
-            _state.update { it.copy(message = "Customer deleted") }
+            _state.update { it.copy(message = Lang.t("Customer deleted", "تم حذف العميل")) }
         } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (e: Exception) {
             _state.update { it.copy(message = com.minimart.pos.util.ErrorAdvice.explain(e, "Deleting the customer")) }
@@ -128,7 +129,7 @@ class CustomerViewModel @Inject constructor(
             val updated = repo.getById(customerId)
             _state.update { it.copy(selectedCustomer = updated) }
         } else {
-            _state.update { it.copy(message = "Could not add credit — check the amount") }
+            _state.update { it.copy(message = Lang.t("Could not add credit — check the amount", "تعذّرت إضافة الرصيد — تحقق من المبلغ")) }
         }
     }
 

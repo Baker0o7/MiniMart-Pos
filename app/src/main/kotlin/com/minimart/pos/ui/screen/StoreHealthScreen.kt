@@ -40,14 +40,14 @@ internal fun healthColor(level: HealthLevel): Color = when (level) {
 
 internal fun actionLabel(a: HealthAction): String? = when (a) {
     HealthAction.NONE -> null
-    HealthAction.BACKUP -> "Back up"
-    HealthAction.SYNC -> "Open sync"
-    HealthAction.MPESA -> "Open M-Pesa"
-    HealthAction.LOW_STOCK -> "See products"
-    HealthAction.SETTINGS -> "Open settings"
-    HealthAction.DATA_CHECK -> "Check again"
-    HealthAction.SHIFTS -> "Open shifts"
-    HealthAction.USERS -> "Open users"
+    HealthAction.BACKUP -> Lang.t("Back up", "نسخ احتياطي")
+    HealthAction.SYNC -> Lang.t("Open sync", "افتح المزامنة")
+    HealthAction.MPESA -> Lang.t("Open M-Pesa", "افتح إم-بيسا")
+    HealthAction.LOW_STOCK -> Lang.t("See products", "عرض المنتجات")
+    HealthAction.SETTINGS -> Lang.t("Open settings", "افتح الإعدادات")
+    HealthAction.DATA_CHECK -> Lang.t("Check again", "افحص مجددًا")
+    HealthAction.SHIFTS -> Lang.t("Open shifts", "افتح الورديات")
+    HealthAction.USERS -> Lang.t("Open users", "افتح المستخدمين")
 }
 
 /** One screen that says whether the shop's data and phone are in good shape, and how to fix what is not. */
@@ -61,7 +61,7 @@ fun StoreHealthScreen(
     val s by vm.state.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().background(DT.Bg)) {
         GradientHeader(Lang.t("Store health", "سلامة المتجر"), if (s.loading) Lang.t("Checking…", "جارٍ الفحص…") else s.headline, onBack) {
-            HeaderPillButton("Check again", Icons.Default.Refresh) { vm.refresh() }
+            HeaderPillButton(Lang.t("Check again", "افحص مجددًا"), Icons.Default.Refresh) { vm.refresh() }
         }
         if (s.loading && s.checks.isEmpty()) {
             Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = DT.Teal) }
@@ -85,7 +85,7 @@ fun StoreHealthScreen(
                     val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                         type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, vm.problemReport())
                     }
-                    runCatching { ctx.startActivity(android.content.Intent.createChooser(send, "Share problem list")
+                    runCatching { ctx.startActivity(android.content.Intent.createChooser(send, Lang.t("Share problem list", "مشاركة قائمة المشكلات"))
                         .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
                 }, onClear = { vm.clearProblems() })
             }

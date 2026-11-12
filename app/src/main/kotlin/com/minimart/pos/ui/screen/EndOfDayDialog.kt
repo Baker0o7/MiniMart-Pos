@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,7 +34,7 @@ fun EndOfDayDialog(onDismiss: () -> Unit, onAction: (HealthAction) -> Unit, vm: 
                 Text(tr(com.minimart.pos.R.string.end_of_day), color = DT.OnSurface, fontWeight = FontWeight.ExtraBold)
                 if (!s.loading) Text(
                     when {
-                        !s.canFinish -> "Something must be done before you close"
+                        !s.canFinish -> Lang.t("Something must be done before you close", "يجب إنجاز أمر قبل إغلاق المتجر")
                         s.remaining == 0 -> "All done. The shop is ready to close."
                         else -> "${s.remaining} thing(s) left"
                     },
@@ -73,7 +74,7 @@ private fun StepRow(step: EndOfDayStep, working: Boolean, onAction: () -> Unit) 
             }
             Text(step.detail, color = DT.SubText, fontSize = 12.sp)
             if (step.state != StepState.DONE && (step.action != HealthAction.NONE || step.id == "backup")) {
-                val label = if (step.id == "backup") (if (working) "Backing up…" else "Back up now") else actionLabel(step.action) ?: "Open"
+                val label = if (step.id == "backup") (if (working) Lang.t("Backing up…", "جارٍ النسخ الاحتياطي…") else Lang.t("Back up now", "انسخ احتياطيًا الآن")) else actionLabel(step.action) ?: Lang.t("Open", "افتح")
                 TextButton(onClick = onAction, enabled = !working) { Text(label, color = DT.Teal, fontWeight = FontWeight.Bold) }
             }
         }

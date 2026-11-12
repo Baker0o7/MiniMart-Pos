@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -49,7 +50,7 @@ internal fun ArchiveSettingsSection(ownerGate: OwnerGateViewModel, vm: ArchiveVi
             onClick = { denied = null; confirm = true },
             enabled = !s.working && s.plan?.isEmpty == false,
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
-        ) { Text(if (s.working) "Archiving…" else "Archive now") }
+        ) { Text(if (s.working) Lang.t("Archiving…", "جارٍ الأرشفة…") else Lang.t("Archive now", "أرشفة الآن")) }
         s.lastFile?.let { file ->
             OutlinedButton(
                 onClick = {
@@ -72,7 +73,7 @@ internal fun ArchiveSettingsSection(ownerGate: OwnerGateViewModel, vm: ArchiveVi
             confirmButton = {
                 TextButton(onClick = {
                     confirm = false
-                    scope.launch { if (ownerGate.allow("archive old sales")) vm.archive() else denied = "Only the owner can do this" }
+                    scope.launch { if (ownerGate.allow("archive old sales")) vm.archive() else denied = Lang.t("Only the owner can do this", "المالك فقط يمكنه ذلك") }
                 }) { Text(tr(com.minimart.pos.R.string.arc_btn)) }
             },
             dismissButton = { TextButton(onClick = { confirm = false }) { Text(tr(com.minimart.pos.R.string.cancel)) } }

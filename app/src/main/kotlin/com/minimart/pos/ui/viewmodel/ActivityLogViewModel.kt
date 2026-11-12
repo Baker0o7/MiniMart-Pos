@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.util.AuditCheck
 import com.minimart.pos.util.AuditLogger
@@ -17,14 +18,15 @@ import javax.inject.Inject
 /** One parsed line of the activity log. */
 data class ActivityEntry(val time: String, val event: String, val user: String, val detail: String)
 
-enum class ActivityFilter(val label: String, val events: Set<String>?) {
-    ALL("All", null),
-    SALES("Sales", setOf("SALE_COMPLETED", "DISCOUNT_APPLIED", "CREDIT_USED", "CREDIT_ADDED", "NO_SALE")),
-    REVERSALS("Voids & refunds", setOf("SALE_VOIDED", "SALE_REFUNDED")),
-    STOCK("Stock & prices", setOf("PRODUCT_CREATED", "PRODUCT_EDITED", "PRODUCT_DELETED", "STOCK_ADJUSTED")),
-    SHIFTS("Shifts", setOf("SHIFT_OPENED", "SHIFT_CLOSED")),
-    SECURITY("Sign-ins & staff", setOf("LOGIN_SUCCESS", "LOGIN_FAILED", "LOGOUT", "SESSION_EXPIRED", "USER_CREATED", "USER_DELETED", "PIN_CHANGED")),
-    SYSTEM("Backups", setOf("BACKUP_CREATED", "BACKUP_FAILED", "BACKUP_RESTORED", "DATA_CHECK", "PERMISSION_DENIED", "LOG_ROTATED", "SETTINGS_CHANGED"))
+enum class ActivityFilter(private val en: String, private val ar: String, val events: Set<String>?) {
+    ALL("All", "الكل", null),
+    SALES("Sales", "المبيعات", setOf("SALE_COMPLETED", "DISCOUNT_APPLIED", "CREDIT_USED", "CREDIT_ADDED", "NO_SALE")),
+    REVERSALS("Voids & refunds", "الإلغاءات والمرتجعات", setOf("SALE_VOIDED", "SALE_REFUNDED")),
+    STOCK("Stock & prices", "المخزون والأسعار", setOf("PRODUCT_CREATED", "PRODUCT_EDITED", "PRODUCT_DELETED", "STOCK_ADJUSTED")),
+    SHIFTS("Shifts", "الورديات", setOf("SHIFT_OPENED", "SHIFT_CLOSED")),
+    SECURITY("Sign-ins & staff", "تسجيل الدخول والموظفون", setOf("LOGIN_SUCCESS", "LOGIN_FAILED", "LOGOUT", "SESSION_EXPIRED", "USER_CREATED", "USER_DELETED", "PIN_CHANGED")),
+    SYSTEM("Backups", "النسخ الاحتياطية", setOf("BACKUP_CREATED", "BACKUP_FAILED", "BACKUP_RESTORED", "DATA_CHECK", "PERMISSION_DENIED", "LOG_ROTATED", "SETTINGS_CHANGED"));
+    val label: String get() = Lang.t(en, ar)
 }
 
 data class ActivityUiState(

@@ -104,7 +104,7 @@ private fun UpdateBlock(vm: com.minimart.pos.ui.viewmodel.UpdateViewModel) {
             Button(onClick = {
                 if (!vm.canInstall()) runCatching { context.startActivity(vm.permissionIntent()) }
                 vm.install()
-            }, modifier = Modifier.heightIn(min = 48.dp)) { Text(if (state is com.minimart.pos.update.UpdateState.Failed) "Try again" else "Download and install") }
+            }, modifier = Modifier.heightIn(min = 48.dp)) { Text(if (state is com.minimart.pos.update.UpdateState.Failed) Lang.t("Try again", "حاول مجددًا") else Lang.t("Download and install", "نزّل وثبّت")) }
         }
         val busy = state is com.minimart.pos.update.UpdateState.Checking || state is com.minimart.pos.update.UpdateState.Downloading
         OutlinedButton(onClick = { vm.check() }, enabled = !busy, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.upd_check)) }

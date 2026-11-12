@@ -5,6 +5,11 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.32.8] - 2026-11-12
+
+- **More of the app in Arabic:** the messages you see after saving, deleting or failing (products, customers, suppliers, purchase orders, expenses, shifts, sign-in and fingerprint), the Analytics card titles and weekday names, Customers (labels and buttons), User management, End of day, Archive, Store health buttons, Hardware check buttons, the Activity log filters, the M-Pesa Daraja and web address settings, and the backup and Bluetooth messages in Settings.
+- Spoken labels for TalkBack (call supplier, add customer, go back and others) are now in Arabic too.
+
 ## [1.32.7] - 2026-11-12
 
 - **More of the app in Arabic:** M-Pesa payments, Stock insights, Today, Analytics, the Settings summaries (printer, cash drawer, M-Pesa Daraja, sync, daily report), Account, Activity log, Hardware check, Store health, Barcode labels, and the period buttons (Today, Week, Month) all follow the language now. Counts use the right Arabic wording ("two payments", "no payments").

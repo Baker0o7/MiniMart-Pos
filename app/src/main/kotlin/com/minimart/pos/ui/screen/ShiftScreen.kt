@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -270,7 +271,7 @@ private fun TodayCashCard(today: List<Shift>, currency: String) {
     })
     fun money(v: com.minimart.pos.util.Money) = "$currency ${v.format()}"
     val (label, color) = when (day.verdict) {
-        com.minimart.pos.util.CashVerdict.BALANCED -> "Cash balances" to SuccessGreen
+        com.minimart.pos.util.CashVerdict.BALANCED -> Lang.t("Cash balances", "الصندوق متوازن") to SuccessGreen
         com.minimart.pos.util.CashVerdict.OVER -> "Over by ${day.variance.format()}" to DT.Amber
         com.minimart.pos.util.CashVerdict.SHORT -> "Short by ${(-day.variance).format()}" to DT.Red
     }
@@ -281,7 +282,7 @@ private fun TodayCashCard(today: List<Shift>, currency: String) {
             if (day.closedShifts == 0) {
                 Text(tr(com.minimart.pos.R.string.no_shift_closed), color = DT.SubText, fontSize = 13.sp)
             } else {
-                SummaryRow("Should be in the drawers", money(day.expected))
+                SummaryRow(Lang.t("Should be in the drawers", "المتوقع في الأدراج"), money(day.expected))
                 SummaryRow("Counted", money(day.counted))
                 Text(label, color = color, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
@@ -400,7 +401,7 @@ private fun ClockOutDialog(currency: String, blind: Boolean, onOpenDrawer: () ->
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     if (blind) "Blind close: count everything in the drawer and enter the total. The expected amount stays hidden."
-                    else "Count everything in the drawer and enter the total.",
+                    else Lang.t("Count everything in the drawer and enter the total.", "عدّ كل ما في الدرج وأدخل المجموع."),
                     color = DT.SubText, style = MaterialTheme.typography.bodySmall
                 )
                 TextButton(onClick = onOpenDrawer) {
@@ -463,14 +464,14 @@ private fun ShiftSummaryDialog(shift: Shift, currency: String, showVariance: Boo
                 SummaryRow("Cashier", shift.cashierName)
                 SummaryRow("Clock In", df.format(Date(shift.clockIn)))
                 shift.clockOut?.let { SummaryRow("Clock Out", df.format(Date(it))) }
-                SummaryRow("Duration", "${hours}h ${mins}m")
+                SummaryRow(Lang.t("Duration", "المدة"), "${hours}h ${mins}m")
                 HorizontalDivider(color = DT.Border)
                 SummaryRow("Cash Sales", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.totalCashSales)}")
                 SummaryRow("M-Pesa Sales", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.totalMpesaSales)}")
                 if (shift.totalCardSales > 0) SummaryRow("Card Sales", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.totalCardSales)}")
                 HorizontalDivider(color = DT.Border)
                 SummaryRow("Total Sales", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.totalSales)}", bold = true, color = DT.Teal)
-                SummaryRow("Transactions", shift.totalTransactions.toString())
+                SummaryRow(Lang.t("Transactions", "العمليات"), shift.totalTransactions.toString())
                 if (shift.totalDiscounts > 0) SummaryRow("Discounts Given", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.totalDiscounts)}", color = ErrorRed)
                 HorizontalDivider(color = DT.Border)
                 SummaryRow("Opening Float", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.openingFloat)}")
@@ -480,7 +481,7 @@ private fun ShiftSummaryDialog(shift: Shift, currency: String, showVariance: Boo
                         SummaryRow("Expected Cash", "$currency ${String.format(java.util.Locale.US, "%,.2f", shift.expectedCash)}")
                         val disc = shift.cashDiscrepancy
                         SummaryRow(
-                            "Discrepancy",
+                            Lang.t("Discrepancy", "الفرق"),
                             "${if (disc >= 0) "+" else ""}$currency ${String.format(java.util.Locale.US, "%,.2f", disc)}",
                             bold = true,
                             color = when { disc > 10 -> SuccessGreen; disc < -10 -> ErrorRed; else -> Color.White }

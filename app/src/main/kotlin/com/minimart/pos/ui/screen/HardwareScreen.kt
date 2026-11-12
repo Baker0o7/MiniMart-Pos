@@ -59,12 +59,12 @@ fun HardwareScreen(onBack: () -> Unit, vm: HardwareViewModel = hiltViewModel()) 
             items(s.checks, key = { it.id }) { c ->
                 DiagRow(c, testing = s.testing == c.id) {
                     when (c.id) {
-                        "printer" -> if (c.detail.contains("Pair it again") || c.detail.contains("No printer chosen")) null else DiagButton("Test print") { vm.testPrinter() }
-                        "drawer" -> DiagButton("Test drawer") { vm.testDrawer() }
+                        "printer" -> if (c.detail.contains("Pair it again") || c.detail.contains("No printer chosen")) null else DiagButton(Lang.t("Test print", "اختبار الطباعة")) { vm.testPrinter() }
+                        "drawer" -> DiagButton(Lang.t("Test drawer", "اختبار الدرج")) { vm.testDrawer() }
                         "bluetooth" -> if (s.bluetoothOff) DiagButton("Bluetooth settings") { open(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) }
-                                       else if (c.level == HealthLevel.BAD) DiagButton("Phone settings") { open(appSettings) } else null
+                                       else if (c.level == HealthLevel.BAD) DiagButton(Lang.t("Phone settings", "إعدادات الهاتف")) { open(appSettings) } else null
                         "camera", "sms", "notifications" ->
-                            if (c.level != HealthLevel.GOOD && !c.detail.startsWith("No camera")) DiagButton("Phone settings") { open(appSettings) } else null
+                            if (c.level != HealthLevel.GOOD && !c.detail.startsWith("No camera")) DiagButton(Lang.t("Phone settings", "إعدادات الهاتف")) { open(appSettings) } else null
                         "storage" -> if (c.level != HealthLevel.GOOD) DiagButton("Storage settings") { open(Intent(Settings.ACTION_INTERNAL_STORAGE_SETTINGS)) } else null
                         else -> null
                     }

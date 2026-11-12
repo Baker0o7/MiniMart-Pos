@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.minimart.pos.util.Lang
 import android.app.Activity
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
@@ -43,7 +44,7 @@ fun CustomerDisplayScreen(onExit: () -> Unit, vm: CustomerDisplayViewModel = hil
     BackHandler(onBack = onExit)
     Box(Modifier.fillMaxSize()) {
         CustomerDisplayContent(state)
-        Icon(Icons.Default.Close, "Exit customer view", tint = Color.White.copy(0.5f),
+        Icon(Icons.Default.Close, Lang.t("Exit customer view", "إغلاق شاشة العميل"), tint = Color.White.copy(0.5f),
             modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(48.dp).padding(10.dp)
                 .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onExit))
     }

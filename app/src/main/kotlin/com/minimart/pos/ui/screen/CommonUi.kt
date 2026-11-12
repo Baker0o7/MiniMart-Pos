@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import androidx.compose.foundation.background
+import com.minimart.pos.util.Lang
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -148,7 +149,7 @@ internal fun GradientHeader(
             Box(
                 modifier = Modifier.size(48.dp).clip(CircleShape)
                     .background(Color.White.copy(0.18f))
-                    .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Go back", onClick = onBack),
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = Lang.t("Go back", "رجوع"), onClick = onBack),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color.White, modifier = Modifier.size(20.dp))

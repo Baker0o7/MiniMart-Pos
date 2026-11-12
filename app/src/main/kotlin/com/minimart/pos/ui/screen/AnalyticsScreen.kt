@@ -116,12 +116,12 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     }
                 }
                 Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    KpiTile("Gross profit", "$cur ${money(s.grossProfit)}",
+                    KpiTile(Lang.t("Gross profit", "إجمالي الربح"), "$cur ${money(s.grossProfit)}",
                         if (s.grossProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f).fillMaxHeight()) {
                         val margin = if (s.revenue > 0) s.grossProfit / s.revenue * 100 else 0.0
                         Text("${String.format(Locale.US, "%.0f", margin)}% margin", color = DT.SubText, fontSize = 11.sp)
                     }
-                    KpiTile("Net profit", "$cur ${money(s.netProfit)}",
+                    KpiTile(Lang.t("Net profit", "صافي الربح"), "$cur ${money(s.netProfit)}",
                         if (s.netProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f).fillMaxHeight()) {
                         Text(tr(com.minimart.pos.R.string.an_after_exp, cur, money(s.expenses)), color = DT.SubText, fontSize = 11.sp)
                     }
@@ -143,7 +143,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
 
         // ── Revenue trend ─────────────────────────────────────────────────────
         item {
-            AnalyticsCard(if (s.trendBucketDays == 1) "Daily revenue" else "Weekly revenue") {
+            AnalyticsCard(if (s.trendBucketDays == 1) Lang.t("Daily revenue", "الإيراد اليومي") else Lang.t("Weekly revenue", "الإيراد الأسبوعي")) {
                 val values = s.trend.map { it.revenue.toFloat() }
                 val best = values.indices.maxByOrNull { values[it] } ?: 0
                 val fmt = SimpleDateFormat(if (s.range.days <= 7) "EEE" else "d MMM", androidx.compose.ui.text.intl.Locale.current.platformLocale)
@@ -164,7 +164,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
 
         // ── Payment mix ───────────────────────────────────────────────────────
         item {
-            AnalyticsCard("Payment methods") {
+            AnalyticsCard(Lang.t("Payment methods", "طرق الدفع")) {
                 val total = s.paymentMix.sumOf { it.second }.coerceAtLeast(0.01)
                 Row(Modifier.fillMaxWidth().height(14.dp).clip(RoundedCornerShape(7.dp))) {
                     s.paymentMix.forEach { (m, v) ->
@@ -186,7 +186,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
 
         // ── Peak hours ────────────────────────────────────────────────────────
         item {
-            AnalyticsCard("Busiest hours") {
+            AnalyticsCard(Lang.t("Busiest hours", "أكثر الساعات ازدحامًا")) {
                 val values = s.hourly.map { it.toFloat() }
                 val peak = values.indices.maxByOrNull { values[it] } ?: 0
                 BarChart(values, highlight = peak, modifier = Modifier.fillMaxWidth().height(80.dp),
@@ -206,11 +206,11 @@ private fun AnalyticsBody(s: AnalyticsState) {
 
         // ── Weekdays ──────────────────────────────────────────────────────────
         item {
-            AnalyticsCard("Best days of the week") {
+            AnalyticsCard(Lang.t("Best days of the week", "أفضل أيام الأسبوع")) {
                 val values = s.weekday.map { it.toFloat() }
                 val best = values.indices.maxByOrNull { values[it] } ?: 0
                 BarChart(values, highlight = best, modifier = Modifier.fillMaxWidth().height(80.dp),
-                    labels = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
+                    labels = weekdayNames(),
                     valueLabel = { v -> "$cur ${money(v.toDouble())}" })
                 Spacer(Modifier.height(6.dp))
                 Row(Modifier.fillMaxWidth()) {
@@ -219,7 +219,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     }
                 }
                 Spacer(Modifier.height(6.dp))
-                val names = if (Lang.arabic) listOf("الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد") else listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+                val names = weekdayNames()
                 Text(Lang.t("Strongest: ", "الأقوى: ") + "${names[best]} • $cur ${money(values[best].toDouble())}",
                     color = DT.OnSurface, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
@@ -227,14 +227,14 @@ private fun AnalyticsBody(s: AnalyticsState) {
 
         // ── Top products ──────────────────────────────────────────────────────
         if (s.topProducts.isNotEmpty()) item {
-            AnalyticsCard("Top products by revenue") {
+            AnalyticsCard(Lang.t("Top products by revenue", "أفضل المنتجات إيرادًا")) {
                 s.topProducts.forEachIndexed { i, p -> TopProductRow(i + 1, p, cur) }
             }
         }
 
         // ── Categories ────────────────────────────────────────────────────────
         if (s.categories.isNotEmpty()) item {
-            AnalyticsCard("Sales by category") {
+            AnalyticsCard(Lang.t("Sales by category", "المبيعات حسب الفئة")) {
                 val total = s.categories.sumOf { it.second }.coerceAtLeast(0.01)
                 s.categories.forEach { (cat, v) ->
                     Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
@@ -256,7 +256,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
 
         // ── Business intelligence ─────────────────────────────────────────────
         s.abc?.let { abc -> item {
-            AnalyticsCard("Where your sales come from") {
+            AnalyticsCard(Lang.t("Where your sales come from", "من أين تأتي مبيعاتك")) {
                 Text("${abc.aCount} of your ${abc.total} selling products make ${String.format(Locale.US, "%.0f", abc.aShare * 100)}% of sales.",
                     color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
@@ -280,7 +280,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
         } }
 
         s.margins?.takeIf { it.best.isNotEmpty() || it.lossMakers.isNotEmpty() || it.thin.isNotEmpty() }?.let { m -> item {
-            AnalyticsCard("Profit by product") {
+            AnalyticsCard(Lang.t("Profit by product", "الربح حسب المنتج")) {
                 if (m.lossMakers.isNotEmpty()) {
                     Text(tr(com.minimart.pos.R.string.below_cost), color = DT.Red, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     m.lossMakers.take(5).forEach { p ->
@@ -321,7 +321,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
 
         // ── Basket, staff and leakage ─────────────────────────────────────────
         if (s.basket != null || s.pairs.isNotEmpty()) item {
-            AnalyticsCard("What goes in a basket") {
+            AnalyticsCard(Lang.t("What goes in a basket", "ما يوضع في السلة")) {
                 s.basket?.let { b ->
                     Text("${String.format(Locale.US, "%.1f", b.avgItemsPerBasket)} items per sale", color = DT.OnSurface, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     Text("${String.format(Locale.US, "%.0f", b.multiItemShare * 100)}% of ${b.baskets} sales had two or more different products.", color = DT.SubText, fontSize = 11.sp)
@@ -340,7 +340,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
             }
         }
         if (s.staff.size > 1) item {
-            AnalyticsCard("Staff and reversals") {
+            AnalyticsCard(Lang.t("Staff and reversals", "الموظفون والمرتجعات")) {
                 s.staff.forEach { st ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
@@ -360,7 +360,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
             }
         }
         s.leakage?.let { l -> item {
-            AnalyticsCard("Where money leaks") {
+            AnalyticsCard(Lang.t("Where money leaks", "أين تضيع الأموال")) {
                 if (l.discounts > 0.0) Text(tr(com.minimart.pos.R.string.an_discounts, cur, money(l.discounts), String.format(Locale.US, "%.1f", l.discountShare * 100)),
                     color = DT.OnSurface, fontSize = 13.sp)
                 if (l.reversedCount > 0) Text(tr(com.minimart.pos.R.string.an_takenback, l.reversedCount, cur, money(l.reversedValue), String.format(Locale.US, "%.1f", l.reversalRate * 100)),
@@ -371,14 +371,14 @@ private fun AnalyticsBody(s: AnalyticsState) {
         } }
 
         s.typicalWeek?.let { week -> item {
-            AnalyticsCard("Your typical week") {
+            AnalyticsCard(Lang.t("Your typical week", "أسبوعك المعتاد")) {
                 val total = week.sum()
                 Text(tr(com.minimart.pos.R.string.an_week, cur, money(total)), color = DT.OnSurface, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 Text(tr(com.minimart.pos.R.string.an_based, s.range.days), color = DT.SubText, fontSize = 11.sp)
                 Spacer(Modifier.height(8.dp))
                 BarChart(week.map { it.toFloat() }, highlight = week.indices.maxByOrNull { week[it] } ?: -1,
                     modifier = Modifier.fillMaxWidth().height(70.dp),
-                    labels = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
+                    labels = weekdayNames(),
                     valueLabel = { v -> "$cur ${money(v.toDouble())}" })
                 Spacer(Modifier.height(4.dp))
                 Row(Modifier.fillMaxWidth()) {
@@ -392,6 +392,8 @@ private fun AnalyticsBody(s: AnalyticsState) {
 }
 
 private fun hourLabel(h: Int): String = HourLabel.of(h)
+
+private fun weekdayNames(): List<String> = if (Lang.arabic) listOf("الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد") else listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
 
 @Composable

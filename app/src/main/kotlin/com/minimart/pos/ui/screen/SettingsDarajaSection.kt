@@ -90,9 +90,9 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
              else "Production — customers are charged for real.",
             color = DT.SubText, style = MaterialTheme.typography.labelSmall)
         Spacer(Modifier.height(8.dp))
-        DField(darajaShortcode, { darajaShortcode = it }, "Business Shortcode", Icons.Default.Storefront)
+        DField(darajaShortcode, { darajaShortcode = it }, Lang.t("Business Shortcode", "رمز النشاط (Shortcode)"), Icons.Default.Storefront)
         Spacer(Modifier.height(4.dp))
-        DField(darajaConsumerKey, { darajaConsumerKey = it }, "Consumer Key", Icons.Default.VpnKey)
+        DField(darajaConsumerKey, { darajaConsumerKey = it }, Lang.t("Consumer Key", "مفتاح المستهلك (Consumer Key)"), Icons.Default.VpnKey)
         Spacer(Modifier.height(4.dp))
         OutlinedTextField(
             value = darajaConsumerSecret, onValueChange = { darajaConsumerSecret = it },
@@ -101,7 +101,7 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
             leadingIcon = { Icon(Icons.Default.Lock, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
             trailingIcon = {
                 IconButton(onClick = { showSecret = !showSecret }) {
-                    Icon(if (showSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility, if (showSecret) "Hide secret" else "Show secret", tint = DT.SubText)
+                    Icon(if (showSecret) Icons.Default.VisibilityOff else Icons.Default.Visibility, if (showSecret) Lang.t("Hide secret", "إخفاء السر") else Lang.t("Show secret", "إظهار السر"), tint = DT.SubText)
                 }
             },
             visualTransformation = if (showSecret) androidx.compose.ui.text.input.VisualTransformation.None
@@ -117,7 +117,7 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
             leadingIcon = { Icon(Icons.Default.Key, null, tint = DT.SubText, modifier = Modifier.size(18.dp)) },
             trailingIcon = {
                 IconButton(onClick = { showPasskey = !showPasskey }) {
-                    Icon(if (showPasskey) Icons.Default.VisibilityOff else Icons.Default.Visibility, if (showPasskey) "Hide passkey" else "Show passkey", tint = DT.SubText)
+                    Icon(if (showPasskey) Icons.Default.VisibilityOff else Icons.Default.Visibility, if (showPasskey) Lang.t("Hide passkey", "إخفاء Passkey") else Lang.t("Show passkey", "إظهار Passkey"), tint = DT.SubText)
                 }
             },
             visualTransformation = if (showPasskey) androidx.compose.ui.text.input.VisualTransformation.None
@@ -161,7 +161,7 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
         ) {
             Icon(Icons.Default.Send, null, tint = DT.Ink, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text(if (darajaSaved) "✓ Saved — encrypted on this device" else "Save Daraja Settings",
+            Text(if (darajaSaved) Lang.t("✓ Saved — encrypted on this device", "✓ تم الحفظ — مشفّر على هذا الجهاز") else Lang.t("Save Daraja Settings", "حفظ إعدادات دراجا"),
                 color = DT.Ink, fontWeight = FontWeight.Bold)
         }
     }

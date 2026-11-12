@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.viewmodel
 
 import android.content.Context
+import com.minimart.pos.util.Lang
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -90,7 +91,7 @@ class EndOfDayViewModel @Inject constructor(
             val result = try { BackupManager.backup(context) } catch (e: Exception) { BackupResult.Error(ErrorAdvice.explain(e, "The backup")) }
             _state.update {
                 when (result) {
-                    is BackupResult.Success -> it.copy(working = false, message = "Backup saved.", messageIsError = false)
+                    is BackupResult.Success -> it.copy(working = false, message = Lang.t("Backup saved.", "تم حفظ النسخة الاحتياطية."), messageIsError = false)
                     is BackupResult.Error -> it.copy(working = false, message = result.message, messageIsError = true)
                 }
             }

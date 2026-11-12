@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.dao.TopSellerResult
 import com.minimart.pos.data.entity.Product
@@ -323,7 +324,7 @@ class AuthViewModel @Inject constructor(
                     auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_FAILED,
                         user = username, detail = "Attempt $attempts of $MAX_ATTEMPTS${if (nowLocked) " — LOCKED OUT" else ""}")
                     _uiState.update {
-                        it.copy(isLoading = false, error = "Invalid username or PIN",
+                        it.copy(isLoading = false, error = Lang.t("Invalid username or PIN", "اسم المستخدم أو PIN غير صحيح"),
                             isLockedOut = nowLocked, failedAttempts = attempts,
                             lockoutRemainingSeconds = lockedForSec)
                     }
@@ -390,7 +391,7 @@ class AuthViewModel @Inject constructor(
             try {
                 val boundUserId = settingsRepo.biometricUserId.first()
                 if (boundUserId == null) {
-                    _uiState.update { it.copy(isLoading = false, error = "Biometric login not set up") }
+                    _uiState.update { it.copy(isLoading = false, error = Lang.t("Biometric login not set up", "الدخول بالبصمة غير مفعّل")) }
                     return@launch
                 }
                 val user = userRepo.getUserById(boundUserId)
@@ -402,10 +403,10 @@ class AuthViewModel @Inject constructor(
                         user = user.username, detail = "Role: ${user.role.name} (biometric)")
                     _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user) }
                 } else {
-                    _uiState.update { it.copy(isLoading = false, error = "Biometric account no longer available") }
+                    _uiState.update { it.copy(isLoading = false, error = Lang.t("Biometric account no longer available", "حساب البصمة لم يعد متاحًا")) }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Biometric login failed") }
+                _uiState.update { it.copy(isLoading = false, error = Lang.t("Biometric login failed", "فشل الدخول بالبصمة")) }
             }
         }
     }

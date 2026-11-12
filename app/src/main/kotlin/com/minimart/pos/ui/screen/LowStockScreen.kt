@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.Intent
 import android.net.Uri
@@ -186,12 +187,12 @@ private fun LowStockCard(
                         // Call button
                         IconButton(onClick = { onCall(product.supplierPhone) },
                             modifier = Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background(DT.TealDim)) {
-                            Icon(Icons.Default.Phone, "Call supplier", tint = DT.Teal, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Phone, Lang.t("Call supplier", "اتصال بالمورّد"), tint = DT.Teal, modifier = Modifier.size(18.dp))
                         }
                         // WhatsApp button
                         IconButton(onClick = { onWhatsApp(product.supplierPhone) },
                             modifier = Modifier.size(48.dp).clip(RoundedCornerShape(10.dp)).background((if (DT.light) Color(0xFF0B7A3E) else Color(0xFF25D366)).copy(0.15f))) {
-                            Icon(Icons.AutoMirrored.Filled.Chat, "Message supplier on WhatsApp", tint = (if (DT.light) Color(0xFF0B7A3E) else Color(0xFF25D366)), modifier = Modifier.size(18.dp))
+                            Icon(Icons.AutoMirrored.Filled.Chat, Lang.t("Message supplier on WhatsApp", "مراسلة المورّد عبر واتساب"), tint = (if (DT.light) Color(0xFF0B7A3E) else Color(0xFF25D366)), modifier = Modifier.size(18.dp))
                         }
                     }
                 }

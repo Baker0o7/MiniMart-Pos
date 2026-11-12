@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.entity.*
 import com.minimart.pos.data.repository.ProductRepository
@@ -187,7 +188,7 @@ class CartViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 if (productRepo.getByBarcode(product.barcode) != null) {
-                    _uiState.update { it.copy(unknownBarcode = null, error = "Barcode already used by another product") }
+                    _uiState.update { it.copy(unknownBarcode = null, error = Lang.t("Barcode already used by another product", "الباركود مستخدم لمنتج آخر")) }
                     return@launch
                 }
                 productRepo.releaseDeletedBarcode(product.barcode)
@@ -199,7 +200,7 @@ class CartViewModel @Inject constructor(
                     else if (saved.stock > 0) { addToCart(saved); _uiState.update { it.copy(lastScannedProduct = saved) } }
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(unknownBarcode = null, error = "Could not save product. " + com.minimart.pos.util.ErrorAdvice.reason(e)) }
+                _uiState.update { it.copy(unknownBarcode = null, error = Lang.t("Could not save product. ", "تعذّر حفظ المنتج. ") + com.minimart.pos.util.ErrorAdvice.reason(e)) }
             }
         }
     }
@@ -365,14 +366,14 @@ class CartViewModel @Inject constructor(
                 _uiState.update { CartUiState() }
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (e: Exception) {
-                _uiState.update { it.copy(error = "Couldn't hold the sale. " + com.minimart.pos.util.ErrorAdvice.reason(e)) }
+                _uiState.update { it.copy(error = Lang.t("Couldn't hold the sale. ", "تعذّر تعليق عملية البيع. ") + com.minimart.pos.util.ErrorAdvice.reason(e)) }
             }
         }
     }
 
     fun resumeHeld(id: Long) {
         if (_uiState.value.items.isNotEmpty()) {
-            _uiState.update { it.copy(error = "Hold or finish the current sale first") }
+            _uiState.update { it.copy(error = Lang.t("Hold or finish the current sale first", "علّق عملية البيع الحالية أو أنهِها أولًا")) }
             return
         }
         viewModelScope.launch {
@@ -406,7 +407,7 @@ class CartViewModel @Inject constructor(
                 }
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (e: Exception) {
-                _uiState.update { it.copy(error = "Couldn't resume the sale. " + com.minimart.pos.util.ErrorAdvice.reason(e)) }
+                _uiState.update { it.copy(error = Lang.t("Couldn't resume the sale. ", "تعذّر استئناف عملية البيع. ") + com.minimart.pos.util.ErrorAdvice.reason(e)) }
             }
         }
     }

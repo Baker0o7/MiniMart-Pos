@@ -77,7 +77,7 @@ fun CustomerScreen(
                     }
                     IconButton(onClick = { showAddDialog = true },
                         modifier = Modifier.clip(CircleShape).background(Color.White.copy(0.15f))) {
-                        Icon(Icons.Default.PersonAdd, "Add customer", tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.PersonAdd, Lang.t("Add customer", "إضافة عميل"), tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                 }
             }
@@ -93,7 +93,7 @@ fun CustomerScreen(
                 trailingIcon = {
                     if (state.query.isNotEmpty()) {
                         IconButton(onClick = { vm.setQuery("") }) {
-                            Icon(Icons.Default.Close, "Clear search", tint = DT.SubText, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Close, Lang.t("Clear search", "مسح البحث"), tint = DT.SubText, modifier = Modifier.size(16.dp))
                         }
                     }
                 },
@@ -282,8 +282,8 @@ private fun CustomerDetailSheet(
                         if (customer.phone.isNotBlank()) Text(customer.phone, color = DT.SubText)
                         if (customer.email.isNotBlank()) Text(customer.email, color = DT.SubText, fontSize = 12.sp)
                     }
-                    IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "Edit customer", tint = DT.Teal) }
-                    IconButton(onClick = { showDeleteConfirm = true }) { Icon(Icons.Default.Delete, "Delete customer", tint = DT.Red) }
+                    IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, Lang.t("Edit customer", "تعديل العميل"), tint = DT.Teal) }
+                    IconButton(onClick = { showDeleteConfirm = true }) { Icon(Icons.Default.Delete, Lang.t("Delete customer", "حذف العميل"), tint = DT.Red) }
                 }
             }
             // Stats row
@@ -296,12 +296,12 @@ private fun CustomerDetailSheet(
                         customer.creditBalance < 0 -> DT.Red
                         else -> DT.SubText
                     }
-                    val balLabel = if (customer.creditBalance < 0) "Owed to Shop" else "Credit Balance"
+                    val balLabel = if (customer.creditBalance < 0) Lang.t("Owed to Shop", "مستحق للمتجر") else Lang.t("Credit Balance", "رصيد العميل")
                     val balValue = if (customer.creditBalance < 0)
                         "$currency ${String.format(java.util.Locale.US, "%,.2f", -customer.creditBalance)}"
                     else "$currency ${String.format(java.util.Locale.US, "%,.2f", customer.creditBalance)}"
                     StatChip(Modifier.weight(1f), balLabel, balValue, balColor)
-                    StatChip(Modifier.weight(1f), "Total Spent",
+                    StatChip(Modifier.weight(1f), Lang.t("Total Spent", "إجمالي الإنفاق"),
                         "$currency ${String.format(java.util.Locale.US, "%,.0f", customer.totalPurchases)}", DT.Green)
                     StatChip(Modifier.weight(1f), "Visits", customer.visitCount.toString(), DT.SubText)
                 }
@@ -382,7 +382,7 @@ private fun AddCustomerDialog(customer: Customer?, onDismiss: () -> Unit, onSave
                 modifier = Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
                 listOf(
                     Triple(name, { v: String -> name = v }, "Full Name *"),
-                    Triple(phone, { v: String -> phone = v }, "Phone Number"),
+                    Triple(phone, { v: String -> phone = v }, Lang.t("Phone Number", "رقم الهاتف")),
                     Triple(email, { v: String -> email = v }, "Email (optional)"),
                     Triple(notes, { v: String -> notes = v }, "Notes (optional)")
                 ).forEach { (value, onChange, label) ->

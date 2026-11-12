@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.entity.Product
 import com.minimart.pos.data.repository.ProductRepository
@@ -65,7 +66,7 @@ class ProductViewModel @Inject constructor(
         viewModelScope.launch {
             if (!guard.allow(if (product.id == 0L) "add a product" else "edit a product",
                     if (product.id == 0L) com.minimart.pos.util.RoleManager::canAddProducts else com.minimart.pos.util.RoleManager::canEditPrices)) {
-                _uiState.update { it.copy(error = "You don't have permission to change products") }
+                _uiState.update { it.copy(error = Lang.t("You don't have permission to change products", "ليست لديك صلاحية لتعديل المنتجات")) }
                 return@launch
             }
             _uiState.update { it.copy(isLoading = true, error = null) }
@@ -111,7 +112,7 @@ class ProductViewModel @Inject constructor(
                             detail = "${product.name}: ${changes.joinToString(", ")}")
                     }
                 }
-                _uiState.update { it.copy(isLoading = false, successMessage = "Product saved") }
+                _uiState.update { it.copy(isLoading = false, successMessage = Lang.t("Product saved", "تم حفظ المنتج")) }
             } catch (e: android.database.sqlite.SQLiteConstraintException) {
                 _uiState.update { it.copy(isLoading = false, error = "Barcode already exists (it may belong to a deleted product)") }
             } catch (e: Exception) {
@@ -123,20 +124,20 @@ class ProductViewModel @Inject constructor(
     fun deleteProduct(productId: Long) {
         viewModelScope.launch {
             if (!guard.allow("delete a product", com.minimart.pos.util.RoleManager::canDeleteProducts)) {
-                _uiState.update { it.copy(error = "Only the owner can delete products") }
+                _uiState.update { it.copy(error = Lang.t("Only the owner can delete products", "المالك فقط يمكنه حذف المنتجات")) }
                 return@launch
             }
             val name = repo.getById(productId)?.name ?: "#$productId"
             repo.softDelete(productId)
             runCatching { audit.log(com.minimart.pos.util.AuditEvent.PRODUCT_DELETED, detail = name) }
-            _uiState.update { it.copy(successMessage = "Product deleted") }
+            _uiState.update { it.copy(successMessage = Lang.t("Product deleted", "تم حذف المنتج")) }
         }
     }
 
     fun adjustStock(productId: Long, delta: Int) {
         viewModelScope.launch {
             if (!guard.allow("adjust stock", com.minimart.pos.util.RoleManager::canAdjustStock)) {
-                _uiState.update { it.copy(error = "You don't have permission to adjust stock") }
+                _uiState.update { it.copy(error = Lang.t("You don't have permission to adjust stock", "ليست لديك صلاحية لتعديل المخزون")) }
                 return@launch
             }
             val product = repo.getById(productId)
@@ -146,7 +147,7 @@ class ProductViewModel @Inject constructor(
                 // Weighed products keep exact kg stock; the integer figure is a mirror of it.
                 if (delta > 0) { repo.incrementStockKg(productId, delta.toDouble()); runCatching { batches.recordManualChange(productId, delta.toDouble(), product.costPrice, "Stock added") } }
                 else if (delta < 0) {
-                    if (product.stockKg < -delta) _uiState.update { it.copy(error = "Cannot remove more than the current stock") }
+                    if (product.stockKg < -delta) _uiState.update { it.copy(error = Lang.t("Cannot remove more than the current stock", "لا يمكن إزالة أكثر من المخزون الحالي")) }
                     else { repo.decrementStockKg(productId, -delta.toDouble()); runCatching { batches.recordManualChange(productId, delta.toDouble(), product.costPrice, "Stock removed") } }
                 }
                 return@launch
@@ -154,7 +155,7 @@ class ProductViewModel @Inject constructor(
             if (delta > 0) { repo.incrementStock(productId, delta); runCatching { batches.recordManualChange(productId, delta.toDouble(), product?.costPrice ?: 0.0, "Stock added") } }
             else if (delta < 0) {
                 if (repo.decrementStock(productId, -delta) == 0)
-                    _uiState.update { it.copy(error = "Cannot remove more than the current stock") }
+                    _uiState.update { it.copy(error = Lang.t("Cannot remove more than the current stock", "لا يمكن إزالة أكثر من المخزون الحالي")) }
                 else runCatching { batches.recordManualChange(productId, delta.toDouble(), product?.costPrice ?: 0.0, "Stock removed") }
             }
         }
@@ -164,7 +165,7 @@ class ProductViewModel @Inject constructor(
     fun adjustWeighedStock(productId: Long, deltaKg: Double) {
         viewModelScope.launch {
             if (!guard.allow("adjust stock", com.minimart.pos.util.RoleManager::canAdjustStock)) {
-                _uiState.update { it.copy(error = "You don't have permission to adjust stock") }
+                _uiState.update { it.copy(error = Lang.t("You don't have permission to adjust stock", "ليست لديك صلاحية لتعديل المخزون")) }
                 return@launch
             }
             val product = repo.getById(productId) ?: return@launch
@@ -172,7 +173,7 @@ class ProductViewModel @Inject constructor(
                 detail = "${product.name}: ${if (deltaKg > 0) "+" else ""}${String.format(java.util.Locale.US, "%.3f", deltaKg)} kg") }
             if (deltaKg > 0) { repo.incrementStockKg(productId, deltaKg); runCatching { batches.recordManualChange(productId, deltaKg, product.costPrice, "Stock added") } }
             else if (deltaKg < 0) {
-                if (product.stockKg < -deltaKg) _uiState.update { it.copy(error = "Cannot remove more than the current stock") }
+                if (product.stockKg < -deltaKg) _uiState.update { it.copy(error = Lang.t("Cannot remove more than the current stock", "لا يمكن إزالة أكثر من المخزون الحالي")) }
                 else { repo.decrementStockKg(productId, -deltaKg); runCatching { batches.recordManualChange(productId, deltaKg, product.costPrice, "Stock removed") } }
             }
         }

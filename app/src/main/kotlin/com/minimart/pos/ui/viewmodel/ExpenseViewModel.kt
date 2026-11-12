@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.viewmodel
 
 import com.minimart.pos.util.sumOfMoney
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.entity.Expense
@@ -105,8 +106,8 @@ class ExpenseViewModel @Inject constructor(
                 val hiddenByPeriod = expense.createdAt < todayStartMs() && _period.value == ReportPeriod.TODAY
                 _uiState.update {
                     it.copy(successMessage = if (hiddenByPeriod)
-                        "Saved as an earlier day's expense. Switch to Week or Month to see it."
-                    else "Expense recorded")
+                        Lang.t("Saved as an earlier day's expense. Switch to Week or Month to see it.", "حُفظ كمصروف ليوم سابق. انتقل إلى الأسبوع أو الشهر لرؤيته.")
+                    else Lang.t("Expense recorded", "تم تسجيل المصروف"))
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
@@ -118,7 +119,7 @@ class ExpenseViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 expenseRepo.delete(expense)
-                _uiState.update { it.copy(successMessage = "Expense deleted") }
+                _uiState.update { it.copy(successMessage = Lang.t("Expense deleted", "تم حذف المصروف")) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
             }

@@ -459,8 +459,8 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
 
     confirm?.let { kind ->
         val (title, body) = when (kind) {
-            "delete" -> "Delete draft?" to "This draft will be removed."
-            "cancel" -> "Cancel this order?" to "The order will be marked cancelled."
+            "delete" -> Lang.t("Delete draft?", "حذف المسودة؟") to Lang.t("This draft will be removed.", "ستُزال هذه المسودة.")
+            "cancel" -> Lang.t("Cancel this order?", "إلغاء هذا الطلب؟") to Lang.t("The order will be marked cancelled.", "سيُعلَّم الطلب كملغى.")
             else -> Lang.t("Close order short?", "إغلاق الطلب ناقصًا؟") to Lang.t("Remaining items will not be received and the order is marked received.", "لن تُستلم الأصناف المتبقية ويُعلَّم الطلب كمستلم.")
         }
         AlertDialog(

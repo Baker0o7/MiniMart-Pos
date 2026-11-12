@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -39,7 +40,7 @@ class MpesaWebhookViewModel @Inject constructor(private val client: MpesaWebhook
 
     fun enable() = launchBusy { client.enable().let { r ->
         when (r) {
-            is WebhookResult.Enabled -> _state.update { it.copy(enabled = true, url = r.callbackUrl, message = "Turned on. Register the address below with Safaricom.", isError = false) }
+            is WebhookResult.Enabled -> _state.update { it.copy(enabled = true, url = r.callbackUrl, message = Lang.t("Turned on. Register the address below with Safaricom.", "تم التشغيل. سجّل العنوان أدناه لدى سفاريكوم."), isError = false) }
             is WebhookResult.Failed -> _state.update { it.copy(message = r.message, isError = true) }
             else -> {}
         }
@@ -53,7 +54,7 @@ class MpesaWebhookViewModel @Inject constructor(private val client: MpesaWebhook
         }
     } }
 
-    fun disable() { client.disable(); _state.update { it.copy(enabled = false, url = null, message = "Turned off. The old address no longer works for this phone.", isError = false) } }
+    fun disable() { client.disable(); _state.update { it.copy(enabled = false, url = null, message = Lang.t("Turned off. The old address no longer works for this phone.", "تم الإيقاف. العنوان القديم لم يعد يعمل لهذا الهاتف."), isError = false) } }
 
     private fun launchBusy(block: suspend () -> Unit) {
         if (_state.value.busy) return

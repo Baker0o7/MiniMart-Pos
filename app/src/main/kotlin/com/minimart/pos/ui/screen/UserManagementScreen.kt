@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -85,7 +86,7 @@ class UserManagementViewModel @Inject constructor(
         viewModelScope.launch {
             // Enforced here, not only by hiding the screen: only an Owner may reset someone else's PIN.
             if (!isOwner() && _state.value.currentUser?.id != userId) {
-                _state.update { it.copy(error = "Only an Owner can change another user's PIN") }
+                _state.update { it.copy(error = Lang.t("Only an Owner can change another user's PIN", "المالك فقط يمكنه تغيير PIN لمستخدم آخر")) }
                 return@launch
             }
             pinProblem(newPin.trim())?.let { msg -> _state.update { it.copy(error = msg) }; return@launch }
@@ -94,7 +95,7 @@ class UserManagementViewModel @Inject constructor(
                 val user = userRepo.getUserById(userId)
                 if (user == null) {
                     // This early return used to leave isLoading stuck on true.
-                    _state.update { it.copy(isLoading = false, error = "That user no longer exists") }
+                    _state.update { it.copy(isLoading = false, error = Lang.t("That user no longer exists", "هذا المستخدم لم يعد موجودًا")) }
                     return@launch
                 }
                 val hash = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { pinHasher.hash(newPin.trim()) }
@@ -148,7 +149,7 @@ class UserManagementViewModel @Inject constructor(
                         it.role == UserRole.OWNER && it.isActive && it.id != user.id
                     }
                     if (activeOwners == 0) {
-                        _state.update { it.copy(error = "Cannot remove the last Owner account") }
+                        _state.update { it.copy(error = Lang.t("Cannot remove the last Owner account", "لا يمكن إزالة حساب المالك الأخير")) }
                         return@launch
                     }
                 }
@@ -213,7 +214,7 @@ fun UserManagementScreen(
 
             // My account section
             state.currentUser?.let { me ->
-                DarkSection("My Account") {
+                DarkSection(Lang.t("My Account", "حسابي")) {
                     DarkUserRow(user = me, isMe = true,
                         onChangePin = { changePinForUser = me },
                         onRemove = null)
@@ -307,12 +308,12 @@ private fun DarkUserRow(user: User, isMe: Boolean, onChangePin: () -> Unit, onRe
             }
             // Change PIN
             IconButton(onClick = onChangePin, modifier = Modifier.size(48.dp)) {
-                Icon(Icons.Default.Lock, "Change PIN", tint = DT.TealLight, modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.Lock, Lang.t("Change PIN", "تغيير PIN"), tint = DT.TealLight, modifier = Modifier.size(18.dp))
             }
             // Remove (not for self)
             if (onRemove != null) {
                 IconButton(onClick = { showConfirm = true }, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Default.Delete, "Remove user", tint = DT.Red, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Delete, Lang.t("Remove user", "إزالة المستخدم"), tint = DT.Red, modifier = Modifier.size(18.dp))
                 }
             }
         }
@@ -424,7 +425,7 @@ private fun ChangePinDialog(userName: String, onDismiss: () -> Unit, onSave: (St
                 DarkInput(newPin, { if (it.length <= 6 && it.all(Char::isDigit)) newPin = it },
                     "New PIN (4-6 digits)", keyboardType = KeyboardType.NumberPassword, isPassword = true)
                 DarkInput(confirmPin, { if (it.length <= 6 && it.all(Char::isDigit)) confirmPin = it },
-                    "Confirm PIN", keyboardType = KeyboardType.NumberPassword, isPassword = true)
+                    Lang.t("Confirm PIN", "تأكيد PIN"), keyboardType = KeyboardType.NumberPassword, isPassword = true)
                 if (newPin.isNotEmpty() && confirmPin.isNotEmpty() && !pinsMatch) {
                     Text(tr(com.minimart.pos.R.string.pins_mismatch), color = DT.Red, style = MaterialTheme.typography.labelSmall)
                 }

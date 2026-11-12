@@ -1,6 +1,8 @@
 package com.minimart.pos.ui.viewmodel
 
 import com.minimart.pos.util.sumOfMoney
+import com.minimart.pos.util.ArabicCount
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -81,7 +83,7 @@ class PurchasingViewModel @Inject constructor(
                 }
                 val orderRows = orders.map { po ->
                     val its = byPo[po.id].orEmpty()
-                    OrderRow(po, names[po.supplierId] ?: "Supplier", its.sumOfMoney { it.lineTotal }, its.size)
+                    OrderRow(po, names[po.supplierId] ?: Lang.t("Supplier", "مورّد"), its.sumOfMoney { it.lineTotal }, its.size)
                 }
                 val known = suppliers.map { it.name.trim().lowercase() }.toSet()
                 val importable = prods.map { it.supplierName.trim() }
@@ -106,7 +108,7 @@ class PurchasingViewModel @Inject constructor(
 
     fun saveSupplier(s: Supplier) {
         val name = s.name.trim()
-        if (name.isEmpty()) { say("Supplier name is required", true); return }
+        if (name.isEmpty()) { say(Lang.t("Supplier name is required", "اسم المورّد مطلوب"), true); return }
         viewModelScope.launch {
             try {
                 repo.saveSupplier(s.copy(name = name, phone = s.phone.trim(), email = s.email.trim(),
@@ -118,7 +120,7 @@ class PurchasingViewModel @Inject constructor(
 
     fun deactivateSupplier(id: Long) {
         viewModelScope.launch {
-            try { repo.deactivateSupplier(id); say("Supplier removed") }
+            try { repo.deactivateSupplier(id); say(Lang.t("Supplier removed", "تمت إزالة المورّد")) }
             catch (e: Exception) { say(com.minimart.pos.util.ErrorAdvice.explain(e, "Removing the supplier"), true) }
         }
     }
@@ -139,7 +141,7 @@ class PurchasingViewModel @Inject constructor(
                         existing += key
                         added++
                     }
-                say(if (added == 0) "No new suppliers found" else "Imported $added supplier${if (added == 1) "" else "s"}")
+                say(if (added == 0) Lang.t("No new suppliers found", "لم يتم العثور على موردين جدد") else Lang.t("Imported $added supplier${if (added == 1) "" else "s"}", "تم استيراد " + ArabicCount.phrase(added, "لا موردين", "مورّد واحد", "موردَين", "موردين", "موردًا")))
             } catch (e: Exception) { say(com.minimart.pos.util.ErrorAdvice.explain(e, "Importing suppliers"), true) }
         }
     }
@@ -222,7 +224,7 @@ class PurchaseOrderEditorViewModel @Inject constructor(
 
     private suspend fun load(id: Long) {
         val po = repo.getOrder(id)
-        if (po == null) { _state.update { it.copy(loading = false, message = "Order not found", isError = true) }; return }
+        if (po == null) { _state.update { it.copy(loading = false, message = Lang.t("Order not found", "الطلب غير موجود"), isError = true) }; return }
         val items = repo.getItems(id)
         val prods = productRepo.getAllProducts().first().associateBy { it.id }
         val lines = items.map { i ->
@@ -293,16 +295,16 @@ class PurchaseOrderEditorViewModel @Inject constructor(
         val name = s.supplier?.name?.trim()?.lowercase()
         val mine = if (name != null) low.filter { it.supplierName.trim().lowercase() == name } else emptyList()
         val chosen = if (mine.isNotEmpty()) mine else low
-        if (chosen.isEmpty()) { say("No low-stock items to add"); return }
+        if (chosen.isEmpty()) { say(Lang.t("No low-stock items to add", "لا توجد أصناف منخفضة المخزون لإضافتها")); return }
         _state.update { it.copy(lines = it.lines + chosen.map(::newLine)) }
         say("Added ${chosen.size} item${if (chosen.size == 1) "" else "s"}")
     }
 
     private fun validate(): String? {
         val s = _state.value
-        if (s.supplierId == 0L || s.supplier == null) return "Choose a supplier"
-        if (s.lines.isEmpty()) return "Add at least one item"
-        if (s.lines.any { it.qty <= 0.0 }) return "Every item needs a quantity"
+        if (s.supplierId == 0L || s.supplier == null) return Lang.t("Choose a supplier", "اختر مورّدًا")
+        if (s.lines.isEmpty()) return Lang.t("Add at least one item", "أضف صنفًا واحدًا على الأقل")
+        if (s.lines.any { it.qty <= 0.0 }) return Lang.t("Every item needs a quantity", "كل صنف يحتاج إلى كمية")
         return null
     }
 
@@ -330,12 +332,12 @@ class PurchaseOrderEditorViewModel @Inject constructor(
 
     fun saveDraft() {
         validate()?.let { say(it, true); return }
-        run("Draft saved") { persistDraft() }
+        run(Lang.t("Draft saved", "تم حفظ المسودة")) { persistDraft() }
     }
 
     fun markOrdered() {
         validate()?.let { say(it, true); return }
-        run("Order marked as sent") { repo.markOrdered(persistDraft()) }
+        run(Lang.t("Order marked as sent", "تم تعليم الطلب كمُرسَل")) { repo.markOrdered(persistDraft()) }
     }
 
     fun receive(quantities: Map<Int, Double>, updateCosts: Boolean) {
@@ -343,12 +345,12 @@ class PurchaseOrderEditorViewModel @Inject constructor(
         val byItem = quantities.mapNotNull { (idx, q) ->
             s.lines.getOrNull(idx)?.takeIf { q > 0 }?.let { it.itemId to q }
         }.toMap()
-        if (byItem.isEmpty()) { say("Enter a quantity received", true); return }
-        run("Stock updated") { repo.receive(s.poId, byItem, updateCosts) }
+        if (byItem.isEmpty()) { say(Lang.t("Enter a quantity received", "أدخل الكمية المستلمة"), true); return }
+        run(Lang.t("Stock updated", "تم تحديث المخزون")) { repo.receive(s.poId, byItem, updateCosts) }
     }
 
-    fun pay(amount: Double) { val id = _state.value.poId; run("Payment recorded") { repo.recordPayment(id, amount) } }
-    fun cancel() { val id = _state.value.poId; run("Order cancelled") { repo.cancel(id) } }
-    fun closeShort() { val id = _state.value.poId; run("Order closed") { repo.closeShort(id) } }
+    fun pay(amount: Double) { val id = _state.value.poId; run(Lang.t("Payment recorded", "تم تسجيل الدفعة")) { repo.recordPayment(id, amount) } }
+    fun cancel() { val id = _state.value.poId; run(Lang.t("Order cancelled", "تم إلغاء الطلب")) { repo.cancel(id) } }
+    fun closeShort() { val id = _state.value.poId; run(Lang.t("Order closed", "تم إغلاق الطلب")) { repo.closeShort(id) } }
     fun deleteDraft() { val id = _state.value.poId; run(null, finish = true) { if (id != 0L) repo.deleteDraft(id) } }
 }
