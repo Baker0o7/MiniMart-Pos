@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.1] - 2026-11-14
 
 - **Refused till sales are no longer silent:** when the main phone cannot accept a sale from another till (for example not enough stock), it now shows a notification with the receipt number and the reason, so the sale can be checked and sold again here. Before, only the till heard about it.
 
