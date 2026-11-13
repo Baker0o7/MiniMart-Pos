@@ -97,7 +97,11 @@ class Migration19To20Test : DbTestBase() {
 
     @Test fun migrationMakesTheSameColumnsAndIndexRoomMakes() {
         val room = db.openHelper.writableDatabase
-        val helper = bareHelper(19) { }
+        val helper = bareHelper(19) { d ->
+            // The migration backfills from `sales`, so an (empty) one must exist.
+            d.execSQL("CREATE TABLE sales (id INTEGER PRIMARY KEY, receiptNumber TEXT NOT NULL, totalAmount REAL NOT NULL, cashPortion REAL NOT NULL, " +
+                "paymentMethod TEXT NOT NULL, status TEXT NOT NULL, createdAt INTEGER NOT NULL, statusChangedAt INTEGER NOT NULL)")
+        }
         val sdb = helper.writableDatabase
         AppMigrations.MIGRATION_19_20.migrate(sdb)
         assertEquals(shape(room, "ledger_entries"), shape(sdb, "ledger_entries"))
