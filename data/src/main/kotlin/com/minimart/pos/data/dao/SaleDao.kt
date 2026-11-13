@@ -187,10 +187,34 @@ interface SaleDao {
     /** Only a COMPLETED sale can be refunded; returns rows changed (0 = already refunded/voided).
      *  Existing sale notes are kept and the reason is appended. */
     @Query("UPDATE sales SET status = 'REFUNDED', statusChangedAt = CAST(strftime('%s','now') AS INTEGER) * 1000, notes = CASE WHEN notes = '' THEN :reason ELSE notes || ' | ' || :reason END WHERE id = :saleId AND status = 'COMPLETED'")
-    suspend fun refundSale(saleId: Long, reason: String): Int
+    suspend fun markRefunded(saleId: Long, reason: String): Int
 
     @Query("UPDATE sales SET status = 'VOIDED', statusChangedAt = CAST(strftime('%s','now') AS INTEGER) * 1000, notes = CASE WHEN notes = '' THEN :reason ELSE notes || ' | ' || :reason END WHERE id = :saleId AND status = 'COMPLETED'")
-    suspend fun voidSale(saleId: Long, reason: String): Int
+    suspend fun markVoided(saleId: Long, reason: String): Int
+
+    @Insert suspend fun insertLedgerEntry(entry: LedgerEntry)
+
+    @Query("SELECT * FROM sales WHERE id = :saleId")
+    suspend fun saleRow(saleId: Long): Sale?
+
+    @Query("SELECT * FROM ledger_entries WHERE saleId = :saleId ORDER BY id ASC")
+    suspend fun ledgerFor(saleId: Long): List<LedgerEntry>
+
+    /** Refunds a completed sale and writes its reversal line in the same transaction; returns rows changed (0 = nothing to refund). */
+    @Transaction
+    suspend fun refundSale(saleId: Long, reason: String): Int {
+        val changed = markRefunded(saleId, reason)
+        if (changed > 0) saleRow(saleId)?.let { insertLedgerEntry(reversalOf(it)) }
+        return changed
+    }
+
+    /** Voids a completed sale and writes its reversal line in the same transaction; returns rows changed. */
+    @Transaction
+    suspend fun voidSale(saleId: Long, reason: String): Int {
+        val changed = markVoided(saleId, reason)
+        if (changed > 0) saleRow(saleId)?.let { insertLedgerEntry(reversalOf(it)) }
+        return changed
+    }
 
     /** Completed sales that carry an M-Pesa code, for matching against the messages this phone received. */
     @Query("""
@@ -238,6 +262,9 @@ interface SaleDao {
         ))
         val itemsWithSaleId = items.map { it.copy(saleId = saleId) }
         insertSaleItems(itemsWithSaleId)
+        insertLedgerEntry(saleLineOf(sale, saleId))
+        // A sale that arrives already refunded or voided (a synced one) is recorded as sold and then taken back.
+        if (sale.status != SaleStatus.COMPLETED) insertLedgerEntry(reversalOf(sale.copy(id = saleId)))
         return saleId
     }
 }
@@ -273,3 +300,11 @@ data class TopSellerResult(
 // Will patch inline instead
 
 data class SaleCostRow(val saleId: Long, val cost: Double)
+
+private fun saleLineOf(sale: Sale, id: Long) = LedgerEntry(
+    kind = LedgerEntry.SALE, saleId = id, receipt = sale.receiptNumber,
+    cents = centsOf(sale.totalAmount), cashCents = centsOf(sale.cashPortion), method = sale.paymentMethod.name)
+
+private fun reversalOf(sale: Sale) = LedgerEntry(
+    kind = LedgerEntry.REVERSAL, saleId = sale.id, receipt = sale.receiptNumber,
+    cents = -centsOf(sale.totalAmount), cashCents = -centsOf(sale.cashPortion), method = sale.paymentMethod.name)

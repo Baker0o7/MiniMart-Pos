@@ -12,8 +12,8 @@ import javax.inject.Inject
 @Database(
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class, MpesaPayment::class,
         Supplier::class, PurchaseOrder::class, PurchaseOrderItem::class,
-        com.minimart.pos.data.entity.StockBatch::class, com.minimart.pos.data.entity.SaleItemCost::class],
-    version = 19,
+        com.minimart.pos.data.entity.StockBatch::class, com.minimart.pos.data.entity.SaleItemCost::class, LedgerEntry::class],
+    version = 20,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -175,6 +175,33 @@ object AppMigrations {
         }
     }
 
+    /** The shadow ledger table, exactly as Room expects it for `LedgerEntry`. Shared with the test that compares it to Room's own. */
+    const val CREATE_LEDGER_TABLE =
+        "CREATE TABLE IF NOT EXISTS `ledger_entries` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `at` INTEGER NOT NULL, `kind` TEXT NOT NULL, " +
+        "`saleId` INTEGER NOT NULL, `receipt` TEXT NOT NULL, `cents` INTEGER NOT NULL, `cashCents` INTEGER NOT NULL, `method` TEXT NOT NULL)"
+    const val CREATE_LEDGER_INDEX = "CREATE INDEX IF NOT EXISTS `index_ledger_entries_saleId` ON `ledger_entries` (`saleId`)"
+
+    /** Gives every sale that already exists its ledger lines (a sale line, plus a reversal for refunded or voided ones). */
+    val BACKFILL_LEDGER = listOf(
+        "INSERT INTO ledger_entries (at, kind, saleId, receipt, cents, cashCents, method) " +
+            "SELECT createdAt, 'SALE', id, receiptNumber, CAST(ROUND(totalAmount * 100) AS INTEGER), CAST(ROUND(cashPortion * 100) AS INTEGER), paymentMethod FROM sales",
+        "INSERT INTO ledger_entries (at, kind, saleId, receipt, cents, cashCents, method) " +
+            "SELECT CASE WHEN statusChangedAt > 0 THEN statusChangedAt ELSE createdAt END, 'REVERSAL', id, receiptNumber, " +
+            "-CAST(ROUND(totalAmount * 100) AS INTEGER), -CAST(ROUND(cashPortion * 100) AS INTEGER), paymentMethod FROM sales WHERE status <> 'COMPLETED'"
+    )
+
+    /**
+     * v19 → v20: the shadow ledger (see `LedgerEntry`). A new table only: nothing existing is touched, and sales that are
+     * already recorded get their ledger lines so the new check starts from a true picture.
+     */
+    val MIGRATION_19_20 = object : androidx.room.migration.Migration(19, 20) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(CREATE_LEDGER_TABLE)
+            db.execSQL(CREATE_LEDGER_INDEX)
+            BACKFILL_LEDGER.forEach { db.execSQL(it) }
+        }
+    }
+
     /** Whole-amount money columns (not per-unit costs). Used by [MIGRATION_16_17] and its test. */
     val MONEY_COLUMNS: List<Pair<String, List<String>>> = listOf(
         "products" to listOf("price", "pricePerKg"),
@@ -189,7 +216,7 @@ object AppMigrations {
             "totalSales", "totalDiscounts", "expectedCash", "cashDiscrepancy")
     )
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19)
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20)
 }
 
 class AppTypeConverters {

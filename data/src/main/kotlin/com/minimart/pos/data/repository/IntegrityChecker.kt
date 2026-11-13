@@ -40,6 +40,21 @@ class IntegrityChecker @Inject constructor(private val db: AppDatabase) {
             }
         }
 
+        // The shadow ledger (see LedgerEntry) must agree with every sale: a sale line, and a reversal if it was refunded or voided.
+        sdb.query("""
+            SELECT s.receiptNumber, COUNT(l.id), COALESCE(SUM(l.cents), 0),
+                   CASE WHEN s.status = 'COMPLETED' THEN CAST(ROUND(s.totalAmount * 100) AS INTEGER) ELSE 0 END
+            FROM sales s LEFT JOIN ledger_entries l ON l.saleId = s.id
+            GROUP BY s.id
+            HAVING COUNT(l.id) = 0 OR COALESCE(SUM(l.cents), 0) <> CASE WHEN s.status = 'COMPLETED' THEN CAST(ROUND(s.totalAmount * 100) AS INTEGER) ELSE 0 END
+        """.trimIndent()).use { c ->
+            while (c.moveToNext() && issues.size < 100) {
+                val receipt = c.getString(0)
+                issues += if (c.getInt(1) == 0) "Sale $receipt is missing from the shadow ledger"
+                    else "Sale $receipt: the shadow ledger says ${fmt(c.getLong(2) / 100.0)} but the sale says ${fmt(c.getLong(3) / 100.0)}"
+            }
+        }
+
         sdb.query("SELECT COUNT(*) FROM sales WHERE $CENTS_MISMATCH").use { c ->
             if (c.moveToFirst() && c.getInt(0) > 0) issues += "${c.getInt(0)} sale(s) have whole-cent amounts that differ from their price; they are repaired the next time the app starts"
         }
