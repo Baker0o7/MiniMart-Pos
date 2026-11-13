@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.2] - 2026-11-14
 
 - **Fewer silent failures:** if the cash drawer does not open after a cash sale, or the Home numbers cannot load, the problem is now written to the problem list (Store health), where it can be seen and sent, instead of being ignored.
 
