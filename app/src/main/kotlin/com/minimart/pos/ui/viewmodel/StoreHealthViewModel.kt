@@ -44,7 +44,9 @@ data class StoreHealthState(
     val dataProblems: List<String> = emptyList(),
     val error: String? = null,
     /** Problems the app handled, newest first (see ProblemLog). */
-    val problems: List<com.minimart.pos.util.ProblemEntry> = emptyList()
+    val problems: List<com.minimart.pos.util.ProblemEntry> = emptyList(),
+    /** The daily message for whoever supports this shop (see PilotSummary). */
+    val pilotSummary: String = ""
 )
 
 /** Gathers the facts about this shop's data and phone, then lets [StoreHealth] judge them. */
@@ -78,16 +80,33 @@ class StoreHealthViewModel @Inject constructor(
                 val now = System.currentTimeMillis()
                 val (inputs, problems) = withContext(Dispatchers.IO) { gather(now) }
                 val checks = StoreHealth.evaluate(inputs)
+                val headline = StoreHealth.headline(checks)
                 _state.value = StoreHealthState(
                     loading = false, checks = checks, overall = StoreHealth.overall(checks),
-                    headline = StoreHealth.headline(checks), checkedAt = now, dataProblems = problems,
-                    problems = com.minimart.pos.util.ProblemRecorder.load(context)
+                    headline = headline, checkedAt = now, dataProblems = problems,
+                    problems = com.minimart.pos.util.ProblemRecorder.load(context),
+                    pilotSummary = pilotSummary(now, headline, checks)
                 )
             } catch (e: Exception) {
                 _state.update { it.copy(loading = false, error = ErrorAdvice.explain(e, "The health check")) }
             } finally { running = false }
         }
     }
+
+    private suspend fun pilotSummary(now: Long, headline: String, checks: List<HealthCheck>): String = try {
+        val start = com.minimart.pos.util.todayStartMs()
+        val count = sales.getSaleCountToday(start).first()
+        val revenue = sales.getTotalRevenueToday(start).first() ?: 0.0
+        val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: "?"
+        val money = com.minimart.pos.util.Money.fromDouble(revenue)
+        com.minimart.pos.util.PilotSummary.format(
+            shop = settings.storeName.first(), dateText = java.text.SimpleDateFormat("EEE d MMM yyyy", java.util.Locale.US).format(java.util.Date(now)),
+            appVersion = version, headline = headline, checks = checks, salesToday = count,
+            revenueToday = "${settings.currency.first()} ${money.format()}", crashesThisWeek = CrashRecorder.recentCount(context))
+    } catch (_: Exception) { "" }
+
+    /** The newest crash report's text, or null when there is none. */
+    fun latestCrashText(): String? = CrashRecorder.latest(context)?.let { runCatching { it.readText() }.getOrNull() }
 
     fun clearProblems() {
         com.minimart.pos.util.ProblemRecorder.clear(context)

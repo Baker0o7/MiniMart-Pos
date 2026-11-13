@@ -70,6 +70,26 @@ fun StoreHealthScreen(
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             s.error?.let { item { FeedbackBanner(it, isError = true) } }
             if (s.checks.isNotEmpty()) item { OverallBanner(s.overall, s.headline, s.checkedAt) }
+            if (s.pilotSummary.isNotEmpty()) item {
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                fun send(subject: String, text: String) {
+                    val i = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(android.content.Intent.EXTRA_SUBJECT, subject)
+                        putExtra(android.content.Intent.EXTRA_TEXT, text)
+                    }
+                    try { ctx.startActivity(android.content.Intent.createChooser(i, subject).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {}
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { send("MiniMart POS daily summary", s.pilotSummary) },
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(Lang.t("Send today's summary", "أرسل ملخص اليوم")) }
+                    OutlinedButton(onClick = {
+                        val crash = vm.latestCrashText()
+                        if (crash != null) send("MiniMart POS crash report", crash)
+                        else android.widget.Toast.makeText(ctx, Lang.t("No crash has been recorded.", "لم تُسجَّل أي أعطال."), android.widget.Toast.LENGTH_SHORT).show()
+                    }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(Lang.t("Send crash report", "أرسل تقرير العطل")) }
+                }
+            }
             items(s.checks, key = { it.id }) { c ->
                 HealthRow(c, if (c.id == "data") s.dataProblems else emptyList()) {
                     when (c.action) {

@@ -59,6 +59,10 @@ object CrashRecorder {
             ?.filter { timestampOf(it) > seen }?.maxByOrNull { timestampOf(it) }
     }
 
+    /** The newest recorded crash report, or null when the app has not crashed. Lets the owner send it any time, not only right after it happened. */
+    fun latest(context: Context): File? =
+        File(context.filesDir, DIR).listFiles { f -> f.name.startsWith("crash_") && f.name.endsWith(".txt") }?.maxByOrNull { timestampOf(it) }
+
     /** Reports recorded in the last [days] days. */
     fun recentCount(context: Context, days: Int = 7, now: Long = System.currentTimeMillis()): Int =
         File(context.filesDir, DIR).listFiles { f -> f.name.startsWith("crash_") }

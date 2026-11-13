@@ -10,6 +10,8 @@ Every release is published, with its signed APKs, on the [Releases page](https:/
 - **Exact money everywhere:** shift cash-up, Z-reports, the daily report, Reports, Analytics, the accounting files and the cloud report now add each sale in whole cents, so a total can never be a cent out. Totals the database adds up for the dashboard and staff report use the same whole cents. Store health now says if any sale's cents ever disagree with its price, and the app repairs them when it starts (normally there is nothing to repair).
 - **Sync is safer:** a phone that keeps sending a wrong pairing code is now locked out on its own, with waits that grow from 30 seconds up to 15 minutes. Before, one stranger on the Wi-Fi could lock out every real till. Sync messages that contain Arabic, accents or emoji are now read exactly byte for byte, and broken or oversized messages get a clear refusal instead of a confusing error.
 - **Setup now includes a backup:** a new brand-new shop must choose a backup passphrase, make an encrypted backup file, send it somewhere that is not the phone, and confirm it before setup can finish.
+- **A second record of every sale:** each sale, refund and void is also written to a separate ledger on the phone. Store health compares it with the sales list and says if they ever disagree. It only detects a mismatch; it does not change any sale. (Database version 20; older phones are upgraded on first start.)
+- **Pilot help:** Store health has two new buttons: "Send today's summary" (sales today, health checks, app version, in plain words) and "Send crash report" (the latest crash, shared only when you choose). Nothing is sent automatically.
 
 ## [1.32.8] - 2026-11-12
 
