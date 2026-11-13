@@ -1,5 +1,7 @@
 package com.minimart.pos.worker
 
+import com.minimart.pos.data.entity.cashMoney
+import com.minimart.pos.data.entity.totalMoney
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -117,9 +119,9 @@ class DailyReportWorker @AssistedInject constructor(
 
         val all = sales.getSalesByDateRange(start, end).first()
         val done = all.filter { it.status == SaleStatus.COMPLETED }
-        fun total(method: PaymentMethod) = done.filter { it.paymentMethod == method }.map { Money.fromDouble(it.totalAmount) }.sum()
-        val cash = done.filter { it.paymentMethod == PaymentMethod.CASH }.map { Money.fromDouble(it.totalAmount) }.sum() +
-            done.filter { it.paymentMethod == PaymentMethod.MIXED }.map { Money.fromDouble(it.cashPortion) }.sum()
+        fun total(method: PaymentMethod) = done.filter { it.paymentMethod == method }.map { it.totalMoney() }.sum()
+        val cash = done.filter { it.paymentMethod == PaymentMethod.CASH }.map { it.totalMoney() }.sum() +
+            done.filter { it.paymentMethod == PaymentMethod.MIXED }.map { it.cashMoney() }.sum()
         val profit = runCatching { sales.profitBetween(start, end) }.getOrDefault(0.0).takeIf { it != 0.0 }
 
         return DailySummaryInput(
@@ -127,7 +129,7 @@ class DailyReportWorker @AssistedInject constructor(
             currency = settings.currency.first(),
             dateLabel = dateLabel,
             salesCount = done.size,
-            revenue = done.map { Money.fromDouble(it.totalAmount) }.sum(),
+            revenue = done.map { it.totalMoney() }.sum(),
             cash = cash,
             mpesa = total(PaymentMethod.MPESA),
             card = total(PaymentMethod.CARD),

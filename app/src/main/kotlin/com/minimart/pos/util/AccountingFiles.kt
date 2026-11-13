@@ -1,5 +1,7 @@
 package com.minimart.pos.util
 
+import com.minimart.pos.data.entity.cashMoney
+import com.minimart.pos.data.entity.totalMoney
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.FileProvider
@@ -24,8 +26,8 @@ object AccountingFiles {
         storeName: String, currency: String, periodLabel: String, now: Long = System.currentTimeMillis()
     ): List<File> {
         val acctSales = sales.map {
-            AcctSale(it.createdAt, it.receiptNumber, it.paymentMethod.name, Money.fromDouble(it.totalAmount), Money.fromDouble(it.taxAmount),
-                Money.fromDouble(it.cashPortion), Money.fromDouble(costs[it.id] ?: 0.0), it.mpesaRef.orEmpty())
+            AcctSale(it.createdAt, it.receiptNumber, it.paymentMethod.name, it.totalMoney(), Money.fromDouble(it.taxAmount),
+                it.cashMoney(), Money.fromDouble(costs[it.id] ?: 0.0), it.mpesaRef.orEmpty())
         }
         val acctExpenses = expenses.map {
             AcctExpense(it.createdAt, it.category.name, it.title, Money.fromDouble(it.amount), it.receiptRef, it.supplierName)

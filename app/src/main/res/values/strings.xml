@@ -427,7 +427,7 @@
     <string name="add_credit_named">Add Credit — %1$s</string>
     <string name="all_items_removed">All %1$d item(s) will be removed.</string>
     <string name="only_on_record">Only %1$s on record</string>
-    <string name="step_of">Step %1$d of 3</string>
+    <string name="step_of">Step %1$d of 4</string>
     <string name="avg_basket_fmt">Average basket %1$s</string>
     <string name="cat_title">Shared product list</string>
     <string name="cat_help">Keep names, prices and tax the same in all your shops. One shop is the main shop and sends its list; the others receive it. Stock, sales and customers are never shared.</string>

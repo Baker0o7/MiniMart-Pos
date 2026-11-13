@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.viewmodel
 
+import com.minimart.pos.data.entity.totalOf
 import com.minimart.pos.util.sumOfMoney
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -124,7 +125,7 @@ class AnalyticsViewModel @Inject constructor(
         r: AnalyticsRange, start: Long, currency: String, sales: List<Sale>, prev: Double,
         stats: List<ProductSalesStat>, expenses: Double
     ): AnalyticsState {
-        val revenue = sales.sumOfMoney { it.totalAmount }
+        val revenue = sales.totalOf()
         val tax = sales.sumOfMoney { it.taxAmount }
         val cogs = stats.sumOf { it.cost }
         val statRevenue = stats.sumOf { it.revenue }

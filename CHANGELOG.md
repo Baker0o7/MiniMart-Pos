@@ -5,6 +5,12 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.33.0] - 2026-11-13
+
+- **Exact money everywhere:** shift cash-up, Z-reports, the daily report, Reports, Analytics, the accounting files and the cloud report now add each sale in whole cents, so a total can never be a cent out. Totals the database adds up for the dashboard and staff report use the same whole cents. Store health now says if any sale's cents ever disagree with its price, and the app repairs them when it starts (normally there is nothing to repair).
+- **Sync is safer:** a phone that keeps sending a wrong pairing code is now locked out on its own, with waits that grow from 30 seconds up to 15 minutes. Before, one stranger on the Wi-Fi could lock out every real till. Sync messages that contain Arabic, accents or emoji are now read exactly byte for byte, and broken or oversized messages get a clear refusal instead of a confusing error.
+- **Setup now includes a backup:** a new brand-new shop must choose a backup passphrase, make an encrypted backup file, send it somewhere that is not the phone, and confirm it before setup can finish.
+
 ## [1.32.8] - 2026-11-12
 
 - **More of the app in Arabic:** the messages you see after saving, deleting or failing (products, customers, suppliers, purchase orders, expenses, shifts, sign-in and fingerprint), the Analytics card titles and weekday names, Customers (labels and buttons), User management, End of day, Archive, Store health buttons, Hardware check buttons, the Activity log filters, the M-Pesa Daraja and web address settings, and the backup and Bluetooth messages in Settings.

@@ -1,5 +1,8 @@
 package com.minimart.pos.data.repository
 
+import com.minimart.pos.data.entity.totalMoney
+import com.minimart.pos.data.entity.cashMoney
+import com.minimart.pos.data.entity.totalOf
 import com.minimart.pos.util.CashUp
 import com.minimart.pos.util.Money
 import com.minimart.pos.util.sumOfMoney
@@ -96,20 +99,20 @@ class ShiftRepository @Inject constructor(
             // reconciliation does not handle. Only the cash share of a split sale is in the drawer.
             when (sale.paymentMethod) {
                 PaymentMethod.CASH, PaymentMethod.MIXED ->
-                    cashSales += CashUp.cashFromSale(sale.paymentMethod.name, m(sale.totalAmount), m(sale.cashPortion))
-                PaymentMethod.MPESA  -> mpesaSales += m(sale.totalAmount)
-                PaymentMethod.CARD   -> cardSales  += m(sale.totalAmount)
+                    cashSales += CashUp.cashFromSale(sale.paymentMethod.name, sale.totalMoney(), sale.cashMoney())
+                PaymentMethod.MPESA  -> mpesaSales += sale.totalMoney()
+                PaymentMethod.CARD   -> cardSales  += sale.totalMoney()
                 PaymentMethod.CREDIT -> { /* no cash collected: buy on account */ }
             }
             totalDiscount += m(sale.discountAmount)
         }
 
         // totalSales is every completed sale whatever the payment method; expectedCash is cash only.
-        val totalSales = completed.map { m(it.totalAmount) }.sum()
+        val totalSales = completed.map { it.totalMoney() }.sum()
         // Cash that left the drawer without being a sale: expenses paid from it, and refunds of earlier shifts' cash sales.
         val paidOut = expenseDao.drawerPaidBetween(shift.clockIn, closeAt, shift.cashierId).map { m(it.amount) }.sum()
         val cashRefunded = saleDao.cashReversedFromEarlier(shift.clockIn, closeAt, shift.cashierId)
-            .map { CashUp.cashFromSale(it.paymentMethod.name, m(it.totalAmount), m(it.cashPortion)) }.sum()
+            .map { CashUp.cashFromSale(it.paymentMethod.name, it.totalMoney(), it.cashMoney()) }.sum()
         val count = CashUp.reconcile(CashUp.expectedDrawer(m(shift.openingFloat), cashSales, paidOut, cashRefunded), m(safeClosingFloat))
         val expectedCash = count.expected.toDouble()
         val discrepancy = count.variance.toDouble()
@@ -144,16 +147,16 @@ class ShiftRepository @Inject constructor(
         val refunded = mine.filter { it.status == SaleStatus.REFUNDED }
         val credit = mine.filter { it.status == SaleStatus.COMPLETED }.sumOfMoney {
             when (it.paymentMethod) {
-                PaymentMethod.CREDIT -> it.totalAmount
-                PaymentMethod.MIXED -> (it.totalAmount - it.cashPortion).coerceAtLeast(0.0)
+                PaymentMethod.CREDIT -> it.totalMoney().toDouble()
+                PaymentMethod.MIXED -> (it.totalMoney() - it.cashMoney()).coerceAtLeast(Money.ZERO).toDouble()
                 else -> 0.0
             }
         }
         return ZReport(
             shift = shift,
             zNumber = "Z-" + shift.id.toString().padStart(4, '0'),
-            voidCount = voided.size, voidTotal = voided.sumOfMoney { it.totalAmount },
-            refundCount = refunded.size, refundTotal = refunded.sumOfMoney { it.totalAmount },
+            voidCount = voided.size, voidTotal = voided.totalOf(),
+            refundCount = refunded.size, refundTotal = refunded.totalOf(),
             creditSales = credit,
             noSaleOpens = settings.noSaleOpens(shift.id)
         )

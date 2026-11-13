@@ -10,4 +10,12 @@ object SetupWizard {
 
     fun validStoreName(name: String) = name.trim().length in 2..60
     fun validOpeningPin(pin: String) = pin.length in 4..8 && pin.all { it.isDigit() } && pin != "1234" && pin.toSet().size > 1
+
+    /**
+     * Setup cannot be finished until an encrypted backup exists, was handed to the share sheet, and the owner says the
+     * file is kept off this phone and the passphrase is written down. (Android cannot tell us what the person chose in
+     * the share sheet, so the confirmation is theirs to give.)
+     */
+    fun backupStepComplete(backupCreated: Boolean, shareOpened: Boolean, ownerConfirmed: Boolean) =
+        backupCreated && shareOpened && ownerConfirmed
 }

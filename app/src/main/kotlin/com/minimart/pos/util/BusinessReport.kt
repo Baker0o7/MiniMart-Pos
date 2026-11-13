@@ -1,5 +1,6 @@
 package com.minimart.pos.util
 
+import com.minimart.pos.data.entity.totalMoney
 import com.minimart.pos.data.dao.TopSellerResult
 import com.minimart.pos.data.entity.Expense
 import com.minimart.pos.data.entity.PaymentMethod
@@ -57,9 +58,9 @@ object BusinessReportBuilder {
     ): BusinessReportData {
         val completed = allSales.filter { it.status == SaleStatus.COMPLETED }
         val reversed = allSales.filter { it.status == SaleStatus.REFUNDED || it.status == SaleStatus.VOIDED }
-        val revenue = completed.map { it.totalAmount }.sumExact()
+        val revenue = completed.map { it.totalMoney().toDouble() }.sumExact()
         val payments = completed.groupBy { it.paymentMethod }
-            .map { (m, list) -> PaymentLine(label(m), list.size, list.map { it.totalAmount }.sumExact()) }
+            .map { (m, list) -> PaymentLine(label(m), list.size, list.map { it.totalMoney().toDouble() }.sumExact()) }
             .sortedByDescending { it.amount }
         val expenseLines = expenses.groupBy { it.category }
             .map { (c, list) -> ExpenseLine(c.name.lowercase().replaceFirstChar { it.uppercase() }, list.map { it.amount }.sumExact()) }
@@ -76,7 +77,7 @@ object BusinessReportBuilder {
             vatIncluded = completed.map { it.taxAmount }.sumExact(),
             payments = payments,
             reversedCount = reversed.size,
-            reversedAmount = reversed.map { it.totalAmount }.sumExact(),
+            reversedAmount = reversed.map { it.totalMoney().toDouble() }.sumExact(),
             topSellers = topSellers.map { SellerLine(it.productName, it.totalQty, it.totalRevenue) },
             expenses = expenseLines,
             totalExpenses = expenses.map { it.amount }.sumExact()

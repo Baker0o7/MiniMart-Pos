@@ -18,6 +18,7 @@ class MiniMartApp : Application(), Configuration.Provider {
     @Inject lateinit var syncServer: com.minimart.pos.sync.SyncServer
     @Inject lateinit var productRepo: com.minimart.pos.data.repository.ProductRepository
     @Inject lateinit var mpesaPayments: com.minimart.pos.data.repository.MpesaPaymentRepository
+    @Inject lateinit var integrity: com.minimart.pos.data.repository.IntegrityChecker
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -48,6 +49,8 @@ class MiniMartApp : Application(), Configuration.Provider {
             } catch (_: Exception) {}
             try { if (settings.dailyReport.first()) com.minimart.pos.worker.DailyReportWorker.schedule(this@MiniMartApp, settings.dailyReportHour.first(), replace = false) } catch (_: Exception) {}
             launch { try { updateManager.autoCheckIfDue() } catch (_: Exception) {} }
+            // Reports add whole cents; make sure every sale's cents match its amount (normally changes nothing).
+            launch { try { integrity.repairSaleCents() } catch (_: Exception) {} }
             launch { settings.telemetryOptIn.collect { com.minimart.pos.util.Telemetry.apply(it) } }
             launch { settings.paperWidthMm.collect { com.minimart.pos.printer.EscPos.lineChars = com.minimart.pos.printer.EscPos.charsForPaper(it) } }
             try { productRepo.warmUp() } catch (_: Exception) {}

@@ -52,10 +52,10 @@ interface SaleDao {
     @Query("SELECT * FROM sales WHERE createdAt >= :startMs ORDER BY createdAt DESC")
     fun getSalesToday(startMs: Long): Flow<List<Sale>>
 
-    @Query("SELECT ROUND(SUM(totalAmount), 2) FROM sales WHERE createdAt >= :startMs AND status = 'COMPLETED'")
+    @Query("SELECT SUM(totalCents) / 100.0 FROM sales WHERE createdAt >= :startMs AND status = 'COMPLETED'")
     fun getTotalRevenueToday(startMs: Long): Flow<Double?>
 
-    @Query("SELECT ROUND(SUM(totalAmount), 2) FROM sales WHERE createdAt >= :startMs AND createdAt < :endMs AND status = 'COMPLETED'")
+    @Query("SELECT SUM(totalCents) / 100.0 FROM sales WHERE createdAt >= :startMs AND createdAt < :endMs AND status = 'COMPLETED'")
     fun getTotalRevenueBetween(startMs: Long, endMs: Long): Flow<Double?>
 
     @Query("SELECT COUNT(*) FROM sales WHERE createdAt >= :startMs AND status = 'COMPLETED'")
@@ -113,10 +113,10 @@ interface SaleDao {
     @Query("""
         SELECT s.cashierId AS cashierId, COALESCE(u.displayName, 'Unknown') AS name,
                SUM(CASE WHEN s.status = 'COMPLETED' THEN 1 ELSE 0 END) AS sales,
-               ROUND(SUM(CASE WHEN s.status = 'COMPLETED' THEN s.totalAmount ELSE 0 END), 2) AS revenue,
+               SUM(CASE WHEN s.status = 'COMPLETED' THEN s.totalCents ELSE 0 END) / 100.0 AS revenue,
                SUM(CASE WHEN s.status = 'VOIDED' THEN 1 ELSE 0 END) AS voids,
                SUM(CASE WHEN s.status = 'REFUNDED' THEN 1 ELSE 0 END) AS refunds,
-               ROUND(SUM(CASE WHEN s.status <> 'COMPLETED' THEN s.totalAmount ELSE 0 END), 2) AS reversedValue
+               SUM(CASE WHEN s.status <> 'COMPLETED' THEN s.totalCents ELSE 0 END) / 100.0 AS reversedValue
         FROM sales s LEFT JOIN users u ON u.id = s.cashierId
         WHERE s.createdAt >= :startMs AND s.createdAt < :endMs
         GROUP BY s.cashierId
@@ -176,7 +176,7 @@ interface SaleDao {
     /** Record count and revenue for the same filter as [pagedCompletedSales] (computed in SQL,
      *  so the totals stay correct even though only one page is loaded at a time). */
     @Query("""
-        SELECT COUNT(*) AS count, ROUND(COALESCE(SUM(totalAmount), 0.0), 2) AS total FROM sales
+        SELECT COUNT(*) AS count, COALESCE(SUM(totalCents), 0) / 100.0 AS total FROM sales
         WHERE status = 'COMPLETED' AND (:query = ''
            OR receiptNumber LIKE '%' || :query || '%'
            OR notes LIKE '%' || :query || '%'

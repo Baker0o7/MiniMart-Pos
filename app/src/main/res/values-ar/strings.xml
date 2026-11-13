@@ -439,7 +439,7 @@
     <string name="add_credit_named">إضافة رصيد — %1$s</string>
     <string name="all_items_removed">ستتم إزالة جميع العناصر (%1$d).</string>
     <string name="only_on_record">المسجَّل %1$s فقط</string>
-    <string name="step_of">الخطوة %1$d من 3</string>
+    <string name="step_of">الخطوة %1$d من 4</string>
     <string name="avg_basket_fmt">متوسط السلة %1$s</string>
     <string name="cat_title">قائمة المنتجات المشتركة</string>
     <string name="cat_help">حافظ على الأسماء والأسعار والضريبة متطابقة في جميع متاجرك. متجر واحد هو المتجر الرئيسي ويرسل قائمته، وتستقبلها المتاجر الأخرى. لا تتم مشاركة المخزون أو المبيعات أو العملاء أبدًا.</string>

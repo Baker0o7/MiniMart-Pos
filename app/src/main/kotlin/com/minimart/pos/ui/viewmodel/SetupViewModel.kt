@@ -5,7 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.repository.ProductRepository
 import com.minimart.pos.data.repository.SaleRepository
 import com.minimart.pos.data.repository.SettingsRepository
+import com.minimart.pos.util.BackupManager
+import com.minimart.pos.util.BackupResult
 import com.minimart.pos.util.SetupWizard
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -14,6 +17,7 @@ import javax.inject.Inject
 /** First-launch setup: decides whether to show the wizard and saves what the owner chose. */
 @HiltViewModel
 class SetupViewModel @Inject constructor(
+    @ApplicationContext private val context: android.content.Context,
     private val settings: SettingsRepository,
     private val products: ProductRepository,
     private val sales: SaleRepository
@@ -40,4 +44,10 @@ class SetupViewModel @Inject constructor(
     fun skip(onDone: () -> Unit) {
         viewModelScope.launch { try { settings.setSetupWizardDone() } catch (_: Exception) {}; onDone() }
     }
+
+    /** Writes an encrypted backup file locked with [passphrase] and checks that it can be read back (see BackupManager). */
+    suspend fun createEncryptedBackup(passphrase: String): BackupResult = BackupManager.backup(context, passphrase)
+
+    /** Opens the share sheet for [file] so it can be sent off this phone. */
+    fun shareBackup(file: java.io.File) = BackupManager.shareBackup(context, file)
 }

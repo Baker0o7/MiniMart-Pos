@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.viewmodel
 
+import com.minimart.pos.data.entity.totalOf
 import com.minimart.pos.util.sumOfMoney
 import com.minimart.pos.util.Lang
 import androidx.lifecycle.ViewModel
@@ -67,7 +68,7 @@ class ExpenseViewModel @Inject constructor(
                     saleRepo.getCompletedSalesByDateRange(start, end)
                 ) { expenses, sales ->
                     val totalExpenses = expenses.sumOfMoney { it.amount }
-                    val totalRevenue  = sales.sumOfMoney { it.totalAmount }
+                    val totalRevenue  = sales.totalOf()
                     val netProfit     = totalRevenue - totalExpenses
                     val margin        = if (totalRevenue > 0) (netProfit / totalRevenue) * 100 else 0.0
                     val byCategory    = expenses.groupBy { it.category }

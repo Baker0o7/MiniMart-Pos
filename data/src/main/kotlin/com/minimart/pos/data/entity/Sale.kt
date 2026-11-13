@@ -42,12 +42,13 @@ data class Sale(
     /** When the sale was refunded or voided (0 while completed, and for reversals made before v18). */
     @ColumnInfo(defaultValue = "0") val statusChangedAt: Long = 0L,
     /**
-     * Phase 1 of the move to whole-cent storage: the same amounts as [totalAmount] and [cashPortion], kept as exact
-     * integers. They are filled in when a sale is saved (see `SaleDao.insertSaleWithItems`) and by migration 18→19;
-     * the decimal columns stay the source of truth until a later release switches reads over.
+     * The same amounts as [totalAmount] and [cashPortion], kept as exact whole cents. Totals, shift cash-up, reports and
+     * exports add THESE (read them with `Sale.totalMoney()` / `cashMoney()`); the decimal columns stay for older code
+     * and for display. A new Sale works the cents out from its decimals, `SaleDao.insertSaleWithItems` sets them again
+     * on save, migration 18→19 filled them for old sales, and `IntegrityChecker.repairSaleCents` fixes any that drift.
      */
-    @ColumnInfo(defaultValue = "0") val totalCents: Long = 0L,
-    @ColumnInfo(defaultValue = "0") val cashPortionCents: Long = 0L
+    @ColumnInfo(defaultValue = "0") val totalCents: Long = com.minimart.pos.util.Money.fromDouble(totalAmount).cents,
+    @ColumnInfo(defaultValue = "0") val cashPortionCents: Long = com.minimart.pos.util.Money.fromDouble(cashPortion).cents
 )
 
 // ─── Sale Line Item ───────────────────────────────────────────────────────────

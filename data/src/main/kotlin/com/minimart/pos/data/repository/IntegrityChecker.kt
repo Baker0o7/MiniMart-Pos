@@ -12,7 +12,7 @@ data class IntegrityReport(val salesChecked: Int, val issues: List<String>) {
 /**
  * Looks for money and stock records that no longer add up: sale headers that disagree with their lines,
  * negative stock, a customer balance that differs from the credit ledger, one M-Pesa code used twice,
- * an M-Pesa sale larger than its payment, and stock batches that disagree with the sales that used them. It only reads; it never changes anything.
+ * an M-Pesa sale larger than its payment, and stock batches that disagree with the sales that used them. The check only reads; [repairSaleCents] is the one thing that writes.
  */
 @Singleton
 class IntegrityChecker @Inject constructor(private val db: AppDatabase) {
@@ -38,6 +38,10 @@ class IntegrityChecker @Inject constructor(private val db: AppDatabase) {
                 if (abs(total - expected) > 0.02 && issues.size < 40)
                     issues += "Sale $receipt: total ${fmt(total)} but its items add up to ${fmt(expected)}"
             }
+        }
+
+        sdb.query("SELECT COUNT(*) FROM sales WHERE $CENTS_MISMATCH").use { c ->
+            if (c.moveToFirst() && c.getInt(0) > 0) issues += "${c.getInt(0)} sale(s) have whole-cent amounts that differ from their price; they are repaired the next time the app starts"
         }
 
         sdb.query("SELECT name, stock, stockKg FROM products WHERE isActive = 1 AND (stock < 0 OR stockKg < -0.0001)").use { c ->
@@ -105,6 +109,21 @@ class IntegrityChecker @Inject constructor(private val db: AppDatabase) {
         }
 
         return IntegrityReport(checked, issues)
+    }
+
+    /**
+     * Brings the whole-cent copies of every sale back in line with the sale's amounts (see `Sale.totalCents`) and returns
+     * how many sales needed it. Normally zero: sales are saved with correct cents. Reports add the cents, so this keeps
+     * them from ever disagreeing with what the receipt says.
+     */
+    fun repairSaleCents(): Int {
+        val sdb = db.openHelper.writableDatabase
+        sdb.execSQL("UPDATE sales SET totalCents = CAST(ROUND(totalAmount * 100) AS INTEGER), cashPortionCents = CAST(ROUND(cashPortion * 100) AS INTEGER) WHERE $CENTS_MISMATCH")
+        return sdb.query("SELECT changes()").use { c -> if (c.moveToFirst()) c.getInt(0) else 0 }
+    }
+
+    private companion object {
+        const val CENTS_MISMATCH = "(totalCents <> CAST(ROUND(totalAmount * 100) AS INTEGER) OR cashPortionCents <> CAST(ROUND(cashPortion * 100) AS INTEGER))"
     }
 
     private fun fmt(v: Double) = String.format(java.util.Locale.US, "%.2f", v)
