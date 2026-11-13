@@ -22,11 +22,17 @@ import javax.inject.Singleton
 @Singleton
 class SyncConflictNotifier @Inject constructor(@ApplicationContext private val context: Context) {
 
-    fun reversalConflict(receipt: String, kept: String, other: String) {
+    fun reversalConflict(receipt: String, kept: String, other: String) =
+        post(receipt.hashCode(), ConflictAlert.reversal(receipt, kept, other))
+
+    /** A sale from a till that this phone refused (stock, rules, bad data). */
+    fun refusedSale(receipt: String, reason: String) =
+        post(("refused:" + receipt).hashCode(), ConflictAlert.refusedSale(receipt, reason))
+
+    private fun post(notificationId: Int, text: ConflictAlert.Text) {
         try {
             val nm = NotificationManagerCompat.from(context)
             if (!nm.areNotificationsEnabled()) return
-            val text = ConflictAlert.reversal(receipt, kept, other)
             (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(
                 NotificationChannel(CHANNEL_ID, Lang.t("Sync conflicts", "تعارضات المزامنة"), NotificationManager.IMPORTANCE_HIGH)
                     .apply { description = Lang.t("When two tills disagree about a sale", "عندما يختلف صندوقان على عملية بيع") }
@@ -48,7 +54,7 @@ class SyncConflictNotifier @Inject constructor(@ApplicationContext private val c
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build()
             // One notification per sale: the same conflict arriving twice replaces itself.
-            nm.notify(receipt.hashCode(), n)
+            nm.notify(notificationId, n)
         } catch (e: SecurityException) {
             Log.w("SyncConflict", "No permission to post the conflict alert", e)
         } catch (e: Exception) {

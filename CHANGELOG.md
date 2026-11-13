@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [Unreleased]
+
+- **Refused till sales are no longer silent:** when the main phone cannot accept a sale from another till (for example not enough stock), it now shows a notification with the receipt number and the reason, so the sale can be checked and sold again here. Before, only the till heard about it.
+
 ## [1.33.0] - 2026-11-13
 
 - **Exact money everywhere:** shift cash-up, Z-reports, the daily report, Reports, Analytics, the accounting files and the cloud report now add each sale in whole cents, so a total can never be a cent out. Totals the database adds up for the dashboard and staff report use the same whole cents. Store health now says if any sale's cents ever disagree with its price, and the app repairs them when it starts (normally there is nothing to repair).

@@ -57,6 +57,9 @@ class SyncApplier @Inject constructor(
                 val shown = if (ex is IllegalArgumentException || ex is IllegalStateException) ex.message else null
                 com.minimart.pos.util.ErrorAdvice.explain(ex, "Applying a till sale")
                 r.put("status", "rejected").put("error", shown?.takeIf { it.isNotBlank() } ?: "Could not apply")
+                // Tell the owner on this phone too: the till only learns of it at its next sync.
+                val receipt = runCatching { JSONObject(e.getString("payload")).optString("receiptNumber") }.getOrDefault("")
+                if (e.optString("operation") == "CREATE") conflictAlerts.refusedSale(receipt, shown ?: "")
             }
             results.put(r)
         }

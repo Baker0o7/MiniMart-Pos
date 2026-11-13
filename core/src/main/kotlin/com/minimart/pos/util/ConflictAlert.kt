@@ -18,6 +18,21 @@ object ConflictAlert {
         )
     )
 
+    /** A till sale this phone could not accept. [reason] is one of the app's own rule messages; it is shortened and stripped of line breaks. */
+    fun refusedSale(receipt: String, reason: String): Text {
+        val r = reason.filter { it >= ' ' && it != '\u007f' }.replace(Regex("\\s+"), " ").trim().take(120)
+        val rec = receipt.filter { it >= ' ' && it != '\u007f' }.trim().take(40).ifBlank { "?" }
+        return Text(
+            Lang.t("A till sale was refused", "رُفضت عملية بيع من صندوق"),
+            Lang.t(
+                "Sale $rec from another till was not accepted here" + (if (r.isNotEmpty()) " ($r)" else "") +
+                    ". It is still on that till and is not in your totals. Check it and sell it again here if it was real.",
+                "لم تُقبل عملية البيع $rec من صندوق آخر هنا" + (if (r.isNotEmpty()) " ($r)" else "") +
+                    ". ما زالت على ذلك الصندوق وليست ضمن إجمالياتك. تحقق منها وأعد بيعها هنا إن كانت حقيقية."
+            )
+        )
+    }
+
     private fun arState(s: String) = when (s.uppercase()) { "REFUNDED" -> "مستردة"; "VOIDED" -> "ملغاة"; else -> s.lowercase() }
     private fun arAction(s: String) = when (s.uppercase()) { "REFUNDED" -> "استردادها"; "VOIDED" -> "إلغائها"; else -> s.lowercase() }
 }
