@@ -47,9 +47,12 @@ data class Sale(
      * and for display. A new Sale works the cents out from its decimals, `SaleDao.insertSaleWithItems` sets them again
      * on save, migration 18→19 filled them for old sales, and `IntegrityChecker.repairSaleCents` fixes any that drift.
      */
-    @ColumnInfo(defaultValue = "0") val totalCents: Long = com.minimart.pos.util.Money.fromDouble(totalAmount).cents,
-    @ColumnInfo(defaultValue = "0") val cashPortionCents: Long = com.minimart.pos.util.Money.fromDouble(cashPortion).cents
+    @ColumnInfo(defaultValue = "0") val totalCents: Long = centsOf(totalAmount),
+    @ColumnInfo(defaultValue = "0") val cashPortionCents: Long = centsOf(cashPortion)
 )
+
+/** Whole cents of an amount; 0 for NaN or infinity, so building a bad Sale reaches the payment check that rejects it instead of crashing here. */
+internal fun centsOf(amount: Double): Long = if (amount.isFinite()) com.minimart.pos.util.Money.fromDouble(amount).cents else 0L
 
 // ─── Sale Line Item ───────────────────────────────────────────────────────────
 
