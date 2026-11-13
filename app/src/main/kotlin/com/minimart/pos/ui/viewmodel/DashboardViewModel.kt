@@ -182,7 +182,8 @@ class DashboardViewModel @Inject constructor(
                     lowStockProducts = low,
                     topSellers       = top
                 ) }
-            } catch (_: Exception) {}
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e
+            } catch (e: Exception) { com.minimart.pos.util.ErrorAdvice.explain(e, "Loading the Home numbers") }
         }
     }
 }

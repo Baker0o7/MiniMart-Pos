@@ -523,7 +523,8 @@ class CartViewModel @Inject constructor(
                     try {
                         val autoOpen = settingsRepo.cashDrawerOnSale.first()
                         if (autoOpen) cashDrawer.openDrawer()
-                    } catch (_: Exception) {}
+                    } catch (e: kotlinx.coroutines.CancellationException) { throw e
+                    } catch (e: Exception) { com.minimart.pos.util.ErrorAdvice.explainDevice(e, "Opening the cash drawer", "cash drawer") }
                 }
                 customerDisplay.showThanks(sale.totalAmount, sale.changeGiven)
                 _uiState.update { CartUiState() } // clear cart after sale
@@ -591,7 +592,8 @@ class CartViewModel @Inject constructor(
                     customerId = customerId, creditAmount = creditAmount)
                 if (cashAmount > 0) {
                     try { val ao = settingsRepo.cashDrawerOnSale.first(); if (ao) cashDrawer.openDrawer() }
-                    catch (_: Exception) {}
+                    catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                    catch (e: Exception) { com.minimart.pos.util.ErrorAdvice.explainDevice(e, "Opening the cash drawer", "cash drawer") }
                 }
                 customerDisplay.showThanks(sale.totalAmount, sale.changeGiven)
                 _uiState.update { CartUiState() }
