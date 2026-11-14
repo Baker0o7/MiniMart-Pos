@@ -94,8 +94,20 @@ private fun UpdateBlock(vm: com.minimart.pos.ui.viewmodel.UpdateViewModel) {
             LinearProgressIndicator(progress = { state.percent / 100f }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp))
         }
         is com.minimart.pos.update.UpdateState.Installing -> Text(tr(com.minimart.pos.R.string.upd_confirm), color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
-        is com.minimart.pos.update.UpdateState.NeedsPermission -> Text(tr(com.minimart.pos.R.string.upd_perm), color = DT.Amber, style = MaterialTheme.typography.bodySmall)
+        is com.minimart.pos.update.UpdateState.NeedsPermission -> Column {
+            Text(Lang.t("One-time step: Android must allow MiniMart to install its own updates.", "خطوة لمرة واحدة: يجب أن يسمح أندرويد لـ MiniMart بتثبيت تحديثاته."), color = DT.Amber, style = MaterialTheme.typography.bodySmall)
+            Text(Lang.t("1. Tap the button below.\n2. Switch on \"Allow from this source\".\n3. Press back. The update continues by itself.",
+                "١. اضغط الزر أدناه.\n٢. فعّل \"السماح من هذا المصدر\".\n٣. اضغط رجوع. يتابع التحديث تلقائيًا."),
+                color = DT.OnSurface, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
+        }
         is com.minimart.pos.update.UpdateState.Failed -> Text(state.message, color = DT.Red, style = MaterialTheme.typography.bodySmall)
+    }
+    // Coming back from Android's permission screen, carry on with the update by itself.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, e -> if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) vm.continueIfPermitted() }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     val canInstall = state is com.minimart.pos.update.UpdateState.Available || state is com.minimart.pos.update.UpdateState.NeedsPermission ||
         (state is com.minimart.pos.update.UpdateState.Failed && state.asset != null)

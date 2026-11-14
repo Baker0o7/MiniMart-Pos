@@ -26,6 +26,10 @@ class UpdateViewModel @Inject constructor(private val manager: UpdateManager) : 
         // Runs on the app-wide scope's manager, but is launched here; a rotation must not cancel a download.
         kotlinx.coroutines.GlobalScope.launch { manager.install(r, a) }
     }
+    /** Back from Android's "allow installs" screen: if the owner switched it on, carry on with the update without another tap. */
+    fun continueIfPermitted() {
+        if (manager.state.value is com.minimart.pos.update.UpdateState.NeedsPermission && manager.canInstall()) install()
+    }
     fun permissionIntent() = manager.permissionIntent()
     fun canInstall() = manager.canInstall()
 }

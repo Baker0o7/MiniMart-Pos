@@ -10,6 +10,7 @@ import android.os.StatFs
 import android.provider.Settings
 import com.minimart.pos.BuildConfig
 import com.minimart.pos.util.AppUpdate
+import com.minimart.pos.util.Lang
 import com.minimart.pos.util.ReleaseAsset
 import com.minimart.pos.util.ReleaseInfo
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -77,7 +78,7 @@ class UpdateManager @Inject constructor(@ApplicationContext private val context:
                 if (release != null && asset != null && AppUpdate.isNewer(BuildConfig.VERSION_NAME, release.tag)) UpdateState.Available(release, asset)
                 else UpdateState.UpToDate(System.currentTimeMillis())
             } catch (e: Exception) {
-                UpdateState.Failed("Could not check for updates. Check the internet connection and try again.")
+                UpdateState.Failed(Lang.t("Could not check for updates. Check the internet connection and try again.", "تعذّر البحث عن تحديثات. تحقق من الاتصال بالإنترنت وحاول مرة أخرى."))
             }
         } finally { busy.unlock() }
     }
@@ -97,9 +98,9 @@ class UpdateManager @Inject constructor(@ApplicationContext private val context:
             withContext(Dispatchers.IO) { handOver(file) }
             _state.value = UpdateState.Installing(release)
         } catch (e: UpdateException) {
-            _state.value = UpdateState.Failed(e.message ?: "The update could not be installed.", release, asset)
+            _state.value = UpdateState.Failed(e.message ?: Lang.t("The update could not be installed.", "تعذّر تثبيت التحديث."), release, asset)
         } catch (e: Exception) {
-            _state.value = UpdateState.Failed("The update could not be downloaded. Check the internet connection and try again.", release, asset)
+            _state.value = UpdateState.Failed(Lang.t("The update could not be downloaded. Check the internet connection and try again.", "تعذّر تنزيل التحديث. تحقق من الاتصال بالإنترنت وحاول مرة أخرى."), release, asset)
         } finally { busy.unlock() }
     }
 
@@ -114,50 +115,50 @@ class UpdateManager @Inject constructor(@ApplicationContext private val context:
             conn.connectTimeout = 15_000; conn.readTimeout = 15_000; conn.instanceFollowRedirects = false
             conn.setRequestProperty("Accept", "application/vnd.github+json")
             conn.setRequestProperty("User-Agent", "MiniMartPOS-updater")
-            if (conn.responseCode != 200) throw UpdateException("The update server answered ${conn.responseCode}.")
+            if (conn.responseCode != 200) throw UpdateException(Lang.t("The update server answered ${conn.responseCode}.", "ردّ خادم التحديث بالرمز ${conn.responseCode}."))
             val body = conn.inputStream.use { it.readBytes(MAX_JSON) }.toString(Charsets.UTF_8)
             return ReleaseParser.parse(body)
         } finally { conn.disconnect() }
     }
 
     private fun download(release: ReleaseInfo, asset: ReleaseAsset): File {
-        if (!AppUpdate.isTrustedUrl(asset.url)) throw UpdateException("The update address is not one this app trusts.")
+        if (!AppUpdate.isTrustedUrl(asset.url)) throw UpdateException(Lang.t("The update address is not one this app trusts.", "عنوان التحديث ليس من العناوين الموثوقة لهذا التطبيق."))
         val dir = File(context.filesDir, "updates").apply { mkdirs() }
         dir.listFiles()?.forEach { it.delete() }
         if (!AppUpdate.enoughSpace(StatFs(dir.path).availableBytes, asset.size))
-            throw UpdateException("Not enough free space on the phone for the update. Free up about ${asset.size * 2 / 1_000_000 + 50} MB and try again.")
+            throw UpdateException(Lang.t("Not enough free space on the phone for the update. Free up about ${asset.size * 2 / 1_000_000 + 50} MB and try again.", "لا توجد مساحة كافية في الهاتف للتحديث. أفرغ نحو ${asset.size * 2 / 1_000_000 + 50} ميغابايت وحاول مرة أخرى."))
         val out = File(dir, "update.apk")
         var url = asset.url; var redirected = false; var hops = 0
         while (true) {
-            if (!AppUpdate.isTrustedUrl(url, redirected)) throw UpdateException("The update was redirected to an address this app does not trust.")
+            if (!AppUpdate.isTrustedUrl(url, redirected)) throw UpdateException(Lang.t("The update was redirected to an address this app does not trust.", "أُعيد توجيه التحديث إلى عنوان لا يثق به التطبيق."))
             val conn = URL(url).openConnection() as HttpURLConnection
             try {
                 conn.connectTimeout = 20_000; conn.readTimeout = 30_000; conn.instanceFollowRedirects = false
                 conn.setRequestProperty("User-Agent", "MiniMartPOS-updater")
                 val code = conn.responseCode
                 if (code in 301..303 || code == 307 || code == 308) {
-                    url = URL(URL(url), conn.getHeaderField("Location") ?: throw UpdateException("The update server sent a bad redirect.")).toString()
+                    url = URL(URL(url), conn.getHeaderField("Location") ?: throw UpdateException(Lang.t("The update server sent a bad redirect.", "أرسل خادم التحديث إعادة توجيه غير صالحة."))).toString()
                     redirected = true
-                    if (++hops > 5) throw UpdateException("The update server redirected too many times.")
+                    if (++hops > 5) throw UpdateException(Lang.t("The update server redirected too many times.", "أعاد خادم التحديث التوجيه مرات كثيرة."))
                     continue
                 }
-                if (code != 200) throw UpdateException("The update server answered $code.")
+                if (code != 200) throw UpdateException(Lang.t("The update server answered $code.", "ردّ خادم التحديث بالرمز $code."))
                 val digest = MessageDigest.getInstance("SHA-256"); var done = 0L; var lastPercent = -1
                 conn.inputStream.use { input -> out.outputStream().use { o ->
                     val buf = ByteArray(64 * 1024)
                     while (true) {
                         val n = input.read(buf); if (n < 0) break
-                        done += n; if (done > asset.size) throw UpdateException("The downloaded file is larger than expected, so it was discarded.")
+                        done += n; if (done > asset.size) throw UpdateException(Lang.t("The downloaded file is larger than expected, so it was discarded.", "الملف المنزَّل أكبر من المتوقع لذلك تم تجاهله."))
                         o.write(buf, 0, n); digest.update(buf, 0, n)
                         val pct = (done * 100 / asset.size).toInt()
                         if (pct != lastPercent) { lastPercent = pct; _state.value = UpdateState.Downloading(release, pct) }
                     }
                     o.fd.sync()
                 } }
-                if (done != asset.size) { out.delete(); throw UpdateException("The download was cut short. Please try again.") }
+                if (done != asset.size) { out.delete(); throw UpdateException(Lang.t("The download was cut short. Please try again.", "انقطع التنزيل. حاول مرة أخرى.")) }
                 val expected = asset.sha256
                 if (expected != null && digest.digest().joinToString("") { "%02x".format(it) } != expected) {
-                    out.delete(); throw UpdateException("The downloaded file did not match its checksum, so it was discarded.")
+                    out.delete(); throw UpdateException(Lang.t("The downloaded file did not match its checksum, so it was discarded.", "الملف المنزَّل لم يطابق رمز التحقق لذلك تم تجاهله."))
                 }
                 return out
             } finally { conn.disconnect() }
@@ -181,7 +182,7 @@ class UpdateManager @Inject constructor(@ApplicationContext private val context:
 
     private fun java.io.InputStream.readBytes(max: Int): ByteArray {
         val out = java.io.ByteArrayOutputStream(); val buf = ByteArray(8192)
-        while (true) { val n = read(buf); if (n < 0) break; out.write(buf, 0, n); if (out.size() > max) throw UpdateException("The update information was too large.") }
+        while (true) { val n = read(buf); if (n < 0) break; out.write(buf, 0, n); if (out.size() > max) throw UpdateException(Lang.t("The update information was too large.", "معلومات التحديث كبيرة جدًا.")) }
         return out.toByteArray()
     }
 
