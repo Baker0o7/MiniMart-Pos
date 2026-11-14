@@ -61,6 +61,9 @@ class DashTileSnapshotTest {
         }
     }
 
+    /** Cut off = some line ends in "…" (the bug seen on a phone). `hasVisualOverflow` is not used: it is also true for a short word in a tile that reserves two lines. */
+    private fun cutOff(l: TextLayoutResult) = (0 until l.lineCount).any { l.isLineEllipsized(it) }
+
     private fun layoutOf(title: String): TextLayoutResult {
         val results = mutableListOf<TextLayoutResult>()
         val node = rule.onNodeWithText(title, useUnmergedTree = true).fetchSemanticsNode()
@@ -80,7 +83,7 @@ class DashTileSnapshotTest {
         listOf("مخزون منخفض", "تذكيرات إعادة الطلب", "مدفوعات إم-بيسا", "سجل النشاط").forEach { title ->
             show(title, widthDp = 80, fontScale = 1.0f)
             val l = layoutOf(title)
-            assertFalse("'$title' is cut off", l.hasVisualOverflow)
+            assertFalse("'$title' is cut off", cutOff(l))
             assertTrue("'$title' needs ${l.lineCount} lines", l.lineCount <= 2)
         }
     }
@@ -89,7 +92,7 @@ class DashTileSnapshotTest {
         listOf("Low stock", "Reorder reminders", "M-Pesa payments", "Activity log").forEach { title ->
             show(title, widthDp = 80, fontScale = 1.0f)
             val l = layoutOf(title)
-            assertFalse("'$title' is cut off", l.hasVisualOverflow)
+            assertFalse("'$title' is cut off", cutOff(l))
             assertTrue("'$title' needs ${l.lineCount} lines", l.lineCount <= 2)
         }
     }
@@ -97,7 +100,7 @@ class DashTileSnapshotTest {
     @Test fun `a short arabic name stays whole with larger system text`() {
         Lang.arabic = true
         show("المبيعات", widthDp = 96, fontScale = 1.3f)
-        assertFalse(layoutOf("المبيعات").hasVisualOverflow)
+        assertFalse(cutOff(layoutOf("المبيعات")))
     }
 
     @Test fun `low stock tile looks the same as the saved snapshot`() = snapshot("dash_tile_low_stock_ar") {
