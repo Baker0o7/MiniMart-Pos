@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.3] - 2026-11-14
 
 - **Home tiles:** a longer tile name (such as "مخزون منخفض") now wraps onto a second line instead of being cut off with "…".
 - **More of the app in Arabic:** the Reorder reminders subtitle ("صنفان يحتاجان إلى إعادة الطلب"), Analytics comparisons and basket texts, Sales history, Inventory, the customer lines at checkout and the scale-label hint.
