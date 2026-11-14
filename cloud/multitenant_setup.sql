@@ -44,12 +44,16 @@ alter table link_codes      enable row level security;   -- no policies: only th
 
 -- Is this store mine? (security definer so the check can see `stores`, which has no policies.)
 create or replace function owns_store(p_store_id uuid) returns boolean
-language sql security definer stable set search_path = public as $$
+language sql security definer stable set search_path = public, pg_temp as $$
   select exists (select 1 from stores where id = p_store_id and owner_id = auth.uid())
 $$;
 revoke all on function owns_store(uuid) from public, anon;
 grant execute on function owns_store(uuid) to authenticated;
 
+-- The single-owner script (supabase_setup.sql) left policies that let one e-mail read EVERY store. Remove them here:
+-- in a hosted multi-owner project nobody may read another owner's shops, the operator included.
+drop policy if exists "owner reads snapshots" on store_snapshots;
+drop policy if exists "signed-in owner reads snapshots" on store_snapshots;
 drop policy if exists "owners read their snapshots" on store_snapshots;
 create policy "owners read their snapshots" on store_snapshots
   for select to authenticated using (owns_store(store_id));
@@ -59,7 +63,7 @@ grant select on store_snapshots to authenticated;
 
 -- 1. A signed-in owner asks for a code to connect one more shop. Returned once, e.g. "K7QM-4TX9".
 create or replace function owner_create_link_code() returns text
-language plpgsql security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare
   alphabet constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   -- no 0/O/1/I/L: easy to read out loud
   raw bytea; code text := ''; i int;
@@ -82,7 +86,7 @@ grant execute on function owner_create_link_code() to authenticated;
 
 -- 2. The phone registers with that code (once per store).
 create or replace function register_store_with_code(p_code text, p_store_id uuid, p_name text, p_secret text)
-returns void language plpgsql security definer set search_path = public, extensions as $$
+returns void language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare c link_codes%rowtype; norm text;
 begin
   norm := upper(regexp_replace(coalesce(p_code, ''), '[^A-Za-z0-9]', '', 'g'));
@@ -106,7 +110,7 @@ grant execute on function register_store_with_code(text, uuid, text, text) to an
 
 -- 3. A registered store uploads its latest snapshot (same as the single-owner setup).
 create or replace function push_snapshot(p_store_id uuid, p_secret text, p_payload jsonb)
-returns void language plpgsql security definer set search_path = public, extensions as $$
+returns void language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare s stores%rowtype;
 begin
   select * into s from stores where id = p_store_id;
@@ -129,14 +133,14 @@ grant execute on function push_snapshot(uuid, text, jsonb) to anon, authenticate
 
 -- 4. Owner tools from the dashboard.
 create or replace function owner_my_stores() returns table (id uuid, name text, created_at timestamptz, last_push timestamptz)
-language sql security definer stable set search_path = public as $$
+language sql security definer stable set search_path = public, pg_temp as $$
   select s.id, s.name, s.created_at, sn.pushed_at
   from stores s left join store_snapshots sn on sn.store_id = s.id
   where s.owner_id = auth.uid() order by s.created_at
 $$;
 
 create or replace function owner_delete_store(p_store_id uuid) returns void
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, pg_temp as $$
 begin
   if auth.uid() is null then raise exception 'Not signed in'; end if;
   delete from stores where id = p_store_id and owner_id = auth.uid();   -- snapshots cascade
@@ -144,7 +148,7 @@ end $$;
 
 -- Deleting an account removes all of its shops and data (the owner's right to leave).
 create or replace function owner_delete_account() returns void
-language plpgsql security definer set search_path = public, auth as $$
+language plpgsql security definer set search_path = public, auth, pg_temp as $$
 begin
   if auth.uid() is null then raise exception 'Not signed in'; end if;
   delete from auth.users where id = auth.uid();   -- stores, snapshots and codes cascade

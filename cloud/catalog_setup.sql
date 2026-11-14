@@ -17,7 +17,7 @@ revoke all on owner_catalog from anon, authenticated;
 
 -- Shared by both functions: check the store's secret, return its owner. Slow on failure to blunt guessing.
 create or replace function catalog_auth(p_store_id uuid, p_secret text) returns uuid
-language plpgsql security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare s stores%rowtype;
 begin
   select * into s from stores where id = p_store_id;
@@ -32,7 +32,7 @@ revoke all on function catalog_auth(uuid, text) from public, anon, authenticated
 -- The main shop publishes its list. Returns the new version number.
 -- A different shop may only take over when p_take_over is true (the app asks the owner to confirm).
 create or replace function publish_catalog(p_store_id uuid, p_secret text, p_items jsonb, p_take_over boolean default false)
-returns bigint language plpgsql security definer set search_path = public, extensions as $$
+returns bigint language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare o uuid; cur owner_catalog%rowtype; n integer; v bigint;
 begin
   o := catalog_auth(p_store_id, p_secret);
@@ -57,7 +57,7 @@ grant execute on function publish_catalog(uuid, text, jsonb, boolean) to anon, a
 -- A following shop asks for the list. Returns nothing new when it already has the latest version.
 create or replace function fetch_catalog(p_store_id uuid, p_secret text, p_since bigint default 0)
 returns table (version bigint, publisher_id uuid, item_count integer, items jsonb)
-language plpgsql security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare o uuid;
 begin
   o := catalog_auth(p_store_id, p_secret);
@@ -69,7 +69,7 @@ grant execute on function fetch_catalog(uuid, text, bigint) to anon, authenticat
 
 -- What the owner's dashboard shows: who publishes, the version, when.
 create or replace function owner_catalog_status() returns table (publisher_name text, version bigint, item_count integer, updated_at timestamptz)
-language sql security definer stable set search_path = public as $$
+language sql security definer stable set search_path = public, pg_temp as $$
   select s.name, c.version, c.item_count, c.updated_at
   from owner_catalog c left join stores s on s.id = c.publisher_id where c.owner_id = auth.uid()
 $$;

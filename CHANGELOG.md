@@ -9,6 +9,7 @@ Every release is published, with its signed APKs, on the [Releases page](https:/
 
 - **M-Pesa prompts cope better with a bad connection or a busy Safaricom:** status checks are repeated on their own and slow down when the signal is poor; an expired M-Pesa key is renewed automatically; a gateway error page now says "M-Pesa is busy" instead of a confusing message. A payment request is never sent a second time on its own: if the answer is lost after sending, the screen warns that the customer may already have the prompt, so nobody is charged twice.
 - Payment failures say what happened in plain words (wrong PIN, not enough money, cancelled, phone did not respond), and the M-Pesa prompt screen is now fully in Arabic.
+- **Cloud dashboard security:** the hosted-backup SQL now removes an old rule that could let one e-mail read every shop, and pins the safe search path on every function. A check in the release script keeps future changes honest. (Apply the updated SQL to your Supabase project; see `docs/SUPABASE_AUDIT.md`.)
 - Behind the scenes: a saved copy of the database layout is now checked in tests, so a future update cannot change the database without a matching upgrade step.
 
 ## [1.33.3] - 2026-11-14

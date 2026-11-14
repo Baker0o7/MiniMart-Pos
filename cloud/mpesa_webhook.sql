@@ -39,7 +39,7 @@ revoke all on mpesa_routes, mpesa_inbox from anon, authenticated;
 
 -- A registered store turns the webhook on (or replaces its token). The token is returned once; only a hash is kept.
 create or replace function enable_mpesa_webhook(p_store_id uuid, p_secret text)
-returns text language plpgsql security definer set search_path = public, extensions as $$
+returns text language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare s stores%rowtype; tok text;
 begin
   select * into s from stores where id = p_store_id;
@@ -55,7 +55,7 @@ end $$;
 
 -- Called only by the Edge Function (service role). Accepts a Daraja C2B confirmation body for the store owning the token.
 create or replace function mpesa_ingest(p_token text, p_payload jsonb)
-returns void language plpgsql security definer set search_path = public, extensions as $$
+returns void language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare sid uuid; tid text; amt numeric; nm text; ph text; ts timestamptz;
 begin
   if length(coalesce(p_token, '')) < 32 or pg_column_size(p_payload) > 20000 then return; end if;
@@ -82,7 +82,7 @@ end $$;
 
 -- The store app fetches its waiting payments (oldest first, at most 200 per call).
 create or replace function claim_mpesa_payments(p_store_id uuid, p_secret text)
-returns jsonb language plpgsql security definer set search_path = public, extensions as $$
+returns jsonb language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare s stores%rowtype;
 begin
   select * into s from stores where id = p_store_id;
@@ -100,7 +100,7 @@ end $$;
 
 -- The app confirms what it has safely recorded; confirmed rows older than 30 days are tidied away.
 create or replace function ack_mpesa_payments(p_store_id uuid, p_secret text, p_ids bigint[])
-returns void language plpgsql security definer set search_path = public, extensions as $$
+returns void language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare s stores%rowtype;
 begin
   select * into s from stores where id = p_store_id;

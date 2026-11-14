@@ -40,7 +40,7 @@ alter table store_snapshots enable row level security;
 
 -- Only the owner's email may read, even if someone manages to sign up to the project.
 create or replace function is_owner() returns boolean
-language sql security definer stable set search_path = public as $$
+language sql security definer stable set search_path = public, pg_temp as $$
   select exists (
     select 1 from app_config
     where key = 'owner_email'
@@ -61,7 +61,7 @@ grant select on store_snapshots to authenticated;
 
 -- 2. A store app registers itself (once).
 create or replace function register_store(p_setup_code text, p_store_id uuid, p_name text, p_secret text)
-returns void language plpgsql security definer set search_path = public, extensions as $$
+returns void language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 begin
   if p_setup_code is distinct from (select value from app_config where key = 'setup_code') then
     perform pg_sleep(1.5);   -- slows down guessing of the setup code
@@ -78,7 +78,7 @@ end $$;
 
 -- 3. A registered store uploads its latest snapshot.
 create or replace function push_snapshot(p_store_id uuid, p_secret text, p_payload jsonb)
-returns void language plpgsql security definer set search_path = public, extensions as $$
+returns void language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare s stores%rowtype;
 begin
   select * into s from stores where id = p_store_id;
@@ -111,7 +111,7 @@ grant execute on function push_snapshot(uuid, text, jsonb) to anon, authenticate
 -- 5. Owner management from the web dashboard (all guarded by is_owner(); safe to run again).
 --    Remove a store (its data and its upload key); the phone can register again with the setup code.
 create or replace function owner_delete_store(p_store_id uuid)
-returns void language plpgsql security definer set search_path = public as $$
+returns void language plpgsql security definer set search_path = public, pg_temp as $$
 begin
   if not is_owner() then raise exception 'Not allowed'; end if;
   delete from stores where id = p_store_id;   -- snapshots cascade
@@ -119,7 +119,7 @@ end $$;
 
 --    Make a new setup code (returned once). Existing stores keep working; only new stores need it.
 create or replace function owner_rotate_setup_code()
-returns text language plpgsql security definer set search_path = public, extensions as $$
+returns text language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare c text;
 begin
   if not is_owner() then raise exception 'Not allowed'; end if;
