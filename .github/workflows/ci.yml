@@ -48,6 +48,15 @@ jobs:
             { echo "### Large-data timings (CI machine, not a phone)"; cat data/build/perf-report.txt; } >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      # When the saved database schema is missing or stale, show the schema the test saw so it can be copied into
+      # data/src/test/resources/schema/ (see SchemaGoldenTest).
+      - name: Schema dump
+        if: failure()
+        run: |
+          if [ -f data/build/schema-actual.txt ]; then
+            echo "=== SCHEMA-ACTUAL-BEGIN ==="; cat data/build/schema-actual.txt; echo "=== SCHEMA-ACTUAL-END ==="
+          fi
+
       # Lint errors fail the build. (Warnings are reported in the uploaded report but do not fail it.)
       - name: Lint
         run: |

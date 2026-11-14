@@ -52,6 +52,8 @@ class SchemaGoldenTest : DbTestBase() {
 
     @Test fun currentSchemaMatchesTheSavedCopy() {
         val actual = dump(db.openHelper.writableDatabase)
+        // Also written next to the other build outputs, so CI can print it when the saved copy is missing or stale.
+        runCatching { java.io.File("build/schema-actual.txt").apply { parentFile?.mkdirs() }.writeText(actual.joinToString("\n") + "\n") }
         val saved = golden(currentVersion)
         assertNotNull("Save the schema below as data/src/test/resources/schema/v$currentVersion.sql:\n" + actual.joinToString("\n"), saved)
         assertEquals("The database no longer matches schema v$currentVersion. Bump the version, add a migration and save a new golden file.\n" +
