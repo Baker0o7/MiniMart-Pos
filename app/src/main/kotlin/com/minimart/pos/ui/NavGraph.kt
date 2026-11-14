@@ -167,7 +167,9 @@ fun MiniMartNavGraph(
 
     val navBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStack?.destination?.route
-    val showBottomNav = currentRoute in mainRoutes
+    // Never over the PIN screen: when the cashier is signed out (manual logout, timeout, process restore) the bar goes away at once,
+    // even in the frames before the route changes, so it cannot cover the keypad's bottom row.
+    val showBottomNav = authState.isLoggedIn && currentRoute != Routes.LOGIN && currentRoute in mainRoutes
 
     // Notification deep link. Waits until the cashier is signed in and past the login screen,
     // so a tap can never bypass the PIN; the cart and back stack of an open sale stay intact.

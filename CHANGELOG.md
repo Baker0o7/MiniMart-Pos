@@ -12,6 +12,7 @@ Every release is published, with its signed APKs, on the [Releases page](https:/
 - **Cloud dashboard security:** the hosted-backup SQL now removes an old rule that could let one e-mail read every shop, and pins the safe search path on every function. A check in the release script keeps future changes honest. (Apply the updated SQL to your Supabase project; see `docs/SUPABASE_AUDIT.md`.)
 - **Easier updates:** the one-time "allow installs" step is now a short three-step guide, and the update carries on by itself when you come back from Android's settings. Update messages are in Arabic too.
 - **Problem reports (only if you turned them on in Settings > Privacy):** problems the app handled itself, such as a failed backup, are now included with crash reports, with only what the app was doing and the kind of error. No sales, customers, prices or PINs.
+- **PIN screen:** the bottom menu bar can no longer appear over the PIN keypad (it hid the ✓, 0 and delete keys).
 - Behind the scenes: a saved copy of the database layout is now checked in tests, so a future update cannot change the database without a matching upgrade step.
 
 ## [1.33.3] - 2026-11-14
