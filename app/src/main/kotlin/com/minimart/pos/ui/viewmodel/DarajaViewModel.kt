@@ -7,6 +7,7 @@ import com.minimart.pos.mpesa.DarajaApiClient
 import com.minimart.pos.mpesa.StkPushResult
 import com.minimart.pos.mpesa.StkReference
 import com.minimart.pos.mpesa.StkStatus
+import com.minimart.pos.util.DarajaRules
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -40,7 +41,7 @@ class DarajaViewModel @Inject constructor(
     fun sendPushAndAwaitResult(phone: String, amountKes: Int, accountRef: String = "MiniMart") {
         if (pollJob?.isActive == true) return
         pollJob = viewModelScope.launch {
-            _uiState.value = StkPushUiState(StkPushPhase.SENDING, "Sending payment request…")
+            _uiState.value = StkPushUiState(StkPushPhase.SENDING, DarajaRules.sending())
             val normalizedPhone = client.normalizePhoneNumber(phone)
             when (val pushResult = client.initiateStkPush(normalizedPhone, amountKes, accountRef)) {
                 is StkPushResult.Error -> {
@@ -49,7 +50,7 @@ class DarajaViewModel @Inject constructor(
                 is StkPushResult.Initiated -> {
                     _uiState.value = StkPushUiState(
                         StkPushPhase.AWAITING_CUSTOMER,
-                        "Prompt sent — awaiting customer…",
+                        DarajaRules.awaiting(),
                         secondsRemaining = 60
                     )
                     pollUntilResolved(pushResult.checkoutRequestId)
@@ -60,21 +61,21 @@ class DarajaViewModel @Inject constructor(
 
     private suspend fun pollUntilResolved(checkoutRequestId: String) {
         val timeoutMs = 60_000L
-        val pollIntervalMs = 3_500L
         val startMs = System.currentTimeMillis()
 
+        var errorsInARow = 0
         while (System.currentTimeMillis() - startMs < timeoutMs) {
-            delay(pollIntervalMs)
+            delay(DarajaRules.pollDelayMs(errorsInARow))
             val elapsed  = System.currentTimeMillis() - startMs
             val remaining = ((timeoutMs - elapsed) / 1000).coerceAtLeast(0).toInt()
             _uiState.value = _uiState.value.copy(secondsRemaining = remaining)
 
             when (val status = client.queryStkStatus(checkoutRequestId)) {
-                is StkStatus.Pending -> { /* keep polling */ }
+                is StkStatus.Pending -> { errorsInARow = 0 }
                 is StkStatus.Success -> {
                     _uiState.value = StkPushUiState(
                         StkPushPhase.SUCCESS,
-                        "Payment confirmed ✓",
+                        DarajaRules.confirmed(),
                         mpesaReceiptNumber = StkReference.forPayment(status.mpesaReceiptNumber, checkoutRequestId)
                     )
                     return
@@ -84,8 +85,9 @@ class DarajaViewModel @Inject constructor(
                     return
                 }
                 is StkStatus.Error -> {
-                    // Transient network errors — keep polling unless timeout
-                    _uiState.value = _uiState.value.copy(statusMessage = "Checking… (${status.message})")
+                    // Transient network errors — keep polling (more slowly each time) unless timeout
+                    errorsInARow++
+                    _uiState.value = _uiState.value.copy(statusMessage = DarajaRules.checkingAgain(status.message))
                 }
             }
         }
@@ -93,7 +95,7 @@ class DarajaViewModel @Inject constructor(
         // Timed out — cashier can enter ref manually from customer's SMS confirmation
         _uiState.value = StkPushUiState(
             StkPushPhase.TIMED_OUT,
-            "Timed out — ask customer for M-Pesa SMS ref"
+            DarajaRules.timedOut()
         )
     }
 

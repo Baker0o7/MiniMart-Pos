@@ -3,6 +3,7 @@ package com.minimart.pos.mpesa
 import android.util.Base64
 import android.util.Log
 import com.minimart.pos.data.repository.SettingsRepository
+import com.minimart.pos.util.DarajaRules
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -73,8 +74,15 @@ class DarajaApiClient @Inject constructor(
             readTimeout    = TIMEOUT_MS
         }
         try {
+            val code = conn.responseCode
+            when (DarajaRules.httpKind(code)) {
+                DarajaRules.HttpKind.OK -> Unit
+                DarajaRules.HttpKind.AUTH_EXPIRED, DarajaRules.HttpKind.REJECTED -> throw DarajaFailure(DarajaRules.authMessage())
+                DarajaRules.HttpKind.RATE_LIMITED -> throw DarajaFailure(DarajaRules.rateLimitedMessage())
+                DarajaRules.HttpKind.SERVER_BUSY -> throw DarajaFailure(DarajaRules.busyMessage())
+            }
             val body = conn.inputStream.bufferedReader().readText()
-            val json = JSONObject(body)
+            val json = parseObject(body) ?: throw DarajaFailure(DarajaRules.busyMessage())
             val token   = json.getString("access_token")
             val expiresIn = json.optLong("expires_in", 3600L)
             tokenRef.set(CachedToken(token, now + expiresIn * 1000, cacheKey))
@@ -83,6 +91,81 @@ class DarajaApiClient @Inject constructor(
             conn.disconnect()
         }
     }
+
+    /** The answer was not a JSON object (an HTML error page from a gateway, an empty reply): treated as "M-Pesa is busy". */
+    private fun parseObject(body: String): JSONObject? = try { JSONObject(body) } catch (_: org.json.JSONException) { null }
+
+    /** A failure with words already fit for the cashier. */
+    private class DarajaFailure(message: String) : Exception(message)
+
+    private data class Reply(val code: Int, val body: String)
+
+    /** One POST. Never retries by itself: callers decide, because only some requests are safe to send twice. */
+    private fun post(url: String, token: String, payload: JSONObject): Reply {
+        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            doOutput = true
+            setRequestProperty("Content-Type", "application/json")
+            setRequestProperty("Authorization", "Bearer $token")
+            connectTimeout = TIMEOUT_MS
+            readTimeout    = TIMEOUT_MS
+        }
+        try {
+            OutputStreamWriter(conn.outputStream, Charsets.UTF_8).use { it.write(payload.toString()) }
+            val code = conn.responseCode
+            val stream = if (code in 200..299) conn.inputStream else conn.errorStream
+            // A reply is a few hundred bytes; anything bigger is not Daraja.
+            val body = stream?.bufferedReader(Charsets.UTF_8)?.use { r ->
+                val buf = CharArray(8192); val sb = StringBuilder(); var n = r.read(buf)
+                while (n >= 0 && sb.length < 65_536) { sb.append(buf, 0, n); n = r.read(buf) }
+                sb.toString()
+            } ?: ""
+            return Reply(code, body)
+        } finally {
+            conn.disconnect()
+        }
+    }
+
+    /**
+     * Sends [payload], with a fresh token. A rejected token (expired or revoked) is dropped and the request repeated once;
+     * [retrySafe] says whether a network failure may be tried again (always for status checks, only before sending for a push).
+     */
+    private suspend fun postWithRecovery(path: String, payload: JSONObject, retrySafe: (Throwable) -> Boolean): Reply {
+        var attempt = 0
+        var tokenRefreshed = false
+        while (true) {
+            val cfg = settingsRepo.getDarajaConfig()
+            val base = if (cfg.sandbox) "https://sandbox.safaricom.co.ke" else "https://api.safaricom.co.ke"
+            try {
+                val reply = post("$base$path", getAccessToken(), payload)
+                when (DarajaRules.httpKind(reply.code)) {
+                    DarajaRules.HttpKind.AUTH_EXPIRED -> {
+                        if (tokenRefreshed) throw DarajaFailure(DarajaRules.authMessage())
+                        tokenRefreshed = true; tokenRef.set(null); continue
+                    }
+                    DarajaRules.HttpKind.SERVER_BUSY -> {
+                        if (retrySafe(DarajaBusy()) && ++attempt < DarajaRules.MAX_ATTEMPTS) {
+                            kotlinx.coroutines.delay(DarajaRules.retryDelayMs(attempt, Math.random())); continue
+                        }
+                        return reply
+                    }
+                    else -> return reply
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: DarajaFailure) {
+                throw e
+            } catch (e: Exception) {
+                if (retrySafe(e) && ++attempt < DarajaRules.MAX_ATTEMPTS) {
+                    kotlinx.coroutines.delay(DarajaRules.retryDelayMs(attempt, Math.random())); continue
+                }
+                throw e
+            }
+        }
+    }
+
+    /** Stand-in "error" for a 5xx answer, so [postWithRecovery]'s retry rule can treat it like any other transient failure. */
+    private class DarajaBusy : java.io.IOException("M-Pesa busy")
 
     // ── Password + timestamp ───────────────────────────────────────────────────
     private fun generatePasswordAndTimestamp(shortcode: String, passkey: String): Pair<String, String> {
@@ -101,8 +184,6 @@ class DarajaApiClient @Inject constructor(
     ): StkPushResult = withContext(Dispatchers.IO) {
         try {
             val cfg   = settingsRepo.getDarajaConfig()
-            val token = getAccessToken()
-            val base  = if (cfg.sandbox) "https://sandbox.safaricom.co.ke" else "https://api.safaricom.co.ke"
             val (password, timestamp) = generatePasswordAndTimestamp(cfg.shortcode, cfg.passkey)
             val normalizedPhone = normalizePhoneNumber(phone)
 
@@ -120,42 +201,35 @@ class DarajaApiClient @Inject constructor(
                 put("TransactionDesc", description.take(13))
             }
 
-            val conn = (URL("$base/mpesa/stkpush/v1/processrequest").openConnection()
-                    as HttpURLConnection).apply {
-                requestMethod = "POST"
-                doOutput = true
-                setRequestProperty("Content-Type", "application/json")
-                setRequestProperty("Authorization", "Bearer $token")
-                connectTimeout = TIMEOUT_MS
-                readTimeout    = TIMEOUT_MS
-            }
-            try {
-                OutputStreamWriter(conn.outputStream).use { it.write(payload.toString()) }
-                val responseCode = conn.responseCode
-                val body = if (responseCode in 200..299)
-                    conn.inputStream.bufferedReader().readText()
-                else
-                    conn.errorStream?.bufferedReader()?.readText() ?: ""
-                val json = JSONObject(body)
-                if (responseCode in 200..299 && json.optString("ResponseCode") == "0") {
+            // Only a failure before anything was sent may be repeated: a second push could charge the customer twice.
+            val reply = postWithRecovery("/mpesa/stkpush/v1/processrequest", payload) { DarajaRules.isSafeToRetryPush(it) }
+            val json = parseObject(reply.body) ?: return@withContext StkPushResult.Error(DarajaRules.busyMessage())
+            val kind = DarajaRules.httpKind(reply.code)
+            when {
+                kind == DarajaRules.HttpKind.OK && json.optString("ResponseCode") == "0" ->
                     StkPushResult.Initiated(
                         checkoutRequestId  = json.getString("CheckoutRequestID"),
                         merchantRequestId  = json.getString("MerchantRequestID")
                     )
-                } else {
-                    val msg = json.optString("errorMessage").ifBlank {
-                        json.optString("ResponseDescription").ifBlank { "STK push failed (HTTP $responseCode)" }
+                kind == DarajaRules.HttpKind.SERVER_BUSY -> StkPushResult.Error(DarajaRules.busyMessage())
+                kind == DarajaRules.HttpKind.RATE_LIMITED -> StkPushResult.Error(DarajaRules.rateLimitedMessage())
+                else -> StkPushResult.Error(
+                    json.optString("errorMessage").ifBlank {
+                        json.optString("ResponseDescription").ifBlank { "STK push failed (HTTP ${reply.code})" }
                     }
-                    StkPushResult.Error(msg)
-                }
-            } finally {
-                conn.disconnect()
+                )
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e   // cashier pressed Cancel — don't turn it into an error result
+        } catch (e: DarajaFailure) {
+            StkPushResult.Error(e.message ?: DarajaRules.busyMessage())
         } catch (e: Exception) {
             Log.e(TAG, "initiateStkPush error", e)
-            StkPushResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "The M-Pesa request"))
+            // If the answer was lost after sending, say the customer may already have the prompt, instead of inviting a second push.
+            StkPushResult.Error(
+                if (DarajaRules.pushOutcomeUnknown(e)) { com.minimart.pos.util.ErrorAdvice.explain(e, "The M-Pesa request"); DarajaRules.unknownOutcomeMessage() }
+                else com.minimart.pos.util.ErrorAdvice.explain(e, "The M-Pesa request")
+            )
         }
     }
 
@@ -163,8 +237,6 @@ class DarajaApiClient @Inject constructor(
     suspend fun queryStkStatus(checkoutRequestId: String): StkStatus = withContext(Dispatchers.IO) {
         try {
             val cfg   = settingsRepo.getDarajaConfig()
-            val token = getAccessToken()
-            val base  = if (cfg.sandbox) "https://sandbox.safaricom.co.ke" else "https://api.safaricom.co.ke"
             val (password, timestamp) = generatePasswordAndTimestamp(cfg.shortcode, cfg.passkey)
 
             val payload = JSONObject().apply {
@@ -174,43 +246,28 @@ class DarajaApiClient @Inject constructor(
                 put("CheckoutRequestID", checkoutRequestId)
             }
 
-            val conn = (URL("$base/mpesa/stkpushquery/v1/query").openConnection()
-                    as HttpURLConnection).apply {
-                requestMethod = "POST"
-                doOutput = true
-                setRequestProperty("Content-Type", "application/json")
-                setRequestProperty("Authorization", "Bearer $token")
-                connectTimeout = TIMEOUT_MS
-                readTimeout    = TIMEOUT_MS
-            }
-            try {
-                OutputStreamWriter(conn.outputStream).use { it.write(payload.toString()) }
-                val responseCode = conn.responseCode
-                val body = if (responseCode in 200..299)
-                    conn.inputStream.bufferedReader().readText()
-                else
-                    conn.errorStream?.bufferedReader()?.readText() ?: ""
-                val json = JSONObject(body)
-                val resultCode = json.optString("ResultCode", "-1")
-                val errorCode  = json.optString("errorCode", "")
-                when {
-                    // Safaricom error codes meaning "still in progress"
-                    errorCode == "500.001.1001" || errorCode == "500.001.1032" -> StkStatus.Pending
-                    resultCode == "0" -> StkStatus.Success(
-                        mpesaReceiptNumber = json.optString("MpesaReceiptNumber").takeIf { it.isNotBlank() },
-                        phoneNumber        = json.optString("PhoneNumber").takeIf { it.isNotBlank() }
-                    )
-                    resultCode == "1032" -> StkStatus.Failed("Customer cancelled or timed out")
-                    resultCode == "1"    -> StkStatus.Failed("Insufficient balance")
-                    resultCode.isNotBlank() && resultCode != "-1" ->
-                        StkStatus.Failed(json.optString("ResultDesc").ifBlank { "Payment failed (code $resultCode)" })
-                    else -> StkStatus.Pending
-                }
-            } finally {
-                conn.disconnect()
+            // A status check changes nothing, so it is always safe to repeat.
+            val reply = postWithRecovery("/mpesa/stkpushquery/v1/query", payload) { true }
+            val json = parseObject(reply.body)
+            val kind = DarajaRules.httpKind(reply.code)
+            if (json == null || kind == DarajaRules.HttpKind.SERVER_BUSY) return@withContext StkStatus.Error(DarajaRules.busyMessage())
+            if (kind == DarajaRules.HttpKind.RATE_LIMITED) return@withContext StkStatus.Error(DarajaRules.rateLimitedMessage())
+            val resultCode = json.optString("ResultCode", "-1")
+            val errorCode  = json.optString("errorCode", "")
+            when {
+                // Safaricom error codes meaning "still in progress"
+                DarajaRules.isStillProcessing(errorCode) -> StkStatus.Pending
+                resultCode == "0" -> StkStatus.Success(
+                    mpesaReceiptNumber = json.optString("MpesaReceiptNumber").takeIf { it.isNotBlank() },
+                    phoneNumber        = json.optString("PhoneNumber").takeIf { it.isNotBlank() }
+                )
+                resultCode.isNotBlank() && resultCode != "-1" -> StkStatus.Failed(DarajaRules.resultMessage(resultCode, json.optString("ResultDesc")))
+                else -> StkStatus.Pending
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
+        } catch (e: DarajaFailure) {
+            StkStatus.Error(e.message ?: DarajaRules.busyMessage())
         } catch (e: Exception) {
             Log.e(TAG, "queryStkStatus error", e)
             StkStatus.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Checking the M-Pesa payment"))
