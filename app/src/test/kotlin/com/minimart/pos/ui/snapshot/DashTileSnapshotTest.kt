@@ -66,7 +66,13 @@ class DashTileSnapshotTest {
         val node = rule.onNodeWithText(title, useUnmergedTree = true).fetchSemanticsNode()
         node.config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action?.invoke(results)
         assertTrue("no text layout for $title", results.isNotEmpty())
-        return results.first()
+        val l = results.first()
+        // Written next to the snapshots so CI can print it when a check fails (the log only shows the line number).
+        runCatching {
+            java.io.File("build/snapshots-actual").apply { mkdirs() }.resolve("layout-diagnostics.txt")
+                .appendText("text=${title.length} chars, lines=${l.lineCount}, overflow=${l.hasVisualOverflow}, size=${l.size}, arabic=${Lang.arabic}, id=${title.hashCode()}\n")
+        }
+        return l
     }
 
     @Test fun `arabic tile names fit in two lines at a narrow width`() {
