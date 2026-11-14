@@ -520,7 +520,7 @@
     <string name="turn_off">Turn off</string>
     <string name="turn_on">Turn on</string>
     <string name="priv_block">Stops screenshots and screen recording of the app, and hides it in the recent-apps list. Turn on for a till that customers or staff can pick up. You will not be able to screenshot the app for support either.</string>
-    <string name="priv_reports">Off by default. When on, the app sends the developer a report if it crashes, and how long things like completing a sale take, so problems get fixed sooner. Reports contain the phone model, Android version and the error. They never contain sales, customers, prices or PINs.</string>
+    <string name="priv_reports">Off by default. When on, the app sends the developer a report if it crashes or hits a problem it handled (for example a failed backup), and how long things like completing a sale take, so problems get fixed sooner. Reports contain the phone model, Android version, what the app was doing and the kind of error. They never contain sales, customers, prices or PINs.</string>
     <string name="priv_kiosk">Locks the phone or tablet to MiniMart and keeps the screen on, so staff cannot wander off into other apps. Android asks you to confirm once. To leave it, switch this off here, or hold Back and Overview together.</string>
     <string name="device_id_fmt">Device ID: %1$s…</string>
     <string name="sync_help">One device is the main device (it acts as server). Other tills enter its address and code: they send their sales to it, then receive its products, stock and customer balances. Manage products on the main device. Sales made before a till was paired are not sent.</string>

@@ -21,6 +21,19 @@ object Telemetry {
         try { return block() } finally { runCatching { trace?.stop() } }
     }
 
+    /**
+     * Reports a problem the app handled (a failed backup, M-Pesa trouble, a drawer that did not open) as a non-fatal event, so
+     * a shop's slow-burning trouble shows up before it becomes a crash. Only what the app was doing and the kind of error are
+     * sent, never the error's own text, which could contain names or amounts. Does nothing unless the owner opted in.
+     */
+    fun nonFatal(doing: String, error: Throwable) {
+        runCatching {
+            val safe = Exception("${doing.take(60)}: ${error.javaClass.name}")
+            safe.stackTrace = error.stackTrace
+            FirebaseCrashlytics.getInstance().recordException(safe)
+        }
+    }
+
     /** Leaves a breadcrumb in the next crash report (no personal data: names of steps only). */
     fun breadcrumb(message: String) { runCatching { FirebaseCrashlytics.getInstance().log(message) } }
 }

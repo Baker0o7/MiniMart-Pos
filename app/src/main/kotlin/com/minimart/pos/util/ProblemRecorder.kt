@@ -19,6 +19,7 @@ object ProblemRecorder {
     }
 
     fun record(error: Throwable, doing: String) {
+        Telemetry.nonFatal(doing, error)   // only if the owner opted in (Settings > Privacy)
         val d = dir ?: return
         try {
             synchronized(lock) {
