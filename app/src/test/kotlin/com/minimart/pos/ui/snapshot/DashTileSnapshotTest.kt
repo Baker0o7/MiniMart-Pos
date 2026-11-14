@@ -1,0 +1,114 @@
+package com.minimart.pos.ui.snapshot
+
+import android.app.Application
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
+import com.minimart.pos.ui.screen.DashActionCard
+import com.minimart.pos.ui.theme.MiniMartTheme
+import com.minimart.pos.util.Lang
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+
+/**
+ * The Home tile is the smallest thing on screen that has to survive long Arabic names and big system fonts. These tests
+ * guard the bug seen on a phone ("مخزون منخفض" cut to "…"): the title must never be cut off, in either language, at a
+ * narrow width, with the text size turned up. A small colour snapshot also catches unintended look changes.
+ */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [34], application = Application::class, qualifiers = "w360dp-h640dp-xhdpi")
+class DashTileSnapshotTest {
+    @get:Rule val rule = createComposeRule()
+
+    @After fun reset() { Lang.arabic = false }
+
+    private fun show(title: String, widthDp: Int, fontScale: Float) {
+        rule.setContent {
+            val d = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(d.density, fontScale)) {
+                MiniMartTheme {
+                    Box(Modifier.width(widthDp.dp)) {
+                        DashActionCard(title, "", Icons.Default.Warning, Color(0xFF2A0F0F), Color(0xFFEF5350),
+                            editing = false, dragging = false, selected = false, onClick = {}, onLongClick = {})
+                    }
+                }
+            }
+        }
+    }
+
+    private fun layoutOf(title: String): TextLayoutResult {
+        val results = mutableListOf<TextLayoutResult>()
+        val node = rule.onNodeWithText(title, useUnmergedTree = true).fetchSemanticsNode()
+        node.config.getOrNull(SemanticsActions.GetTextLayoutResult)?.action?.invoke(results)
+        assertTrue("no text layout for $title", results.isNotEmpty())
+        return results.first()
+    }
+
+    @Test fun `arabic tile names fit in two lines at a narrow width`() {
+        Lang.arabic = true
+        listOf("مخزون منخفض", "تذكيرات إعادة الطلب", "مدفوعات إم-بيسا", "سجل النشاط").forEach { title ->
+            show(title, widthDp = 80, fontScale = 1.0f)
+            val l = layoutOf(title)
+            assertFalse("'$title' is cut off", l.hasVisualOverflow)
+            assertTrue("'$title' needs ${l.lineCount} lines", l.lineCount <= 2)
+        }
+    }
+
+    @Test fun `english tile names fit in two lines at a narrow width`() {
+        listOf("Low stock", "Reorder reminders", "M-Pesa payments", "Activity log").forEach { title ->
+            show(title, widthDp = 80, fontScale = 1.0f)
+            val l = layoutOf(title)
+            assertFalse("'$title' is cut off", l.hasVisualOverflow)
+            assertTrue("'$title' needs ${l.lineCount} lines", l.lineCount <= 2)
+        }
+    }
+
+    @Test fun `a short arabic name stays whole with larger system text`() {
+        Lang.arabic = true
+        show("المبيعات", widthDp = 96, fontScale = 1.3f)
+        assertFalse(layoutOf("المبيعات").hasVisualOverflow)
+    }
+
+    @Test fun `low stock tile looks the same as the saved snapshot`() = snapshot("dash_tile_low_stock_ar") {
+        Lang.arabic = true
+        show("مخزون منخفض", widthDp = 96, fontScale = 1.0f)
+    }
+
+    @Test fun `low stock tile in english looks the same as the saved snapshot`() = snapshot("dash_tile_low_stock_en") {
+        show("Low stock", widthDp = 96, fontScale = 1.0f)
+    }
+
+    private fun snapshot(name: String, draw: () -> Unit) {
+        draw()
+        val actual = Fingerprint.of(rule.onRoot().captureToImage().asAndroidBitmap())
+        Fingerprint.saveActual(name, actual)
+        val golden = Fingerprint.golden(name)
+        assertNotNull("No saved snapshot. Save this as app/src/test/resources/snapshots/$name.txt:\n" + actual.joinToString("\n"), golden)
+        assertEquals("$name differs from the saved snapshot", null, Fingerprint.difference(golden!!, actual))
+    }
+}

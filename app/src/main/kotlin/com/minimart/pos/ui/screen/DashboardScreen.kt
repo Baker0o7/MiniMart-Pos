@@ -480,7 +480,7 @@ fun DashboardScreen(
 /** One compact quick-action tile: icon over a one-line label. Four across on a phone. */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: Color, glow: Color,
+internal fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: Color, glow: Color,
     editing: Boolean, dragging: Boolean, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit,
     roomy: Boolean = false) {
     // A press-scale animation gives the tap visible feedback during the screen transition.

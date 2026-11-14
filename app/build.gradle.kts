@@ -85,7 +85,11 @@ android {
     }
     kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
     buildFeatures { compose = true; buildConfig = true }
-    testOptions { unitTests.all { it.useJUnitPlatform() } }
+    testOptions {
+        // Robolectric needs the app's resources for the screenshot-style UI tests (ui/snapshot).
+        unitTests.isIncludeAndroidResources = true
+        unitTests.all { it.useJUnitPlatform() }
+    }
 
     splits {
         abi {
@@ -201,6 +205,11 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
     // org.json for JVM tests (Android's own copy is only a stub there)
     testImplementation("org.json:json:20240303")
+    // UI snapshot tests (ui/snapshot): Compose on the JVM through Robolectric, the same Robolectric the :data tests use.
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation("androidx.test:core-ktx:1.6.1")
 
     // MIGRATION ONLY: reads the old EncryptedSharedPreferences files once (LegacySecurePrefsMigrator).
     // New secrets use KeystorePrefs (AES-256-GCM, Android Keystore). Delete this line and the migrator

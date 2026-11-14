@@ -57,6 +57,15 @@ jobs:
             echo "=== SCHEMA-ACTUAL-BEGIN ==="; cat data/build/schema-actual.txt; echo "=== SCHEMA-ACTUAL-END ==="
           fi
 
+      # New or changed UI snapshots (see app/src/test/.../ui/snapshot): print what the tests saw so it can be saved.
+      - name: Snapshot dump
+        if: failure()
+        run: |
+          for f in app/build/snapshots-actual/*.txt; do
+            [ -f "$f" ] && { echo "=== SNAPSHOT-BEGIN $(basename "$f" .txt) ==="; cat "$f"; echo "=== SNAPSHOT-END ==="; }
+          done
+          true
+
       # Lint errors fail the build. (Warnings are reported in the uploaded report but do not fail it.)
       - name: Lint
         run: |
