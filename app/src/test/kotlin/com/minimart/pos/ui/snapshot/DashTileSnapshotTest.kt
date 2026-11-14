@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -47,19 +48,24 @@ class DashTileSnapshotTest {
 
     @After fun reset() { Lang.arabic = false }
 
-    private fun show(title: String, widthDp: Int, fontScale: Float) {
+    private val title = mutableStateOf("")
+
+    /** Composes the tile once (a Compose test rule allows a single setContent); [title] then changes the text. */
+    private fun start(widthDp: Int, fontScale: Float) {
         rule.setContent {
             val d = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(d.density, fontScale)) {
                 MiniMartTheme {
                     Box(Modifier.width(widthDp.dp)) {
-                        DashActionCard(title, "", Icons.Default.Warning, Color(0xFF2A0F0F), Color(0xFFEF5350),
+                        DashActionCard(title.value, "", Icons.Default.Warning, Color(0xFF2A0F0F), Color(0xFFEF5350),
                             editing = false, dragging = false, selected = false, onClick = {}, onLongClick = {})
                     }
                 }
             }
         }
     }
+
+    private fun show(newTitle: String) { rule.runOnUiThread { title.value = newTitle }; rule.waitForIdle() }
 
     /** Cut off = some line ends in "…" (the bug seen on a phone). `hasVisualOverflow` is not used: it is also true for a short word in a tile that reserves two lines. */
     private fun cutOff(l: TextLayoutResult) = (0 until l.lineCount).any { l.isLineEllipsized(it) }
@@ -80,8 +86,9 @@ class DashTileSnapshotTest {
 
     @Test fun `arabic tile names fit in two lines at a narrow width`() {
         Lang.arabic = true
+        start(widthDp = 80, fontScale = 1.0f)
         listOf("مخزون منخفض", "تذكيرات إعادة الطلب", "مدفوعات إم-بيسا", "سجل النشاط").forEach { title ->
-            show(title, widthDp = 80, fontScale = 1.0f)
+            show(title)
             val l = layoutOf(title)
             assertFalse("'$title' is cut off", cutOff(l))
             assertTrue("'$title' needs ${l.lineCount} lines", l.lineCount <= 2)
@@ -89,8 +96,9 @@ class DashTileSnapshotTest {
     }
 
     @Test fun `english tile names fit in two lines at a narrow width`() {
+        start(widthDp = 80, fontScale = 1.0f)
         listOf("Low stock", "Reorder reminders", "M-Pesa payments", "Activity log").forEach { title ->
-            show(title, widthDp = 80, fontScale = 1.0f)
+            show(title)
             val l = layoutOf(title)
             assertFalse("'$title' is cut off", cutOff(l))
             assertTrue("'$title' needs ${l.lineCount} lines", l.lineCount <= 2)
@@ -99,17 +107,17 @@ class DashTileSnapshotTest {
 
     @Test fun `a short arabic name stays whole with larger system text`() {
         Lang.arabic = true
-        show("المبيعات", widthDp = 96, fontScale = 1.3f)
+        start(widthDp = 96, fontScale = 1.3f); show("المبيعات")
         assertFalse(cutOff(layoutOf("المبيعات")))
     }
 
     @Test fun `low stock tile looks the same as the saved snapshot`() = snapshot("dash_tile_low_stock_ar") {
         Lang.arabic = true
-        show("مخزون منخفض", widthDp = 96, fontScale = 1.0f)
+        start(widthDp = 96, fontScale = 1.0f); show("مخزون منخفض")
     }
 
     @Test fun `low stock tile in english looks the same as the saved snapshot`() = snapshot("dash_tile_low_stock_en") {
-        show("Low stock", widthDp = 96, fontScale = 1.0f)
+        start(widthDp = 96, fontScale = 1.0f); show("Low stock")
     }
 
     private fun snapshot(name: String, draw: () -> Unit) {
