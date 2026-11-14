@@ -515,7 +515,8 @@ private fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: Co
             Spacer(Modifier.height(7.dp))
             Text(title, color = White, fontWeight = FontWeight.SemiBold, fontSize = if (roomy) 15.sp else 11.sp,
                 lineHeight = if (roomy) 19.sp else 14.sp,
-                textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                // Two lines, always reserved, so a longer name (Arabic especially) wraps instead of being cut to "…" and tiles stay level.
+                textAlign = TextAlign.Center, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (roomy && sub.isNotBlank()) Text(sub, color = Sub, fontSize = 12.sp, textAlign = TextAlign.Center,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }

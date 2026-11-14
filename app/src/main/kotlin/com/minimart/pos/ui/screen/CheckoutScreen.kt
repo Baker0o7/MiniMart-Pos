@@ -444,7 +444,7 @@ fun CheckoutScreen(
                                                     Text(stkState.statusMessage, color = DT.OnSurface,
                                                         fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                                     if (stkState.secondsRemaining > 0) {
-                                                        Text("${stkState.secondsRemaining}s remaining",
+                                                        Text(Lang.t("${stkState.secondsRemaining}s remaining", "متبقي ${stkState.secondsRemaining} ث"),
                                                             color = DT.SubText, fontSize = 12.sp)
                                                     }
                                                     Spacer(Modifier.height(8.dp))
@@ -561,7 +561,7 @@ fun CheckoutScreen(
                                             }
                                             // Visit count badge
                                             Box(Modifier.clip(RoundedCornerShape(8.dp)).background(DT.Surface2).padding(horizontal = 8.dp, vertical = 4.dp)) {
-                                                Text("${selectedCustomer?.visitCount ?: 0} visits", color = DT.SubText, fontSize = 11.sp)
+                                                Text(Lang.t("${selectedCustomer?.visitCount ?: 0} visits", "${selectedCustomer?.visitCount ?: 0} زيارة"), color = DT.SubText, fontSize = 11.sp)
                                             }
                                         }
                                         HorizontalDivider(color = DT.Border.copy(0.5f))
@@ -579,7 +579,7 @@ fun CheckoutScreen(
                                                 Icon(Icons.Default.Warning, null, tint = DT.Amber, modifier = Modifier.size(16.dp))
                                                 Spacer(Modifier.width(8.dp))
                                                 Column(Modifier.weight(1f)) {
-                                                    Text("${selectedCustomer?.name ?: "Customer"} will owe $currency ${String.format(java.util.Locale.US, "%,.2f", state.total - creditBalance)}", color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                                    Text(Lang.t("${selectedCustomer?.name ?: "Customer"} will owe $currency ${String.format(java.util.Locale.US, "%,.2f", state.total - creditBalance)}", "${selectedCustomer?.name ?: "العميل"} سيدين بمبلغ $currency ${String.format(java.util.Locale.US, "%,.2f", state.total - creditBalance)}"), color = DT.Amber, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                                     Text(tr(com.minimart.pos.R.string.credit_note, currency, String.format(java.util.Locale.US, "%,.2f", state.total - creditBalance)), color = DT.SubText, fontSize = 11.sp)
                                                 }
                                             }
@@ -958,7 +958,7 @@ private fun CustomerSearchSheet(
                             Column(Modifier.weight(1f)) {
                                 Text(cust.name, color = DT.Ink, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                 if (cust.phone.isNotBlank()) Text(cust.phone, color = DT.SubText, fontSize = 12.sp)
-                                Text("${cust.visitCount} visits  •  $currency ${String.format(java.util.Locale.US, "%,.0f", cust.totalPurchases)} total",
+                                Text(Lang.t("${cust.visitCount} visits", "${cust.visitCount} زيارة") + "  •  $currency ${String.format(java.util.Locale.US, "%,.0f", cust.totalPurchases)} " + Lang.t("total", "إجمالًا"),
                                     color = DT.SubText, fontSize = 11.sp)
                             }
                             Column(horizontalAlignment = Alignment.End) {

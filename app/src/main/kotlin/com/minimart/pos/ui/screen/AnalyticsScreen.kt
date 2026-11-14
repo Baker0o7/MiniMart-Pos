@@ -107,7 +107,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     KpiTile("Revenue", "$cur ${money(s.revenue)}", DT.TealLight, Modifier.weight(1f).fillMaxHeight()) {
                         s.revenueChangePct?.let { pct ->
                             val up = pct >= 0
-                            Text("${if (up) "▲" else "▼"} ${String.format(Locale.US, "%.0f", kotlin.math.abs(pct))}% vs previous ${s.range.days} days",
+                            Text("${if (up) "▲" else "▼"} ${String.format(Locale.US, "%.0f", kotlin.math.abs(pct))}% " + Lang.t("vs previous ${s.range.days} days", "مقارنة بآخر ${s.range.days} يومًا"),
                                 color = if (up) DT.Green else DT.Red, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
@@ -119,7 +119,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     KpiTile(Lang.t("Gross profit", "إجمالي الربح"), "$cur ${money(s.grossProfit)}",
                         if (s.grossProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f).fillMaxHeight()) {
                         val margin = if (s.revenue > 0) s.grossProfit / s.revenue * 100 else 0.0
-                        Text("${String.format(Locale.US, "%.0f", margin)}% margin", color = DT.SubText, fontSize = 11.sp)
+                        Text("${String.format(Locale.US, "%.0f", margin)}% " + Lang.t("margin", "هامش الربح"), color = DT.SubText, fontSize = 11.sp)
                     }
                     KpiTile(Lang.t("Net profit", "صافي الربح"), "$cur ${money(s.netProfit)}",
                         if (s.netProfit >= 0) DT.Green else DT.Red, Modifier.weight(1f).fillMaxHeight()) {
@@ -257,7 +257,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
         // ── Business intelligence ─────────────────────────────────────────────
         s.abc?.let { abc -> item {
             AnalyticsCard(Lang.t("Where your sales come from", "من أين تأتي مبيعاتك")) {
-                Text("${abc.aCount} of your ${abc.total} selling products make ${String.format(Locale.US, "%.0f", abc.aShare * 100)}% of sales.",
+                Text(Lang.t("${abc.aCount} of your ${abc.total} selling products make ${String.format(Locale.US, "%.0f", abc.aShare * 100)}% of sales.", "${abc.aCount} من أصل ${abc.total} منتجًا مباعًا تحقق ${String.format(Locale.US, "%.0f", abc.aShare * 100)}% من المبيعات."),
                     color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 listOf(
@@ -323,8 +323,8 @@ private fun AnalyticsBody(s: AnalyticsState) {
         if (s.basket != null || s.pairs.isNotEmpty()) item {
             AnalyticsCard(Lang.t("What goes in a basket", "ما يوضع في السلة")) {
                 s.basket?.let { b ->
-                    Text("${String.format(Locale.US, "%.1f", b.avgItemsPerBasket)} items per sale", color = DT.OnSurface, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                    Text("${String.format(Locale.US, "%.0f", b.multiItemShare * 100)}% of ${b.baskets} sales had two or more different products.", color = DT.SubText, fontSize = 11.sp)
+                    Text(Lang.t("${String.format(Locale.US, "%.1f", b.avgItemsPerBasket)} items per sale", "${String.format(Locale.US, "%.1f", b.avgItemsPerBasket)} أصناف في كل عملية بيع"), color = DT.OnSurface, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Text(Lang.t("${String.format(Locale.US, "%.0f", b.multiItemShare * 100)}% of ${b.baskets} sales had two or more different products.", "${String.format(Locale.US, "%.0f", b.multiItemShare * 100)}% من ${b.baskets} عملية بيع احتوت على منتجين مختلفين أو أكثر."), color = DT.SubText, fontSize = 11.sp)
                 }
                 if (s.pairs.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
@@ -345,9 +345,9 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(st.row.name, color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                            Text("${st.row.sales} sales • $cur ${money(st.row.revenue)}", color = DT.SubText, fontSize = 11.sp)
+                            Text(Lang.t("${st.row.sales} sales", "${st.row.sales} عملية بيع") + " • $cur ${money(st.row.revenue)}", color = DT.SubText, fontSize = 11.sp)
                         }
-                        Text("${st.row.voids + st.row.refunds} taken back (${String.format(Locale.US, "%.0f", st.reversalRate * 100)}%)",
+                        Text(Lang.t("${st.row.voids + st.row.refunds} taken back (${String.format(Locale.US, "%.0f", st.reversalRate * 100)}%)", "${st.row.voids + st.row.refunds} مسترجعة (${String.format(Locale.US, "%.0f", st.reversalRate * 100)}%)"),
                             color = if (st.flagged) DT.Amber else DT.SubText, fontSize = 12.sp,
                             fontWeight = if (st.flagged) FontWeight.Bold else FontWeight.Normal)
                     }
@@ -431,7 +431,7 @@ private fun TopProductRow(rank: Int, p: ProductSalesStat, cur: String) {
         Column(Modifier.weight(1f)) {
             Text(p.productName, color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("${plainNumber(p.qty)} sold", color = DT.SubText, fontSize = 11.sp)
+            Text(Lang.t("${plainNumber(p.qty)} sold", "${plainNumber(p.qty)} مباعة"), color = DT.SubText, fontSize = 11.sp)
         }
         Column(horizontalAlignment = Alignment.End) {
             Text("$cur ${money(p.revenue)}", color = DT.OnSurface, fontSize = 13.sp, fontWeight = FontWeight.Bold)

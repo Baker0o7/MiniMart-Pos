@@ -496,7 +496,7 @@ fun AddEditProductDialog(
                         }
                         DarkField(pluCode, { pluCode = it.filter(Char::isDigit).take(5) }, Lang.t("PLU code (1–5 digits) *", "رمز PLU (من 1 إلى 5 أرقام) *"),
                             keyboardType = KeyboardType.Number, focusRequester = pluFocus, nextFocusRequester = stockFocus,
-                            supportingText = "The 5 digits after the leading 2 on scale labels")
+                            supportingText = Lang.t("The 5 digits after the leading 2 on scale labels", "الأرقام الخمسة بعد الرقم 2 في بداية ملصقات الميزان"))
                     } else {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             DarkField(price, { price = sanitizeMoneyInput(it) }, Lang.t("Price ($currency) *", "السعر ($currency) *"), Modifier.weight(1f),

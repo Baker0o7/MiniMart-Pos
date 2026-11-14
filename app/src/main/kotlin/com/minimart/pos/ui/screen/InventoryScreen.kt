@@ -77,7 +77,7 @@ fun InventoryScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             GradientHeader(
                 title = tr(com.minimart.pos.R.string.inventory),
-                subtitle = "${products.size} products • ${lowStock.size} low stock",
+                subtitle = Lang.t("${products.size} products • ${lowStock.size} low stock", "${products.size} منتجًا • ${lowStock.size} منخفض المخزون"),
                 onBack = onBack,
                 actions = {
                     if (canEditPrices && onInsights != null) {

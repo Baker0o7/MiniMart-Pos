@@ -123,7 +123,7 @@ fun SalesHistoryScreen(
             // ── Top bar ───────────────────────────────────────────────────────
             GradientHeader(
                 title = tr(com.minimart.pos.R.string.sales_history),
-                subtitle = "${stats.count} records  •  $currency ${String.format(java.util.Locale.US, "%,.2f", stats.total)}",
+                subtitle = Lang.t("${stats.count} records", "${stats.count} سجلًا") + "  •  $currency ${String.format(java.util.Locale.US, "%,.2f", stats.total)}",
                 onBack = onBack
             )
             Spacer(Modifier.height(12.dp))
@@ -252,7 +252,7 @@ private fun SaleHistoryRow(
             // Items summary + payment method chip
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.ShoppingCart, null, tint = DT.SubText, modifier = Modifier.size(14.dp))
-                Text("${saleWithItems.items.size} item${if (saleWithItems.items.size != 1) "s" else ""}",
+                Text(com.minimart.pos.util.ArabicCount.t(saleWithItems.items.size, "item", "items", "لا أصناف", "صنف واحد", "صنفان", "أصناف", "صنفًا"),
                     color = DT.SubText, style = MaterialTheme.typography.labelSmall)
                 val (pmLabel, pmColor) = when (sale.paymentMethod) {
                     PaymentMethod.CASH   -> "💵 Cash"   to com.minimart.pos.ui.theme.paymentColor(sale.paymentMethod)

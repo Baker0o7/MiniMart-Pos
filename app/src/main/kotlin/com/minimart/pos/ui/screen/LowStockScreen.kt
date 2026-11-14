@@ -46,7 +46,7 @@ fun LowStockScreen(
             // ── Top bar ───────────────────────────────────────────────────────
             GradientHeader(
                 title = tr(com.minimart.pos.R.string.reorder_reminders),
-                subtitle = "${lowStock.size} item${if (lowStock.size != 1) "s" else ""} need restocking",
+                subtitle = com.minimart.pos.util.ArabicCount.t(lowStock.size, "item needs", "items need", "لا أصناف تحتاج", "صنف واحد يحتاج", "صنفان يحتاجان", "أصناف تحتاج", "صنفًا يحتاج").let { Lang.t("$it restocking", "$it إلى إعادة الطلب") },
                 onBack = onBack
             )
             Spacer(Modifier.height(8.dp))
