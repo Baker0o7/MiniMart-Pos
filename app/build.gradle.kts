@@ -206,7 +206,7 @@ dependencies {
     // org.json for JVM tests (Android's own copy is only a stub there)
     testImplementation("org.json:json:20240303")
     // UI snapshot tests (ui/snapshot): Compose on the JVM through Robolectric, the same Robolectric the :data tests use.
-    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("org.robolectric:robolectric:4.17")
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation("androidx.compose.ui:ui-test-junit4")
     testImplementation("androidx.test:core-ktx:1.6.1")
