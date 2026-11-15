@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.4] - 2026-11-15
 
 - **M-Pesa prompts cope better with a bad connection or a busy Safaricom:** status checks are repeated on their own and slow down when the signal is poor; an expired M-Pesa key is renewed automatically; a gateway error page now says "M-Pesa is busy" instead of a confusing message. A payment request is never sent a second time on its own: if the answer is lost after sending, the screen warns that the customer may already have the prompt, so nobody is charged twice.
 - Payment failures say what happened in plain words (wrong PIN, not enough money, cancelled, phone did not respond), and the M-Pesa prompt screen is now fully in Arabic.
