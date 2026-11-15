@@ -13,6 +13,7 @@ import com.minimart.pos.data.entity.PaymentMethod
 import com.minimart.pos.data.entity.Sale
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.OutputStream
 import java.text.SimpleDateFormat
@@ -59,6 +60,7 @@ class ThermalPrinter @Inject constructor(
     companion object {
         private const val TAG = "ThermalPrinter"
         private const val MAX_LABELS_PER_JOB = 300
+        private const val CONNECT_TIMEOUT_MS = 10_000L
         private val SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
     }
 
@@ -96,9 +98,12 @@ class ThermalPrinter @Inject constructor(
                 ?: return@withContext PrintResult.Error("Bluetooth not available")
 
             val device: BluetoothDevice = adapter.getRemoteDevice(address)
-            val s = device.createRfcommSocketToServiceRecord(SPP_UUID)
             adapter.cancelDiscovery()
-            s.connect()
+            // Many cheap printers only accept the "insecure" kind of link and some phones refuse the secure one, so if the
+            // first attempt fails the second kind is tried before giving up. Each attempt is cut off after 10 s: Android's
+            // own connect can hang for a long time on a printer that is off or out of range, and the till would freeze.
+            val s = try { openAndConnect(device, insecure = false) }
+                    catch (e: Exception) { Log.w(TAG, "Secure link failed, trying the other kind", e); openAndConnect(device, insecure = true) }
             socket = s
             outputStream = s.outputStream
             connectedAddress = address
@@ -109,6 +114,15 @@ class ThermalPrinter @Inject constructor(
             Log.e(TAG, "Connection failed", e)
             PrintResult.Error("Could not connect to the printer. Make sure it is switched on, paired in the phone's Bluetooth settings and close by, then try again.")
         }
+    }
+
+    /** Opens one Bluetooth link; closes it again if it does not connect within [CONNECT_TIMEOUT_MS]. */
+    @SuppressLint("MissingPermission") // only called after hasBluetoothConnectPermission() in connect()
+    private suspend fun openAndConnect(device: BluetoothDevice, insecure: Boolean): BluetoothSocket = kotlinx.coroutines.coroutineScope {
+        val s = if (insecure) device.createInsecureRfcommSocketToServiceRecord(SPP_UUID) else device.createRfcommSocketToServiceRecord(SPP_UUID)
+        // Closing the socket is the only way to interrupt a blocked connect(); it then throws.
+        val watchdog = launch { kotlinx.coroutines.delay(CONNECT_TIMEOUT_MS); runCatching { s.close() } }
+        try { s.connect(); s } catch (e: Exception) { runCatching { s.close() }; throw e } finally { watchdog.cancel() }
     }
 
     suspend fun disconnect() = withContext(Dispatchers.IO) {

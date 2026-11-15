@@ -5,6 +5,13 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [Unreleased]
+
+- **Printer connection:** connecting to the Bluetooth printer no longer freezes the till for a long time when the printer is off or out of range (it gives up after 10 seconds), and it tries the other kind of Bluetooth link that many cheap printers need.
+- **Backups:** the end-of-day backup now says clearly that it has no passphrase and where to make a protected copy.
+- **Cloud backup security:** stricter checks on what the public backup functions accept. (Apply the updated `cloud/multitenant_setup.sql`.)
+- Audit notes for security, encryption, Google Play, hardware, sync and cloud rules are in `docs/AUDIT_2026-11.md`.
+
 ## [1.33.4] - 2026-11-15
 
 - **M-Pesa prompts cope better with a bad connection or a busy Safaricom:** status checks are repeated on their own and slow down when the signal is poor; an expired M-Pesa key is renewed automatically; a gateway error page now says "M-Pesa is busy" instead of a confusing message. A payment request is never sent a second time on its own: if the answer is lost after sending, the screen warns that the customer may already have the prompt, so nobody is charged twice.

@@ -99,6 +99,7 @@ begin
     raise exception 'Invalid or expired code';
   end if;
   if length(coalesce(p_secret, '')) < 24 then raise exception 'Store secret too short'; end if;
+  if length(p_secret) > 200 then raise exception 'Store secret too long'; end if;
   if exists (select 1 from stores where id = p_store_id) then raise exception 'This store is already registered'; end if;
   if (select count(*) from stores where owner_id = c.owner_id) >= 25 then raise exception 'This account has reached its shop limit'; end if;
   update link_codes set used_at = now() where code_hash = c.code_hash;
@@ -113,6 +114,9 @@ create or replace function push_snapshot(p_store_id uuid, p_secret text, p_paylo
 returns void language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare s stores%rowtype;
 begin
+  -- Anyone with the public key can call this, so refuse oversized secrets and non-object payloads before doing any work.
+  if length(coalesce(p_secret, '')) > 200 then raise exception 'Unknown store or wrong secret'; end if;
+  if jsonb_typeof(p_payload) is distinct from 'object' then raise exception 'Snapshot must be a JSON object'; end if;
   select * into s from stores where id = p_store_id;
   if not found or s.secret_hash <> crypt(p_secret, s.secret_hash) then
     perform pg_sleep(1.5);
