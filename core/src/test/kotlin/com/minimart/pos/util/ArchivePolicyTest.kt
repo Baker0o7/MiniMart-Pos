@@ -59,4 +59,9 @@ class ArchivePolicyTest {
         val now = ms("2026-10-22")
         assertEquals(now - 30L * 86_400_000, ArchivePolicy.syncLogCutoff(now))
     }
+
+    @Test fun planWithSalesButNoDatesDescribesItselfWithoutCrashing() {
+        val text = ArchivePolicy.describe(ArchivePlan(cutoffMs = 0, sales = 3, items = 7, oldestMs = null, newestMs = null), utc)
+        assertEquals("3 sale(s) with 7 item line(s) can be archived.", text)
+    }
 }

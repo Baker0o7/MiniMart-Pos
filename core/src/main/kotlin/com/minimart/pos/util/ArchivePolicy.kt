@@ -59,6 +59,9 @@ object ArchivePolicy {
     fun describe(plan: ArchivePlan, zone: ZoneId = ZoneId.systemDefault()): String {
         if (plan.isEmpty) return "Nothing to archive yet. Sales stay on the phone until they are over a year old."
         fun day(ms: Long) = Instant.ofEpochMilli(ms).atZone(zone).toLocalDate().toString()
-        return "${plan.sales} sale(s) with ${plan.items} item line(s), from ${day(plan.oldestMs!!)} to ${day(plan.newestMs!!)}, can be archived."
+        val oldest = plan.oldestMs; val newest = plan.newestMs
+        // A plan with sales but no dates should not happen; say what we know rather than crash the screen.
+        if (oldest == null || newest == null) return "${plan.sales} sale(s) with ${plan.items} item line(s) can be archived."
+        return "${plan.sales} sale(s) with ${plan.items} item line(s), from ${day(oldest)} to ${day(newest)}, can be archived."
     }
 }

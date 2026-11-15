@@ -1,6 +1,7 @@
 package com.minimart.pos.worker
 
 import com.minimart.pos.util.Lang
+import com.minimart.pos.util.RetryPolicy
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -117,8 +118,11 @@ class ExpiryAlertWorker @AssistedInject constructor(
                 nm.notify(NOTIFICATION_ID, notification)
             }
             Result.success()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Result.retry()
+            // A few tries, then give up until tomorrow's run instead of retrying a broken alert forever.
+            if (RetryPolicy.QUICK.shouldRetry(runAttemptCount)) Result.retry() else Result.success()
         }
     }
 

@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [Unreleased]
+
+- **Steadier in edge cases:** the Analytics revenue chart and the archive summary can no longer crash when there is no data to show, and the low-stock and expiry reminders stop retrying after a few failed attempts instead of retrying forever.
+
 ## [1.33.8] - 2026-11-16
 
 - **M-Pesa payments read more reliably:** payments where Safaricom hides part of the sender's number now show the sender's name correctly, a payment text with a wrong date in it is now counted on the day it really arrived, and amounts are kept to whole cents. Behind the scenes, every release build is now checked for safety before it is published.

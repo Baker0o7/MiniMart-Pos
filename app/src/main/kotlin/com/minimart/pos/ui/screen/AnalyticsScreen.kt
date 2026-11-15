@@ -151,7 +151,7 @@ private fun AnalyticsBody(s: AnalyticsState) {
                     labels = s.trend.map { fmt.format(Date(it.startMs)) },
                     valueLabel = { v -> String.format(Locale.US, "%,.0f", v) })
                 Spacer(Modifier.height(6.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                if (s.trend.isNotEmpty()) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(fmt.format(Date(s.trend.first().startMs)), color = DT.SubText, fontSize = 11.sp)
                     Text(fmt.format(Date(s.trend.last().startMs)), color = DT.SubText, fontSize = 11.sp)
                 }
