@@ -77,9 +77,7 @@ private val Sub: Color get() = DT.SubText
 
 internal data class DashCard_(
     val id: String, val title: String, val sub: String,
-    val icon: ImageVector, val bg: Color, val glow: Color, val action: () -> Unit,
-    /** A count shown in a small bubble on the tile (0 = none), e.g. how many items are low. */
-    val badge: Int = 0
+    val icon: ImageVector, val bg: Color, val glow: Color, val action: () -> Unit
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -415,7 +413,7 @@ fun DashboardScreen(
                     if ("customerview" !in hidden)
                         add(DashCard_("customerview",tr(com.minimart.pos.R.string.card_custview),tr(com.minimart.pos.R.string.card_custview_s),Icons.Default.Tv,Color(0xFF0B1A2C),BlueGlow,onNavigateToCustomerDisplay))
                     if ("history"  !in hidden) add(DashCard_("history",  tr(com.minimart.pos.R.string.card_history),tr(com.minimart.pos.R.string.card_history_s),        Icons.Default.History,   Color(0xFF081525), BlueGlow,   onNavigateToSalesHistory))
-                    if ("lowstock" !in hidden) add(DashCard_("lowstock", tr(com.minimart.pos.R.string.card_lowstock),tr(com.minimart.pos.R.string.card_lowstock_s), Icons.Default.Warning,   Color(0xFF1E0808), RedGlow,    onNavigateToLowStock, state.lowStockProducts.size))
+                    if ("lowstock" !in hidden) add(DashCard_("lowstock", tr(com.minimart.pos.R.string.card_lowstock),tr(com.minimart.pos.R.string.card_lowstock_s), Icons.Default.Warning,   Color(0xFF1E0808), RedGlow,    onNavigateToLowStock))
                     if ("mpesa" !in hidden) add(DashCard_("mpesa", tr(com.minimart.pos.R.string.card_mpesa),tr(com.minimart.pos.R.string.card_mpesa_s), Icons.Default.PhoneAndroid, Color(0xFF0B2210), GreenGlow, onNavigateToMpesa))
                     if ("customers" !in hidden) add(DashCard_("customers", tr(com.minimart.pos.R.string.card_customers),tr(com.minimart.pos.R.string.card_customers_s),  Icons.Default.People,    Color(0xFF0B1525), BlueGlow,   onNavigateToCustomers))
                     if ("creditoverview" !in hidden) add(DashCard_("creditoverview", tr(com.minimart.pos.R.string.card_ledger),tr(com.minimart.pos.R.string.card_ledger_s), Icons.Default.AccountBalanceWallet, Color(0xFF1A0808), RedGlow, onNavigateToCreditOverview))
@@ -428,7 +426,8 @@ fun DashboardScreen(
                         onHide = { hide(it) },
                         onSaveOrder = { scope.launch { settingsRepo?.setActionOrder(it) } },
                         onStartEditing = { showManageActions = true },
-                        columns = actionColumns
+                        columns = actionColumns,
+                        badges = mapOf("lowstock" to state.lowStockProducts.size)
                     )
                 }
             }
@@ -581,7 +580,9 @@ internal fun TileColumnsPicker(selected: Int, onPick: (Int) -> Unit) {
 internal fun QuickActionGrid(
     cards: List<DashCard_>, savedOrder: String, editing: Boolean,
     onHide: (String) -> Unit, onSaveOrder: (String) -> Unit, onStartEditing: () -> Unit = {},
-    columns: Int = 4
+    columns: Int = 4,
+    /** Tile id to a count shown in a small bubble on that tile (missing or 0 = none). */
+    badges: Map<String, Int> = emptyMap()
 ) {
     val ao = com.minimart.pos.util.ActionOrder
     var draft by remember { mutableStateOf<List<String>?>(null) }
@@ -658,7 +659,7 @@ internal fun QuickActionGrid(
                     ) {
                         DashActionCard(c.title, c.sub, c.icon, c.bg, c.glow, editing,
                             dragging = dragId == c.id, selected = pickedId == c.id,
-                            onClick = c.action, onLongClick = onStartEditing, roomy = cols <= 2, badge = c.badge)
+                            onClick = c.action, onLongClick = onStartEditing, roomy = cols <= 2, badge = badges[c.id] ?: 0)
                         if (editing) DashBadge { onHide(c.id) }
                     }
                 }
