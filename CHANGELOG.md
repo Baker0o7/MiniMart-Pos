@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.9] - 2026-11-16
 
 - **Better quick actions:** the Low stock tile now shows how many items are low, right on the tile. While arranging Home there is a "Reset tile order" button, and screen-reader users can move a tile earlier or later (or hide it) without dragging.
 
