@@ -7,6 +7,8 @@ Every release is published, with its signed APKs, on the [Releases page](https:/
 
 ## [Unreleased]
 
+- **Better quick actions:** the Low stock tile now shows how many items are low, right on the tile. While arranging Home there is a "Reset tile order" button, and screen-reader users can move a tile earlier or later (or hide it) without dragging.
+
 - **Steadier in edge cases:** the Analytics revenue chart and the archive summary can no longer crash when there is no data to show, and the low-stock and expiry reminders stop retrying after a few failed attempts instead of retrying forever.
 
 ## [1.33.8] - 2026-11-16

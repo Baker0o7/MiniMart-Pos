@@ -40,7 +40,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -75,7 +77,9 @@ private val Sub: Color get() = DT.SubText
 
 internal data class DashCard_(
     val id: String, val title: String, val sub: String,
-    val icon: ImageVector, val bg: Color, val glow: Color, val action: () -> Unit
+    val icon: ImageVector, val bg: Color, val glow: Color, val action: () -> Unit,
+    /** A count shown in a small bubble on the tile (0 = none), e.g. how many items are low. */
+    val badge: Int = 0
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -367,6 +371,13 @@ fun DashboardScreen(
             // Hidden tiles are brought back from here, while arranging, so Home stays uncluttered the rest of the time.
             if (showManageActions) item {
                 val hiddenCount = hiddenActions.split(",").count { it.isNotBlank() }
+                val resetScope = rememberCoroutineScope()
+                if (savedActionOrder.isNotBlank()) TextButton(onClick = { resetScope.launch { settingsRepo?.setActionOrder("") } },
+                    modifier = Modifier.padding(horizontal = 12.dp).heightIn(min = 48.dp)) {
+                    Icon(Icons.Default.Restore, null, tint = DT.Teal, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(com.minimart.pos.util.Lang.t("Reset tile order", "إعادة ترتيب البلاطات"), color = DT.Teal, fontSize = 13.sp)
+                }
                 if (hiddenCount > 0) {
                     val restoreScope = rememberCoroutineScope()
                     TextButton(onClick = { restoreScope.launch { settingsRepo?.setHiddenActions("") } },
@@ -404,7 +415,7 @@ fun DashboardScreen(
                     if ("customerview" !in hidden)
                         add(DashCard_("customerview",tr(com.minimart.pos.R.string.card_custview),tr(com.minimart.pos.R.string.card_custview_s),Icons.Default.Tv,Color(0xFF0B1A2C),BlueGlow,onNavigateToCustomerDisplay))
                     if ("history"  !in hidden) add(DashCard_("history",  tr(com.minimart.pos.R.string.card_history),tr(com.minimart.pos.R.string.card_history_s),        Icons.Default.History,   Color(0xFF081525), BlueGlow,   onNavigateToSalesHistory))
-                    if ("lowstock" !in hidden) add(DashCard_("lowstock", tr(com.minimart.pos.R.string.card_lowstock),tr(com.minimart.pos.R.string.card_lowstock_s), Icons.Default.Warning,   Color(0xFF1E0808), RedGlow,    onNavigateToLowStock))
+                    if ("lowstock" !in hidden) add(DashCard_("lowstock", tr(com.minimart.pos.R.string.card_lowstock),tr(com.minimart.pos.R.string.card_lowstock_s), Icons.Default.Warning,   Color(0xFF1E0808), RedGlow,    onNavigateToLowStock, state.lowStockProducts.size))
                     if ("mpesa" !in hidden) add(DashCard_("mpesa", tr(com.minimart.pos.R.string.card_mpesa),tr(com.minimart.pos.R.string.card_mpesa_s), Icons.Default.PhoneAndroid, Color(0xFF0B2210), GreenGlow, onNavigateToMpesa))
                     if ("customers" !in hidden) add(DashCard_("customers", tr(com.minimart.pos.R.string.card_customers),tr(com.minimart.pos.R.string.card_customers_s),  Icons.Default.People,    Color(0xFF0B1525), BlueGlow,   onNavigateToCustomers))
                     if ("creditoverview" !in hidden) add(DashCard_("creditoverview", tr(com.minimart.pos.R.string.card_ledger),tr(com.minimart.pos.R.string.card_ledger_s), Icons.Default.AccountBalanceWallet, Color(0xFF1A0808), RedGlow, onNavigateToCreditOverview))
@@ -482,7 +493,7 @@ fun DashboardScreen(
 @Composable
 internal fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: Color, glow: Color,
     editing: Boolean, dragging: Boolean, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit,
-    roomy: Boolean = false) {
+    roomy: Boolean = false, badge: Int = 0) {
     // A press-scale animation gives the tap visible feedback during the screen transition.
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -497,7 +508,10 @@ internal fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: C
         .border(if (lifted) 2.5.dp else if (editing) 1.5.dp else 1.dp,
             glow.copy(if (lifted) 1f else if (editing) 0.9f else 0.5f), RoundedCornerShape(16.dp))
         // TalkBack reads the short description we no longer show on screen.
-        .semantics { contentDescription = if (sub.isBlank()) title else "$title. $sub" }
+        .semantics {
+            val base = if (sub.isBlank()) title else "$title. $sub"
+            contentDescription = if (badge > 0) "$base. $badge" else base
+        }
         // While editing there is no click handler here: the grid handles taps (pick up / put down) and
         // drags itself, and a clickable would swallow the touch first. Outside editing, a long press
         // opens Edit, so the feature can be found without hunting for the button.
@@ -519,6 +533,14 @@ internal fun DashActionCard(title: String, sub: String, icon: ImageVector, bg: C
                 textAlign = TextAlign.Center, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (roomy && sub.isNotBlank()) Text(sub, color = Sub, fontSize = 12.sp, textAlign = TextAlign.Center,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        // A count bubble in the corner, so "Low stock 5" is visible without opening the tile.
+        val badgeLabel = com.minimart.pos.util.ActionOrder.badgeText(badge)
+        if (badgeLabel.isNotEmpty() && !editing) Box(Modifier.align(Alignment.TopEnd).padding(top = 2.dp, end = 2.dp)
+            .defaultMinSize(minWidth = 20.dp, minHeight = 20.dp)
+            .clip(RoundedCornerShape(10.dp)).background(glow)
+            .padding(horizontal = 5.dp), contentAlignment = Alignment.Center) {
+            Text(badgeLabel, color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -592,6 +614,13 @@ internal fun QuickActionGrid(
                 key(c.id) {
                     Box(Modifier.width(tileWidth)
                         .onGloballyPositioned { bounds[c.id] = it.boundsInRoot() }
+                        // Screen-reader users cannot drag: give them the same moves as actions while arranging.
+                        .semantics(mergeDescendants = true) {
+                            if (editing) customActions = listOf(
+                                CustomAccessibilityAction(com.minimart.pos.util.Lang.t("Move earlier", "تقديم")) { save(ao.moveBy(orderNow.value, c.id, -1)); true },
+                                CustomAccessibilityAction(com.minimart.pos.util.Lang.t("Move later", "تأخير")) { save(ao.moveBy(orderNow.value, c.id, 1)); true },
+                                CustomAccessibilityAction(com.minimart.pos.util.Lang.t("Hide tile", "إخفاء")) { onHide(c.id); true })
+                        }
                         // Tap: pick this tile up, or put the picked one down in this place.
                         .pointerInput(c.id, editing) {
                             if (!editing) return@pointerInput
@@ -629,7 +658,7 @@ internal fun QuickActionGrid(
                     ) {
                         DashActionCard(c.title, c.sub, c.icon, c.bg, c.glow, editing,
                             dragging = dragId == c.id, selected = pickedId == c.id,
-                            onClick = c.action, onLongClick = onStartEditing, roomy = cols <= 2)
+                            onClick = c.action, onLongClick = onStartEditing, roomy = cols <= 2, badge = c.badge)
                         if (editing) DashBadge { onHide(c.id) }
                     }
                 }

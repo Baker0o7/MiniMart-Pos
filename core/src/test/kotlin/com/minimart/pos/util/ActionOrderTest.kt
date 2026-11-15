@@ -28,4 +28,21 @@ class ActionOrderTest {
     }
     @Test fun mergeKeepsHiddenTilesAfterTheVisibleOnes() =
         assertEquals(listOf("c", "a", "b"), ActionOrder.merge(listOf("c", "a"), listOf("a", "b", "c")))
+
+    @Test fun moveByShiftsAndStopsAtTheEnds() {
+        assertEquals(listOf("b", "a", "c", "d"), ActionOrder.moveBy(all, "a", 1))
+        assertEquals(listOf("a", "b", "d", "c"), ActionOrder.moveBy(all, "d", -1))
+        assertEquals(all, ActionOrder.moveBy(all, "a", -1))
+        assertEquals(all, ActionOrder.moveBy(all, "d", 1))
+        assertEquals(listOf("b", "c", "d", "a"), ActionOrder.moveBy(all, "a", 10))
+        assertEquals(all, ActionOrder.moveBy(all, "zzz", 1))
+    }
+
+    @Test fun badgeTextIsEmptyForZeroAndCappedAtNinetyNine() {
+        assertEquals("", ActionOrder.badgeText(0))
+        assertEquals("", ActionOrder.badgeText(-3))
+        assertEquals("7", ActionOrder.badgeText(7))
+        assertEquals("99", ActionOrder.badgeText(99))
+        assertEquals("99+", ActionOrder.badgeText(100))
+    }
 }
