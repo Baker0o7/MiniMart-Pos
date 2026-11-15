@@ -28,7 +28,8 @@ object MpesaSmsParser {
     private const val TAIL = """\s+from\s+(.+?)\s+on\s+(\d{1,2}/\d{1,2}/\d{2,4})\s+at\s+(\d{1,2}:\d{2}\s*[AaPp][Mm])"""
     private val personal = Regex("""received\s+$AMT$TAIL""", RegexOption.IGNORE_CASE)
     private val till = Regex("""$AMT\s+received$TAIL""", RegexOption.IGNORE_CASE)
-    private val phone = Regex("""\+?\d{9,13}""")
+    // Safaricom now hides the middle of the sender's number ("0712***456"), so stars count as part of the number.
+    private val phone = Regex("""\+?(?=[\d*]*\d)[\d*]{9,13}""")
     private val account = Regex("""\s*Account\s+Number.*$""", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
 
     fun parse(body: String): ParsedMpesa? {
@@ -44,6 +45,14 @@ object MpesaSmsParser {
         val name = middle.replace(phoneNo, " ").replace(account, "").replace(Regex("""\s+"""), " ").trim()
         return ParsedMpesa(code, amount, name, phoneNo, parseTime(m.groupValues[3], m.groupValues[4]))
     }
+
+    /**
+     * When the payment happened. The time written in the text is used unless it is more than a day ahead of this
+     * phone's clock (a wrong date in the text must not hide a payment from today's reports); then the time the
+     * network stamped on the message is used.
+     */
+    fun paidAt(textTime: Long?, smsTimeMs: Long, nowMs: Long): Long =
+        if (textTime != null && textTime <= nowMs + 24L * 60 * 60 * 1000) textTime else smsTimeMs
 
     private fun parseTime(date: String, time: String): Long? {
         val pattern = if (date.substringAfterLast('/').length == 4) "d/M/yyyy h:mm a" else "d/M/yy h:mm a"

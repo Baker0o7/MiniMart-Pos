@@ -48,7 +48,7 @@ class MpesaSmsReceiver : BroadcastReceiver() {
                             amount = parsed.amount,
                             senderName = parsed.senderName,
                             senderPhone = parsed.senderPhone,
-                            receivedAt = parsed.timestamp ?: sentAt,
+                            receivedAt = MpesaSmsParser.paidAt(parsed.timestamp, sentAt, System.currentTimeMillis()),
                             rawMessage = body
                         )
                     )

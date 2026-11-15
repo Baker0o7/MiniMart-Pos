@@ -20,11 +20,14 @@ object MpesaWebhook {
     fun sanitize(p: InboxPayment, nowMs: Long): InboxPayment? {
         val code = p.code.trim().uppercase()
         if (!CODE.matches(code)) return null
-        if (!p.amount.isFinite() || p.amount <= 0.0 || p.amount > MAX_AMOUNT) return null
+        if (!p.amount.isFinite()) return null
+        // Whole cents only: a stray third decimal must not become part of a stored or shown total.
+        val amount = Math.round(p.amount * 100) / 100.0
+        if (amount <= 0.0 || amount > MAX_AMOUNT) return null
         // A time far in the future is a clock or data fault; use arrival time instead.
         val paidAt = if (p.paidAtMs <= 0L || p.paidAtMs > nowMs + 24L * 60 * 60 * 1000) nowMs else p.paidAtMs
         val phone = p.phone.filter { it.isDigit() || it == '+' }.take(15)
-        return p.copy(code = code, name = p.name.trim().take(60), phone = phone, paidAtMs = paidAt)
+        return p.copy(code = code, amount = amount, name = p.name.filter { !it.isISOControl() }.trim().take(60), phone = phone, paidAtMs = paidAt)
     }
 
     /** Plain-language summary of a fetch, shown in Settings. */
