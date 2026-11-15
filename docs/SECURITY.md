@@ -44,3 +44,19 @@ phone. Old rows are sealed once at startup. If the Keystore is unavailable the a
 
 Trade-offs: a manual backup restored on a *different* phone cannot read those three fields (code and amount are intact).
 Customer phone numbers are not sealed because they are searched and looked up. Sync traffic is a separate protection.
+
+## Release build checks (Nov 2026)
+CI inspects the APK it builds (job "Release build smoke test (apk)"): not debuggable, signed with scheme v2/v3, an R8
+`mapping.txt` exists (so Crashlytics stack traces can be read), and the permission list (printed on the run summary)
+contains none of: READ_SMS, SEND_SMS, READ_PHONE_STATE, RECORD_AUDIO, location, SYSTEM_ALERT_WINDOW, READ_CALL_LOG,
+WRITE_SETTINGS, MANAGE_EXTERNAL_STORAGE, QUERY_ALL_PACKAGES. `scripts/release-checks.sh` still guards the source manifest
+(exported components, no debuggable or cleartext).
+Reviewed and fine: `allowBackup` limited to plain settings by the backup rules, cleartext off, only system CAs trusted,
+`FLAG_SECURE` available, `HIDE_OVERLAY_WINDOWS` requested, SMS receiver protected by `BROADCAST_SMS` and sender check.
+Open: `Log.w/e` calls are kept in release builds on purpose (they carry exception text, never secrets, but check new ones);
+RECEIVE_SMS and REQUEST_INSTALL_PACKAGES remain Play Store blockers (see AUDIT_2026-11.md).
+
+## M-Pesa edge cases covered by tests (MpesaEdgeCasesTest)
+Masked sender numbers (`0712***456`), odd spacing and line breaks, zero or lowercase-code messages, impossible dates,
+text dates in the future (now fall back to the network time), amounts rounded to whole cents, control characters in names,
+case and spacing in transaction codes, the 0.50 tolerance boundary, split sales, and the same message stored twice.

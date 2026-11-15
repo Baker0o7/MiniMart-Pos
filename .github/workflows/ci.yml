@@ -178,6 +178,23 @@ jobs:
           else
             gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee release.log
           fi
+      # Looks at the APK that was actually built, not the source: not debuggable, properly signed, a mapping file
+      # for crash reports, and none of the permissions this app must never ask for.
+      - name: Check the built release APK
+        if: matrix.kind == 'apk'
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          apk=$(find app/build/outputs/apk/release -name '*universal*.apk' | head -1)
+          [ -n "$apk" ] || { echo "::error::No universal release APK found"; exit 1; }
+          "$BT/aapt2" dump badging "$apk" > badging.txt
+          if grep -q "application-debuggable" badging.txt; then echo "::error::The release APK is debuggable"; exit 1; fi
+          "$BT/apksigner" verify --verbose "$apk" | tee sign.txt
+          grep -qE "Verified using v[23] scheme.*: true" sign.txt || { echo "::error::The release APK is not signed with scheme v2/v3"; exit 1; }
+          find app/build/outputs/mapping -name mapping.txt | grep -q . || { echo "::error::No R8 mapping file: crash reports would be unreadable"; exit 1; }
+          grep -o "uses-permission: name='[^']*'" badging.txt | sed "s/.*name='//;s/'//" | sort > permissions.txt
+          { echo "### Permissions in the release APK"; sed 's/^/- /' permissions.txt; } >> "$GITHUB_STEP_SUMMARY"
+          bad=$(grep -xE "android.permission.(READ_SMS|SEND_SMS|READ_PHONE_STATE|READ_PHONE_NUMBERS|RECORD_AUDIO|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|SYSTEM_ALERT_WINDOW|READ_CALL_LOG|WRITE_SETTINGS|MANAGE_EXTERNAL_STORAGE|QUERY_ALL_PACKAGES)" permissions.txt || true)
+          if [ -n "$bad" ]; then echo "::error::Permissions this app must not ask for: $bad"; exit 1; fi
       - name: Surface release build errors
         if: failure()
         run: |
