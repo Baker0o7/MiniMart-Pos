@@ -145,10 +145,16 @@ jobs:
 
   # A release build (R8 shrinking, resources, signing) on every push, with a throwaway key that is never
   # published. Catches toolchain and shrinker breakage before a release day instead of on it.
+  # The Play bundle and the per-ABI APKs are two separate R8 builds of about five minutes each, so they run side by side
+  # (one job each) instead of one after the other: the whole pipeline is as slow as its slowest job.
   release-build:
-    name: Release build smoke test
+    name: Release build smoke test (${{ matrix.kind }})
     runs-on: ubuntu-24.04
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        kind: [bundle, apk]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v6
@@ -166,9 +172,12 @@ jobs:
           keytool -genkeypair -keystore app/minimart-release.jks -alias ci -keyalg RSA -keysize 2048 -validity 2 \
             -storepass "$PASS" -keypass "$PASS" -dname "CN=CI smoke test"
           export SIGNING_STORE_PASSWORD="$PASS" SIGNING_KEY_PASSWORD="$PASS" SIGNING_KEY_ALIAS=ci
-          # The Play bundle is built first and without per-ABI APKs (AGP 9 refuses to mix them), as release.yml does.
-          gradle bundleRelease -PabiSplits=false --no-daemon --stacktrace 2>&1 | tee bundle.log
-          gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee release.log
+          # The Play bundle is built without per-ABI APKs (AGP 9 refuses to mix them), as release.yml does.
+          if [ "${{ matrix.kind }}" = "bundle" ]; then
+            gradle bundleRelease -PabiSplits=false --no-daemon --stacktrace 2>&1 | tee bundle.log
+          else
+            gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee release.log
+          fi
       - name: Surface release build errors
         if: failure()
         run: |
