@@ -161,7 +161,7 @@ class CartViewModel @Inject constructor(
             val product = productRepo.getByBarcode(clean)
             if (product == null) {
                 com.minimart.pos.util.ScanFeedback.problem()
-                _uiState.update { it.copy(isLoading = false, error = "Product not found: $clean", unknownBarcode = clean) }
+                _uiState.update { it.copy(isLoading = false, error = Lang.t("Product not found: $clean", "المنتج غير موجود: $clean"), unknownBarcode = clean) }
                 return@run
             }
             if (product.isWeighed) {
@@ -236,7 +236,7 @@ class CartViewModel @Inject constructor(
         if (existing >= 0) {
             val item = state.items[existing]
             if (item.quantity >= product.stock) {
-                _uiState.update { it.copy(error = "Max stock reached for ${product.name}") }
+                _uiState.update { it.copy(error = Lang.t("Max stock reached for ${product.name}", "بلغت الكمية المتاحة من ${product.name}")) }
                 return
             }
             val updated = state.items.toMutableList().also {

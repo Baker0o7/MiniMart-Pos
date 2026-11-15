@@ -84,7 +84,7 @@ class CustomerViewModel @Inject constructor(
             try {
                 val existing = if (phone.isNotBlank()) repo.getByPhone(phone) else null
                 if (existing != null) {
-                    _state.update { it.copy(message = "Already saved as ${existing.name}") }
+                    _state.update { it.copy(message = Lang.t("Already saved as ${existing.name}", "محفوظ بالفعل باسم ${existing.name}")) }
                     onReady(existing)
                     return@launch
                 }

@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.viewmodel
 
+import com.minimart.pos.util.Lang
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -60,7 +61,7 @@ class ArchiveViewModel @Inject constructor(
                     archiver.archive(_state.value.months, now, File(directory(context), ArchivePolicy.fileName(now)))
                 }
                 _state.update { it.copy(working = false, lastFile = result.file,
-                    message = "Archived ${result.sales} sale(s) to ${result.file.name} (${result.bytes / 1024} KB). Share or copy that file somewhere safe: it is now the only copy of those sales.") }
+                    message = Lang.t("Archived ${result.sales} sale(s) to ${result.file.name} (${result.bytes / 1024} KB). Share or copy that file somewhere safe: it is now the only copy of those sales.", "تمت أرشفة ${result.sales} عملية بيع في ${result.file.name} (${result.bytes / 1024} ك.ب). شارك هذا الملف أو انسخه إلى مكان آمن: فهو الآن النسخة الوحيدة من تلك المبيعات.")) }
             } catch (e: com.minimart.pos.data.repository.ArchiveException) {
                 _state.update { it.copy(working = false, error = e.message) }
             } catch (e: Exception) {

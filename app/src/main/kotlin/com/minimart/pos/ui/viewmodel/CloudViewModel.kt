@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.viewmodel
 
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.cloud.CloudConfig
@@ -68,7 +69,7 @@ class CloudViewModel @Inject constructor(
                     val p = reporter.push()
                     _state.update {
                         it.copy(busy = false, connected = true, setupCode = "", lastPushAt = config.lastPushAt,
-                            message = if (p is CloudResult.Failed) "Connected, but first upload failed: ${p.message}" else "Connected. Store uploaded.",
+                            message = if (p is CloudResult.Failed) Lang.t("Connected, but first upload failed: ${p.message}", "تم الاتصال لكن فشل الرفع الأول: ${p.message}") else Lang.t("Connected. Store uploaded.", "تم الاتصال ورُفع المتجر."),
                             isError = p is CloudResult.Failed)
                     }
                 }
@@ -81,14 +82,14 @@ class CloudViewModel @Inject constructor(
         viewModelScope.launch {
             when (val r = reporter.push()) {
                 is CloudResult.Failed -> _state.update { it.copy(busy = false, message = r.message, isError = true) }
-                CloudResult.Ok -> _state.update { it.copy(busy = false, message = "Uploaded.", isError = false, lastPushAt = config.lastPushAt) }
+                CloudResult.Ok -> _state.update { it.copy(busy = false, message = Lang.t("Uploaded.", "تم الرفع."), isError = false, lastPushAt = config.lastPushAt) }
             }
         }
     }
 
     fun disconnect() {
         config.disconnect()
-        _state.update { it.copy(connected = false, message = "Disconnected. Reconnecting registers this phone as a new store.", isError = false, lastPushAt = 0L) }
+        _state.update { it.copy(connected = false, message = Lang.t("Disconnected. Reconnecting registers this phone as a new store.", "تم قطع الاتصال. إعادة الاتصال تسجّل هذا الهاتف كمتجر جديد."), isError = false, lastPushAt = 0L) }
     }
 
     fun setCatalogRole(role: Int) {

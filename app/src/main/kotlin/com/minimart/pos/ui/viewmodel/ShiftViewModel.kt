@@ -151,7 +151,7 @@ class ShiftViewModel @Inject constructor(
                 if (noSale && shift != null) runCatching { settingsRepo.recordNoSaleOpen(shift.id); audit.log(com.minimart.pos.util.AuditEvent.NO_SALE, detail = "Drawer opened without a sale (shift #${shift.id})") }
                 _uiState.update { it.copy(successMessage = Lang.t("Drawer opened", "تم فتح الدرج")) }
             } else if (r is com.minimart.pos.printer.DrawerResult.Error) {
-                _uiState.update { it.copy(error = "Drawer: ${r.msg}") }
+                _uiState.update { it.copy(error = Lang.t("Drawer: ${r.msg}", "الدرج: ${r.msg}")) }
             }
         }
     }

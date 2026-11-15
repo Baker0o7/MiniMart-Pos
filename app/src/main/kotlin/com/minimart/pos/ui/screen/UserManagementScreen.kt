@@ -113,13 +113,13 @@ class UserManagementViewModel @Inject constructor(
 
     fun addUser(username: String, displayName: String, pin: String, role: UserRole) {
         viewModelScope.launch {
-            if (!isOwner()) { _state.update { it.copy(error = "Only an Owner can add users") }; return@launch }
+            if (!isOwner()) { _state.update { it.copy(error = Lang.t("Only an Owner can add users", "المالك فقط يمكنه إضافة مستخدمين")) }; return@launch }
             pinProblem(pin.trim())?.let { msg -> _state.update { it.copy(error = msg) }; return@launch }
             _state.update { it.copy(isLoading = true, error = null) }
             try {
                 val cleanName = username.trim()
                 if (userRepo.getUserByUsername(cleanName) != null) {
-                    _state.update { it.copy(isLoading = false, error = "Username \"$cleanName\" is already taken") }
+                    _state.update { it.copy(isLoading = false, error = Lang.t("Username \"$cleanName\" is already taken", "اسم المستخدم \"$cleanName\" مستخدم بالفعل")) }
                     return@launch
                 }
                 val hash = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { pinHasher.hash(pin.trim()) }
@@ -130,7 +130,7 @@ class UserManagementViewModel @Inject constructor(
                 _state.update { it.copy(isLoading = false, success = "User '${displayName.trim()}' added") }
             } catch (e: android.database.sqlite.SQLiteConstraintException) {
                 // Removed users keep their row (and username), so the active-only check above can miss it.
-                _state.update { it.copy(isLoading = false, error = "Username is already used by a removed account — pick another") }
+                _state.update { it.copy(isLoading = false, error = Lang.t("Username is already used by a removed account — pick another", "اسم المستخدم مرتبط بحساب محذوف — اختر اسمًا آخر")) }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
             }
@@ -139,7 +139,7 @@ class UserManagementViewModel @Inject constructor(
 
     fun deactivateUser(user: User) {
         viewModelScope.launch {
-            if (!isOwner()) { _state.update { it.copy(error = "Only an Owner can remove users") }; return@launch }
+            if (!isOwner()) { _state.update { it.copy(error = Lang.t("Only an Owner can remove users", "المالك فقط يمكنه حذف المستخدمين")) }; return@launch }
             try {
                 // Bug fix: no guard existed against removing the last active Owner.
                 // If the only Owner account got deactivated, nobody could reach

@@ -75,14 +75,14 @@ class ProductViewModel @Inject constructor(
                 // with an existing barcode used to silently delete the other product.
                 val clash = repo.getByBarcode(product.barcode)
                 if (clash != null && clash.id != product.id) {
-                    _uiState.update { it.copy(isLoading = false, error = "Barcode already used by \"${clash.name}\"") }
+                    _uiState.update { it.copy(isLoading = false, error = Lang.t("Barcode already used by \"${clash.name}\"", "الباركود مستخدم بالفعل للمنتج \"${clash.name}\"")) }
                     return@launch
                 }
                 // The scale label identifies a weighed product by its PLU, so two products must not share one.
                 if (product.isWeighed && product.pluCode.isNotBlank()) {
                     val pluClash = repo.getProductByPlu(product.pluCode)
                     if (pluClash != null && pluClash.id != product.id) {
-                        _uiState.update { it.copy(isLoading = false, error = "PLU ${product.pluCode} is already used by \"${pluClash.name}\"") }
+                        _uiState.update { it.copy(isLoading = false, error = Lang.t("PLU ${product.pluCode} is already used by \"${pluClash.name}\"", "رمز PLU ‏${product.pluCode} مستخدم بالفعل للمنتج \"${pluClash.name}\"")) }
                         return@launch
                     }
                 }
@@ -114,7 +114,7 @@ class ProductViewModel @Inject constructor(
                 }
                 _uiState.update { it.copy(isLoading = false, successMessage = Lang.t("Product saved", "تم حفظ المنتج")) }
             } catch (e: android.database.sqlite.SQLiteConstraintException) {
-                _uiState.update { it.copy(isLoading = false, error = "Barcode already exists (it may belong to a deleted product)") }
+                _uiState.update { it.copy(isLoading = false, error = Lang.t("Barcode already exists (it may belong to a deleted product)", "الباركود موجود بالفعل (قد يعود إلى منتج محذوف)")) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Saving the product")) }
             }

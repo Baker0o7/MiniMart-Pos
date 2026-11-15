@@ -293,7 +293,7 @@ class AuthViewModel @Inject constructor(
             // nothing stopped a direct vm.login() call (or a restarted app) from bypassing
             // it. Now re-checked against the persisted deadline before every attempt.
             if (settingsRepo.lockoutRemainingMs() > 0L) {
-                _uiState.update { it.copy(error = "Too many attempts. Please wait.") }
+                _uiState.update { it.copy(error = Lang.t("Too many attempts. Please wait.", "محاولات كثيرة. يرجى الانتظار.")) }
                 return@launch
             }
             _uiState.update { it.copy(isLoading = true, error = null) }
@@ -353,7 +353,7 @@ class AuthViewModel @Inject constructor(
                 auditLogger.log(com.minimart.pos.util.AuditEvent.PIN_CHANGED, user = user.username, detail = "Default PIN replaced")
                 _uiState.update { it.copy(mustChangePin = false, pinChangeError = null) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(pinChangeError = "Could not save PIN. " + com.minimart.pos.util.ErrorAdvice.reason(e)) }
+                _uiState.update { it.copy(pinChangeError = Lang.t("Could not save PIN. ", "تعذّر حفظ الرمز السري. ") + com.minimart.pos.util.ErrorAdvice.reason(e)) }
             }
         }
     }

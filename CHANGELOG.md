@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [Unreleased]
+
+- **More messages in Arabic:** "Product not found", "Max stock reached", duplicate barcode/PLU/username warnings, owner-only notices, too many PIN attempts, cloud connection messages, label printing and archive results now appear in Arabic.
+
 ## [1.33.5] - 2026-11-15
 
 - **Printer connection:** connecting to the Bluetooth printer no longer freezes the till for a long time when the printer is off or out of range (it gives up after 10 seconds), and it tries the other kind of Bluetooth link that many cheap printers need.

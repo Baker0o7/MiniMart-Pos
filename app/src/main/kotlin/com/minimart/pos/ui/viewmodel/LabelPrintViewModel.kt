@@ -1,5 +1,6 @@
 package com.minimart.pos.ui.viewmodel
 
+import com.minimart.pos.util.Lang
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.minimart.pos.data.entity.Product
@@ -91,9 +92,9 @@ class LabelPrintViewModel @Inject constructor(
                     catch (e: Exception) { PrintResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Printing")) }
             _state.update {
                 when (r) {
-                    is PrintResult.Success -> it.copy(printing = false, printerConnected = true, message = "Printed ${jobs.sumOf { j -> j.copies }} label(s)", isError = false)
+                    is PrintResult.Success -> it.copy(printing = false, printerConnected = true, message = Lang.t("Printed ${jobs.sumOf { j -> j.copies }} label(s)", "تمت طباعة ${jobs.sumOf { j -> j.copies }} ملصق"), isError = false)
                     is PrintResult.Error -> it.copy(printing = false, printerConnected = printer.isConnected,
-                        message = if (printer.isConnected) r.message else "Printer not connected. Connect one in Settings.", isError = true)
+                        message = if (printer.isConnected) r.message else Lang.t("Printer not connected. Connect one in Settings.", "الطابعة غير متصلة. اربط واحدة من الإعدادات."), isError = true)
                 }
             }
         }
