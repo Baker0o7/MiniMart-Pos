@@ -5,12 +5,12 @@ Measured on GitHub's `ubuntu-24.04` runners (Nov 2026). CI is the only place the
 ## Build times
 | Job | Before | Now |
 |---|---|---|
-| Release smoke test (bundle + APK, one after the other) | about 580-620 s | two jobs side by side, about 300 s each |
+| Release smoke test (bundle + APK, one after the other) | about 580-620 s | two jobs side by side, about 380 s each |
 | Unit tests (tests step ~118 s) | about 305 s | unchanged |
 | Debug build with Firebase plugins | about 156 s | unchanged |
 | Lint | about 113 s (inside the unit-test job) | unchanged |
 
-The whole pipeline is as slow as its slowest job, so splitting the release build roughly halves the wait.
+The whole pipeline is as slow as its slowest job, so splitting the release build cut the whole pipeline from about 10 min to about 7.5 min (unit tests are now the slowest job, about 440 s).
 Not done, on purpose: the Gradle configuration cache (`gradle.properties` keeps it off; AGP 9 plus the Firebase and
 Hilt plugins have not been proven with it here). Try it on a branch and watch CI before turning it on.
 
