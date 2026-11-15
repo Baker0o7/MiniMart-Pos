@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.6] - 2026-11-15
 
 - **More messages in Arabic:** "Product not found", "Max stock reached", duplicate barcode/PLU/username warnings, owner-only notices, too many PIN attempts, cloud connection messages, label printing and archive results now appear in Arabic.
 
