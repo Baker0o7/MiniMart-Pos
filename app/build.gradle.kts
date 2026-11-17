@@ -60,7 +60,7 @@ android {
         buildConfigField("String", "CLOUD_ANON_KEY", "\"${cfg("minimart.cloudAnonKey", "CLOUD_ANON_KEY")}\"")
         applicationId = "com.minimart.pos"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 156
         versionName = "1.33.10"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

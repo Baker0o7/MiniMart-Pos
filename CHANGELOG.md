@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [Unreleased]
+
+- **Ready for newer Android:** the app now targets Android 16, which Google requires for Play Store updates. Nothing should look different; if rotation on a tablet or the back gesture behaves oddly, tell us.
+
 ## [1.33.10] - 2026-11-17
 
 - **Safer double-taps:** tapping "Add credit" or saving an expense twice in a hurry now records it once. The "credit added" message is also shown in Arabic.
