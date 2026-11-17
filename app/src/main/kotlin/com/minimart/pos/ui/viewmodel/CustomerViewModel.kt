@@ -113,18 +113,28 @@ class CustomerViewModel @Inject constructor(
         }
     }
 
+    // A fast double-tap on "Add credit" must not add the credit twice (viewModelScope runs on the main thread, so a
+    // plain flag set before the first suspension is enough).
+    private var creditInFlight = false
+
     fun addCredit(customerId: Long, amount: Double, notes: String = "", currency: String = "KES") = viewModelScope.launch {
+        if (creditInFlight) return@launch
+        creditInFlight = true
+        try { addCreditNow(customerId, amount, notes, currency) } finally { creditInFlight = false }
+    }
+
+    private suspend fun addCreditNow(customerId: Long, amount: Double, notes: String, currency: String) {
         val ok = try {
             repo.addCredit(customerId, amount, notes)
         } catch (e: kotlinx.coroutines.CancellationException) { throw e
         } catch (e: Exception) {
             _state.update { it.copy(message = com.minimart.pos.util.ErrorAdvice.explain(e, "Adding the credit")) }
-            return@launch
+            return
         }
         if (ok) {
             // Bug fix: was hardcoded "KES" in this success message regardless of the
             // app's configurable currency setting.
-            _state.update { it.copy(message = "$currency ${String.format(java.util.Locale.US, "%.2f", amount)} credit added") }
+            _state.update { it.copy(message = Lang.t("$currency ${String.format(java.util.Locale.US, "%.2f", amount)} credit added", "تمت إضافة رصيد $currency ${String.format(java.util.Locale.US, "%.2f", amount)}")) }
             // Refresh selected customer
             val updated = repo.getById(customerId)
             _state.update { it.copy(selectedCustomer = updated) }

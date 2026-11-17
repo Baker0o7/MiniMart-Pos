@@ -96,7 +96,12 @@ class ExpenseViewModel @Inject constructor(
         _period.value = ReportPeriod.CUSTOM
     }
 
+    private var expenseInFlight = false
+
     fun addExpense(expense: Expense) {
+        // A fast double-tap on Save must not record the same expense twice.
+        if (expenseInFlight) return
+        expenseInFlight = true
         viewModelScope.launch {
             try {
                 // Every expense used to be stored against cashier #1 whoever was signed in.
@@ -112,6 +117,8 @@ class ExpenseViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = com.minimart.pos.util.ErrorAdvice.explain(e, "That")) }
+            } finally {
+                expenseInFlight = false
             }
         }
     }
