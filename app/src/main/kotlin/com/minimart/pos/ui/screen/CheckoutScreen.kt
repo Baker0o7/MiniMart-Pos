@@ -456,7 +456,7 @@ fun CheckoutScreen(
                                         }
                                         StkPushPhase.SUCCESS -> {
                                             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                                                .background(Color(0xFF1B5E20).copy(0.3f))
+                                                .background(DT.tone(Color(0xFF1B5E20).copy(0.3f), DT.Green))
                                                 .border(1.dp, DT.Green.copy(0.5f), RoundedCornerShape(12.dp))
                                                 .padding(12.dp)) {
                                                 Column {
@@ -476,7 +476,7 @@ fun CheckoutScreen(
                                         }
                                         StkPushPhase.FAILED, StkPushPhase.TIMED_OUT -> {
                                             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-                                                .background(Color(0xFF5E1B1B).copy(0.3f))
+                                                .background(DT.tone(Color(0xFF5E1B1B).copy(0.3f), DT.Red))
                                                 .border(1.dp, DT.Red.copy(0.5f), RoundedCornerShape(12.dp))
                                                 .padding(12.dp)) {
                                                 Column {
