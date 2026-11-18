@@ -61,8 +61,8 @@ android {
         applicationId = "com.minimart.pos"
         minSdk = 26
         targetSdk = 36
-        versionCode = 158
-        versionName = "1.33.12"
+        versionCode = 159
+        versionName = "1.33.13"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

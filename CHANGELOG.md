@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.13] - 2026-11-18
 
 - **Light theme:** the "payment confirmed" and "payment failed" boxes at checkout (M-Pesa prompt) are now soft green and red in the light theme, so their text is easy to read. The dark theme looks the same.
 
