@@ -68,11 +68,7 @@ fun Context.vibrateShort() {
         } else {
             @Suppress("DEPRECATION")
             val v = getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                v.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
-            } else {
-                @Suppress("DEPRECATION") v.vibrate(40)
-            }
+            v.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
         }
     } catch (_: Exception) {}
 }

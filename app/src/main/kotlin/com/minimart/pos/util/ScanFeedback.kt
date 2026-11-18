@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Context
 import android.media.AudioManager
 import android.media.ToneGenerator
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.VibrationEffect
@@ -59,8 +58,7 @@ object ScanFeedback {
             @Suppress("DEPRECATION")
             val v = c.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
             if (!v.hasVibrator()) return
-            if (Build.VERSION.SDK_INT >= 26) v.vibrate(VibrationEffect.createWaveform(pattern, -1))
-            else @Suppress("DEPRECATION") v.vibrate(pattern, -1)
+            v.vibrate(VibrationEffect.createWaveform(pattern, -1))
         } catch (_: Throwable) { /* no vibrator: nothing to do */ }
     }
 

@@ -83,7 +83,7 @@ class UpdateManager @Inject constructor(@ApplicationContext private val context:
         } finally { busy.unlock() }
     }
 
-    fun canInstall(): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.O || context.packageManager.canRequestPackageInstalls()
+    fun canInstall(): Boolean = context.packageManager.canRequestPackageInstalls()
 
     /** The Android screen where the owner allows this app to install updates. */
     fun permissionIntent(): Intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}"))
