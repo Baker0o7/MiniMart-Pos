@@ -167,7 +167,7 @@ dependencies {
     // Accompanist
     implementation(libs.accompanist.permissions)
     // Gson for sync serialization
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.15.0")
     // Argon2id PIN hashing
     implementation("com.lambdapioneer.argon2kt:argon2kt:1.6.0")
 
