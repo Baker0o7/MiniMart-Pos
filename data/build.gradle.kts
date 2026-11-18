@@ -33,7 +33,7 @@ dependencies {
 
     implementation(libs.hilt.android)
     // Native Argon2id for PinHasher (an Android library, so it cannot live in the pure-JVM :core).
-    implementation("com.lambdapioneer.argon2kt:argon2kt:1.4.0")
+    implementation("com.lambdapioneer.argon2kt:argon2kt:1.6.0")
     ksp(libs.hilt.compiler)
 
     // Types below appear in the public API of repositories/entities, so expose them with `api`.

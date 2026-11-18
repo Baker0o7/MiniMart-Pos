@@ -169,7 +169,7 @@ dependencies {
     // Gson for sync serialization
     implementation("com.google.code.gson:gson:2.10.1")
     // Argon2id PIN hashing
-    implementation("com.lambdapioneer.argon2kt:argon2kt:1.4.0")
+    implementation("com.lambdapioneer.argon2kt:argon2kt:1.6.0")
 
     debugImplementation(libs.androidx.ui.tooling.preview)
     // Memory-leak detector: debug builds only (never in the release APK), it installs itself.
