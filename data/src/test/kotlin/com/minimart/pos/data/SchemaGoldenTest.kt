@@ -30,6 +30,26 @@ class SchemaGoldenTest : DbTestBase() {
             generateSequence { if (c.moveToNext()) "${c.getString(0)} ${c.getString(1)}: ${normalise(c.getString(2))}" else null }.toList()
         }.sorted()
 
+    /**
+     * What an upgraded phone and a new install must agree on: every table's columns (name, type, null, default, key),
+     * its foreign keys, and every index. Not the CREATE text itself: `ALTER TABLE ... ADD COLUMN` writes the new column
+     * after the table's constraints while a fresh install writes it among the columns, which changes nothing real.
+     */
+    private fun structure(d: SupportSQLiteDatabase): List<String> {
+        fun rows(sql: String, cols: List<Int>) = d.query(sql).use { c ->
+            generateSequence { if (c.moveToNext()) cols.joinToString("|") { i -> c.getString(i) ?: "" } else null }.toList()
+        }
+        val tables = d.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' " +
+            "AND name NOT IN ('room_master_table', 'android_metadata')").use { c ->
+            generateSequence { if (c.moveToNext()) c.getString(0) else null }.toList()
+        }
+        val out = tables.map { t ->
+            "table $t cols=" + rows("PRAGMA table_info(`$t`)", listOf(1, 2, 3, 4, 5)).joinToString(";") +
+                " fks=" + rows("PRAGMA foreign_key_list(`$t`)", listOf(2, 3, 4, 5, 6)).sorted().joinToString(";")
+        }
+        return (out + dump(d).filter { it.startsWith("index ") }).sorted()
+    }
+
     private fun golden(version: Int): List<String>? =
         javaClass.getResourceAsStream("/schema/v$version.sql")?.bufferedReader(Charsets.UTF_8)?.readLines()
             ?.map { it.trim() }?.filter { it.isNotEmpty() && !it.startsWith("--") }
@@ -61,12 +81,12 @@ class SchemaGoldenTest : DbTestBase() {
     }
 
     @Test fun everySavedOlderSchemaUpgradesToTheCurrentOne() {
-        val current = dump(db.openHelper.writableDatabase)
+        val current = structure(db.openHelper.writableDatabase)
         val saved = (8 until currentVersion).mapNotNull { v -> golden(v)?.let { v to it } }
         saved.forEach { (v, lines) ->
             val (helper, sdb) = bareDb(v, lines)
             AppMigrations.ALL.filter { it.startVersion >= v }.sortedBy { it.startVersion }.forEach { it.migrate(sdb) }
-            assertEquals("Upgrading a phone from v$v gives a different schema than a new install", current, dump(sdb))
+            assertEquals("Upgrading a phone from v$v gives a different schema than a new install", current, structure(sdb))
             helper.close()
         }
     }
