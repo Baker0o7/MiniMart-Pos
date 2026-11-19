@@ -270,7 +270,7 @@ private fun InventoryRow(
     Column(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
             .background(DT.Surface).border(1.dp, DT.Border, RoundedCornerShape(16.dp))
-            .padding(14.dp)
+            .padding(12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(DT.TealDim),
@@ -297,15 +297,15 @@ private fun InventoryRow(
                 Text("$currency $unitPrice", color = DT.SubText, fontSize = 12.sp, maxLines = 1)
             }
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(4.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             ActionBtn(Lang.t("Stock", "المخزون"), DT.TealLight, onAdjustStock)
-            if (canEdit) ActionBtn("Edit", DT.Teal, onEdit)
-            if (product.supplierPhone.isNotBlank()) ActionBtn("Call", DT.Teal, onCallSupplier)
+            if (canEdit) ActionBtn(Lang.t("Edit", "تعديل"), DT.Teal, onEdit)
+            if (product.supplierPhone.isNotBlank()) ActionBtn(Lang.t("Call", "اتصال"), DT.Teal, onCallSupplier)
             Spacer(Modifier.weight(1f))
             if (canEdit) {
                 IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Default.Delete, "Delete ${product.name}", tint = DT.Red.copy(0.85f), modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Delete, Lang.t("Delete ${product.name}", "حذف ${product.name}"), tint = DT.Red.copy(0.85f), modifier = Modifier.size(20.dp))
                 }
             }
         }
@@ -316,7 +316,7 @@ private fun InventoryRow(
             onDismissRequest = { showDeleteConfirm = false },
             containerColor = DT.Surface,
             title = { Text(tr(com.minimart.pos.R.string.delete_product_q), color = DT.Ink, fontWeight = FontWeight.Bold) },
-            text = { Text("\"${product.name}\" will be permanently removed. This cannot be undone.", color = DT.SubText) },
+            text = { Text(Lang.t("\"${product.name}\" will be permanently removed. This cannot be undone.", "سيتم حذف \"${product.name}\" نهائيًا. لا يمكن التراجع عن ذلك."), color = DT.SubText) },
             confirmButton = {
                 Button(
                     onClick = { onDelete(); showDeleteConfirm = false },
@@ -340,10 +340,11 @@ private fun InventoryRow(
 private fun ActionBtn(label: String, textColor: Color, onClick: () -> Unit) {
     val shape = RoundedCornerShape(20.dp)
     Box(
-        modifier = Modifier.height(36.dp).clip(shape)
+        // The pill looks 36dp tall but the touch area is the full 48dp, and it ripples when pressed.
+        modifier = Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
+            .minimumInteractiveComponentSize().height(36.dp).clip(shape)
             .background(DT.Surface2)
             .border(1.dp, textColor.copy(0.3f), shape)
-            .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }, onClick = onClick)
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -395,7 +396,7 @@ private fun StockAdjustDialog(product: Product, onDismiss: () -> Unit, onAdjust:
                 )
                 if (qty > 0) {
                     Text(
-                        if (tooMuch) "Only ${fmt(current)} on record" else "New stock: ${fmt(newStock)}",
+                        if (tooMuch) Lang.t("Only ${fmt(current)} on record", "المسجّل ${fmt(current)} فقط") else Lang.t("New stock: ${fmt(newStock)}", "المخزون الجديد: ${fmt(newStock)}"),
                         color = if (tooMuch) DT.Red else DT.Green, fontSize = 13.sp, fontWeight = FontWeight.SemiBold
                     )
                 }
