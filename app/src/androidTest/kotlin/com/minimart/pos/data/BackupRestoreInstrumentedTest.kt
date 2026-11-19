@@ -59,11 +59,11 @@ class BackupRestoreInstrumentedTest {
 
     @Test fun aBackupPutsTheShopBackAsItWas() = runBlocking<Unit> {
         addProducts(5)
-        val saved = (BackupManager.backup(context) as BackupResult.Success).file
+        val saved = (BackupManager.backup(context, "backup-pass-1") as BackupResult.Success).file
         addProducts(3, from = 100)
         assertEquals(8, countNow())
 
-        val r = BackupManager.restore(context, saved)
+        val r = BackupManager.restore(context, saved, "backup-pass-1")
         assertTrue("restore failed: $r", r is BackupResult.Success)
         assertEquals(5, countNow())
         saved.delete()
@@ -83,9 +83,13 @@ class BackupRestoreInstrumentedTest {
         saved.delete()
     }
 
+    @Test fun aBackupWithoutAPassphraseIsRefused() = runBlocking<Unit> {
+        assertTrue(BackupManager.backup(context, "") is BackupResult.Error)
+    }
+
     @Test fun aDamagedBackupIsRefusedAndTheLiveDataIsUntouched() = runBlocking<Unit> {
         addProducts(5)
-        val saved = (BackupManager.backup(context) as BackupResult.Success).file
+        val saved = (BackupManager.autoBackup(context) as BackupResult.Success).file
         val damaged = File(context.cacheDir, "damaged_backup.db")
         saved.copyTo(damaged, overwrite = true)
         damaged.writeBytes(damaged.readBytes().copyOf(damaged.length().toInt() / 2))   // cut in half

@@ -5,6 +5,12 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [Unreleased]
+
+- **Safer pilot defaults:** M-Pesa payments now need a verified code by default. The Store health screen shows a red problem if the app ever has to correct a saved sale total when it starts (it should never happen).
+- **Refunds from a second till:** if a till sold more than the main phone had in stock, a later refund now gives back only what was actually taken off stock, so the count no longer grows by mistake. A refund or void from a till that the main phone refuses now shows a notification, like refused sales do.
+- **Backups:** a backup that can leave the phone now always needs a passphrase, and only protected backups can be shared. The end-of-day backup is kept private on the phone instead of in the shared folder. (Database format moves to version 21; existing data is kept.)
+
 ## [1.33.15] - 2026-11-19
 
 - **Inventory list:** the Stock, Edit and Call buttons are easier to tap, show a press effect, and are in Arabic. The delete confirmation and the stock-change preview are in Arabic too. Product cards are a little tighter so more fit on the screen.

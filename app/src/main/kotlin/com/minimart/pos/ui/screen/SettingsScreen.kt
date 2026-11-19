@@ -668,13 +668,14 @@ fun SettingsScreen(
                         var pendingRestoreFile by remember { mutableStateOf<java.io.File?>(null) }
                         var showBackupDialog by remember { mutableStateOf(false) }
 
-                        // Optional passphrase: an encrypted (.mmbak) backup is unreadable without it,
+                        // The passphrase is required: an encrypted (.mmbak) backup is unreadable without it,
                         // so it is safe to share or store in the cloud, and restores on any phone.
                         if (showBackupDialog) {
                             var pass by remember { mutableStateOf("") }
                             var pass2 by remember { mutableStateOf("") }
                             val passError = when {
-                                pass.isNotEmpty() && pass.length < 6 -> "Use at least 6 characters"
+                                pass.isEmpty() -> Lang.t("A passphrase is required", "عبارة المرور مطلوبة")
+                                pass.length < 6 -> Lang.t("Use at least 6 characters", "استخدم 6 أحرف على الأقل")
                                 pass != pass2 -> Lang.t("Passphrases do not match", "عبارتا المرور غير متطابقتين")
                                 else -> null
                             }
@@ -686,7 +687,7 @@ fun SettingsScreen(
                                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Text(tr(com.minimart.pos.R.string.backup_pass_help),
                                             color = DT.SubText, style = MaterialTheme.typography.bodySmall)
-                                        OutlinedTextField(pass, { pass = it }, label = { Text(tr(com.minimart.pos.R.string.pass_optional)) }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
+                                        OutlinedTextField(pass, { pass = it }, label = { Text(Lang.t("Passphrase (required)", "عبارة المرور (مطلوبة)")) }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
                                             visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                                             colors = dColors(), modifier = Modifier.fillMaxWidth())
                                         if (pass.isNotEmpty()) OutlinedTextField(pass2, { pass2 = it }, label = { Text(tr(com.minimart.pos.R.string.repeat_pass)) }, singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
@@ -704,9 +705,9 @@ fun SettingsScreen(
                                 },
                                 confirmButton = {
                                     Button(
-                                        enabled = pass.isEmpty() || passError == null,
+                                        enabled = pass.isNotEmpty() && passError == null,
                                         onClick = {
-                                            val chosen = pass.ifEmpty { null }
+                                            val chosen = pass
                                             showBackupDialog = false
                                             isBackingUp = true
                                             scope.launch {
@@ -718,7 +719,7 @@ fun SettingsScreen(
                                                 }
                                                 integrityVm.recordBackup(
                                                     if (r is com.minimart.pos.util.BackupResult.Success) com.minimart.pos.util.AuditEvent.BACKUP_CREATED else com.minimart.pos.util.AuditEvent.BACKUP_FAILED,
-                                                    if (r is com.minimart.pos.util.BackupResult.Success) "Manual backup${if (chosen != null) " (encrypted)" else ""}" else "Manual backup failed")
+                                                    if (r is com.minimart.pos.util.BackupResult.Success) "Manual backup${" (encrypted)"}" else "Manual backup failed")
                                                 isBackingUp = false
                                             }
                                         },
@@ -747,7 +748,10 @@ fun SettingsScreen(
                         backupStatus?.let { Text(it, color = if ("saved" in it) DT.Green else DT.Red, style = MaterialTheme.typography.labelSmall) }
                         // The moment a backup succeeds is when a copy should leave the phone.
                         lastBackupFile?.let { f ->
-                            Button(onClick = { com.minimart.pos.util.BackupManager.shareBackup(context, f) },
+                            Button(onClick = {
+                                if (!com.minimart.pos.util.BackupManager.shareBackup(context, f))
+                                    backupStatus = Lang.t("Only passphrase-protected backups can be shared. Make a new backup with a passphrase.", "يمكن مشاركة النسخ المحمية بعبارة مرور فقط. أنشئ نسخة جديدة بعبارة مرور.")
+                            },
                                 modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = DT.Green.copy(0.85f))) {
                                 Icon(Icons.Default.Share, null, tint = DT.Ink, modifier = Modifier.size(16.dp))

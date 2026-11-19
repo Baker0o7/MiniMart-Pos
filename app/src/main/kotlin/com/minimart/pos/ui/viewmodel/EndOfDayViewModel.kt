@@ -88,10 +88,10 @@ class EndOfDayViewModel @Inject constructor(
         if (_state.value.working) return
         _state.update { it.copy(working = true, message = null) }
         viewModelScope.launch {
-            val result = try { BackupManager.backup(context) } catch (e: Exception) { BackupResult.Error(ErrorAdvice.explain(e, "The backup")) }
+            val result = try { BackupManager.autoBackup(context) } catch (e: Exception) { BackupResult.Error(ErrorAdvice.explain(e, "The backup")) }
             _state.update {
                 when (result) {
-                    is BackupResult.Success -> it.copy(working = false, message = Lang.t("Backup saved. It has no passphrase: before it leaves this phone, make a protected copy in Settings > Data & Backup.", "تم حفظ النسخة الاحتياطية. ليست محمية بعبارة مرور: قبل نقلها خارج الهاتف أنشئ نسخة محمية من الإعدادات > البيانات والنسخ الاحتياطي."), messageIsError = false)
+                    is BackupResult.Success -> it.copy(working = false, message = Lang.t("Backup saved on this phone. To keep a copy away from the phone, make a protected backup in Settings > Data & Backup.", "تم حفظ النسخة الاحتياطية على هذا الهاتف. للاحتفاظ بنسخة بعيدة عن الهاتف، أنشئ نسخة محمية من الإعدادات > البيانات والنسخ الاحتياطي."), messageIsError = false)
                     is BackupResult.Error -> it.copy(working = false, message = result.message, messageIsError = true)
                 }
             }

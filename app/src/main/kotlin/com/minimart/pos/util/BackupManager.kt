@@ -22,7 +22,11 @@ object BackupManager {
     private val df = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.US)
 
     /** Back up the Room DB to the app's external files dir (backups/). */
-    suspend fun backup(context: Context, passphrase: String? = null): BackupResult = withContext(Dispatchers.IO) {
+    suspend fun backup(context: Context, passphrase: String): BackupResult = withContext(Dispatchers.IO) {
+        // A backup in the shared folder can be copied or shared off the phone, so it is never written without a passphrase.
+        // (Daily automatic backups stay private to this phone: see [autoBackup].)
+        if (passphrase.isEmpty()) return@withContext BackupResult.Error(
+            Lang.t("A backup that can leave this phone needs a passphrase.", "النسخة التي قد تغادر الهاتف تحتاج إلى عبارة مرور."))
         try {
             val dbFile = context.getDatabasePath(AppDatabase.DATABASE_NAME)
             if (!dbFile.exists()) return@withContext BackupResult.Error("Database file not found")
@@ -45,33 +49,18 @@ object BackupManager {
             // to copy a backup off the device — app-specific files are removed on uninstall.
             val backupDir = backupDir(context).apply { mkdirs() }
 
-            // Optional passphrase: the backup is written as an encrypted .mmbak file (portable to
-            // any device, unreadable without the passphrase). The -wal/-shm copies are skipped for
-            // encrypted backups — the checkpoint above already flushed everything into the main
-            // file, and the companions would otherwise sit next to it in plaintext.
-            if (!passphrase.isNullOrEmpty()) {
-                val enc = File(backupDir, "minimart_backup_$timestamp.mmbak")
-                // The encrypted file cannot be opened without the passphrase, so check the data first.
-                verify(context, snapshot)?.let { problem ->
-                    recordFailure(context, problem)
-                    return@withContext BackupResult.Error("Backup was not saved: $problem")
-                }
-                snapshot.inputStream().use { ins -> enc.outputStream().use { outs -> BackupCrypto.encrypt(ins, outs, passphrase) } }
-                recordSuccess(context)
-                return@withContext BackupResult.Success(enc, "Encrypted backup saved: ${enc.name}\nKeep the passphrase — it cannot be recovered.")
-            }
-
-            val dest = File(backupDir, "minimart_backup_$timestamp.db")
-            snapshot.copyTo(dest, overwrite = true)
-            // A backup that cannot be opened is worse than none: it gives false comfort.
-            verify(context, dest)?.let { problem ->
-                dest.delete()
+            // The backup is written as an encrypted .mmbak file (portable to any device, unreadable without the
+            // passphrase). The -wal/-shm copies are skipped: the checkpoint above already flushed everything into the
+            // main file, and the companions would otherwise sit next to it in plaintext.
+            val enc = File(backupDir, "minimart_backup_$timestamp.mmbak")
+            // The encrypted file cannot be opened without the passphrase, so check the data first.
+            verify(context, snapshot)?.let { problem ->
                 recordFailure(context, problem)
                 return@withContext BackupResult.Error("Backup was not saved: $problem")
             }
-
+            snapshot.inputStream().use { ins -> enc.outputStream().use { outs -> BackupCrypto.encrypt(ins, outs, passphrase) } }
             recordSuccess(context)
-            BackupResult.Success(dest, "Backup saved and checked: ${dest.name}\nUse \"Share Latest Backup\" to copy it off this device.\nThis file is not encrypted: add a passphrase when you back up if it will leave the phone.")
+            return@withContext BackupResult.Success(enc, "Encrypted backup saved: ${enc.name}\nKeep the passphrase — it cannot be recovered.")
             } finally { snapshot.delete() }
         } catch (e: Exception) {
             BackupResult.Error(com.minimart.pos.util.ErrorAdvice.explain(e, "Backup"))
@@ -322,7 +311,9 @@ object BackupManager {
     }
 
     /** Share the backup file via intent (USB OTG, cloud, etc.) */
-    fun shareBackup(context: Context, file: File) {
+    fun shareBackup(context: Context, file: File): Boolean {
+        // Only passphrase-protected backups may leave the phone.
+        if (!file.name.endsWith(".mmbak")) return false
         val uri: Uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "application/octet-stream"
@@ -331,5 +322,6 @@ object BackupManager {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(Intent.createChooser(intent, "Share Backup").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        return true
     }
 }
