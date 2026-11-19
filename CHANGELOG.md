@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.15] - 2026-11-19
 
 - **Inventory list:** the Stock, Edit and Call buttons are easier to tap, show a press effect, and are in Arabic. The delete confirmation and the stock-change preview are in Arabic too. Product cards are a little tighter so more fit on the screen.
 
