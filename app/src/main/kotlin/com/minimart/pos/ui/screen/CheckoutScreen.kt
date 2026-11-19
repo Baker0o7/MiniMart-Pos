@@ -358,19 +358,11 @@ fun CheckoutScreen(
                                     cursorColor = DT.Teal, focusedContainerColor = DT.Surface, unfocusedContainerColor = DT.Surface))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                                 // "Exact" is by far the most common tender — one tap instead of typing the total.
-                                val exactCash = if (state.total % 1.0 == 0.0) state.total.toLong().toString()
-                                                else String.format(java.util.Locale.US, "%.2f", state.total)
                                 val quickCash = buildList {
-                                    if (state.total > 0) add(Lang.t("Exact", "المبلغ بالضبط") to exactCash)
-                                    // Round-up notes that actually cover the bill (next 50/100/500/1000),
-                                    // instead of fixed amounts that are often below the total.
-                                    val t = kotlin.math.ceil(state.total).toLong()
-                                    val ups = listOf(50L, 100L, 500L, 1000L)
-                                        .map { step -> ((t + step - 1) / step) * step }
-                                        .filter { it > state.total }
-                                        .distinct().take(3)
-                                    val fallback = listOf(100L, 200L, 500L, 1000L)
-                                    (if (state.total > 0) ups else fallback).forEach { add(it.toString() to it.toString()) }
+                                    if (state.total > 0) add(Lang.t("Exact", "المبلغ بالضبط") to com.minimart.pos.util.CashSuggestions.exactText(state.total))
+                                    // Round-up notes that actually cover the bill (see CashSuggestions).
+                                    com.minimart.pos.util.CashSuggestions.roundUps(state.total)
+                                        .forEach { add(com.minimart.pos.util.CashSuggestions.label(it) to it.toString()) }
                                 }
                                 quickCash.forEach { (label, value) ->
                                     val picked = cashInput == value
@@ -378,11 +370,11 @@ fun CheckoutScreen(
                                         .background(if (picked) DT.Teal else DT.Surface)
                                         .border(1.dp, if (picked) DT.Teal else DT.Border, RoundedCornerShape(12.dp))
                                         .clickable(role = androidx.compose.ui.semantics.Role.Button, indication = null, interactionSource = remember { MutableInteractionSource() }) { cashInput = value }
-                                        .padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
+                                        .heightIn(min = 48.dp).padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
                                         Text(label,
                                             color = if (picked) Color.White else DT.SubText,
                                             fontWeight = if (picked) FontWeight.Bold else FontWeight.Normal,
-                                            fontSize = 12.sp)
+                                            fontSize = 14.sp, maxLines = 1)
                                     }
                                 }
                             }
