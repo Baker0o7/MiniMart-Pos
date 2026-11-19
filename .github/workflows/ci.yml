@@ -173,10 +173,20 @@ jobs:
             -storepass "$PASS" -keypass "$PASS" -dname "CN=CI smoke test"
           export SIGNING_STORE_PASSWORD="$PASS" SIGNING_KEY_PASSWORD="$PASS" SIGNING_KEY_ALIAS=ci
           # The Play bundle is built without per-ABI APKs (AGP 9 refuses to mix them), as release.yml does.
+          # Plugin and library downloads from the public repositories sometimes fail on a busy runner ("Could not find ...jar").
+          # That is not a code problem, so a build that failed only for that reason is tried again (up to three times).
+          retry_gradle() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              grep -qE "Could not (find|resolve|get)|429 Too Many|Connection reset|Read timed out" "$LOG" || return 1
+              echo "::warning::Dependency download failed (attempt $attempt of 3); trying again"; sleep $((attempt * 20))
+            done
+            return 1
+          }
           if [ "${{ matrix.kind }}" = "bundle" ]; then
-            gradle bundleRelease -PabiSplits=false --no-daemon --stacktrace 2>&1 | tee bundle.log
+            LOG=bundle.log; retry_gradle bash -c 'set -o pipefail; gradle bundleRelease -PabiSplits=false --no-daemon --stacktrace 2>&1 | tee -a bundle.log'
           else
-            gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee release.log
+            LOG=release.log; retry_gradle bash -c 'set -o pipefail; gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee -a release.log'
           fi
       # Looks at the APK that was actually built, not the source: not debuggable, properly signed, a mapping file
       # for crash reports, and none of the permissions this app must never ask for.
@@ -237,8 +247,17 @@ jobs:
           JSON
       - name: Build debug with the Firebase plugins
         run: |
-          set -o pipefail
-          gradle :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee firebase.log
+          # Plugin and library downloads from the public repositories sometimes fail on a busy runner ("Could not find ...jar").
+          # That is not a code problem, so a build that failed only for that reason is tried again (up to three times).
+          retry_gradle() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              grep -qE "Could not (find|resolve|get)|429 Too Many|Connection reset|Read timed out" "$LOG" || return 1
+              echo "::warning::Dependency download failed (attempt $attempt of 3); trying again"; sleep $((attempt * 20))
+            done
+            return 1
+          }
+          LOG=firebase.log; retry_gradle bash -c 'set -o pipefail; gradle :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee -a firebase.log'
       - name: Surface build errors
         if: failure()
         run: |
