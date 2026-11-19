@@ -9,7 +9,9 @@ for attempt in 1 2 3; do
   attempt_log="$(mktemp)"
   set +e
   set -o pipefail
-  gradle "$@" 2>&1 | tee "$attempt_log"
+  # A half-restored dependency cache can keep failing the same way, so later attempts fetch everything fresh.
+  extra=(); [ "$attempt" -gt 1 ] && extra=(--refresh-dependencies)
+  gradle "$@" "${extra[@]}" 2>&1 | tee "$attempt_log"
   status=$?
   cat "$attempt_log" >> "$log"
   if [ "$status" -eq 0 ]; then rm -f "$attempt_log"; exit 0; fi
