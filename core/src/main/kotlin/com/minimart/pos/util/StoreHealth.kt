@@ -39,7 +39,9 @@ data class HealthInputs(
     /** Disagreements between phones that were settled automatically and have not been looked at. */
     val syncConflicts: Int = 0,
     /** The app has been closing again and again right after opening (see [CrashLoopGuard]). */
-    val crashLoop: Boolean = false
+    val crashLoop: Boolean = false,
+    /** Sales whose saved cents had to be corrected at start-up in the last two weeks. Should always be 0. */
+    val centRepairs: Int = 0
 )
 
 /** Turns raw numbers into plain-language checks, worst problems first. Pure, so it can be tested. */
@@ -91,6 +93,11 @@ object StoreHealth {
             Lang.t("${i.syncConflicts} change(s) were edited on two phones at once. The newest edit was kept; check the activity log if something looks wrong.", "تم تعديل ${i.syncConflicts} عنصر على هاتفين في الوقت نفسه. احتُفظ بأحدث تعديل؛ راجع سجل النشاط إذا بدا شيء خاطئًا."), HealthAction.SYNC)
         if (i.crashLoop) out += HealthCheck("crash_loop", Lang.t("App keeps closing", "التطبيق يُغلق باستمرار"), HealthLevel.BAD,
             Lang.t("The app closed several times soon after opening. Background work was held back so you can keep selling. Share the problem report from this screen.", "أُغلق التطبيق عدة مرات بعد فتحه مباشرة. أُوقف العمل في الخلفية لتتمكن من مواصلة البيع. شارك تقرير المشكلة من هذه الشاشة."))
+
+        // Sales are saved with exact cents, so a start-up correction means something wrote a wrong figure.
+        // During the pilot any single one of these is a stop sign.
+        if (i.centRepairs > 0) out += HealthCheck("cent_repair", Lang.t("Sale totals were corrected", "تم تصحيح إجماليات مبيعات"), HealthLevel.BAD,
+            Lang.t("${i.centRepairs} sale(s) had a wrong stored total and were corrected when the app started. This should never happen: share the problem report from this screen.", "تم تصحيح إجمالي ${i.centRepairs} عملية بيع كان مخزّنًا بشكل خاطئ عند بدء التطبيق. يجب ألا يحدث هذا: شارك تقرير المشكلة من هذه الشاشة."), HealthAction.DATA_CHECK)
 
         i.freeStorageMb?.let { mb ->
             out += when {

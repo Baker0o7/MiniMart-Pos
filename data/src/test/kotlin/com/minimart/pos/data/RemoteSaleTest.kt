@@ -49,6 +49,29 @@ class RemoteSaleTest : DbTestBase() {
         assertEquals(0, db.productDao().getProductById(pid)?.stock)
     }
 
+    @Test fun refundingASaleThatWasAppliedWhileStockWasShortGivesBackOnlyWhatWasTaken() = runBlocking {
+        val pid = db.productDao().insertProduct(Product(barcode = "S1", name = "Soda", price = 50.0, stock = 3))
+        val id = apply(sale("R-S1", 250.0), listOf(line("S1", 5)))
+        assertEquals(0, db.productDao().getProductById(pid)?.stock)
+        repo.refundSale(id, "customer returned")
+        assertEquals("only the 3 units that were taken come back, not 5", 3, db.productDao().getProductById(pid)?.stock)
+    }
+
+    @Test fun twoLinesOfTheSameProductShareTheStockThatIsLeft() = runBlocking {
+        val pid = db.productDao().insertProduct(Product(barcode = "S2", name = "Soda", price = 50.0, stock = 4))
+        val id = apply(sale("R-S2", 300.0), listOf(line("S2", 3), line("S2", 3)))
+        assertEquals(0, db.productDao().getProductById(pid)?.stock)
+        repo.voidSale(id, "mistake")
+        assertEquals(4, db.productDao().getProductById(pid)?.stock)
+    }
+
+    @Test fun aNormalRemoteSaleStillRefundsEveryUnit() = runBlocking {
+        val pid = db.productDao().insertProduct(Product(barcode = "S3", name = "Soda", price = 50.0, stock = 10))
+        val id = apply(sale("R-S3", 100.0), listOf(line("S3", 2)))
+        repo.refundSale(id, "x")
+        assertEquals(10, db.productDao().getProductById(pid)?.stock)
+    }
+
     @Test fun anUnknownBarcodeGetsAStubProductSoHistoryStaysIntact() = runBlocking {
         val id = apply(sale("R-3", 50.0), listOf(line("NEW-9", 1)))
         assertNotNull(db.productDao().getAnyByBarcode("NEW-9"))

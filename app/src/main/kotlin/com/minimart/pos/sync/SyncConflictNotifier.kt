@@ -29,6 +29,10 @@ class SyncConflictNotifier @Inject constructor(@ApplicationContext private val c
     fun refusedSale(receipt: String, reason: String) =
         post(("refused:" + receipt).hashCode(), ConflictAlert.refusedSale(receipt, reason))
 
+    /** A refund or void from a till that this phone refused: the sale still stands here. */
+    fun refusedReversal(receipt: String, reason: String) =
+        post(("refused-reversal:" + receipt).hashCode(), ConflictAlert.refusedReversal(receipt, reason))
+
     private fun post(notificationId: Int, text: ConflictAlert.Text) {
         try {
             val nm = NotificationManagerCompat.from(context)

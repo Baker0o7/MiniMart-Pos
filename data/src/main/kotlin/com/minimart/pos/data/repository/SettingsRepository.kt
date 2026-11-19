@@ -171,7 +171,7 @@ class SettingsRepository @Inject constructor(
     val heldCartsJson: Flow<String> = context.dataStore.data.map { it[KEY_HELD_CARTS] ?: "" }
     suspend fun setHeldCartsJson(json: String) = context.dataStore.edit { it[KEY_HELD_CARTS] = json }
     /** When on, an M-Pesa sale needs a code that matches a payment this phone received. */
-    val mpesaStrict: Flow<Boolean> = context.dataStore.data.map { it[KEY_MPESA_STRICT] ?: false }
+    val mpesaStrict: Flow<Boolean> = context.dataStore.data.map { it[KEY_MPESA_STRICT] ?: true }
     suspend fun setMpesaStrict(v: Boolean) = context.dataStore.edit { it[KEY_MPESA_STRICT] = v }
     suspend fun setCashDrawerAddress(addr: String) = context.dataStore.edit { it[KEY_CASH_DRAWER_ADDRESS] = addr }
     suspend fun setCashDrawerOnSale(v: Boolean) = context.dataStore.edit { it[KEY_CASH_DRAWER_ON_SALE] = v }

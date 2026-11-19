@@ -50,7 +50,7 @@ class MiniMartApp : Application(), Configuration.Provider {
             try { if (settings.dailyReport.first()) com.minimart.pos.worker.DailyReportWorker.schedule(this@MiniMartApp, settings.dailyReportHour.first(), replace = false) } catch (_: Exception) {}
             launch { try { updateManager.autoCheckIfDue() } catch (_: Exception) {} }
             // Reports add whole cents; make sure every sale's cents match its amount (normally changes nothing).
-            launch { try { integrity.repairSaleCents() } catch (_: Exception) {} }
+            launch { try { com.minimart.pos.util.CentRepairLog.note(this@MiniMartApp, integrity.repairSaleCents()) } catch (_: Exception) {} }
             launch { settings.telemetryOptIn.collect { com.minimart.pos.util.Telemetry.apply(it) } }
             launch { settings.paperWidthMm.collect { com.minimart.pos.printer.EscPos.lineChars = com.minimart.pos.printer.EscPos.charsForPaper(it) } }
             try { productRepo.warmUp() } catch (_: Exception) {}

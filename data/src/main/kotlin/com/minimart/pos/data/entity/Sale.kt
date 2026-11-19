@@ -83,7 +83,11 @@ data class SaleItem(
     @androidx.room.ColumnInfo(defaultValue = "0.0") val weightKg: Double = 0.0,
     // What the goods on this line cost (FIFO batches), so profit is real, not estimated from the
     // product's latest cost price. 0 on sales made before batch costing existed.
-    @androidx.room.ColumnInfo(defaultValue = "0.0") val costTotal: Double = 0.0
+    @androidx.room.ColumnInfo(defaultValue = "0.0") val costTotal: Double = 0.0,
+    // Units actually taken off the shelf count for this line. -1 means "all of [quantity]" (every normal sale and every
+    // sale from before this column). A till's sale applied here when stock was short takes off less than it sold, and a
+    // refund must give back only what was taken, or the stock count grows out of thin air.
+    @androidx.room.ColumnInfo(defaultValue = "-1") val stockApplied: Int = -1
 )
 
 // ─── Sale with items (Room relation) ─────────────────────────────────────────

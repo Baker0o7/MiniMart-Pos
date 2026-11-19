@@ -59,7 +59,10 @@ class SyncApplier @Inject constructor(
                 r.put("status", "rejected").put("error", shown?.takeIf { it.isNotBlank() } ?: "Could not apply")
                 // Tell the owner on this phone too: the till only learns of it at its next sync.
                 val receipt = runCatching { JSONObject(e.getString("payload")).optString("receiptNumber") }.getOrDefault("")
-                if (e.optString("operation") == "CREATE") conflictAlerts.refusedSale(receipt, shown ?: "")
+                when (e.optString("operation")) {
+                    "CREATE" -> conflictAlerts.refusedSale(receipt, shown ?: "")
+                    "UPDATE" -> conflictAlerts.refusedReversal(receipt, shown ?: "")
+                }
             }
             results.put(r)
         }

@@ -129,3 +129,23 @@ class Migration19To20Test : DbTestBase() {
         helper.close()
     }
 }
+
+/** The 20→21 step: one new column on sale_items, existing lines keep meaning "all of the quantity". */
+class Migration20To21Test : DbTestBase() {
+    @Test fun addsStockAppliedWithTheDefaultThatKeepsOldRowsMeaningAllUnits() {
+        val ctx = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val helper = androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory().create(
+            SupportSQLiteOpenHelper.Configuration.builder(ctx).name(null)
+                .callback(object : SupportSQLiteOpenHelper.Callback(20) {
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        db.execSQL("CREATE TABLE sale_items (id INTEGER PRIMARY KEY, saleId INTEGER NOT NULL, quantity INTEGER NOT NULL)")
+                    }
+                    override fun onUpgrade(db: SupportSQLiteDatabase, o: Int, n: Int) {}
+                }).build())
+        val sdb = helper.writableDatabase
+        sdb.execSQL("INSERT INTO sale_items VALUES (1, 1, 4)")
+        AppMigrations.MIGRATION_20_21.migrate(sdb)
+        sdb.query("SELECT stockApplied FROM sale_items WHERE id = 1").use { c -> assertTrue(c.moveToFirst()); assertEquals(-1, c.getInt(0)) }
+        helper.close()
+    }
+}

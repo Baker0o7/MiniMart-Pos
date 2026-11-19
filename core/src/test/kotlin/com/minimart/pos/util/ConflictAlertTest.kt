@@ -1,6 +1,7 @@
 package com.minimart.pos.util
 
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -29,5 +30,14 @@ class ConflictAlertTest {
     @Test fun `refused sale text is tidied`() {
         val t = ConflictAlert.refusedSale("", "line one\r\nline two " + "x".repeat(500))
         assertTrue(!t.body.contains('\n') && !t.body.contains('\r') && t.body.length < 400 && t.body.contains("Sale ?"), t.body)
+    }
+
+    @Test fun refusedRefundNamesTheSaleAndSaysItStillStandsHere() {
+        val t = ConflictAlert.refusedReversal("T2-0007", "Sale T2-0007 was never received")
+        assertTrue(t.body.contains("T2-0007"))
+        assertTrue(t.body.contains("still counts here"))
+        val messy = ConflictAlert.refusedReversal("", "a\r\nb " + "x".repeat(500))
+        assertFalse(messy.body.contains("\n"))
+        assertTrue(messy.body.length < 400)
     }
 }

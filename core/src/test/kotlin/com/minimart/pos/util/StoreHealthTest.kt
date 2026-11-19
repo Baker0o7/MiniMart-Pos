@@ -56,4 +56,10 @@ class StoreHealthTest {
         val ids = StoreHealth.evaluate(HealthInputs(secureStorageAvailable = false, weakPairingCode = true, defaultPinStillUsed = true)).map { it.id }
         assertTrue(ids.containsAll(listOf("secure", "pairing", "pin")))
     }
+
+    @Test fun anyStartupCentRepairIsAProblem() {
+        val checks = StoreHealth.evaluate(HealthInputs(centRepairs = 1))
+        assertEquals(HealthLevel.BAD, level(checks, "cent_repair"))
+        assertTrue(StoreHealth.evaluate(HealthInputs()).none { it.id == "cent_repair" })
+    }
 }

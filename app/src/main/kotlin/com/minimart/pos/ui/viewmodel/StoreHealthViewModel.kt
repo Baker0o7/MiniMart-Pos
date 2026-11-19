@@ -162,7 +162,8 @@ class StoreHealthViewModel @Inject constructor(
             databaseEncrypted = runCatching { com.minimart.pos.util.DbEncryption.isEncrypted(context) }.getOrNull(),
             lastSyncAgeHours = prefs.getLong("last_sync_at", 0L).takeIf { it > 0 }?.let { ((now - it).coerceAtLeast(0L)) / 3_600_000L },
             syncConflicts = runCatching { audit.countOf(com.minimart.pos.util.AuditEvent.SYNC_CONFLICT) }.getOrDefault(0),
-            crashLoop = com.minimart.pos.util.StartupGuard.isInLoop(context, now)
+            crashLoop = com.minimart.pos.util.StartupGuard.isInLoop(context, now),
+            centRepairs = com.minimart.pos.util.CentRepairLog.recent(context, now)
         )
         return inputs to (report?.issues.orEmpty().take(10))
     }

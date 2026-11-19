@@ -33,6 +33,21 @@ object ConflictAlert {
         )
     }
 
+    /** A refund or void from a till that this phone refused. The sale stays as it is here, so the money is not given back here. */
+    fun refusedReversal(receipt: String, reason: String): Text {
+        val r = reason.filter { it >= ' ' && it != '\u007f' }.replace(Regex("\\s+"), " ").trim().take(120)
+        val rec = receipt.filter { it >= ' ' && it != '\u007f' }.trim().take(40).ifBlank { "?" }
+        return Text(
+            Lang.t("A till refund was refused", "رُفض استرداد من صندوق"),
+            Lang.t(
+                "A refund or void of sale $rec from another till was not accepted here" + (if (r.isNotEmpty()) " ($r)" else "") +
+                    ". The sale still counts here, so your totals and stock differ from that till. Check it and refund it here if it was real.",
+                "لم يُقبل استرداد أو إلغاء عملية البيع $rec من صندوق آخر هنا" + (if (r.isNotEmpty()) " ($r)" else "") +
+                    ". ما زالت العملية محسوبة هنا، لذا تختلف إجمالياتك ومخزونك عن ذلك الصندوق. تحقق منها وأجرِ الاسترداد هنا إن كان حقيقيًا."
+            )
+        )
+    }
+
     private fun arState(s: String) = when (s.uppercase()) { "REFUNDED" -> "مستردة"; "VOIDED" -> "ملغاة"; else -> s.lowercase() }
     private fun arAction(s: String) = when (s.uppercase()) { "REFUNDED" -> "استردادها"; "VOIDED" -> "إلغائها"; else -> s.lowercase() }
 }

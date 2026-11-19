@@ -137,6 +137,8 @@ class SaleRepository @Inject constructor(
         val hasCustomer = !customerName.isNullOrBlank() || !customerPhone.isNullOrBlank()
         checkPayment(sale, items, hasCustomer, creditAmount)
 
+        // Stock left per product while this sale's lines are applied one by one (two lines can share a product).
+        val stockLeft = HashMap<Long, Int>()
         val mapped = items.map { item ->
             val product = productRepository.getAnyByBarcode(item.productBarcode)
                 ?: Product(
@@ -144,7 +146,15 @@ class SaleRepository @Inject constructor(
                     price = item.unitPrice,
                     stock = 0
                 ).let { stub -> stub.copy(id = productRepository.insert(stub)) }
-            item.copy(productId = product.id)
+            // The goods already left the shop, so stock is never pushed below zero; remember how many units that really
+            // took off so a refund gives back exactly those.
+            val applied = if (item.weightKg > 0.0) -1 else {
+                val left = stockLeft.getOrPut(product.id) { product.stock.coerceAtLeast(0) }
+                val taken = minOf(left, item.quantity.coerceAtLeast(0))
+                stockLeft[product.id] = left - taken
+                taken
+            }
+            item.copy(productId = product.id, stockApplied = applied)
         }
         // The main device does the costing, from its own batches (a till's own figure is not trusted).
         val (costedMapped, allocations) = batches.costLines(mapped)
@@ -152,7 +162,7 @@ class SaleRepository @Inject constructor(
         batches.saveAllocations(saleDao.getItemIds(saleId), allocations)
         mapped.forEach { item ->
             if (item.weightKg > 0.0) productRepository.decrementStockKg(item.productId, item.weightKg)
-            else productRepository.decrementStockClamped(item.productId, item.quantity)
+            else if (item.stockApplied > 0) productRepository.decrementStockClamped(item.productId, item.stockApplied)
         }
 
         if (hasCustomer) {
@@ -195,7 +205,10 @@ class SaleRepository @Inject constructor(
         if (changed == 0) return@withTransaction
         saleWithItems.items.forEach { item ->
             if (item.weightKg > 0.0) productRepository.incrementStockKg(item.productId, item.weightKg)
-            else productRepository.incrementStock(item.productId, item.quantity)
+            else {
+                val back = if (item.stockApplied >= 0) item.stockApplied else item.quantity
+                if (back > 0) productRepository.incrementStock(item.productId, back)
+            }
         }
         customerRepository.reverseCreditForSale(saleId, reason)
         batches.restoreForSale(saleId)
