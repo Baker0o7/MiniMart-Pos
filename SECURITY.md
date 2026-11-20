@@ -46,7 +46,7 @@ Please give us a reasonable chance to fix the problem before you tell anyone els
 In scope:
 
 - The Android app (`app/`, `data/`, `core/`), including PIN login and roles, backups and restore, till-to-till LAN sync and its encryption and pairing, M-Pesa (Daraja and SMS) handling, receipt and file sharing, and local storage of secrets.
-- The optional cloud dashboard and its SQL in `cloud/`.
+- The optional Google sign-in and Firestore copy (`app/.../cloud/`, `firebase/firestore.rules`).
 - The build and release workflows in `.github/`, for example anything that could leak signing keys or tamper with released files.
 
 Out of scope (unless you can show a realistic way around the protection):

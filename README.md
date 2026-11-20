@@ -97,7 +97,6 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 ### 🛡️ Accountability & Recovery
 - **Activity log (owner):** every sign-in, sale, discount, void and refund (a written reason is now required), price/cost change, stock adjustment, product add/delete, no-sale drawer opening, shift open/close (with cash variance) and backup is recorded with who did it. Each line is chained to the one before by a hash, so an edited or removed line is detected and the screen says where. Deleting only the newest lines cannot be detected on the phone itself.
 - **Sync visibility:** Settings → Sync shows when the till last synced and how many sales are waiting. Sales the main device refused are shown in red with a **Retry refused sales** button, so a refused sale can no longer sit unnoticed on one phone.
-- **Cloud dashboard management:** the web dashboard has **Manage stores** (remove a store and its cloud data) and **Make a new setup code**. Re-run `cloud/supabase_setup.sql` once to add these (it is safe to run again).
 - **M-Pesa verification:** under the code field the till says whether the code is verified (a payment of at least the amount arrived on this phone), short-paid, already used on another sale, not received yet, or badly formed. Turn on **Require a verified code** on the M-Pesa payments screen to refuse unverified M-Pesa sales (STK-push confirmed payments are exempt). The payments list shows which received payments are matched to a sale and which are not.
 - **Smart restocking:** an item is due for reorder when stock would run out before a delivery could arrive (3 days) plus a 2-day buffer, based on its recent sales rate. The suggested quantity covers lead time plus 14 days, never less than the product's reorder quantity, with an estimated cost per item and per supplier in the shared list.
 - **Batch (FIFO) costing:** each delivery (purchase order, opening stock, stock added) is kept as a cost layer. A sale takes its cost from the oldest layers first, and a void or refund puts the stock back into the same layers. Profit reports use that real cost; stock that predates layers is costed at the product's cost price. Layers are not created retroactively for existing stock.
@@ -196,19 +195,11 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 ### 🔧 Hardware check, archiving and instant M-Pesa
 - **Hardware check** (from Store health): printer, cash drawer, camera, Bluetooth, SMS, notifications, network, storage and battery, with one-tap test print and test drawer.
 - **Archive old sales** (Settings, owner only): sales older than 1, 2 or 3 years are written to a compressed file you keep, checked, and only then removed, so the app stays fast. Weekly housekeeping trims delivered sync records.
-- **Instant M-Pesa (webhook)**: payments reach the phone through your own cloud project even if the SMS never arrives. See [docs/MPESA_WEBHOOK.md](docs/MPESA_WEBHOOK.md).
 
-### ☁️ Multi-Store Cloud Dashboard
-See every store in one web page: sales totals and 30-day trend, low-stock and expiry alerts, estimated profit and expenses, and shift / Z-report status (with cash variance). Uses **your own free Supabase project**; nothing goes through anyone else's server.
+### ☁️ Online account (Sign in with Google)
+Optional. Tap **Continue with Google** in *Settings > Online account* (the first time it creates your account) and the phone uploads a daily summary of the store (sales totals, low-stock and expiry alerts, profit and expenses, shifts) to your own area of Firestore, and can share one product list between your shops. Customer names and receipts are never sent. The till works fully without an account. **Delete my account and cloud copy** is in the same place.
 
-1. Create a project at supabase.com. Open **SQL Editor**, paste `cloud/supabase_setup.sql`, **first change the setup code and the owner email near the top**, and run it.
-2. **Authentication → Users → Add user** (the same owner email you put in the script, plus a password), then turn **off** "Allow new users to sign up". Only that email can read the data, even if sign-ups stay on. Already set up? Run the new script and then `update app_config set value = 'you@example.com' where key = 'owner_email';`.
-3. In each store's app (admin): **Settings → Cloud dashboard** → enter Project URL, anon key (Project Settings → API) and the setup code → **Connect & upload**. The app then uploads every few hours and when a shift is closed.
-4. Open `cloud/dashboard/index.html` (double-click it, or host it on GitHub Pages / any static host), enter the URL and anon key, and sign in.
-
-Re-installing the app or tapping Disconnect registers the phone as a new store; delete the old one in Supabase (Table Editor → `stores`) so it disappears from the dashboard. Renaming the shop updates its name on the next upload.
-
-Security: the anon key alone can neither read data nor write to an existing store; each phone has its own random secret (only a hash is stored online) and only the signed-in owner can read. Customer names, phone numbers and receipts are not uploaded. Profit is only accurate for products that have a cost price (the dashboard shows the coverage).
+Setup (once, by the person who builds the app): create a Firebase project, enable **Authentication → Google** and **Firestore**, add the `google-services.json` for `com.minimart.pos` (see [docs/FIREBASE.md](docs/FIREBASE.md)), and deploy `firebase/firestore.rules`, which lets each owner read and write only their own `owners/<id>` data.
 
 ### 📊 Reports & Analytics
 - **Analytics dashboard** (Home tile; managers/owners): 7 / 30 / 90-day view with revenue (and change vs the
@@ -433,7 +424,7 @@ Actions tab, or push a `v*` tag). The version comes from `versionName` in
 - Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 - Found a security problem? Please follow [SECURITY.md](SECURITY.md) and do not open a public issue.
 - Looking for somewhere to start? See the [roadmap and good first contributions](docs/ROADMAP.md). Need help? [SUPPORT.md](SUPPORT.md). Libraries and updates: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
-- Working on the code (or using an AI assistant)? Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [CLAUDE.md](CLAUDE.md). Instant M-Pesa setup is in [docs/MPESA_WEBHOOK.md](docs/MPESA_WEBHOOK.md).
+- Working on the code (or using an AI assistant)? Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [CLAUDE.md](CLAUDE.md)..
 - MiniMart POS is open source under the [Apache License 2.0](LICENSE). Third-party libraries keep their own licenses.
 
 ---

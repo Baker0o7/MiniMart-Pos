@@ -45,7 +45,8 @@ class MiniMartApp : Application(), Configuration.Provider {
                 com.minimart.pos.worker.AutoBackupWorker.schedule(this@MiniMartApp)
                 com.minimart.pos.worker.SyncWorker.schedule(this@MiniMartApp)
                 com.minimart.pos.worker.MaintenanceWorker.schedule(this@MiniMartApp)
-                com.minimart.pos.worker.MpesaWebhookWorker.schedule(this@MiniMartApp)
+                // The instant M-Pesa inbox (Supabase) was removed; stop its old background job on phones that still have it.
+                androidx.work.WorkManager.getInstance(this@MiniMartApp).cancelUniqueWork("mpesa_webhook_pull")
             } catch (_: Exception) {}
             try { if (settings.dailyReport.first()) com.minimart.pos.worker.DailyReportWorker.schedule(this@MiniMartApp, settings.dailyReportHour.first(), replace = false) } catch (_: Exception) {}
             launch { try { updateManager.autoCheckIfDue() } catch (_: Exception) {} }

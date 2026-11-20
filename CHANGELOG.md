@@ -7,6 +7,8 @@ Every release is published, with its signed APKs, on the [Releases page](https:/
 
 ## [Unreleased]
 
+- **Sign in with Google (Gmail):** the optional online account now uses Google sign-in. One button creates your account the first time and signs you in after that. Your daily summary and shared product list are kept in your own private area, and you can delete your account and cloud copy from the same screen.
+- **Supabase removed:** the old setup-code/Supabase connection, its web dashboard and the instant-M-Pesa inbox are gone. M-Pesa payments still arrive by SMS and the STK push.
 - **Internal update:** the library the app uses to read and write saved settings and sync data (Gson) is updated to its latest version. Nothing you use should look different.
 
 ## [1.33.18] - 2026-11-20

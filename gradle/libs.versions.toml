@@ -1,6 +1,8 @@
 [versions]
 leakcanary = "2.14"
 firebaseBom = "35.1.0"
+credentials = "1.5.0"
+googleid = "1.1.1"
 googleServices = "4.5.0"
 firebaseCrashlyticsPlugin = "3.0.8"
 firebasePerfPlugin = "2.0.2"
@@ -35,6 +37,11 @@ leakcanary = { module = "com.squareup.leakcanary:leakcanary-android", version.re
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 firebase-perf = { module = "com.google.firebase:firebase-perf" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
+androidx-credentials-play = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit5" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-vintage = { module = "org.junit.vintage:junit-vintage-engine" }

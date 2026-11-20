@@ -43,6 +43,5 @@ if grep -rn 'String.format("' --include=*.kt app/src/main data/src/main core/src
   grep -rn 'String.format("' --include=*.kt app/src/main data/src/main core/src/main | grep -v Locale | head -5
   fail=1
 fi
-python3 scripts/check-cloud-sql.py || fail=1
 [ "$fail" -eq 0 ] && echo "Release checks passed (db v$ver, app $name/$code)"
 exit $fail

@@ -52,12 +52,6 @@ android {
     }
 
     defaultConfig {
-    // Hosted backend (cloud/multitenant_setup.sql). Set `minimart.cloudUrl` and `minimart.cloudAnonKey` in gradle.properties
-    // or the CLOUD_URL / CLOUD_ANON_KEY environment variables; the anon key is public by design. Left empty, the
-    // app asks owners for their own Supabase project instead, exactly as before.
-        fun cfg(prop: String, env: String) = (providers.gradleProperty(prop).orNull ?: System.getenv(env) ?: "").trim().replace("\"", "")
-        buildConfigField("String", "CLOUD_URL", "\"${cfg("minimart.cloudUrl", "CLOUD_URL")}\"")
-        buildConfigField("String", "CLOUD_ANON_KEY", "\"${cfg("minimart.cloudAnonKey", "CLOUD_ANON_KEY")}\"")
         applicationId = "com.minimart.pos"
         minSdk = 26
         targetSdk = 36
@@ -180,6 +174,13 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.perf)
+    // Owner account: "Continue with Google" (Credential Manager -> Firebase Auth) and the optional cloud copy in Firestore.
+    // Both stay idle unless app/google-services.json exists (docs/FIREBASE.md).
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play)
+    implementation(libs.googleid)
 
     // Compose UI tests that run on a device/emulator (app/src/androidTest).
     androidTestImplementation(platform(libs.androidx.compose.bom))

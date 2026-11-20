@@ -1,0 +1,28 @@
+rules_version = '2';
+// An owner can read and write only their own area, owners/<their Google account id>/..., and only documents of the
+// two shapes the app writes. Everything else is closed. Deploy with: firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) { return request.auth != null && request.auth.uid == uid; }
+
+    match /owners/{uid}/stores/{storeId} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['name', 'pushedAt', 'payload'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 80
+        && request.resource.data.pushedAt is number
+        && request.resource.data.payload is string && request.resource.data.payload.size() <= 900000;
+    }
+
+    match /owners/{uid}/catalog/main {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['version', 'publisherId', 'itemCount', 'items', 'updatedAt'])
+        && request.resource.data.version is number
+        && request.resource.data.publisherId is string
+        && request.resource.data.itemCount is number && request.resource.data.itemCount <= 5000
+        && request.resource.data.items is string && request.resource.data.items.size() <= 900000
+        && request.resource.data.updatedAt is number;
+    }
+  }
+}

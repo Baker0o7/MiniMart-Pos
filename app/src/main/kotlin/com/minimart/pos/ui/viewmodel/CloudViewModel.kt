@@ -3,7 +3,10 @@ package com.minimart.pos.ui.viewmodel
 import com.minimart.pos.util.Lang
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.app.Activity
 import com.minimart.pos.cloud.CloudConfig
+import com.minimart.pos.cloud.OwnerAuth
+import com.minimart.pos.cloud.SignInResult
 import com.minimart.pos.cloud.CloudReporter
 import com.minimart.pos.cloud.CloudResult
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,12 +18,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class CloudUiState(
-    /** The operator's hosted backend is used: owners only type a code from the web dashboard. */
-    val hosted: Boolean = false,
-    val url: String = "",
-    val anonKey: String = "",
-    val setupCode: String = "",
+    /** This build has a Firebase project, so Google sign-in can work. */
+    val available: Boolean = false,
     val connected: Boolean = false,
+    val email: String = "",
     val busy: Boolean = false,
     val message: String? = null,
     val isError: Boolean = false,
@@ -31,45 +32,36 @@ data class CloudUiState(
     val catalogMessage: String? = null,
     val catalogError: Boolean = false,
     val catalogAt: Long = 0L,
-    val takeOverPrompt: Boolean = false
+    val takeOverPrompt: Boolean = false,
+    val confirmDelete: Boolean = false
 )
 
 @HiltViewModel
 class CloudViewModel @Inject constructor(
     private val config: CloudConfig,
+    private val auth: OwnerAuth,
     private val reporter: CloudReporter,
     private val catalog: com.minimart.pos.cloud.CatalogSync
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
-        CloudUiState(hosted = config.usesHosted, url = config.url, anonKey = config.anonKey, connected = config.isConfigured, lastPushAt = config.lastPushAt,
+        CloudUiState(available = auth.available, connected = config.isConfigured, email = auth.email, lastPushAt = config.lastPushAt,
             catalogRole = config.catalogRole, catalogAt = config.catalogAt)
     )
     val state: StateFlow<CloudUiState> = _state.asStateFlow()
 
-    fun setUrl(v: String) = _state.update { it.copy(url = v) }
-    fun setAnonKey(v: String) = _state.update { it.copy(anonKey = v) }
-    fun setSetupCode(v: String) = _state.update { it.copy(setupCode = v) }
-
-    fun connect() {
-        val s = _state.value
-        val url = s.url.trim().trimEnd('/')
-        when {
-            !config.usesHosted && !url.startsWith("https://") -> return fail("Project URL must start with https://")
-            !config.usesHosted && s.anonKey.isBlank() -> return fail("Enter the project's anon (public) key")
-            s.setupCode.isBlank() -> return fail(if (config.usesHosted) "Enter the code from your dashboard (Add a shop)" else "Enter the setup code you put in the SQL script")
-        }
-        if (!config.usesHosted) { config.url = url; config.anonKey = s.anonKey }
+    /** "Continue with Google": creates the account the first time, signs in after that. */
+    fun signIn(activity: Activity) {
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch {
-            when (val r = reporter.register(s.setupCode.trim())) {
-                is CloudResult.Failed -> _state.update { it.copy(busy = false, message = r.message, isError = true) }
-                CloudResult.Ok -> {
-                    config.registered = true
+            when (val r = auth.signInWithGoogle(activity)) {
+                SignInResult.Cancelled -> _state.update { it.copy(busy = false) }
+                is SignInResult.Failed -> _state.update { it.copy(busy = false, message = r.message, isError = true) }
+                is SignInResult.Ok -> {
                     val p = reporter.push()
                     _state.update {
-                        it.copy(busy = false, connected = true, setupCode = "", lastPushAt = config.lastPushAt,
-                            message = if (p is CloudResult.Failed) Lang.t("Connected, but first upload failed: ${p.message}", "تم الاتصال لكن فشل الرفع الأول: ${p.message}") else Lang.t("Connected. Store uploaded.", "تم الاتصال ورُفع المتجر."),
+                        it.copy(busy = false, connected = true, email = r.email, lastPushAt = config.lastPushAt,
+                            message = if (p is CloudResult.Failed) Lang.t("Signed in, but the first upload failed: ${p.message}", "تم تسجيل الدخول لكن فشل الرفع الأول: ${p.message}") else Lang.t("Signed in. Store uploaded.", "تم تسجيل الدخول ورُفع المتجر."),
                             isError = p is CloudResult.Failed)
                     }
                 }
@@ -87,9 +79,31 @@ class CloudViewModel @Inject constructor(
         }
     }
 
-    fun disconnect() {
-        config.disconnect()
-        _state.update { it.copy(connected = false, message = Lang.t("Disconnected. Reconnecting registers this phone as a new store.", "تم قطع الاتصال. إعادة الاتصال تسجّل هذا الهاتف كمتجر جديد."), isError = false, lastPushAt = 0L) }
+    fun signOut() {
+        viewModelScope.launch {
+            auth.signOut()
+            config.disconnect()
+            _state.update { it.copy(connected = false, email = "", catalogRole = 0, message = Lang.t("Signed out. Your cloud copy is kept; sign in again to continue.", "تم تسجيل الخروج. نسختك السحابية محفوظة؛ سجّل الدخول للمتابعة."), isError = false, lastPushAt = 0L) }
+        }
+    }
+
+    fun askDelete() = _state.update { it.copy(confirmDelete = true) }
+    fun cancelDelete() = _state.update { it.copy(confirmDelete = false) }
+
+    /** Removes the cloud copy, then the account itself. Shop data on this phone is not touched. */
+    fun deleteAccount() {
+        _state.update { it.copy(busy = true, confirmDelete = false, message = null) }
+        viewModelScope.launch {
+            when (val r = reporter.deleteCloudData()) {
+                is CloudResult.Failed -> return@launch _state.update { it.copy(busy = false, message = r.message, isError = true) }
+                CloudResult.Ok -> Unit
+            }
+            val problem = auth.deleteAccount()
+            if (problem != null) return@launch _state.update { it.copy(busy = false, message = problem, isError = true) }
+            config.disconnect()
+            _state.update { it.copy(busy = false, connected = false, email = "", catalogRole = 0, lastPushAt = 0L, isError = false,
+                message = Lang.t("Your account and cloud copy were deleted. This phone's shop data is untouched.", "تم حذف حسابك ونسختك السحابية. بيانات المتجر على هذا الهاتف لم تتغير.")) }
+        }
     }
 
     fun setCatalogRole(role: Int) {
@@ -114,6 +128,4 @@ class CloudViewModel @Inject constructor(
     }
 
     fun dismissTakeOver() = _state.update { it.copy(takeOverPrompt = false) }
-
-    private fun fail(msg: String) = _state.update { it.copy(message = msg, isError = true) }
 }

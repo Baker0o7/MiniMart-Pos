@@ -23,13 +23,13 @@ What protects a shop's till, and what does not yet.
 
 ## Shared product list (cloud)
 * Optional and off by default (Settings, Cloud dashboard, Shared product list). One shop sends names, prices, tax and supplier details; the owner's other shops receive them. Stock, batches, expiry, sales and customers are never part of it.
-* It uses the shop's own secret like the daily upload, and the server (`cloud/catalog_setup.sql`) only lets a shop read or change the list of the owner it belongs to. A second shop can only take over as the sender after the owner confirms in the app.
+* It uses the owner's Google sign-in like the daily upload, and the Firestore rules (`firebase/firestore.rules`) only let a signed-in owner read or change their own list. A second shop can only take over as the main shop by an explicit, confirmed action; the switch happens in one transaction so two shops cannot both win.
 * Everything received is untrusted: `CatalogRules` drops items with bad barcodes, empty names, negative or huge prices, or tax outside 0-100%, strips control characters and caps lengths. A list that is empty or mostly unreadable is refused whole. Answers over 8 MB are cut off.
 * Gap: a following shop's own name and price edits are overwritten at the next sync. That is the point of the feature, and the Settings screen says so.
 
 ## Hardening in 1.31.1
 * **PIN lockout clock:** the lockout is now timed with the phone's since-boot clock (`LockoutClock`), so changing the phone's date no longer shortens it. After a restart the wall clock is used again, capped at the lockout length. Remaining gap: restart the phone *and* move the date forward in one go still ends a lockout early.
-* **Web dashboard:** the Supabase script is now served from the dashboard's own folder (`vendor/`, version 2.45.4, MIT) instead of a public CDN, so a compromised CDN cannot inject code into a page where the owner signs in. The page's own script moved out of `index.html`, and a Content-Security-Policy (`script-src 'self'`, no inline scripts, no frames in objects) blocks anything else. Web hosts should also send `X-Frame-Options: DENY`, which a meta tag cannot do.
+* **Web dashboard (removed):** the old Supabase web dashboard and its vendored script were removed with the move to Google sign-in and Firestore.
 * **Known limit, M-Pesa SMS:** text-message sender names can be faked by a determined attacker, so a forged "MPESA" text could be logged as a payment. Where that matters, use the instant M-Pesa (webhook) or STK push, which come from Safaricom directly, and treat SMS-logged payments as a convenience, not proof.
 
 ## Known gaps

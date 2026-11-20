@@ -1,14 +1,15 @@
 package com.minimart.pos.cloud
 
+import com.google.firebase.firestore.FirebaseFirestore
 import com.minimart.pos.data.repository.SettingsRepository
+import com.minimart.pos.util.ErrorAdvice
+import com.minimart.pos.util.Lang
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,65 +18,50 @@ sealed class CloudResult {
     data class Failed(val message: String) : CloudResult()
 }
 
-/** Registers this store with the owner's Supabase project and uploads its summary. */
+/** Uploads this shop's summary to the signed-in owner's own area of Firestore (`owners/<uid>/stores/<shop>`). */
 @Singleton
 class CloudReporter @Inject constructor(
     private val config: CloudConfig,
+    private val auth: OwnerAuth,
     private val builder: CloudSnapshotBuilder,
     private val settings: SettingsRepository
 ) {
     private val lock = Mutex()   // one upload at a time (worker, shift close and the button can overlap)
 
-    suspend fun register(setupCode: String): CloudResult = withContext(Dispatchers.IO) {
-        if (!config.url.startsWith("https://")) return@withContext CloudResult.Failed("The project URL must start with https://")
-        if (config.anonKey.isBlank()) return@withContext CloudResult.Failed("Enter the project's anon key")
-        if (setupCode.isBlank()) return@withContext CloudResult.Failed(
-            if (config.usesHosted) "Enter the code from your dashboard (Add a shop)" else "Enter the setup code from your SQL script")
-        val name = try { settings.storeName.first() } catch (_: Exception) { "Store" }
-        val hosted = config.usesHosted
-        val body = JSONObject().put(if (hosted) "p_code" else "p_setup_code", setupCode.trim()).put("p_store_id", config.storeId)
-            .put("p_name", name).put("p_secret", config.storeSecret)
-        when (val r = rpc(if (hosted) "register_store_with_code" else "register_store", body)) {
-            is CloudResult.Ok -> { config.registered = true; CloudResult.Ok }
-            // Registering twice (e.g. after an interrupted first try) is fine.
-            is CloudResult.Failed -> if (r.message.contains("already registered", true)) { config.registered = true; CloudResult.Ok } else r
-        }
-    }
-
     suspend fun push(): CloudResult = lock.withLock {
-        if (!config.isConfigured) return CloudResult.Failed("Cloud dashboard is not connected")
+        val uid = auth.uid ?: return CloudResult.Failed(Lang.t("Sign in with Google first.", "سجّل الدخول عبر Google أولاً."))
         withContext(Dispatchers.IO) {
             try {
-                val body = JSONObject().put("p_store_id", config.storeId).put("p_secret", config.storeSecret)
-                    .put("p_payload", builder.build())
-                val r = rpc("push_snapshot", body)
-                if (r is CloudResult.Ok) config.lastPushAt = System.currentTimeMillis()
-                r
+                val name = try { settings.storeName.first() } catch (_: Exception) { "Store" }
+                val payload = builder.build().toString()
+                if (payload.length > MAX_PAYLOAD) return@withContext CloudResult.Failed(Lang.t("The summary is too large to upload.", "الملخص كبير جدًا للرفع."))
+                FirebaseFirestore.getInstance().collection("owners").document(uid).collection("stores").document(config.storeId)
+                    .set(mapOf("name" to name.take(80), "pushedAt" to System.currentTimeMillis(), "payload" to payload)).awaitResult()
+                config.lastPushAt = System.currentTimeMillis()
+                CloudResult.Ok
+            } catch (_: TimeoutCancellationException) {
+                CloudResult.Failed(Lang.t("No connection right now. The upload will go through when the internet is back.",
+                    "لا يوجد اتصال الآن. سيتم الرفع عند عودة الإنترنت."))
             } catch (e: Exception) {
-                CloudResult.Failed(com.minimart.pos.util.ErrorAdvice.explain(e, "The upload"))
+                CloudResult.Failed(ErrorAdvice.explain(e, "The upload"))
             }
         }
     }
 
-    private fun rpc(fn: String, body: JSONObject): CloudResult = try {
-        val conn = URL("${config.url}/rest/v1/rpc/$fn").openConnection() as HttpURLConnection
-        conn.connectTimeout = 10_000; conn.readTimeout = 30_000
-        conn.requestMethod = "POST"
-        conn.setRequestProperty("apikey", config.anonKey)
-        conn.setRequestProperty("Authorization", "Bearer ${config.anonKey}")
-        conn.setRequestProperty("Content-Type", "application/json")
-        val bytes = body.toString().toByteArray(Charsets.UTF_8)
-        conn.doOutput = true
-        conn.setFixedLengthStreamingMode(bytes.size)
-        conn.outputStream.use { it.write(bytes) }
-        val code = conn.responseCode
-        if (code in 200..299) CloudResult.Ok
-        else {
-            val text = conn.errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
-            val msg = try { JSONObject(text).optString("message", "") } catch (_: Exception) { "" }
-            CloudResult.Failed(msg.ifBlank { "Server replied $code" })
+    /** Removes everything this owner has in the cloud (all shops and the shared product list). Needs the internet. */
+    suspend fun deleteCloudData(): CloudResult = lock.withLock {
+        val uid = auth.uid ?: return CloudResult.Ok
+        withContext(Dispatchers.IO) {
+            try {
+                val owner = FirebaseFirestore.getInstance().collection("owners").document(uid)
+                owner.collection("stores").get().awaitResult().documents.forEach { it.reference.delete().awaitResult() }
+                owner.collection("catalog").document("main").delete().awaitResult()
+                CloudResult.Ok
+            } catch (e: Exception) {
+                CloudResult.Failed(ErrorAdvice.explain(e, "Deleting the cloud copy"))
+            }
         }
-    } catch (e: Exception) {
-        CloudResult.Failed(com.minimart.pos.util.ErrorAdvice.explain(e, "Reaching the server"))
     }
+
+    private companion object { const val MAX_PAYLOAD = 900_000 }   // a Firestore document holds about 1 MB
 }

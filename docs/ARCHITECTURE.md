@@ -45,11 +45,9 @@ Compose screen  ->  ViewModel (Hilt)  ->  Repository (in :data)  ->  DAO / Room
 ## Payments
 
 * **Cash / card / credit**: recorded at checkout in `CartViewModel` / `SaleRepository`.
-* **M-Pesa** has three independent sources, all landing in the `mpesa_payments` table (unique per transaction code):
+* **M-Pesa** has two independent sources, all landing in the `mpesa_payments` table (unique per transaction code):
   1. SMS from sender `MPESA` (`MpesaSmsReceiver` + `MpesaSmsParser`),
-  2. Daraja STK push started from checkout (`DarajaApiClient`),
-  3. Instant webhook: Safaricom -> Supabase Edge Function -> cloud inbox -> `MpesaWebhookClient`
-     (see [MPESA_WEBHOOK.md](MPESA_WEBHOOK.md)).
+  2. Daraja STK push started from checkout (`DarajaApiClient`).
 * A sale can only claim a code that exists in `mpesa_payments` and is not already used (`PaymentValidator`,
   `MpesaVerifier`). `MpesaReconciler` lists payments with no sale and sales with no payment.
 
@@ -58,9 +56,10 @@ Compose screen  ->  ViewModel (Hilt)  ->  Repository (in :data)  ->  DAO / Room
 * **LAN sync**: one phone runs `SyncServer`; others use `SyncClient`. Bodies are AES-GCM encrypted and HMAC-signed with
   a pairing secret (`SyncCrypto`, `SyncAuth`); requests go through `LanHttp` raw sockets because the network security
   config blocks all cleartext HTTP.
-* **Cloud dashboard**: the owner's own Supabase project (`cloud/supabase_setup.sql`, `cloud/dashboard`). The app
-  registers with a setup code and pushes a snapshot with a per-store secret. `cloud/mpesa_webhook.sql` adds the
-  instant M-Pesa inbox.
+* **Online account**: optional "Continue with Google" (`OwnerAuth`: Credential Manager + Firebase Auth). Signed in, the app
+  writes a snapshot to `owners/<uid>/stores/<shop>` (`CloudReporter`) and shares the product list through
+  `owners/<uid>/catalog/main` (`CatalogSync`). Rules are in `firebase/firestore.rules`. Without `app/google-services.json`
+  all of it stays idle.
 
 ## Background work (WorkManager)
 

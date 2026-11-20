@@ -27,10 +27,8 @@ import com.minimart.pos.util.SupportInfo
 
 /** Version, licence, project links, and a one-tap "copy support info" that holds no shop data or secrets. */
 @Composable
-internal fun AboutSettingsSection(syncOn: Boolean, cloudOn: Boolean, webhook: MpesaWebhookViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
-                                  updates: com.minimart.pos.ui.viewmodel.UpdateViewModel = androidx.hilt.navigation.compose.hiltViewModel()) {
+internal fun AboutSettingsSection(syncOn: Boolean, cloudOn: Boolean, updates: com.minimart.pos.ui.viewmodel.UpdateViewModel = androidx.hilt.navigation.compose.hiltViewModel()) {
     val context = LocalContext.current
-    val instantMpesaOn = webhook.state.collectAsStateWithLifecycle().value.enabled
     var copied by remember { mutableStateOf(false) }
     DSection(tr(com.minimart.pos.R.string.set_about), Icons.Default.Info, summary = tr(com.minimart.pos.R.string.version_fmt, BuildConfig.VERSION_NAME), initiallyExpanded = false) {
         Text("MiniMart POS ${BuildConfig.VERSION_NAME} (" + Lang.t("build", "الإصدار الداخلي") + " ${BuildConfig.VERSION_CODE})", color = DT.OnSurface, style = MaterialTheme.typography.bodyMedium)
@@ -41,7 +39,7 @@ internal fun AboutSettingsSection(syncOn: Boolean, cloudOn: Boolean, webhook: Mp
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = {
-                val text = SupportInfo.format(facts(context, syncOn, cloudOn, instantMpesaOn))
+                val text = SupportInfo.format(facts(context, syncOn, cloudOn))
                 (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("MiniMart support info", text))
                 copied = true
             }, modifier = Modifier.heightIn(min = 48.dp)) { Text(tr(com.minimart.pos.R.string.copy_support)) }
@@ -57,7 +55,7 @@ private fun open(context: Context, url: String) {
     runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 }
 
-private fun facts(context: Context, sync: Boolean, cloud: Boolean, instant: Boolean): SupportFacts {
+private fun facts(context: Context, sync: Boolean, cloud: Boolean): SupportFacts {
     val now = System.currentTimeMillis()
     val lastOk = runCatching { BackupManager.healthSnapshot(context).first }.getOrDefault(0L)
     val newest = runCatching { BackupManager.listBackups(context).maxOfOrNull { it.lastModified() } ?: 0L }.getOrDefault(0L)
@@ -69,7 +67,7 @@ private fun facts(context: Context, sync: Boolean, cloud: Boolean, instant: Bool
         freeStorageMb = runCatching { StatFs(context.filesDir.path).availableBytes / (1024 * 1024) }.getOrNull(),
         crashReportsThisWeek = runCatching { CrashRecorder.recentCount(context) }.getOrDefault(0),
         lastBackupDays = if (last > 0) ((now - last) / (24L * 60 * 60 * 1000)).toInt() else null,
-        syncOn = sync, cloudOn = cloud, instantMpesaOn = instant
+        syncOn = sync, cloudOn = cloud, instantMpesaOn = false
     )
 }
 

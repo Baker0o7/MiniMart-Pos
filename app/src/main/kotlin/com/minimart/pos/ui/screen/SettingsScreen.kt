@@ -565,72 +565,12 @@ fun SettingsScreen(
                     }
                 }
 
-                // ── Cloud dashboard (multi-store) ─────────────────────────────
-                if (isOwner) {
-                    val cs by cloudVm.state.collectAsStateWithLifecycle()
-                    val fieldColors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = DT.Teal, unfocusedBorderColor = DT.Border,
-                        focusedTextColor = DT.Ink, unfocusedTextColor = DT.Ink,
-                        focusedContainerColor = DT.Bg, unfocusedContainerColor = DT.Bg)
-                    DSection(tr(com.minimart.pos.R.string.set_cloud), Icons.Default.Sync,
-                        summary = if (cs.connected) Lang.t("Connected", "متصل") else Lang.t("Off", "متوقف"),
-                        initiallyExpanded = false) {
-                        Text(if (cs.hosted)
-                            "Sends a daily summary (sales, stock alerts, expenses, shifts) of this store to your online dashboard so you can see all your shops in one place. Customer names and receipts are not sent. On the dashboard website, sign in, press \"Add a shop\", and type the code it shows below."
-                        else "Sends a daily summary (sales, stock alerts, expenses, shifts) of this store to your own Supabase project so you can see all stores in one web dashboard. Customer names and receipts are not sent. See the README for the 5-minute setup.",
-                            color = DT.SubText, fontSize = 11.sp, lineHeight = 15.sp)
-                        Spacer(Modifier.height(10.dp))
-                        if (!cs.connected) {
-                            if (!cs.hosted) {
-                                OutlinedTextField(cs.url, cloudVm::setUrl, label = { Text(tr(com.minimart.pos.R.string.proj_url)) },
-                                    singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Next), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
-                                Spacer(Modifier.height(8.dp))
-                                OutlinedTextField(cs.anonKey, cloudVm::setAnonKey, label = { Text(tr(com.minimart.pos.R.string.anon_key)) },
-                                    singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
-                                Spacer(Modifier.height(8.dp))
-                            }
-                            OutlinedTextField(cs.setupCode, cloudVm::setSetupCode, label = { Text(if (cs.hosted) Lang.t("Code from your dashboard (e.g. K7QM-4TX9)", "الرمز من لوحة التحكم (مثال: K7QM-4TX9)") else Lang.t("Setup code", "رمز الإعداد")) },
-                                singleLine = true,
-                                keyboardOptions = if (cs.hosted)
-                                    androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters, autoCorrectEnabled = false, imeAction = androidx.compose.ui.text.input.ImeAction.Done)
-                                else androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false),
-                                modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = fieldColors)
-                            Spacer(Modifier.height(10.dp))
-                            Button(onClick = { cloudVm.connect() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.Surface2)) {
-                                if (cs.busy) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
-                                else Text(tr(com.minimart.pos.R.string.connect_upload), color = DT.Ink, fontSize = 13.sp)
-                            }
-                        } else {
-                            Text(if (cs.lastPushAt > 0) "Last upload: " + java.text.SimpleDateFormat("d MMM, HH:mm", androidx.compose.ui.text.intl.Locale.current.platformLocale).format(java.util.Date(cs.lastPushAt)) else "Not uploaded yet",
-                                color = DT.Ink, fontSize = 12.sp)
-                            Spacer(Modifier.height(4.dp))
-                            Text(tr(com.minimart.pos.R.string.upload_auto), color = DT.SubText, fontSize = 11.sp)
-                            Spacer(Modifier.height(10.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Button(onClick = { cloudVm.uploadNow() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = DT.Teal, disabledContainerColor = DT.Surface2)) {
-                                    if (cs.busy) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
-                                    else Text(tr(com.minimart.pos.R.string.upload_now), color = DT.Ink, fontSize = 13.sp)
-                                }
-                                OutlinedButton(onClick = { cloudVm.disconnect() }, enabled = !cs.busy, shape = RoundedCornerShape(12.dp)) {
-                                    Text(tr(com.minimart.pos.R.string.disconnect), color = DT.Red, fontSize = 13.sp)
-                                }
-                            }
-                            CatalogShareBlock(cs, cloudVm)
-                        }
-                        cs.message?.let {
-                            Spacer(Modifier.height(6.dp))
-                            Text(it, color = if (cs.isError) DT.Red else DT.Green, fontSize = 12.sp)
-                        }
-                    }
-                }
+                // ── Online account (Google sign-in) and multi-store dashboard ──────
+                if (isOwner) CloudAccountSection(cloudVm)
 
                 if (isOwner) PrivacySettingsSection(settingsRepo)
 
                 if (isOwner) DailyReportSettingsSection(settingsRepo)
-
-                if (isOwner) MpesaWebhookSettingsSection()
 
                 if (isOwner) ArchiveSettingsSection(ownerGate)
 
