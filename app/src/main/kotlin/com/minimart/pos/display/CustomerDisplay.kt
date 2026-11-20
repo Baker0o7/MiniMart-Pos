@@ -103,7 +103,7 @@ private fun money(cur: String, v: Double) = "$cur ${String.format(Locale.US, "%,
 fun CustomerDisplayContent(s: CustomerDisplayState) {
     Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(Bg1, Bg2))).padding(28.dp)) {
         Column(Modifier.fillMaxSize()) {
-            Text(s.storeName.ifBlank { "Welcome" }, color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold,
+            Text(s.storeName.ifBlank { Lang.t("Welcome", "مرحبًا") }, color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(16.dp))
             when {
@@ -113,7 +113,7 @@ fun CustomerDisplayContent(s: CustomerDisplayState) {
                     Spacer(Modifier.height(16.dp))
                     Text(Lang.t("Thank you!", "شكرًا لك!"), color = Color.White, fontSize = 44.sp, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.height(8.dp))
-                    Text("Paid ${money(s.currency, s.total)}", color = Sub, fontSize = 24.sp)
+                    Text(Lang.t("Paid", "المدفوع") + " ${money(s.currency, s.total)}", color = Sub, fontSize = 24.sp)
                     if (s.change > 0.005) {
                         Spacer(Modifier.height(18.dp))
                         Text(Lang.t("Your change", "الباقي لك"), color = Sub, fontSize = 20.sp)

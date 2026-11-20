@@ -81,8 +81,6 @@ internal fun DSection(
             Row(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     .clickable(
-                        indication = null,
-                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                         role = androidx.compose.ui.semantics.Role.Button,
                         onClickLabel = if (expanded) com.minimart.pos.util.Lang.t("Collapse $title", "طيّ $title") else com.minimart.pos.util.Lang.t("Expand $title", "توسيع $title")
                     ) { openByHand = !openByHand }
