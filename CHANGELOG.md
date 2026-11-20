@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.33.18] - 2026-11-20
+
+- **No change for shops.** This version only renews the app's version number; nothing you use has changed.
+
 ## [1.33.17] - 2026-11-20
 
 - **Customer screen and settings:** the "Paid" line and the welcome title on the customer-facing screen are now in Arabic too. Settings section headers show a press effect when tapped, so it is clear they responded.
