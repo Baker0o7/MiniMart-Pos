@@ -1,8 +1,15 @@
 # Cloud dashboard security review (Supabase row-level security)
 
 Reviewed: `cloud/*.sql` (single-owner, multi-owner, catalog, M-Pesa inbox) and the Edge Function.
-**Not reviewed live:** the hosted project `minimart-pos-cloud` (eu-central-1) is **paused**, so its real policies and the
-Supabase security advisors could not be read. Nothing was changed on it. Restore it first, then run the advisors (see "Next").
+**Live deployment (2026-11-20):** the hosted project `minimart-pos-cloud` (eu-central-1) was restored, found empty (no hand-made
+policies), and `multitenant_setup.sql`, `catalog_setup.sql` and `mpesa_webhook.sql` were applied in that order.
+The security advisor shows only the expected notes: tables with row-level security and no policies (by design) and the
+phone-facing functions that the public key can call (each checks a per-shop secret). Owner functions are not callable by anon.
+**Two-account test (run in a rolled-back transaction, nothing left behind):** both phones registered and pushed; a wrong secret and
+a reused code were refused; the public key could not read `stores` or `store_snapshots` or create codes; owner A saw only A's
+snapshot, could not read `stores` or `link_codes`, and could not delete B's shop; owner B saw only B's snapshot.
+**Not done yet:** Auth settings (Confirm email, sign-up and API rate limits) are dashboard-only; the `till-payments` Edge Function is not
+deployed; the dashboard and app are not pointed at this project.
 
 ## What is already right
 - Every table has row-level security on. `stores`, `link_codes`, `mpesa_*` have no policies, so only the functions touch them.
