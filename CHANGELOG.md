@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.16] - 2026-11-20
 
 - **Safer pilot defaults:** M-Pesa payments now need a verified code by default. The Store health screen shows a red problem if the app ever has to correct a saved sale total when it starts (it should never happen).
 - **Refunds from a second till:** if a till sold more than the main phone had in stock, a later refund now gives back only what was actually taken off stock, so the count no longer grows by mistake. A refund or void from a till that the main phone refuses now shows a notification, like refused sales do.
