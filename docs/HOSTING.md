@@ -27,3 +27,13 @@ Dashboard → create account → confirm email → **Add a shop** → type the c
 Run `cloud/catalog_setup.sql` once, after `multitenant_setup.sql`. Then, in the app, on one shop choose Settings → Cloud dashboard → Shared product list → *Main shop (sends)*, and on the others *Follows main shop*. The phones share the list every few hours with the daily upload, or at once with the button. Only names, prices, tax and supplier details are shared; each shop keeps its own stock. The SQL was tested on a local PostgreSQL 16 with a stand-in for Supabase's `auth` schema (publish, fetch, one sender per owner, take-over, two owners kept apart, wrong secret, and the public key being unable to read the table).
 
 The dashboard no longer needs the internet for its script: `vendor/supabase.js` is bundled. Upload the whole `cloud/dashboard` folder including `app.js` and `vendor/`.
+
+## Go-live checklist for the hosted project (`minimart-pos-cloud`)
+Done: schema and policies applied and tested with two accounts (see [SUPABASE_AUDIT.md](SUPABASE_AUDIT.md)); `cloud/dashboard/config.js` points at the project.
+Still to do, by the operator, in this order (none of it can be done from code):
+1. Supabase → Authentication → Providers → Email: turn **Confirm email** on; set the Site URL to where the dashboard is hosted.
+2. Authentication → Rate Limits: lower the sign-up and sign-in limits; Project Settings → API: enable rate limits and consider CAPTCHA on sign-up.
+3. Upgrade the project to a paid plan before real shops use it (free projects pause and have no backups).
+4. Publish `cloud/dashboard/` over https.
+5. GitHub → Settings → Secrets and variables → Actions → Variables: add `CLOUD_URL` (`https://uapdeclayqknsrmtvwdt.supabase.co`) and `CLOUD_ANON_KEY` (the publishable key in `config.js`), then include it in the next batched release. Until then the app keeps asking owners for their own project.
+6. Optional: GitHub → Settings → Environments → add a `release` environment with a required reviewer and use it in the signing job (adds one manual approval per release).
