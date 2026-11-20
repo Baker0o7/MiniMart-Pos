@@ -7,8 +7,8 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
- * Waits for a Google Play services task without pulling in another library. Firestore writes made while offline
- * finish only when the server answers, so every wait has a limit; the write itself stays queued by Firestore.
+ * Waits for a Google Play services task without pulling in another library. Sign-in needs the
+ * internet, so every wait has a limit instead of hanging.
  */
 internal suspend fun <T> Task<T>.awaitResult(timeoutMs: Long = 30_000L): T = withTimeout(timeoutMs) {
     suspendCancellableCoroutine { cont ->

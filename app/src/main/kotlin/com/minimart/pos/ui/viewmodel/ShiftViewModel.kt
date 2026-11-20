@@ -35,8 +35,6 @@ class ShiftViewModel @Inject constructor(
     private val settingsRepo: SettingsRepository,
     private val printer: com.minimart.pos.printer.ThermalPrinter,
     private val cashDrawer: com.minimart.pos.printer.CashDrawerManager,
-    private val cloud: com.minimart.pos.cloud.CloudReporter,
-    private val cloudConfig: com.minimart.pos.cloud.CloudConfig,
     private val audit: com.minimart.pos.util.AuditLogger
 ) : ViewModel() {
 
@@ -116,7 +114,6 @@ class ShiftViewModel @Inject constructor(
                         detail = "Counted ${money(closingFloat)}" + (closed?.let { " · expected ${money(it.expectedCash)} · variance ${money(it.cashDiscrepancy)}" } ?: ""))
                 }
                 _uiState.update { it.copy(isLoading = false, activeShift = null, lastClosedShift = closed, successMessage = Lang.t("Shift ended", "انتهت الوردية")) }
-                if (cloudConfig.isConfigured) launch { runCatching { cloud.push() } }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = com.minimart.pos.util.ErrorAdvice.explain(e, "Clock-out")) }
             }

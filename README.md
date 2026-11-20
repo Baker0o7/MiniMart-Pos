@@ -196,10 +196,10 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 - **Hardware check** (from Store health): printer, cash drawer, camera, Bluetooth, SMS, notifications, network, storage and battery, with one-tap test print and test drawer.
 - **Archive old sales** (Settings, owner only): sales older than 1, 2 or 3 years are written to a compressed file you keep, checked, and only then removed, so the app stays fast. Weekly housekeeping trims delivered sync records.
 
-### ☁️ Online account (Sign in with Google)
-Optional. Tap **Continue with Google** in *Settings > Online account* (the first time it creates your account) and the phone uploads a daily summary of the store (sales totals, low-stock and expiry alerts, profit and expenses, shifts) to your own area of Firestore, and can share one product list between your shops. Customer names and receipts are never sent. The till works fully without an account. **Delete my account and cloud copy** is in the same place.
+### 🔐 Owner account (Sign in with Google)
+Optional. Tap **Continue with Google** in *Settings > Owner account* (the first time it creates your account) to identify yourself as the owner. No sales, customers or shop data are sent anywhere, and there is no cloud database. The till works fully without an account. **Delete my account** is in the same place.
 
-Setup (once, by the person who builds the app): create a Firebase project, enable **Authentication → Google** and **Firestore**, add the `google-services.json` for `com.minimart.pos` (see [docs/FIREBASE.md](docs/FIREBASE.md)), and deploy `firebase/firestore.rules`, which lets each owner read and write only their own `owners/<id>` data.
+Setup (once, by the person who builds the app): create a Firebase project, enable **Authentication → Google**, and add the `google-services.json` for `com.minimart.pos` (see [docs/FIREBASE.md](docs/FIREBASE.md)).
 
 ### 📊 Reports & Analytics
 - **Analytics dashboard** (Home tile; managers/owners): 7 / 30 / 90-day view with revenue (and change vs the

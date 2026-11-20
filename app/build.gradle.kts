@@ -174,10 +174,9 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.perf)
-    // Owner account: "Continue with Google" (Credential Manager -> Firebase Auth) and the optional cloud copy in Firestore.
+    // Owner account: "Continue with Google" (Credential Manager -> Firebase Auth). No database.
     // Both stay idle unless app/google-services.json exists (docs/FIREBASE.md).
     implementation(libs.firebase.auth)
-    implementation(libs.firebase.firestore)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play)
     implementation(libs.googleid)

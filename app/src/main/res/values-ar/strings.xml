@@ -219,7 +219,6 @@
     <string name="set_bt_scanner">ماسح الباركود بالبلوتوث</string>
     <string name="set_expiry">تنبيهات انتهاء الصلاحية</string>
     <string name="set_sync">مزامنة عدة أجهزة (الشبكة المحلية)</string>
-    <string name="set_cloud">لوحة السحابة (عدة متاجر)</string>
     <string name="set_backup">البيانات والنسخ الاحتياطي</string>
     <string name="set_account">الحساب</string>
     <string name="currency">العملة</string>
@@ -238,7 +237,6 @@
     <string name="server_ip">عنوان IP للخادم</string>
     <string name="pairing_code">رمز الاقتران</string>
     <string name="connect_server">الاتصال بالخادم</string>
-    <string name="disconnect">قطع الاتصال</string>
     <string name="paired">تم الاقتران</string>
     <string name="sync_now">زامن الآن</string>
     <string name="retry_refused">أعد محاولة المبيعات المرفوضة</string>
@@ -246,9 +244,6 @@
     <string name="make_new_code_q">إنشاء رمز اقتران جديد؟</string>
     <string name="new_code_help">يجب أن يُدخل كل صندوق الرمز الجديد قبل أن يزامن مجددًا.</string>
     <string name="sync_encrypted">تُشفَّر المزامنة بين الهواتف بهذا الرمز.</string>
-    <string name="upload_now">ارفع الآن</string>
-    <string name="connect_upload">اتصل وارفع</string>
-    <string name="upload_auto">يرفع تلقائيًا كل بضع ساعات وعند إغلاق الوردية.</string>
     <string name="create_backup">إنشاء نسخة احتياطية</string>
     <string name="back_up">احفظ نسخة</string>
     <string name="backup">نسخة احتياطية</string>
@@ -519,14 +514,9 @@
     <string name="passkey">مفتاح ليبا نا إم-بيسا</string>
     <string name="saved_replace">تم الحفظ. اكتب للاستبدال</string>
     <string name="secure_unavail">التخزين الآمن غير متاح على هذا الهاتف، لذا لا يمكن حفظ مفاتيح إم-بيسا بأمان.</string>
-    <string name="hook_title">إم-بيسا الفوري (ويب هوك)</string>
     <string name="on">مفعّل</string>
     <string name="off">متوقف</string>
-    <string name="hook_help">تُبلغ سفاريكوم مشروعك السحابي بكل دفعة لحظة حدوثها، ويلتقطها هذا الهاتف خلال حوالي 15 دقيقة أو فورًا عند فتح قائمة إم-بيسا. يعمل حتى لو كان الهاتف مغلقًا أو لم تصل رسالة. يتطلب ربط لوحة السحابة وحساب Daraja C2B (راجع cloud/mpesa_webhook.sql وملف README).</string>
-    <string name="hook_connect_first">اربط لوحة السحابة أولًا (القسم أعلاه).</string>
-    <string name="hook_addr">العنوان المطلوب تسجيله لدى سفاريكوم (رابط التأكيد والتحقق):</string>
     <string name="copy_addr">نسخ العنوان</string>
-    <string name="hook_private">أبقِ هذا العنوان سريًا: أي شخص يملكه يمكنه إضافة مدفوعات إلى قائمتك.</string>
     <string name="fetch_now">جلب الآن</string>
     <string name="new_addr">عنوان جديد</string>
     <string name="turn_off">إيقاف</string>

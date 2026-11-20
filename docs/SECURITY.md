@@ -21,11 +21,9 @@ What protects a shop's till, and what does not yet.
 * Needs `REQUEST_INSTALL_PACKAGES`; the owner allows it once in Android settings. The receiver is not exported.
 * Gap: an attacker who controls the GitHub repo *and* the signing key could ship a bad update. Keep the release keystore safe.
 
-## Shared product list (cloud)
-* Optional and off by default (Settings, Cloud dashboard, Shared product list). One shop sends names, prices, tax and supplier details; the owner's other shops receive them. Stock, batches, expiry, sales and customers are never part of it.
-* It uses the owner's Google sign-in like the daily upload, and the Firestore rules (`firebase/firestore.rules`) only let a signed-in owner read or change their own list. A second shop can only take over as the main shop by an explicit, confirmed action; the switch happens in one transaction so two shops cannot both win.
-* Everything received is untrusted: `CatalogRules` drops items with bad barcodes, empty names, negative or huge prices, or tax outside 0-100%, strips control characters and caps lengths. A list that is empty or mostly unreadable is refused whole. Answers over 8 MB are cut off.
-* Gap: a following shop's own name and price edits are overwritten at the next sync. That is the point of the feature, and the Settings screen says so.
+## Owner account (Google sign-in)
+* Optional. Uses Android's Credential Manager and Firebase Authentication; no shop data, sales or customers are uploaded and no database is used.
+* The account only identifies the owner; the till, PINs and backups do not depend on it.
 
 ## Hardening in 1.31.1
 * **PIN lockout clock:** the lockout is now timed with the phone's since-boot clock (`LockoutClock`), so changing the phone's date no longer shortens it. After a restart the wall clock is used again, capped at the lockout length. Remaining gap: restart the phone *and* move the date forward in one go still ends a lockout early.

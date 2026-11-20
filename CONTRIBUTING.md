@@ -20,7 +20,6 @@ By contributing you agree that your contribution is licensed under the [Apache L
 | `:core` | Pure Kotlin/JVM logic: money, barcode decoding, backup and sync cryptography, M-Pesa SMS parsing, store-health and end-of-day rules, error messages | **No Android imports.** Everything here must be unit-testable on a laptop. |
 | `:data` | Room database, DAOs, entities, migrations, repositories, settings | Money and stock rules live here, not only in screens. Tests run on Robolectric. |
 | `:app` | Jetpack Compose UI, ViewModels, Hilt wiring, printer, scanner, sync, M-Pesa, workers | Keep screens thin; put decisions in `:core` or `:data` where they can be tested. |
-| `firebase/` | Firestore security rules for the optional online account | Deployed with the Firebase CLI, separate from the Android build. |
 
 ## Building
 

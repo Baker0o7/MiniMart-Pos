@@ -1,7 +1,7 @@
 # Architecture
 
 MiniMart POS is an offline-first point-of-sale app for small shops. Everything a till needs works without a network;
-the network is only used for optional things (syncing tills over Wi-Fi, the cloud dashboard, M-Pesa prompts, instant
+the network is only used for optional things (syncing tills over Wi-Fi, M-Pesa prompts, instant
 M-Pesa payments).
 
 ## Modules
@@ -56,10 +56,8 @@ Compose screen  ->  ViewModel (Hilt)  ->  Repository (in :data)  ->  DAO / Room
 * **LAN sync**: one phone runs `SyncServer`; others use `SyncClient`. Bodies are AES-GCM encrypted and HMAC-signed with
   a pairing secret (`SyncCrypto`, `SyncAuth`); requests go through `LanHttp` raw sockets because the network security
   config blocks all cleartext HTTP.
-* **Online account**: optional "Continue with Google" (`OwnerAuth`: Credential Manager + Firebase Auth). Signed in, the app
-  writes a snapshot to `owners/<uid>/stores/<shop>` (`CloudReporter`) and shares the product list through
-  `owners/<uid>/catalog/main` (`CatalogSync`). Rules are in `firebase/firestore.rules`. Without `app/google-services.json`
-  all of it stays idle.
+* **Owner account**: optional "Continue with Google" (`OwnerAuth`: Credential Manager + Firebase Auth). It only identifies the
+  owner; nothing is uploaded and there is no cloud database. Without `app/google-services.json` it stays idle.
 
 ## Background work (WorkManager)
 

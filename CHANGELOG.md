@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [Unreleased]
+
+- **Google sign-in only:** the optional owner account is just "Continue with Google" (Gmail): sign up, sign in, sign out and delete account. There is no cloud database: the daily upload, the shared product list and their settings were removed, and nothing from your shop leaves the phone.
+
 ## [1.33.19] - 2026-11-20
 
 - **Sign in with Google (Gmail):** the optional online account now uses Google sign-in. One button creates your account the first time and signs you in after that. Your daily summary and shared product list are kept in your own private area, and you can delete your account and cloud copy from the same screen.

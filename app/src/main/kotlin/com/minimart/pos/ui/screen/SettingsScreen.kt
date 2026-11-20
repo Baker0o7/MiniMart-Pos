@@ -565,7 +565,7 @@ fun SettingsScreen(
                     }
                 }
 
-                // ── Online account (Google sign-in) and multi-store dashboard ──────
+                // ── Owner account (Google sign-in) ──────
                 if (isOwner) CloudAccountSection(cloudVm)
 
                 if (isOwner) PrivacySettingsSection(settingsRepo)
@@ -829,7 +829,7 @@ fun SettingsScreen(
                 run {
                     val cloudState by cloudVm.state.collectAsStateWithLifecycle()
                     val syncOn by settingsRepo.syncServerEnabled.collectAsStateWithLifecycle(false)
-                    AboutSettingsSection(syncOn = syncOn, cloudOn = cloudState.connected)
+                    AboutSettingsSection(syncOn = syncOn, cloudOn = cloudState.signedIn)
                 }
 
                 // ── Account ───────────────────────────────────────────────────

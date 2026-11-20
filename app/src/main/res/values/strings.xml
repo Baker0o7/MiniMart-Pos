@@ -207,7 +207,6 @@
     <string name="set_bt_scanner">Bluetooth Barcode Scanner</string>
     <string name="set_expiry">Expiry Alerts</string>
     <string name="set_sync">Multi-Device Sync (LAN)</string>
-    <string name="set_cloud">Cloud dashboard (multi-store)</string>
     <string name="set_backup">Data &amp; Backup</string>
     <string name="set_account">Account</string>
     <string name="currency">Currency</string>
@@ -226,7 +225,6 @@
     <string name="server_ip">Server IP address</string>
     <string name="pairing_code">Pairing code</string>
     <string name="connect_server">Connect to Server</string>
-    <string name="disconnect">Disconnect</string>
     <string name="paired">Paired</string>
     <string name="sync_now">Sync Now</string>
     <string name="retry_refused">Retry refused sales</string>
@@ -234,9 +232,6 @@
     <string name="make_new_code_q">Make a new pairing code?</string>
     <string name="new_code_help">Every till must enter the new code before it can sync again.</string>
     <string name="sync_encrypted">Sync between phones is encrypted with this code.</string>
-    <string name="upload_now">Upload now</string>
-    <string name="connect_upload">Connect &amp; upload</string>
-    <string name="upload_auto">Uploads automatically every few hours and when a shift is closed.</string>
     <string name="create_backup">Create Backup</string>
     <string name="back_up">Back up</string>
     <string name="backup">Backup</string>
@@ -507,14 +502,9 @@
     <string name="passkey">Lipa na M-Pesa Passkey</string>
     <string name="saved_replace">Saved. Type to replace</string>
     <string name="secure_unavail">Secure storage is unavailable on this phone, so M-Pesa keys cannot be saved safely.</string>
-    <string name="hook_title">Instant M-Pesa (webhook)</string>
     <string name="on">On</string>
     <string name="off">Off</string>
-    <string name="hook_help">Safaricom tells your cloud project about each payment the moment it happens, and this phone picks it up within about 15 minutes, or at once when you open the M-Pesa list. It works even if the phone was off or had no SMS. Needs the Cloud dashboard connected and a Daraja C2B account (see cloud/mpesa_webhook.sql and the README).</string>
-    <string name="hook_connect_first">Connect the cloud dashboard first (the section above).</string>
-    <string name="hook_addr">Address to register with Safaricom (Confirmation and Validation URL):</string>
     <string name="copy_addr">Copy address</string>
-    <string name="hook_private">Keep this address private: anyone who has it can add payments to your list.</string>
     <string name="fetch_now">Fetch now</string>
     <string name="new_addr">New address</string>
     <string name="turn_off">Turn off</string>

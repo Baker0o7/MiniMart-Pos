@@ -31,7 +31,7 @@ sealed class SignInResult {
 /**
  * The owner's account: "Continue with Google" through Android's Credential Manager, checked by Firebase Auth. The first
  * time a Google account signs in the account is created, so one button is both sign up and sign in. The till itself
- * never needs an account; this only switches on the optional cloud copy. Without app/google-services.json
+ * never needs an account, and nothing is uploaded: the account only says who the owner is. Without app/google-services.json
  * (docs/FIREBASE.md) [available] is false and everything here stays idle.
  */
 @Singleton
@@ -81,7 +81,7 @@ class OwnerAuth @Inject constructor(@ApplicationContext private val context: Con
         runCatching { CredentialManager.create(context).clearCredentialState(ClearCredentialStateRequest()) }
     }
 
-    /** Deletes the sign-in itself (the cloud copy is removed first by [CloudReporter.deleteCloudData]). Null means done. */
+    /** Deletes the sign-in itself . Null means done. */
     suspend fun deleteAccount(): String? {
         val user = auth()?.currentUser ?: return null
         return try {
