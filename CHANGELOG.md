@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.20] - 2026-11-20
 
 - **Google sign-in only:** the optional owner account is just "Continue with Google" (Gmail): sign up, sign in, sign out and delete account. There is no cloud database: the daily upload, the shared product list and their settings were removed, and nothing from your shop leaves the phone.
 
