@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.19] - 2026-11-20
 
 - **Sign in with Google (Gmail):** the optional online account now uses Google sign-in. One button creates your account the first time and signs you in after that. Your daily summary and shared product list are kept in your own private area, and you can delete your account and cloud copy from the same screen.
 - **Supabase removed:** the old setup-code/Supabase connection, its web dashboard and the instant-M-Pesa inbox are gone. M-Pesa payments still arrive by SMS and the STK push.
