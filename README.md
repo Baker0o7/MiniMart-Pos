@@ -11,8 +11,8 @@ Built with Kotlin + Jetpack Compose 🇰🇪
 [![Release](https://img.shields.io/github/v/release/Baker0o7/MiniMart-Pos?color=00897B&label=Download%20APK&style=for-the-badge)](https://github.com/Baker0o7/MiniMart-Pos/releases/latest)
 [![Build](https://img.shields.io/github/actions/workflow/status/Baker0o7/MiniMart-Pos/release.yml?label=Build&color=00897B&style=for-the-badge)](https://github.com/Baker0o7/MiniMart-Pos/actions)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-00897B?style=for-the-badge)](https://developer.android.com)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge)](https://kotlinlang.org)
-[![Room DB](https://img.shields.io/badge/Room-v16-00897B?style=for-the-badge)](https://developer.android.com/jetpack/androidx/releases/room)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4-7F52FF?style=for-the-badge)](https://kotlinlang.org)
+[![Room DB](https://img.shields.io/badge/Room-v21-00897B?style=for-the-badge)](https://developer.android.com/jetpack/androidx/releases/room)
 [![Tests](https://img.shields.io/badge/Unit%20Tests-JUnit4-00897B?style=for-the-badge)](https://junit.org/junit4/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-00897B?style=for-the-badge)](LICENSE)
 
@@ -279,26 +279,23 @@ Owner account (permanent lockout protection).
   creation / removal / PIN resets
 - **Sync pairing secrets** — rate-limited, constant-time compared, and
   encrypted at rest (see Multi-Device Sync above)
-- **At-rest database protection**: relies on Android's File-Based Encryption
-  (FBE), hardware-backed and enabled by default since Android 7.0. App-level
-  SQLCipher encryption was evaluated twice and reverted both times due to
-  native-library crashes on startup; FBE was judged the safer,
-  zero-maintenance choice for this app.
+- **At-rest database protection**: the database is encrypted with SQLCipher, on top of
+  Android's File-Based Encryption.
 
 ### 💾 Backup & Data
 - One-tap backup to the app's own storage (`Android/data/com.minimart.pos/files/backups/`) —
   no all-files permission required. Use **Share Latest Backup** to copy it off the
   device (app storage is cleared on uninstall). Older backups in
   `Downloads/MiniMartPOS/backups/` still appear in the restore list
-- **Optional passphrase encryption** — set a passphrase when backing up and the file is saved as an
+- **Passphrase required** for any backup that leaves the phone — the file is saved as an
   encrypted `.mmbak` (AES-256-GCM, PBKDF2 key), unreadable without it, so it's safe to share or upload;
-  it restores on any phone. Wrong passphrases and tampered files are rejected. (A lost passphrase can't be recovered.)
+  it restores on any phone. The end-of-day backup stays in the app's private storage, encrypted with the phone's key. Wrong passphrases and tampered files are rejected. (A lost passphrase can't be recovered.)
 - Restores are validated first (SQLite header, schema version) and a safety copy of the
   current data is kept
 - **Restore requires explicit two-step confirmation** — selecting a backup
   shows exactly what will be lost before anything is overwritten, then the
   app automatically restarts (WAL/SHM files handled correctly)
-- 100% offline — Room SQLite v13, no internet required for core operation
+- 100% offline — Room SQLite v21, no internet required for core operation
 
 ### 🎨 UI / UX
 - Deep dark teal theme — readable in bright retail lighting; status-bar and navigation icons
@@ -320,19 +317,18 @@ Owner account (permanent lockout protection).
 
 ## 🧪 Testing
 
-Local JVM unit tests (`app/src/test`) cover the core financial calculation
-logic — no emulator needed:
+Roughly 750 automated tests run on every push (see [docs/BUILD_AND_TESTS.md](docs/BUILD_AND_TESTS.md)):
+
+| Where | Tests | Covers |
+|---|---|---|
+| `:core` (plain JVM) | ~436 | Money, cart and discount rules, M-Pesa parsing and webhook checks, Store health, sync payloads, conflict alerts |
+| `:data` (Robolectric) | ~144 | Room migrations (every version, schema golden files), repositories, ledger, sync apply |
+| `:app` (JVM) | ~174 | View models, backup, printer and receipt output, theme contrast |
+| `androidTest` (emulator, CI) | ~27 | Backup and restore, UI flows |
 
 ```bash
 gradle :core:test testDebugUnitTest
 ```
-
-| Test file | Covers |
-|---|---|
-| `MoneyTest` | Cent-exact arithmetic, the classic `0.1 + 0.2 != 0.3` Double failure case, rounding, clamping |
-| `CartUiStateTest` | Checkout subtotal/discount/total math, the discount-floor regression, weighed-item pricing |
-| `CartDiscountTest` | Discount capping: oversized/stale/negative global and line discounts never give goods away |
-| `PluDecoderTest` | Weighing-scale barcode decode/reject cases, price calculation |
 
 ---
 
@@ -340,11 +336,11 @@ gradle :core:test testDebugUnitTest
 
 | Layer | Technology |
 |---|---|
-| Language | Kotlin 2.0 |
+| Language | Kotlin 2.4 |
 | UI | Jetpack Compose + Material 3 |
 | Architecture | MVVM · Clean Architecture · Repository |
 | DI | Hilt |
-| Database | Room 2.6 (SQLite v13), Android FBE at rest |
+| Database | Room 2.8 (SQLite v21), SQLCipher at rest |
 | Money | Custom `Money` value class (Long cents) for checkout-critical math |
 | PIN Security | Argon2id (argon2-kt 1.4.0) |
 | Sensitive Storage | AES-256-GCM with an Android Keystore key (`KeystorePrefs`) |
@@ -366,7 +362,7 @@ gradle :core:test testDebugUnitTest
 ```bash
 git clone https://github.com/Baker0o7/MiniMart-Pos.git
 cd MiniMart-Pos
-gradle assembleDebug        # needs JDK 17, the Android SDK and Gradle 8.7
+gradle assembleDebug        # needs JDK 17, the Android SDK and Gradle 9.6 (AGP 9.4)
 ```
 
 Full build, test and contribution instructions are in [CONTRIBUTING.md](CONTRIBUTING.md).

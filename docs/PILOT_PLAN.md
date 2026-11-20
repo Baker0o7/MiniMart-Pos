@@ -33,3 +33,16 @@ crashes, sync failures between tills, M-Pesa payments not matched, days with no 
 ## Not covered
 The pilot does not prove Arabic wording (needs a native reader), thermal-printer Arabic, or multi-phone conflict alerts
 unless the shops actually use those.
+
+## Changes made for the pilot (code side, 2026-11)
+- "Require verified code" for M-Pesa is now **on by default**.
+- Any start-up "cent repair" of a sale total is recorded and shown in Store health as a **problem** (14-day window).
+- Database v21: sync now records the stock actually applied, so a refund of a sale that was short of stock gives back only what was taken.
+- A refund refused during sync now alerts the main phone's owner, like a refused sale does.
+- Every backup that leaves the phone needs a passphrase; the end-of-day backup stays in private storage.
+- Every GitHub Action is pinned to a commit SHA; CI retries only dependency-download failures.
+
+## Still needs people, phones and accounts
+Device matrix (32-bit, 16 KB-page, tablet, printers, drawer, scanner, kiosk), live Daraja and real callbacks with real SMS samples,
+the Supabase deployment with a two-account RLS test, and the signing-job environment protection (adds a manual approval to each release).
+Features are frozen for the pilot; releases are batched weekly.
