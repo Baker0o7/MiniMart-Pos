@@ -11,10 +11,10 @@ jobs:
   review:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # Needs "Dependency graph" switched on in the repository's Settings > Code security. Until then this
       # reports its own failure but must not make every pull request look broken.
-      - uses: actions/dependency-review-action@v4
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         continue-on-error: true
         with:
           fail-on-severity: high
