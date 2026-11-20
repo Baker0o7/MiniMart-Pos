@@ -46,3 +46,8 @@ unless the shops actually use those.
 Device matrix (32-bit, 16 KB-page, tablet, printers, drawer, scanner, kiosk), live Daraja and real callbacks with real SMS samples,
 the Supabase deployment with a two-account RLS test, and the signing-job environment protection (adds a manual approval to each release).
 Features are frozen for the pilot; releases are batched weekly.
+
+## Update 2026-11-20: Supabase replaced by Google sign-in
+The Supabase project (`minimart-pos-cloud`) was paused (not deleted) and all Supabase code, SQL, the web dashboard and the instant-M-Pesa inbox were removed.
+The optional online account is now "Continue with Google" (Firebase Auth) with a Firestore copy; see docs/FIREBASE.md. Needs the owner's Firebase project,
+the SHA-1 keys and `firebase/firestore.rules` deployed before it works; until then Settings says it is not set up. Not released: held until after the pilot.
