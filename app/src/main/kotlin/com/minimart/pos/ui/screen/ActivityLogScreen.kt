@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -46,9 +47,10 @@ fun ActivityLogScreen(onBack: () -> Unit, vm: ActivityLogViewModel = hiltViewMod
                     .padding(12.dp)
             ) {
                 Text(
-                    if (good) "Log intact · ${c.entries} protected entries"
-                    else c.anchorProblem?.let { "$it Entries you can still see may be incomplete." }
-                        ?: "Log was altered: the record breaks at line ${c.brokenAtLine}. Entries before it are still trustworthy.",
+                    if (good) Lang.t("Log intact · ${c.entries} protected entries", "السجل سليم · ${c.entries} إدخالات محمية")
+                    else c.anchorProblem?.let { Lang.t("$it Entries you can still see may be incomplete.", "$it قد تكون الإدخالات الظاهرة غير مكتملة.") }
+                        ?: Lang.t("Log was altered: the record breaks at line ${c.brokenAtLine}. Entries before it are still trustworthy.",
+                            "تم تعديل السجل: ينقطع عند السطر ${c.brokenAtLine}. الإدخالات التي قبله ما زالت موثوقة."),
                     color = if (good) DT.Green else DT.Red, fontSize = 12.sp, fontWeight = FontWeight.SemiBold
                 )
             }
@@ -87,6 +89,7 @@ private fun ActivityRow(e: ActivityEntry) {
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(DT.Surface)
             .border(1.dp, DT.Border, RoundedCornerShape(14.dp)).padding(12.dp)
+            .semantics(mergeDescendants = true) {}   // one TalkBack stop per entry, not four
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(prettyEnumName(e.event), color = tone, fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.weight(1f))

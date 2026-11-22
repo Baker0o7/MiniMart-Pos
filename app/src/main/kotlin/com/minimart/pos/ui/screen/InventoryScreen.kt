@@ -138,7 +138,7 @@ fun InventoryScreen(
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 item { CategoryChip(Lang.t("Low stock (${lowStock.size})", "مخزون منخفض (${lowStock.size})"), lowOnly, DT.Amber) { lowOnly = !lowOnly } }
                 item { CategoryChip(Lang.t("All", "الكل"), selectedCat == null) { vm.setCategory(null) } }
-                items(categories) { cat -> CategoryChip(cat, selectedCat == cat) { vm.setCategory(cat) } }
+                items(categories, key = { it }) { cat -> CategoryChip(cat, selectedCat == cat) { vm.setCategory(cat) } }
             }
 
             Spacer(Modifier.height(10.dp))

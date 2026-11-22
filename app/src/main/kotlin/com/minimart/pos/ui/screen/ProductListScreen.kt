@@ -131,7 +131,7 @@ fun ProductListScreen(
                 if (lowStock.isNotEmpty()) {
                     item { DarkFilterChip("⚠ Low stock (${lowStock.size})", lowOnly, accent = DT.Amber) { lowOnly = !lowOnly } }
                 }
-                items(categories) { cat -> DarkFilterChip(cat, selectedCat == cat) { vm.setCategory(cat) } }
+                items(categories, key = { it }) { cat -> DarkFilterChip(cat, selectedCat == cat) { vm.setCategory(cat) } }
             }
             Spacer(Modifier.height(8.dp))
 
