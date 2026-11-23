@@ -5,7 +5,7 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
-## [Unreleased]
+## [1.33.22] - 2026-11-23
 
 - **Units of measure:** new *Units* screen in Inventory (pieces, kg, litre, dozen, carton, box and your own). Each product can have pack sizes, for example 1 carton = 24 pcs, set in the product's edit screen.
 - **Selling in packs:** at the till, a product with packs shows buttons such as "+ carton (24)" that add the whole pack in one tap. Stock is still counted in the product's main unit, so stock, refunds and reports are unchanged.
