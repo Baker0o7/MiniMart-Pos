@@ -52,6 +52,7 @@ object DatabaseModule {
     @Provides @Singleton fun provideCustomerDao(db: AppDatabase) = db.customerDao()
     @Provides @Singleton fun provideSyncDao(db: AppDatabase) = db.syncDao()
     @Provides @Singleton fun provideMpesaPaymentDao(db: AppDatabase) = db.mpesaPaymentDao()
+    @Provides @Singleton fun provideUomDao(db: AppDatabase) = db.uomDao()
 
     /** Seals M-Pesa sender details with a Keystore key. Without a working Keystore the app stores them as before
      * (the database itself is still encrypted) rather than failing sales. */

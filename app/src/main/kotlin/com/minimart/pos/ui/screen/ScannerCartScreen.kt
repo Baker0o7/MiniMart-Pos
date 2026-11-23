@@ -107,6 +107,8 @@ fun ScannerCartScreen(
 
     val scanScope = rememberCoroutineScope()
     val searchResults: List<Product> by searchVm.results.collectAsStateWithLifecycle()
+    val uomVm: com.minimart.pos.ui.viewmodel.UomViewModel = hiltViewModel()
+    val packsByProduct by uomVm.packs.collectAsStateWithLifecycle()
 
     // Dialogs: tap a quantity to type it; weighed products need a weight (no scale ticket).
     var qtyEditItem by remember { mutableStateOf<CartItem?>(null) }
@@ -309,6 +311,23 @@ fun ScannerCartScreen(
                                         style = MaterialTheme.typography.labelSmall)
                                 }
                                 if (!soldOut) Icon(Icons.Default.Add, null, tint = DT.Teal, modifier = Modifier.size(20.dp))
+                            }
+                            // Sell a whole pack in one tap (1 carton = 24 pcs adds 24 pcs); only packs that stock can cover are offered.
+                            val packs = if (product.isWeighed) emptyList()
+                                        else packsByProduct[product.id].orEmpty().filter { it.sellable && it.factor <= product.stock }
+                            if (packs.isNotEmpty()) {
+                                androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(start = 62.dp, end = 14.dp, bottom = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    items(packs, key = { it.unitCode }) { pk ->
+                                        val label = "+ ${pk.unitCode} (${pk.factor})"
+                                        Box(Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(20.dp)).background(DT.TealDim)
+                                            .clickable(role = androidx.compose.ui.semantics.Role.Button) {
+                                                context.vibrateShort(); vm.addUnits(product, pk.factor); searchText = ""; searchVm.clear()
+                                            }.padding(horizontal = 14.dp), contentAlignment = Alignment.Center) {
+                                            Text(label, color = DT.TealLight, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                        }
+                                    }
+                                }
                             }
                             if (i < minOf(searchResults.size, 5) - 1)
                                 HorizontalDivider(color = DT.Border, thickness = 0.5.dp)

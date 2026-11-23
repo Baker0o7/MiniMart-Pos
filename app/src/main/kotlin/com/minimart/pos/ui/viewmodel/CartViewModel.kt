@@ -254,6 +254,26 @@ class CartViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Adds [units] of the product's main unit in one tap, for a pack (1 carton = 24 pcs adds 24). The line stays in the
+     * main unit, so stock, cost, refunds and receipts work exactly as for single items; stock is checked for the whole amount.
+     */
+    fun addUnits(product: Product, units: Int) {
+        if (units < 1 || product.isWeighed) return
+        val state = _uiState.value
+        val existing = state.items.indexOfFirst { it.product.id == product.id }
+        val current = if (existing >= 0) state.items[existing].quantity else 0
+        val wanted = current.toLong() + units
+        if (wanted > product.stock) {
+            val left = (product.stock - current).coerceAtLeast(0)
+            _uiState.update { it.copy(error = Lang.t("Only $left more of ${product.name} in stock", "المتاح فقط $left إضافية من ${product.name}")) }
+            return
+        }
+        val updated = if (existing >= 0) state.items.toMutableList().also { it[existing] = it[existing].copy(quantity = wanted.toInt()) }
+                      else state.items + CartItem(product = product, quantity = wanted.toInt())
+        _uiState.update { it.copy(items = updated, error = null) }
+    }
+
     fun updateQuantity(productId: Long, quantity: Int) {
         _uiState.update { state ->
             if (quantity <= 0) {

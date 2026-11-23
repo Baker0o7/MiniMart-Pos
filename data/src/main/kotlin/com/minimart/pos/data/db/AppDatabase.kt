@@ -12,8 +12,8 @@ import javax.inject.Inject
 @Database(
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class, MpesaPayment::class,
         Supplier::class, PurchaseOrder::class, PurchaseOrderItem::class,
-        com.minimart.pos.data.entity.StockBatch::class, com.minimart.pos.data.entity.SaleItemCost::class, LedgerEntry::class],
-    version = 21,
+        com.minimart.pos.data.entity.StockBatch::class, com.minimart.pos.data.entity.SaleItemCost::class, LedgerEntry::class, Uom::class, ProductUnit::class],
+    version = 22,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -28,6 +28,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun mpesaPaymentDao(): MpesaPaymentDao
     abstract fun purchasingDao(): PurchasingDao
     abstract fun batchDao(): BatchDao
+    abstract fun uomDao(): UomDao
     companion object { const val DATABASE_NAME = "minimart_pos.db" }
 }
 
@@ -212,6 +213,21 @@ object AppMigrations {
         }
     }
 
+    /**
+     * v21 → v22: units of measure. `uoms` is the managed unit list; `product_units` holds each product's pack sizes
+     * (1 carton = 24 pcs). Stock and sales stay in the product's base unit, so no existing row changes. The default units
+     * are added by UomRepository.ensureDefaults(), the same way for new and upgraded installs.
+     */
+    val MIGRATION_21_22 = object : androidx.room.migration.Migration(21, 22) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS `uoms` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `code` TEXT NOT NULL, `name` TEXT NOT NULL, `isActive` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL)")
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_uoms_code` ON `uoms` (`code`)")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `product_units` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `productId` INTEGER NOT NULL, `unitCode` TEXT NOT NULL, `factor` INTEGER NOT NULL, `sellable` INTEGER NOT NULL, `purchasable` INTEGER NOT NULL, FOREIGN KEY(`productId`) REFERENCES `products`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_product_units_productId` ON `product_units` (`productId`)")
+            db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_product_units_productId_unitCode` ON `product_units` (`productId`, `unitCode`)")
+        }
+    }
+
     /** Whole-amount money columns (not per-unit costs). Used by [MIGRATION_16_17] and its test. */
     val MONEY_COLUMNS: List<Pair<String, List<String>>> = listOf(
         "products" to listOf("price", "pricePerKg"),
@@ -226,7 +242,7 @@ object AppMigrations {
             "totalSales", "totalDiscounts", "expectedCash", "cashDiscrepancy")
     )
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21)
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22)
 }
 
 class AppTypeConverters {

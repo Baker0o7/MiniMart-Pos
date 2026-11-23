@@ -181,6 +181,8 @@ data class PoEditorState(
     val lines: List<PoLine> = emptyList(),
     val suppliers: List<Supplier> = emptyList(),
     val products: List<Product> = emptyList(),
+    /** Pack sizes by product id: ordering a carton adds its units to the (main-unit) quantity. */
+    val packs: Map<Long, List<com.minimart.pos.data.entity.ProductUnit>> = emptyMap(),
     val storeName: String = "",
     val message: String? = null,
     val isError: Boolean = false,
@@ -200,6 +202,7 @@ class PurchaseOrderEditorViewModel @Inject constructor(
     private val repo: PurchasingRepository,
     private val productRepo: ProductRepository,
     private val settings: SettingsRepository,
+    private val uom: com.minimart.pos.data.repository.UomRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -214,6 +217,9 @@ class PurchaseOrderEditorViewModel @Inject constructor(
         }
         viewModelScope.launch {
             productRepo.getAllProducts().catch { emit(emptyList()) }.collect { list -> _state.update { it.copy(products = list) } }
+        }
+        viewModelScope.launch {
+            uom.packsByProduct.catch { emit(emptyMap()) }.collect { m -> _state.update { it.copy(packs = m) } }
         }
         viewModelScope.launch {
             val name = try { settings.storeName.first() } catch (_: Exception) { "" }
@@ -253,6 +259,15 @@ class PurchaseOrderEditorViewModel @Inject constructor(
 
     fun setQty(index: Int, text: String) = editLine(index) { it.copy(qtyText = text) }
     fun setCost(index: Int, text: String) = editLine(index) { it.copy(costText = text) }
+
+    /** Orders one more pack: adds its units to the quantity (the order itself stays in the product's main unit). */
+    fun addPack(index: Int, factor: Int) = editLine(index) { l ->
+        if (l.weighed || !com.minimart.pos.util.UnitMath.validFactor(factor)) l
+        else {
+            val total = (l.qty.toLong() + factor).coerceAtMost(999_999L)
+            l.copy(qtyText = total.toString())
+        }
+    }
     private fun editLine(index: Int, f: (PoLine) -> PoLine) {
         _state.update { s ->
             if (!s.editable || index !in s.lines.indices) s

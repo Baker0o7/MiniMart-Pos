@@ -70,6 +70,7 @@ object Routes {
     const val LABELS = "labels"
     const val CUSTOMER_DISPLAY = "customer_display"
     const val ACTIVITY_LOG = "activity_log"
+    const val UNITS = "units"
     const val TODAY = "today"
     const val HEALTH = "store_health"
     const val HARDWARE = "hardware"
@@ -302,7 +303,14 @@ fun MiniMartNavGraph(
 
                 composable(Routes.PRODUCTS)  { ProductListScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role), currency = currency) }
                 composable(Routes.INVENTORY) { InventoryScreen(onBack = { navController.popBackStack() }, canEditPrices = RoleManager.canEditPrices(authState.currentUser?.role), currency = currency,
-                    onInsights = { navController.navigate(Routes.STOCK_INSIGHTS) { launchSingleTop = true } }) }
+                    onInsights = { navController.navigate(Routes.STOCK_INSIGHTS) { launchSingleTop = true } },
+                    onUnits = { navController.navigate(Routes.UNITS) { launchSingleTop = true } }) }
+                composable(Routes.UNITS) {
+                    AccessGuard(
+                        hasAccess = RoleManager.canEditPrices(authState.currentUser?.role),
+                        onBack = guardBack
+                    ) { UomScreen(onBack = { navController.popBackStack() }) }
+                }
                 composable(Routes.ANALYTICS) {
                     AccessGuard(
                         hasAccess = RoleManager.canViewReports(authState.currentUser?.role),

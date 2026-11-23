@@ -19,6 +19,7 @@ class MiniMartApp : Application(), Configuration.Provider {
     @Inject lateinit var productRepo: com.minimart.pos.data.repository.ProductRepository
     @Inject lateinit var mpesaPayments: com.minimart.pos.data.repository.MpesaPaymentRepository
     @Inject lateinit var integrity: com.minimart.pos.data.repository.IntegrityChecker
+    @Inject lateinit var uoms: com.minimart.pos.data.repository.UomRepository
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -53,6 +54,8 @@ class MiniMartApp : Application(), Configuration.Provider {
             launch { try { updateManager.autoCheckIfDue() } catch (_: Exception) {} }
             // Reports add whole cents; make sure every sale's cents match its amount (normally changes nothing).
             launch { try { com.minimart.pos.util.CentRepairLog.note(this@MiniMartApp, integrity.repairSaleCents()) } catch (_: Exception) {} }
+            // The managed unit list: the standard units plus any unit a product already uses (normally changes nothing).
+            launch { try { uoms.ensureDefaults() } catch (_: Exception) {} }
             launch { settings.telemetryOptIn.collect { com.minimart.pos.util.Telemetry.apply(it) } }
             launch { settings.paperWidthMm.collect { com.minimart.pos.printer.EscPos.lineChars = com.minimart.pos.printer.EscPos.charsForPaper(it) } }
             try { productRepo.warmUp() } catch (_: Exception) {}

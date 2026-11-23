@@ -357,6 +357,22 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                                 if (l.weighed) Lang.t("Qty (kg)", "الكمية (كجم)") else Lang.t("Qty", "الكمية"), Modifier.weight(1f), KeyboardType.Decimal)
                             PoField(l.costText, { vm.setCost(i, sanitizeMoneyInput(it)) }, Lang.t("Unit cost", "تكلفة الوحدة"), Modifier.weight(1f), KeyboardType.Decimal)
                         }
+                        // Order in packs: each tap adds a pack's units; the total is also shown as "2 carton + 3 pcs".
+                        val packs = if (l.weighed) emptyList() else s.packs[l.productId].orEmpty().filter { it.purchasable }
+                        if (packs.isNotEmpty()) {
+                            val baseUnit = s.products.firstOrNull { it.id == l.productId }?.unit ?: "pcs"
+                            androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
+                                items(packs, key = { it.unitCode }) { pk ->
+                                    Box(Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(20.dp)).background(DT.TealDim)
+                                        .clickable(role = androidx.compose.ui.semantics.Role.Button) { vm.addPack(i, pk.factor) }
+                                        .padding(horizontal = 14.dp), contentAlignment = Alignment.Center) {
+                                        Text("+ ${pk.unitCode} (${pk.factor} $baseUnit)", color = DT.TealLight, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                    }
+                                }
+                            }
+                            if (l.qty > 0) Text("= " + com.minimart.pos.util.UnitMath.describe(l.qty.toInt(), baseUnit, packs.map { com.minimart.pos.util.PackSize(it.unitCode, it.factor) }),
+                                color = DT.SubText, fontSize = 12.sp)
+                        }
                         Text(tr(com.minimart.pos.R.string.po_line_total, currency, formatPrice(l.total)), color = DT.SubText, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
                     } else {
                         Text(tr(com.minimart.pos.R.string.po_line_fmt, plainNumber(l.qty, 3), plainNumber(l.receivedQty, 3), formatPrice(l.cost)),

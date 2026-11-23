@@ -43,9 +43,12 @@ fun InventoryScreen(
     canEditPrices: Boolean = true,
     currency: String = "KES",
     onInsights: (() -> Unit)? = null,
+    onUnits: (() -> Unit)? = null,
     vm: ProductViewModel = hiltViewModel()
 ) {
     val products by vm.products.collectAsStateWithLifecycle()
+    val uomVm: com.minimart.pos.ui.viewmodel.UomViewModel = hiltViewModel()
+    val packsByProduct by uomVm.packs.collectAsStateWithLifecycle()
     val categories by vm.categories.collectAsStateWithLifecycle()
     val selectedCat by vm.selectedCategory.collectAsStateWithLifecycle()
     val searchQuery by vm.searchQuery.collectAsStateWithLifecycle()
@@ -80,6 +83,10 @@ fun InventoryScreen(
                 subtitle = Lang.t("${products.size} products • ${lowStock.size} low stock", "${products.size} منتجًا • ${lowStock.size} منخفض المخزون"),
                 onBack = onBack,
                 actions = {
+                    if (canEditPrices && onUnits != null) {
+                        HeaderPillButton(Lang.t("Units", "الوحدات"), Icons.Default.Straighten, onUnits)
+                        Spacer(Modifier.width(8.dp))
+                    }
                     if (canEditPrices && onInsights != null) {
                         HeaderPillButton(Lang.t("Insights", "تحليلات"), Icons.Default.Insights, onInsights)
                         Spacer(Modifier.width(8.dp))
@@ -152,6 +159,7 @@ fun InventoryScreen(
                 items(shown, key = { it.id }, contentType = { "product" }) { product ->
                     InventoryRow(
                         product = product,
+                        packs = packsByProduct[product.id].orEmpty(),
                         currency = currency,
                         canEdit = canEditPrices,
                         onEdit = { editProduct = product; showAddDialog = true },
@@ -214,7 +222,7 @@ fun InventoryScreen(
         )
     }
     showStockDialog?.let { product ->
-        StockAdjustDialog(product = product, onDismiss = { showStockDialog = null },
+        StockAdjustDialog(product = product, packs = packsByProduct[product.id].orEmpty(), onDismiss = { showStockDialog = null },
             onAdjust = { delta ->
                 if (product.isWeighed) vm.adjustWeighedStock(product.id, delta) else vm.adjustStock(product.id, delta.toInt())
                 showStockDialog = null
@@ -256,6 +264,7 @@ private fun CategoryChip(label: String, selected: Boolean, accent: Color = DT.Te
 @Composable
 private fun InventoryRow(
     product: Product,
+    packs: List<com.minimart.pos.data.entity.ProductUnit> = emptyList(),
     currency: String,
     canEdit: Boolean,
     onEdit: () -> Unit,
@@ -292,6 +301,11 @@ private fun InventoryRow(
             Spacer(Modifier.width(8.dp))
             Column(horizontalAlignment = Alignment.End) {
                 StockPill(product)
+                if (packs.isNotEmpty() && !product.isWeighed) {
+                    // "3 carton + 3 pcs": the same stock, counted the way it is delivered.
+                    Text(com.minimart.pos.util.UnitMath.describe(product.stock, product.unit, packs.map { com.minimart.pos.util.PackSize(it.unitCode, it.factor) }),
+                        color = DT.SubText, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
                 Spacer(Modifier.height(4.dp))
                 val unitPrice = if (product.isWeighed) "${formatPrice(product.pricePerKg)}/kg" else formatPrice(product.price)
                 Text("$currency $unitPrice", color = DT.SubText, fontSize = 12.sp, maxLines = 1)
@@ -357,7 +371,7 @@ private fun ActionBtn(label: String, textColor: Color, onClick: () -> Unit) {
  * three decimals. The result is previewed and removal beyond the current stock is blocked.
  */
 @Composable
-private fun StockAdjustDialog(product: Product, onDismiss: () -> Unit, onAdjust: (Double) -> Unit) {
+private fun StockAdjustDialog(product: Product, packs: List<com.minimart.pos.data.entity.ProductUnit> = emptyList(), onDismiss: () -> Unit, onAdjust: (Double) -> Unit) {
     var amount by remember { mutableStateOf("") }
     var isAddition by remember { mutableStateOf(true) }
     val qty = amount.toDoubleOrNull() ?: 0.0
@@ -394,6 +408,16 @@ private fun StockAdjustDialog(product: Product, onDismiss: () -> Unit, onAdjust:
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp), colors = fieldColors
                 )
+                // Count in packs: each tap adds a pack's units (1 carton = 24 pcs adds 24).
+                if (!product.isWeighed && packs.isNotEmpty()) {
+                    androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(packs, key = { it.unitCode }) { pk ->
+                            CategoryChip("+ ${pk.unitCode} (${pk.factor})", false, DT.Teal) {
+                                amount = ((amount.toLongOrNull() ?: 0L) + pk.factor).coerceAtMost(999_999L).toString()
+                            }
+                        }
+                    }
+                }
                 if (qty > 0) {
                     Text(
                         if (tooMuch) Lang.t("Only ${fmt(current)} on record", "المسجّل ${fmt(current)} فقط") else Lang.t("New stock: ${fmt(newStock)}", "المخزون الجديد: ${fmt(newStock)}"),

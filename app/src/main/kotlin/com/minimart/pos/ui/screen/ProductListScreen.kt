@@ -520,6 +520,10 @@ fun AddEditProductDialog(
                             focusRequester = stockFocus, nextFocusRequester = unitFocus)
                         DarkField(unit, { unit = it }, Lang.t("Unit", "الوحدة"), Modifier.weight(1f), focusRequester = unitFocus, nextFocusRequester = categoryFocus)
                     }
+                    // Main unit from the managed list, then pack sizes (1 carton = 24 pcs) for selling and ordering in packs.
+                    UnitChips(unit.trim(), { unit = it })
+                    if (product != null) PackSizesSection(product.id, unit.trim().ifBlank { "pcs" }, isWeighed)
+                    else if (!isWeighed) Text(Lang.t("Save the product first, then edit it to add pack sizes (carton, dozen...).", "احفظ المنتج أولًا ثم عدّله لإضافة أحجام العبوات (كرتون، دزينة...)."), color = DT.SubText, fontSize = 11.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         DarkField(category, { category = it }, Lang.t("Category", "الفئة"), Modifier.weight(1f), focusRequester = categoryFocus, nextFocusRequester = skuFocus)
                         DarkField(sku, { sku = it }, Lang.t("SKU", "رمز SKU"), Modifier.weight(1f), focusRequester = skuFocus, nextFocusRequester = lowAtFocus)
