@@ -348,6 +348,7 @@ class SettingsRepository @Inject constructor(
         const val PASSKEY         = "daraja_passkey"
         const val SHORTCODE       = "daraja_shortcode"
         const val SANDBOX         = "daraja_sandbox"
+        const val CALLBACK        = "daraja_callback_url"
     }
 
     data class DarajaConfig(
@@ -355,7 +356,8 @@ class SettingsRepository @Inject constructor(
         val consumerSecret: String = "",
         val passkey: String        = "",
         val shortcode: String      = "",
-        val sandbox: Boolean       = true
+        val sandbox: Boolean       = true,
+        val callbackUrl: String    = ""
     ) {
         /** Never prints the secrets, so a stray log line or crash report cannot leak them. */
         override fun toString() = "DarajaConfig(shortcode=$shortcode, sandbox=$sandbox, key=***, secret=***, passkey=***)"
@@ -373,7 +375,8 @@ class SettingsRepository @Inject constructor(
             consumerSecret = securePrefs.getString(DarajaKeys.CONSUMER_SECRET, "") ?: "",
             passkey        = securePrefs.getString(DarajaKeys.PASSKEY, "") ?: "",
             shortcode      = securePrefs.getString(DarajaKeys.SHORTCODE, "") ?: "",
-            sandbox        = securePrefs.getBoolean(DarajaKeys.SANDBOX, true)
+            sandbox        = securePrefs.getBoolean(DarajaKeys.SANDBOX, true),
+            callbackUrl    = securePrefs.getString(DarajaKeys.CALLBACK, "") ?: ""
         )
     } catch (_: Exception) {
         DarajaConfig()   // an unreadable store counts as "not set up" instead of crashing checkout
@@ -400,6 +403,7 @@ class SettingsRepository @Inject constructor(
                 .putString(DarajaKeys.PASSKEY,         cfg.passkey.ifBlank { current.passkey })
                 .putString(DarajaKeys.SHORTCODE,       cfg.shortcode)
                 .putBoolean(DarajaKeys.SANDBOX,        cfg.sandbox)
+                .putString(DarajaKeys.CALLBACK,        cfg.callbackUrl.trim())
                 .commit()
         } catch (_: Exception) { false }
         return if (ok) DarajaSave.SAVED else DarajaSave.FAILED

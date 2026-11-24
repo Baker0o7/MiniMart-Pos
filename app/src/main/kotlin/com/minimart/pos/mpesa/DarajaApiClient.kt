@@ -196,7 +196,7 @@ class DarajaApiClient @Inject constructor(
                 put("PartyA", normalizedPhone)
                 put("PartyB", cfg.shortcode)
                 put("PhoneNumber", normalizedPhone)
-                put("CallBackURL", "https://example.com/mpesa/callback")
+                put("CallBackURL", DarajaRules.callbackFor(cfg.callbackUrl))
                 put("AccountReference", accountRef.take(12))
                 put("TransactionDesc", description.take(13))
             }

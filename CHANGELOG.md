@@ -9,6 +9,7 @@ Every release is published, with its signed APKs, on the [Releases page](https:/
 
 ### Fixed
 - **The "set a new PIN" step can no longer be skipped.** It used to be checked only from the PIN typed at sign-in, so a fingerprint sign-in or a session that came back after the screen rebuilt could use the factory PIN without being asked to change it. It now checks the saved PIN every time.
+- **M-Pesa confirmation address.** Settings now has an optional box for your own https address. Until you set one, the till sends a stand-in address, because it checks every payment with Safaricom itself instead of waiting for a call-back. Addresses that are not https, or point at this phone's network, are refused.
 
 ## [1.33.22] - 2026-11-23
 

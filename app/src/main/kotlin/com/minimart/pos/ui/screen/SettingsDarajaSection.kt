@@ -1,6 +1,7 @@
 package com.minimart.pos.ui.screen
 
 import com.minimart.pos.ui.components.Text
+import com.minimart.pos.util.DarajaRules
 import com.minimart.pos.util.Lang
 import android.bluetooth.BluetoothDevice
 import android.content.Context
@@ -55,6 +56,7 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
     var darajaSandbox       by remember { mutableStateOf(initialDaraja.sandbox) }
     var darajaShortcode     by remember { mutableStateOf(initialDaraja.shortcode) }
     var darajaConsumerKey   by remember { mutableStateOf(initialDaraja.consumerKey) }
+    var darajaCallback      by remember { mutableStateOf(initialDaraja.callbackUrl) }
     // Saved secrets are never loaded into the screen (they could be shown with the eye icon or seen over a
     // shoulder). The boxes start empty; leaving one empty keeps the saved value.
     var secretSaved by remember { mutableStateOf(settingsRepo.darajaSecretsSaved()) }
@@ -125,6 +127,19 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
             singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password, autoCorrectEnabled = false), modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp), colors = dColors()
         )
+        Spacer(Modifier.height(4.dp))
+        OutlinedTextField(
+            value = darajaCallback, onValueChange = { darajaCallback = it.take(200) },
+            label = { Text(Lang.t("Payment confirmation address (optional, https)", "عنوان تأكيد الدفع (اختياري، https)"), color = DT.SubText, style = MaterialTheme.typography.labelSmall) },
+            supportingText = {
+                Text(DarajaRules.callbackProblem(darajaCallback)
+                    ?: Lang.t("The till checks each payment with Safaricom itself, so this can stay empty unless Safaricom asks for your own address.",
+                        "يتحقق الصندوق من كل دفعة مع سفاريكوم بنفسه، لذا يمكن تركه فارغًا ما لم تطلب سفاريكوم عنوانك."),
+                    color = if (DarajaRules.callbackProblem(darajaCallback) != null) DT.Red else DT.SubText)
+            },
+            singleLine = true, keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri, autoCorrectEnabled = false),
+            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = dColors()
+        )
         if (!secureAvailable) Text(tr(com.minimart.pos.R.string.secure_unavail),
             color = DT.Red, style = MaterialTheme.typography.labelSmall)
         saveError?.let { Text(it, color = DT.Red, style = MaterialTheme.typography.labelSmall) }
@@ -133,13 +148,15 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
             onClick = {
                 scope.launch {
                     if (!ownerGate.allow("change payment credentials")) return@launch
+                    DarajaRules.callbackProblem(darajaCallback)?.let { saveError = it; return@launch }
                     val result = settingsRepo.saveDarajaConfig(
                         com.minimart.pos.data.repository.SettingsRepository.DarajaConfig(
                             consumerKey    = darajaConsumerKey.trim(),
                             consumerSecret = darajaConsumerSecret.trim(),
                             passkey        = darajaPasskey.trim(),
                             shortcode      = darajaShortcode.trim(),
-                            sandbox        = darajaSandbox
+                            sandbox        = darajaSandbox,
+                            callbackUrl    = darajaCallback.trim()
                         )
                     )
                     saveError = when (result) {

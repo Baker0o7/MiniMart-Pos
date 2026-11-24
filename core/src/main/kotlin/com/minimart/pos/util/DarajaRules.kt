@@ -22,6 +22,32 @@ object DarajaRules {
         else -> HttpKind.REJECTED
     }
 
+    /** What the app sends when the owner has not set an address. The app confirms payments by asking Safaricom, so it never listens here. */
+    const val FALLBACK_CALLBACK = "https://example.com/mpesa/callback"
+
+    /**
+     * A usable payment-confirmation address: https only, a real host name (no bare IP, localhost or example domains),
+     * no spaces, no login details in the address. Blank is allowed and means "use the fallback".
+     */
+    fun callbackProblem(url: String): String? {
+        val u = url.trim()
+        if (u.isEmpty()) return null
+        if (u.length > 200 || u.any { it.isWhitespace() }) return "The address is not valid"
+        if (!u.startsWith("https://", ignoreCase = true)) return "The address must start with https://"
+        val rest = u.substring(8)
+        val host = rest.substringBefore('/').substringBefore('?').substringBefore('#')
+        if (host.contains('@')) return "The address must not contain a user name or password"
+        val name = host.substringBefore(':').lowercase()
+        val ipLike = name.all { it.isDigit() || it == '.' }
+        val bad = name == "localhost" || name.endsWith(".local") || name == "example.com" || name.endsWith(".example.com") ||
+            name.endsWith(".example") || name.endsWith(".invalid") || name.endsWith(".test")
+        if (!name.contains('.') || ipLike || bad || name.startsWith(".") || name.endsWith(".")) return "Use the web address of your own server"
+        return null
+    }
+
+    /** The address to send with a push: the owner's if it is valid, otherwise the fallback. */
+    fun callbackFor(saved: String): String = saved.trim().takeIf { it.isNotEmpty() && callbackProblem(it) == null } ?: FALLBACK_CALLBACK
+
     /** Safaricom's "still being processed" answers to a status query: keep waiting, do not call it a failure. */
     fun isStillProcessing(errorCode: String) = errorCode == "500.001.1001" || errorCode == "500.001.1032"
 

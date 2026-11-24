@@ -3,6 +3,8 @@ package com.minimart.pos.util
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.io.IOException
@@ -86,5 +88,25 @@ class DarajaRulesTest {
         assertTrue(DarajaRules.unknownOutcomeMessage().contains("before sending again"))
         Lang.arabic = true
         assertTrue(DarajaRules.unknownOutcomeMessage().any { it in '؀'..'ۿ' })
+    }
+
+    @Test fun callbackBlankMeansFallback() {
+        assertNull(DarajaRules.callbackProblem(""))
+        assertEquals(DarajaRules.FALLBACK_CALLBACK, DarajaRules.callbackFor("  "))
+    }
+
+    @Test fun callbackMustBeHttpsWithRealHost() {
+        assertNull(DarajaRules.callbackProblem("https://pay.myshop.co.ke/mpesa/cb"))
+        assertNotNull(DarajaRules.callbackProblem("http://pay.myshop.co.ke/cb"))
+        assertNotNull(DarajaRules.callbackProblem("https://localhost/cb"))
+        assertNotNull(DarajaRules.callbackProblem("https://192.168.1.5/cb"))
+        assertNotNull(DarajaRules.callbackProblem("https://user:pw@pay.myshop.co.ke/cb"))
+        assertNotNull(DarajaRules.callbackProblem("https://example.com/cb"))
+        assertNotNull(DarajaRules.callbackProblem("https://pay shop.co.ke/cb"))
+    }
+
+    @Test fun callbackForIgnoresInvalidSavedValue() {
+        assertEquals("https://pay.myshop.co.ke/cb", DarajaRules.callbackFor(" https://pay.myshop.co.ke/cb "))
+        assertEquals(DarajaRules.FALLBACK_CALLBACK, DarajaRules.callbackFor("http://insecure.co.ke"))
     }
 }
