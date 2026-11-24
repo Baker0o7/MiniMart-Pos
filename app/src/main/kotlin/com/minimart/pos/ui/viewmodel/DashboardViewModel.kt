@@ -245,7 +245,8 @@ class AuthViewModel @Inject constructor(
                             // A removed (deactivated) account must not keep a live session.
                             val usable = user != null && user.isActive
                             auditLogger.actor = if (usable) user?.username.orEmpty() else ""
-                            _uiState.update { it.copy(isLoggedIn = usable, currentUser = if (usable) user else null) }
+                            val mustChange = usable && user != null && usesDefaultPin(user.pinHash)
+                            _uiState.update { it.copy(isLoggedIn = usable, currentUser = if (usable) user else null, mustChangePin = mustChange) }
                             if (!usable) try { settingsRepo.setLoggedInUser(null) } catch (_: Exception) {}
                         } catch (e: Exception) {
                             _uiState.update { it.copy(isLoggedIn = false, currentUser = null) }
@@ -315,7 +316,7 @@ class AuthViewModel @Inject constructor(
                         }
                         catch (_: Exception) {}
                     }
-                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user, isLockedOut = false, failedAttempts = 0, mustChangePin = pin.trim() == DEFAULT_PIN, pinChangeError = null) }
+                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user, isLockedOut = false, failedAttempts = 0, mustChangePin = usesDefaultPin(user.pinHash), pinChangeError = null) }
                 } else {
                     val attempts = settingsRepo.recordFailedAttempt(MAX_ATTEMPTS, LOCKOUT_DURATION_MS)
                     val nowLocked = attempts >= MAX_ATTEMPTS
@@ -357,6 +358,15 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
+    /**
+     * True while the stored PIN is still the factory one. Checked against the saved hash (not the PIN just typed)
+     * so a restored session or a fingerprint sign-in cannot skip the forced change.
+     */
+    private suspend fun usesDefaultPin(pinHash: String): Boolean =
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            runCatching { pinHasher.verify(DEFAULT_PIN, pinHash) }.getOrDefault(false)
+        }
 
     fun logout() {
         val username = _uiState.value.currentUser?.username ?: ""
@@ -402,7 +412,7 @@ class AuthViewModel @Inject constructor(
                     auditLogger.actor = user.username
                     auditLogger.log(com.minimart.pos.util.AuditEvent.LOGIN_SUCCESS,
                         user = user.username, detail = "Role: ${user.role.name} (biometric)")
-                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user) }
+                    _uiState.update { it.copy(isLoading = false, isLoggedIn = true, currentUser = user, mustChangePin = usesDefaultPin(user.pinHash), pinChangeError = null) }
                 } else {
                     _uiState.update { it.copy(isLoading = false, error = Lang.t("Biometric account no longer available", "حساب البصمة لم يعد متاحًا")) }
                 }

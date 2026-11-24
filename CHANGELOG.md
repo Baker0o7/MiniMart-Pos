@@ -5,6 +5,11 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [Unreleased]
+
+### Fixed
+- **The "set a new PIN" step can no longer be skipped.** It used to be checked only from the PIN typed at sign-in, so a fingerprint sign-in or a session that came back after the screen rebuilt could use the factory PIN without being asked to change it. It now checks the saved PIN every time.
+
 ## [1.33.22] - 2026-11-23
 
 - **Units of measure:** new *Units* screen in Inventory (pieces, kg, litre, dozen, carton, box and your own). Each product can have pack sizes, for example 1 carton = 24 pcs, set in the product's edit screen.
