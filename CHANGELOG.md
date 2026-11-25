@@ -5,6 +5,10 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [1.33.25] - 2026-11-26
+
+- **Arabic for the M-Pesa settings messages.** The messages about the confirmation address and about keys that could not be saved now show in Arabic when the till is set to Arabic.
+
 ## [1.33.24] - 2026-11-26
 
 - **Fewer rare crashes.** The report date picker and the printer's second try no longer assume a value is still there when a button is pressed.
