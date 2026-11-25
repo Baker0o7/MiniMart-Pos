@@ -268,7 +268,8 @@ class ThermalPrinter @Inject constructor(
     suspend fun printPlainText(text: String): PrintResult {
         var r = tryPlainText(text)
         // A printer that went to sleep or drifted out of range often works on a second try: reconnect once.
-        if (r is PrintResult.Error && lastAddress != null && connect(lastAddress!!) is PrintResult.Success) r = tryPlainText(text)
+        val again = lastAddress   // read once: it can change while we wait for the connection
+        if (r is PrintResult.Error && again != null && connect(again) is PrintResult.Success) r = tryPlainText(text)
         note(r is PrintResult.Success)
         return r
     }

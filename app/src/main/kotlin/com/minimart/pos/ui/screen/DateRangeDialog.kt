@@ -80,9 +80,13 @@ fun DateRangeDialog(onDismiss: () -> Unit, onConfirm: (startMs: Long, endMs: Lon
                     TextButton(
                         enabled = ready,
                         onClick = {
-                            val s = localDayStart(state.selectedStartDateMillis!!)
-                            val e = localDayStart(state.selectedEndDateMillis!!) + 24L * 60 * 60 * 1000 - 1
-                            onConfirm(s, maxOf(s, e))
+                            val from = state.selectedStartDateMillis
+                            val to = state.selectedEndDateMillis
+                            if (from != null && to != null) {
+                                val s = localDayStart(from)
+                                val e = localDayStart(to) + 24L * 60 * 60 * 1000 - 1
+                                onConfirm(s, maxOf(s, e))
+                            }
                         }
                     ) { Text(tr(com.minimart.pos.R.string.apply), color = if (ready) DT.Teal else DT.SubText) }
                 }

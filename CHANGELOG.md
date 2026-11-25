@@ -5,6 +5,11 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [Unreleased]
+
+### Fixed
+- **Fewer rare crashes.** The report date picker and the printer's second try no longer assume a value is still there when a button is pressed.
+
 ## [1.33.23] - 2026-11-25
 
 - **The "set a new PIN" step can no longer be skipped.** It used to be checked only from the PIN typed at sign-in, so a fingerprint sign-in or a session that came back after the screen rebuilt could use the factory PIN without being asked to change it. It now checks the saved PIN every time.
