@@ -32,16 +32,16 @@ object DarajaRules {
     fun callbackProblem(url: String): String? {
         val u = url.trim()
         if (u.isEmpty()) return null
-        if (u.length > 200 || u.any { it.isWhitespace() }) return "The address is not valid"
-        if (!u.startsWith("https://", ignoreCase = true)) return "The address must start with https://"
+        if (u.length > 200 || u.any { it.isWhitespace() }) return Lang.t("The address is not valid", "العنوان غير صالح")
+        if (!u.startsWith("https://", ignoreCase = true)) return Lang.t("The address must start with https://", "يجب أن يبدأ العنوان بـ https://")
         val rest = u.substring(8)
         val host = rest.substringBefore('/').substringBefore('?').substringBefore('#')
-        if (host.contains('@')) return "The address must not contain a user name or password"
+        if (host.contains('@')) return Lang.t("The address must not contain a user name or password", "يجب ألا يحتوي العنوان على اسم مستخدم أو كلمة مرور")
         val name = host.substringBefore(':').lowercase()
         val ipLike = name.all { it.isDigit() || it == '.' }
         val bad = name == "localhost" || name.endsWith(".local") || name == "example.com" || name.endsWith(".example.com") ||
             name.endsWith(".example") || name.endsWith(".invalid") || name.endsWith(".test")
-        if (!name.contains('.') || ipLike || bad || name.startsWith(".") || name.endsWith(".")) return "Use the web address of your own server"
+        if (!name.contains('.') || ipLike || bad || name.startsWith(".") || name.endsWith(".")) return Lang.t("Use the web address of your own server", "استخدم عنوان الويب لخادمك الخاص")
         return null
     }
 

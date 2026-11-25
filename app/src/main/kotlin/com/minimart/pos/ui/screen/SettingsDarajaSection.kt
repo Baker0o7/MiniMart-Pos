@@ -162,8 +162,8 @@ internal fun DarajaSettingsSection(settingsRepo: SettingsRepository, ownerGate: 
                     saveError = when (result) {
                         com.minimart.pos.data.repository.SettingsRepository.DarajaSave.SAVED -> null
                         com.minimart.pos.data.repository.SettingsRepository.DarajaSave.NO_SECURE_STORAGE ->
-                            "This phone's secure storage is not available, so the M-Pesa keys were NOT saved. Restart the phone and try again."
-                        com.minimart.pos.data.repository.SettingsRepository.DarajaSave.FAILED -> "Could not save the M-Pesa keys. Try again."
+                            Lang.t("This phone's secure storage is not available, so the M-Pesa keys were NOT saved. Restart the phone and try again.", "التخزين الآمن في هذا الهاتف غير متاح، لذلك لم تُحفظ مفاتيح إم-بيسا. أعد تشغيل الهاتف وحاول مرة أخرى.")
+                        com.minimart.pos.data.repository.SettingsRepository.DarajaSave.FAILED -> Lang.t("Could not save the M-Pesa keys. Try again.", "تعذّر حفظ مفاتيح إم-بيسا. حاول مرة أخرى.")
                     }
                     if (result == com.minimart.pos.data.repository.SettingsRepository.DarajaSave.SAVED) {
                         darajaConsumerSecret = ""; darajaPasskey = ""; showSecret = false; showPasskey = false
