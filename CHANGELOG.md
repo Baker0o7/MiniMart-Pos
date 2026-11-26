@@ -5,6 +5,11 @@ All notable changes to MiniMart POS are listed here, newest first. The format fo
 
 Every release is published, with its signed APKs, on the [Releases page](https://github.com/Baker0o7/MiniMart-Pos/releases).
 
+## [Unreleased]
+
+### Added
+- **Profit & Loss screen** (Reports, top bar). See today, this week or this month as a full statement: sales, VAT, cost of goods, gross profit, expenses and net profit, with gross margin. It is compared with the period just before it, shows which products and categories earn the most, and lists items sold below cost or with no cost price recorded. Export gives the accountant a statement and a profit-by-product spreadsheet.
+
 ## [1.33.25] - 2026-11-26
 
 - **Arabic for the M-Pesa settings messages.** The messages about the confirmation address and about keys that could not be saved now show in Arabic when the till is set to Arabic.

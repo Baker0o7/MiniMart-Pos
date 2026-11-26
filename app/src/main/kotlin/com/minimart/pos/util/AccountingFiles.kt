@@ -25,13 +25,8 @@ object AccountingFiles {
         context: Context, sales: List<Sale>, costs: Map<Long, Double>, expenses: List<Expense>,
         storeName: String, currency: String, periodLabel: String, now: Long = System.currentTimeMillis()
     ): List<File> {
-        val acctSales = sales.map {
-            AcctSale(it.createdAt, it.receiptNumber, it.paymentMethod.name, it.totalMoney(), Money.fromDouble(it.taxAmount),
-                it.cashMoney(), Money.fromDouble(costs[it.id] ?: 0.0), it.mpesaRef.orEmpty())
-        }
-        val acctExpenses = expenses.map {
-            AcctExpense(it.createdAt, it.category.name, it.title, Money.fromDouble(it.amount), it.receiptRef, it.supplierName)
-        }
+        val acctSales = acctSales(sales, costs)
+        val acctExpenses = acctExpenses(expenses)
         val journal = AccountingExport.journalCsv(AccountingExport.journal(acctSales, acctExpenses, ZoneId.systemDefault()), currency)
         val pnl = AccountingExport.profitAndLossCsv(AccountingExport.profitAndLoss(acctSales, acctExpenses), storeName, periodLabel, currency)
 
@@ -46,6 +41,16 @@ object AccountingFiles {
         )
         dir.listFiles()?.sortedByDescending { it.lastModified() }?.drop(KEEP)?.forEach { it.delete() }
         return files
+    }
+
+    /** Completed sales as the books see them, each with the cost of its goods when one was recorded. */
+    fun acctSales(sales: List<Sale>, costs: Map<Long, Double>): List<AcctSale> = sales.map {
+        AcctSale(it.createdAt, it.receiptNumber, it.paymentMethod.name, it.totalMoney(), Money.fromDouble(it.taxAmount),
+            it.cashMoney(), Money.fromDouble(costs[it.id] ?: 0.0), it.mpesaRef.orEmpty())
+    }
+
+    fun acctExpenses(expenses: List<Expense>): List<AcctExpense> = expenses.map {
+        AcctExpense(it.createdAt, it.category.name, it.title, Money.fromDouble(it.amount), it.receiptRef, it.supplierName)
     }
 
     fun share(context: Context, files: List<File>, subject: String) {

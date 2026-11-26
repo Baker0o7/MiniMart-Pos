@@ -55,6 +55,7 @@ object Routes {
     const val PRODUCTS  = "products"
     const val INVENTORY = "inventory"
     const val REPORTS   = "reports"
+    const val PROFIT_LOSS = "profit_loss"
     const val EXPENSES  = "expenses"
     const val SALES_HISTORY = "sales_history"
     const val LOW_STOCK     = "low_stock"
@@ -409,7 +410,14 @@ fun MiniMartNavGraph(
                     AccessGuard(
                         hasAccess = com.minimart.pos.util.RoleManager.canViewReports(authState.currentUser?.role),
                         onBack = guardBack
-                    ) { ReportsScreen(onBack = { navController.popBackStack() }) }
+                    ) { ReportsScreen(onBack = { navController.popBackStack() },
+                        onProfitLoss = { navController.navigate(Routes.PROFIT_LOSS) { launchSingleTop = true } }) }
+                }
+                composable(Routes.PROFIT_LOSS) {
+                    AccessGuard(
+                        hasAccess = com.minimart.pos.util.RoleManager.canViewReports(authState.currentUser?.role),
+                        onBack = guardBack
+                    ) { ProfitLossScreen(onBack = { navController.popBackStack() }) }
                 }
                 composable(Routes.MPESA) {
                     MpesaPaymentsScreen(

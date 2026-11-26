@@ -41,7 +41,7 @@ import com.minimart.pos.ui.viewmodel.ReportsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
+fun ReportsScreen(onBack: () -> Unit, onProfitLoss: () -> Unit = {}, vm: ReportsViewModel = hiltViewModel()) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     val period by vm.period.collectAsStateWithLifecycle()
     val customRange by vm.customRange.collectAsStateWithLifecycle()
@@ -105,6 +105,9 @@ fun ReportsScreen(onBack: () -> Unit, vm: ReportsViewModel = hiltViewModel()) {
             // ── Header ──
             item {
                 GradientHeader(title = tr(com.minimart.pos.R.string.reports), subtitle = tr(com.minimart.pos.R.string.analytics_overview), onBack = onBack, actions = {
+                    IconButton(onClick = onProfitLoss) {
+                        Icon(Icons.Default.Assessment, Lang.t("Profit and loss", "الأرباح والخسائر"), tint = Color.White, modifier = Modifier.size(24.dp))
+                    }
                     // Journal and profit-and-loss as CSV files an accountant can open in Excel or Sheets.
                     IconButton(
                         enabled = !isSharing,
