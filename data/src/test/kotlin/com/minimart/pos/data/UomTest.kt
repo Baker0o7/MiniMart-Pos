@@ -112,7 +112,7 @@ class Migration21To22Test : DbTestBase() {
 class UomPackPricingTest : DbTestBase() {
     private fun repo() = UomRepository(db.uomDao(), db)
     private fun product(name: String = "Soda", weighed: Boolean = false) = runBlocking {
-        db.productDao().insertProduct(Product(barcode = "b$name", name = name, price = 50.0, stock = 100, unit = "pcs", isWeighed = weighed))
+        db.productDao().insertProduct(Product(barcode = "PROD-$name", name = name, price = 50.0, stock = 100, unit = "pcs", isWeighed = weighed))
     }
     private fun refused(r: UomResult) = (r as? UomResult.Refused)?.error
 
@@ -145,7 +145,7 @@ class UomPackPricingTest : DbTestBase() {
         val r = repo(); r.ensureDefaults(); val a = product("A"); val b = product("B")
         assertEquals(UomResult.Ok, r.savePack(a, "carton", 24, barcode = "CTN-0001"))
         assertEquals(UomError.BARCODE_TAKEN, refused(r.savePack(b, "carton", 12, barcode = "CTN-0001")))
-        assertEquals(UomError.BARCODE_TAKEN, refused(r.savePack(b, "carton", 12, barcode = "bA")))   // a product's own barcode
+        assertEquals(UomError.BARCODE_TAKEN, refused(r.savePack(b, "carton", 12, barcode = "PROD-A")))   // a product's own barcode
         assertEquals(UomResult.Ok, r.savePack(a, "carton", 24, barcode = "CTN-0001"))                // its own barcode again is fine
     }
 
