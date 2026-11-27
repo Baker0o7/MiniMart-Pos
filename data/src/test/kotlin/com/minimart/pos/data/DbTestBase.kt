@@ -18,7 +18,10 @@ abstract class DbTestBase {
 
     @Before fun openDb() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()
+        db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries()
+            .addCallback(object : androidx.room.RoomDatabase.Callback() {
+                override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) { com.minimart.pos.data.db.StockTriggers.install(db) }
+            }).build()
     }
 
     @After fun closeDb() { db.close() }

@@ -25,7 +25,7 @@ class SchemaGoldenTest : DbTestBase() {
 
     /** One normalised line per table/index, sorted, ignoring Room's and Android's bookkeeping tables. */
     private fun dump(d: SupportSQLiteDatabase): List<String> =
-        d.query("SELECT type, name, sql FROM sqlite_master WHERE sql IS NOT NULL AND name NOT LIKE 'sqlite_%' " +
+        d.query("SELECT type, name, sql FROM sqlite_master WHERE sql IS NOT NULL AND type != 'trigger' AND name NOT LIKE 'sqlite_%' " +
             "AND name NOT IN ('room_master_table', 'android_metadata')").use { c ->
             generateSequence { if (c.moveToNext()) "${c.getString(0)} ${c.getString(1)}: ${normalise(c.getString(2))}" else null }.toList()
         }.sorted()

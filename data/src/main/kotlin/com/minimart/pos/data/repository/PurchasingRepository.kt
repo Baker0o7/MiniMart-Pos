@@ -91,6 +91,7 @@ class PurchasingRepository @Inject constructor(
             throw IllegalStateException("This order is not waiting for delivery")
         val now = System.currentTimeMillis()
         val items = dao.getItems(poId)
+        db.stockMovementDao().setContext(com.minimart.pos.data.entity.StockMovement.Reasons.RECEIVE, poId)
         items.forEach { item ->
             val raw = received[item.id] ?: 0.0
             if (!raw.isFinite()) return@forEach
@@ -120,6 +121,7 @@ class PurchasingRepository @Inject constructor(
             }
             dao.updateItem(item.copy(receivedQty = item.receivedQty + arrived))
         }
+        db.stockMovementDao().clearContext()
         val after = dao.getItems(poId)
         val complete = after.all { it.receivedQty + 1e-9 >= it.quantity }
         dao.updateOrder(po.copy(

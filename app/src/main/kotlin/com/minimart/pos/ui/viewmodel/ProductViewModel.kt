@@ -26,7 +26,8 @@ class ProductViewModel @Inject constructor(
     private val repo: ProductRepository,
     private val audit: com.minimart.pos.util.AuditLogger,
     private val batches: com.minimart.pos.data.repository.BatchRepository,
-    private val guard: com.minimart.pos.util.PermissionGuard
+    private val guard: com.minimart.pos.util.PermissionGuard,
+    private val stockLog: com.minimart.pos.data.repository.StockLog
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -140,6 +141,12 @@ class ProductViewModel @Inject constructor(
                 _uiState.update { it.copy(error = Lang.t("You don't have permission to adjust stock", "ليست لديك صلاحية لتعديل المخزون")) }
                 return@launch
             }
+            stockLog.tag(com.minimart.pos.data.entity.StockMovement.Reasons.ADJUST) { adjustStockTagged(productId, delta) }
+        }
+    }
+
+    private suspend fun adjustStockTagged(productId: Long, delta: Int) {
+        run {
             val product = repo.getById(productId)
             if (delta != 0) runCatching { audit.log(com.minimart.pos.util.AuditEvent.STOCK_ADJUSTED,
                 detail = "${product?.name ?: "#$productId"}: ${if (delta > 0) "+" else ""}$delta") }
@@ -150,7 +157,7 @@ class ProductViewModel @Inject constructor(
                     if (product.stockKg < -delta) _uiState.update { it.copy(error = Lang.t("Cannot remove more than the current stock", "لا يمكن إزالة أكثر من المخزون الحالي")) }
                     else { repo.decrementStockKg(productId, -delta.toDouble()); runCatching { batches.recordManualChange(productId, delta.toDouble(), product.costPrice, "Stock removed") } }
                 }
-                return@launch
+                return@run
             }
             if (delta > 0) { repo.incrementStock(productId, delta); runCatching { batches.recordManualChange(productId, delta.toDouble(), product?.costPrice ?: 0.0, "Stock added") } }
             else if (delta < 0) {
@@ -168,7 +175,13 @@ class ProductViewModel @Inject constructor(
                 _uiState.update { it.copy(error = Lang.t("You don't have permission to adjust stock", "ليست لديك صلاحية لتعديل المخزون")) }
                 return@launch
             }
-            val product = repo.getById(productId) ?: return@launch
+            stockLog.tag(com.minimart.pos.data.entity.StockMovement.Reasons.ADJUST) { adjustWeighedTagged(productId, deltaKg) }
+        }
+    }
+
+    private suspend fun adjustWeighedTagged(productId: Long, deltaKg: Double) {
+        run {
+            val product = repo.getById(productId) ?: return@run
             if (deltaKg != 0.0) runCatching { audit.log(com.minimart.pos.util.AuditEvent.STOCK_ADJUSTED,
                 detail = "${product.name}: ${if (deltaKg > 0) "+" else ""}${String.format(java.util.Locale.US, "%.3f", deltaKg)} kg") }
             if (deltaKg > 0) { repo.incrementStockKg(productId, deltaKg); runCatching { batches.recordManualChange(productId, deltaKg, product.costPrice, "Stock added") } }

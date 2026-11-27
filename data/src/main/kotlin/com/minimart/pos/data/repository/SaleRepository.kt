@@ -70,7 +70,8 @@ class SaleRepository @Inject constructor(
         val (costedItems, allocations) = batches.costLines(items)
         val saleId = saleDao.insertSaleWithItems(sale, costedItems)
         batches.saveAllocations(saleDao.getItemIds(saleId), allocations)
-        items.forEach { item ->
+        db.tagStock(com.minimart.pos.data.entity.StockMovement.Reasons.SALE, saleId) {
+          items.forEach { item ->
             if (item.weightKg > 0.0) {
                 // Weighed item: deduct the actual kilograms sold (floored at 0 — weighed stock is
                 // never allowed to block a sale, since the scale ticket already exists).
@@ -82,6 +83,7 @@ class SaleRepository @Inject constructor(
                     throw IllegalStateException("Not enough stock for ${item.productName}")
                 }
             }
+          }
         }
         // Customer credit / purchase stats are part of the same transaction so a failure here
         // can no longer leave a committed CREDIT sale with no recorded debt.
@@ -203,12 +205,14 @@ class SaleRepository @Inject constructor(
         if (saleWithItems.sale.status != SaleStatus.COMPLETED) return@withTransaction
         val changed = if (refund) saleDao.refundSale(saleId, reason) else saleDao.voidSale(saleId, reason)
         if (changed == 0) return@withTransaction
-        saleWithItems.items.forEach { item ->
+        db.tagStock(if (refund) com.minimart.pos.data.entity.StockMovement.Reasons.REFUND else com.minimart.pos.data.entity.StockMovement.Reasons.VOID, saleId) {
+          saleWithItems.items.forEach { item ->
             if (item.weightKg > 0.0) productRepository.incrementStockKg(item.productId, item.weightKg)
             else {
                 val back = if (item.stockApplied >= 0) item.stockApplied else item.quantity
                 if (back > 0) productRepository.incrementStock(item.productId, back)
             }
+          }
         }
         customerRepository.reverseCreditForSale(saleId, reason)
         batches.restoreForSale(saleId)
