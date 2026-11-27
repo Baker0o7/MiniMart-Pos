@@ -13,7 +13,7 @@ import javax.inject.Inject
     entities = [Product::class, Sale::class, SaleItem::class, User::class, Expense::class, Shift::class, com.minimart.pos.data.entity.Customer::class, com.minimart.pos.data.entity.CreditTransaction::class, com.minimart.pos.data.entity.SyncLog::class, MpesaPayment::class,
         Supplier::class, PurchaseOrder::class, PurchaseOrderItem::class,
         com.minimart.pos.data.entity.StockBatch::class, com.minimart.pos.data.entity.SaleItemCost::class, LedgerEntry::class, Uom::class, ProductUnit::class],
-    version = 22,
+    version = 23,
     exportSchema = false
 )
 @TypeConverters(AppTypeConverters::class)
@@ -228,6 +228,21 @@ object AppMigrations {
         }
     }
 
+    /** Pack price, pack barcode and pack cost on [ProductUnit] (units of measure 2.0). Safe to run twice. */
+    val MIGRATION_22_23 = object : androidx.room.migration.Migration(22, 23) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            fun has(col: String): Boolean = db.query("PRAGMA table_info(`product_units`)").use { c ->
+                val i = c.getColumnIndex("name"); var found = false
+                while (c.moveToNext()) if (c.getString(i) == col) found = true
+                found
+            }
+            if (!has("price")) db.execSQL("ALTER TABLE `product_units` ADD COLUMN `price` REAL NOT NULL DEFAULT 0.0")
+            if (!has("barcode")) db.execSQL("ALTER TABLE `product_units` ADD COLUMN `barcode` TEXT NOT NULL DEFAULT ''")
+            if (!has("cost")) db.execSQL("ALTER TABLE `product_units` ADD COLUMN `cost` REAL NOT NULL DEFAULT 0.0")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_product_units_barcode` ON `product_units` (`barcode`)")
+        }
+    }
+
     /** Whole-amount money columns (not per-unit costs). Used by [MIGRATION_16_17] and its test. */
     val MONEY_COLUMNS: List<Pair<String, List<String>>> = listOf(
         "products" to listOf("price", "pricePerKg"),
@@ -242,7 +257,7 @@ object AppMigrations {
             "totalSales", "totalDiscounts", "expectedCash", "cashDiscrepancy")
     )
 
-    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22)
+    val ALL = arrayOf(MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23)
 }
 
 class AppTypeConverters {

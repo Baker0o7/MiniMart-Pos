@@ -43,6 +43,22 @@ interface UomDao {
     @Query("SELECT * FROM product_units WHERE productId = :productId ORDER BY factor")
     suspend fun packsFor(productId: Long): List<ProductUnit>
 
+    /** The sellable pack with this barcode, if any (the till adds the whole pack). */
+    @Query("SELECT * FROM product_units WHERE barcode = :barcode AND barcode != '' AND sellable = 1 LIMIT 1")
+    suspend fun sellablePackByBarcode(barcode: String): ProductUnit?
+
+    /** Another pack already using this barcode (the one being saved is left out by id). */
+    @Query("SELECT COUNT(*) FROM product_units WHERE barcode = :barcode AND barcode != '' AND id != :exceptId")
+    suspend fun packBarcodeTaken(barcode: String, exceptId: Long): Int
+
+    /** Packs that have a price of their own, with the product's unit price, to work out carton deals. */
+    @Query("""
+        SELECT pu.productId AS productId, pu.factor AS factor, pu.price AS packPrice, p.price AS basePrice
+        FROM product_units pu JOIN products p ON p.id = pu.productId
+        WHERE pu.sellable = 1 AND pu.price > 0 AND p.isWeighed = 0
+    """)
+    fun observeDealRows(): Flow<List<PackDealRow>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertPack(pack: ProductUnit): Long
 
@@ -59,3 +75,5 @@ interface UomDao {
     @Query("UPDATE product_units SET unitCode = :new WHERE unitCode = :old")
     suspend fun renamePackUnit(old: String, new: String)
 }
+
+data class PackDealRow(val productId: Long, val factor: Int, val packPrice: Double, val basePrice: Double)

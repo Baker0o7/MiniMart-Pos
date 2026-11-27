@@ -24,6 +24,9 @@ fun uomErrorText(e: UomError): String = when (e) {
     UomError.NO_PRODUCT -> Lang.t("Save the product first.", "احفظ المنتج أولًا.")
     UomError.WEIGHED_PRODUCT -> Lang.t("Weighed products are sold by the kilogram and take no pack sizes.", "المنتجات الموزونة تُباع بالكيلوغرام ولا تأخذ أحجام عبوات.")
     UomError.NOT_FOUND -> Lang.t("That unit no longer exists.", "هذه الوحدة لم تعد موجودة.")
+    UomError.BAD_BARCODE -> Lang.t("A barcode has 4 to 40 letters or digits, with no spaces.", "الباركود من 4 إلى 40 حرفًا أو رقمًا بدون مسافات.")
+    UomError.BARCODE_TAKEN -> Lang.t("That barcode is already used by a product or another pack.", "هذا الباركود مستخدم بالفعل لمنتج أو عبوة أخرى.")
+    UomError.BAD_PRICE -> Lang.t("Enter a price or cost that is zero or more (leave empty to use the automatic one).", "أدخل سعرًا أو تكلفة صفرًا أو أكثر (اتركه فارغًا للحساب التلقائي).")
 }
 
 data class UomUiState(val units: List<Uom> = emptyList(), val message: String? = null, val isError: Boolean = false)
@@ -51,8 +54,11 @@ class UomViewModel @Inject constructor(private val repo: UomRepository) : ViewMo
     fun delete(id: Long) = viewModelScope.launch { report(repo.delete(id), Lang.t("Unit deleted.", "تم حذف الوحدة.")) }
 
     /** Returns null when saved, otherwise the reason in plain words. */
-    suspend fun savePack(productId: Long, code: String, factor: Int, sellable: Boolean, purchasable: Boolean): String? =
-        (repo.savePack(productId, code, factor, sellable, purchasable) as? UomResult.Refused)?.let { uomErrorText(it.error) }
+    suspend fun savePack(
+        productId: Long, code: String, factor: Int, sellable: Boolean, purchasable: Boolean,
+        price: Double = 0.0, barcode: String = "", cost: Double = 0.0
+    ): String? =
+        (repo.savePack(productId, code, factor, sellable, purchasable, price, barcode, cost) as? UomResult.Refused)?.let { uomErrorText(it.error) }
 
     fun removePack(productId: Long, code: String) = viewModelScope.launch { repo.removePack(productId, code) }
 }

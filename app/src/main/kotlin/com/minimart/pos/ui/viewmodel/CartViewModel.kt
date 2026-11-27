@@ -84,6 +84,7 @@ class CartViewModel @Inject constructor(
     private val settingsRepo: SettingsRepository,
     private val cashDrawer: com.minimart.pos.printer.CashDrawerManager,
     private val customerRepo: com.minimart.pos.data.repository.CustomerRepository,
+    private val uomRepo: com.minimart.pos.data.repository.UomRepository,
     private val auditLogger: com.minimart.pos.util.AuditLogger,
     private val completeSale: com.minimart.pos.domain.usecase.CompleteSaleUseCase,
     private val customerDisplay: com.minimart.pos.display.CustomerDisplayHub,
@@ -99,7 +100,20 @@ class CartViewModel @Inject constructor(
     val currency = settingsRepo.currency.stateIn(viewModelScope, SharingStarted.Eagerly, "KES")
     val loggedInUserId = settingsRepo.loggedInUserId.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    /** The shop's carton deals by product. Read when a line is created; refreshed on lines already in the cart. */
+    @Volatile private var packDeals: Map<Long, List<com.minimart.pos.util.PackDeal>> = emptyMap()
+    private fun dealsFor(productId: Long) = packDeals[productId].orEmpty()
+
     init {
+        // Keep carton deals current, including on lines already in the cart (a price edited mid-sale applies at once).
+        viewModelScope.launch {
+            uomRepo.observePackDeals()
+                .catch { /* deals are an extra: a failure leaves normal prices */ }
+                .collect { map ->
+                    packDeals = map
+                    _uiState.update { st -> st.copy(items = st.items.map { it.copy(deals = map[it.product.id].orEmpty()) }) }
+                }
+        }
         // Mirror the cart on the customer-facing display.
         viewModelScope.launch {
             _uiState.collect { st ->
@@ -160,6 +174,20 @@ class CartViewModel @Inject constructor(
             // ── Regular fixed-price barcode ──────────────────────────────────
             val product = productRepo.getByBarcode(clean)
             if (product == null) {
+                // Not a product barcode: it may be the barcode on a carton, which adds the whole pack.
+                val pack = uomRepo.packForBarcode(clean)
+                if (pack != null) {
+                    val (unit, packProduct) = pack
+                    if (packProduct.stock < unit.factor) {
+                        com.minimart.pos.util.ScanFeedback.problem()
+                        _uiState.update { it.copy(isLoading = false, error = Lang.t("Only ${packProduct.stock} ${packProduct.name} in stock, not a full ${unit.unitCode} of ${unit.factor}", "المتاح ${packProduct.stock} من ${packProduct.name} فقط، أقل من ${unit.unitCode} كاملة (${unit.factor})")) }
+                        return@run
+                    }
+                    addUnits(packProduct, unit.factor)
+                    com.minimart.pos.util.ScanFeedback.ok()
+                    _uiState.update { it.copy(isLoading = false, lastScannedProduct = packProduct) }
+                    return@run
+                }
                 com.minimart.pos.util.ScanFeedback.problem()
                 _uiState.update { it.copy(isLoading = false, error = Lang.t("Product not found: $clean", "المنتج غير موجود: $clean"), unknownBarcode = clean) }
                 return@run
@@ -250,7 +278,7 @@ class CartViewModel @Inject constructor(
                 _uiState.update { it.copy(error = "${product.name} is out of stock") }
                 return
             }
-            _uiState.update { it.copy(items = it.items + CartItem(product = product, quantity = 1), error = null) }
+            _uiState.update { it.copy(items = it.items + CartItem(product = product, quantity = 1, deals = dealsFor(product.id)), error = null) }
         }
     }
 
@@ -270,7 +298,7 @@ class CartViewModel @Inject constructor(
             return
         }
         val updated = if (existing >= 0) state.items.toMutableList().also { it[existing] = it[existing].copy(quantity = wanted.toInt()) }
-                      else state.items + CartItem(product = product, quantity = wanted.toInt())
+                      else state.items + CartItem(product = product, quantity = wanted.toInt(), deals = dealsFor(product.id))
         _uiState.update { it.copy(items = updated, error = null) }
     }
 
@@ -330,7 +358,7 @@ class CartViewModel @Inject constructor(
                     // Bug fix: discount was only floored at 0, never capped — a discount
                     // larger than the line's own subtotal made that line's total negative,
                     // which then let `total` (cart-wide) go negative too (see below).
-                    val maxAllowed = it.lineSubtotal
+                    val maxAllowed = (it.lineSubtotal - it.dealDiscount).coerceAtLeast(0.0)
                     it.copy(discount = discount.coerceIn(0.0, maxAllowed))
                 } else it
             })
@@ -413,7 +441,7 @@ class CartViewModel @Inject constructor(
                         } else {
                             val qty = line.quantity.coerceAtMost(p.stock)
                             if (qty <= 0) { left++; return@mapNotNull null }
-                            CartItem(product = p, quantity = qty, discount = line.discount)
+                            CartItem(product = p, quantity = qty, discount = line.discount, deals = dealsFor(p.id))
                         }
                     }
                     settingsRepo.setHeldCartsJson(com.minimart.pos.util.HeldCarts.encode(

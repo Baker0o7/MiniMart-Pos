@@ -2,6 +2,7 @@ package com.minimart.pos.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -136,7 +137,12 @@ internal fun PackSizesSection(productId: Long, baseUnit: String, isWeighed: Bool
     val scope = rememberCoroutineScope()
     var code by remember { mutableStateOf("") }
     var factor by remember { mutableStateOf("") }
+    var price by remember { mutableStateOf("") }
+    var cost by remember { mutableStateOf("") }
+    var barcode by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
+    fun money(s: String): Double = s.trim().toDoubleOrNull()?.takeIf { it >= 0.0 } ?: 0.0
+    fun clearForm() { code = ""; factor = ""; price = ""; cost = ""; barcode = "" }
 
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(Lang.t("Pack sizes", "أحجام العبوات"), color = DT.OnSurface, fontWeight = FontWeight.Bold, fontSize = 13.sp)
@@ -146,15 +152,29 @@ internal fun PackSizesSection(productId: Long, baseUnit: String, isWeighed: Bool
         }
         packs.forEach { p ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("1 ${p.unitCode} = ${p.factor} $baseUnit", color = DT.OnSurface, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                Column(Modifier.weight(1f).heightIn(min = 48.dp).clickable(role = androidx.compose.ui.semantics.Role.Button) {
+                    // Tap a pack to change it: its details go into the boxes below and Save writes them back.
+                    code = p.unitCode; factor = p.factor.toString(); error = null
+                    price = if (p.price > 0) String.format(java.util.Locale.US, "%.2f", p.price).trimEnd('0').trimEnd('.') else ""
+                    cost = if (p.cost > 0) String.format(java.util.Locale.US, "%.2f", p.cost).trimEnd('0').trimEnd('.') else ""
+                    barcode = p.barcode
+                }, verticalArrangement = Arrangement.Center) {
+                    Text("1 ${p.unitCode} = ${p.factor} $baseUnit", color = DT.OnSurface, fontSize = 13.sp)
+                    val bits = listOfNotNull(
+                        p.price.takeIf { it > 0 }?.let { Lang.t("price ${String.format(java.util.Locale.US, "%,.2f", it)}", "السعر ${String.format(java.util.Locale.US, "%,.2f", it)}") },
+                        p.cost.takeIf { it > 0 }?.let { Lang.t("cost ${String.format(java.util.Locale.US, "%,.2f", it)}", "التكلفة ${String.format(java.util.Locale.US, "%,.2f", it)}") },
+                        p.barcode.takeIf { it.isNotEmpty() }?.let { Lang.t("barcode $it", "الباركود $it") }
+                    )
+                    if (bits.isNotEmpty()) Text(bits.joinToString("  •  "), color = DT.SubText, fontSize = 11.sp)
+                }
                 TextButton(onClick = { vm.removePack(productId, p.unitCode) }, modifier = Modifier.heightIn(min = 48.dp)) {
                     Text(Lang.t("Remove", "إزالة"), color = DT.Red, fontSize = 12.sp)
                 }
             }
         }
-        Text(Lang.t("Add a pack: pick the unit, then how many $baseUnit it holds.", "أضف عبوة: اختر الوحدة ثم عدد الـ$baseUnit التي تحتويها."), color = DT.SubText, fontSize = 11.sp)
+        Text(Lang.t("Add a pack: pick the unit, then how many $baseUnit it holds. Tap a pack above to change it.", "أضف عبوة: اختر الوحدة ثم عدد الـ$baseUnit التي تحتويها. اضغط على عبوة أعلاه لتعديلها."), color = DT.SubText, fontSize = 11.sp)
         androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(s.units.filter { it.isActive && it.code != baseUnit && packs.none { p -> p.unitCode == it.code } }, key = { it.id }) { u ->
+            items(s.units.filter { it.isActive && it.code != baseUnit && (packs.none { p -> p.unitCode == it.code } || it.code == code) }, key = { it.id }) { u ->
                 FilterChip(selected = code == u.code, onClick = { code = u.code; error = null }, label = { Text(u.code, fontSize = 12.sp) })
             }
         }
@@ -166,12 +186,22 @@ internal fun PackSizesSection(productId: Long, baseUnit: String, isWeighed: Bool
                     val f = com.minimart.pos.util.UnitMath.parseFactor(factor)
                     if (f == null) { error = com.minimart.pos.ui.viewmodel.uomErrorText(com.minimart.pos.data.repository.UomError.BAD_FACTOR); return@Button }
                     scope.launch {
-                        val problem = vm.savePack(productId, code, f, sellable = true, purchasable = true)
+                        val problem = vm.savePack(productId, code, f, sellable = true, purchasable = true, price = money(price), barcode = barcode, cost = money(cost))
                         error = problem
-                        if (problem == null) { code = ""; factor = "" }
+                        if (problem == null) clearForm()
                     }
-                }) { Text(Lang.t("Add pack", "إضافة عبوة"), fontSize = 12.sp) }
+                }) { Text(Lang.t("Save pack", "حفظ العبوة"), fontSize = 12.sp) }
         }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            UomTextField(price, { price = it.filter { c -> c.isDigit() || c == '.' }.take(12); error = null }, Lang.t("Pack price (optional)", "سعر العبوة (اختياري)"),
+                Modifier.weight(1f), androidx.compose.ui.text.input.KeyboardType.Decimal)
+            UomTextField(cost, { cost = it.filter { c -> c.isDigit() || c == '.' }.take(12); error = null }, Lang.t("Pack cost (optional)", "تكلفة العبوة (اختياري)"),
+                Modifier.weight(1f), androidx.compose.ui.text.input.KeyboardType.Decimal)
+        }
+        UomTextField(barcode, { barcode = it.filter { c -> c.code < 128 && !c.isWhitespace() }.take(40); error = null }, Lang.t("Pack barcode (optional)", "باركود العبوة (اختياري)"),
+            Modifier.fillMaxWidth(), androidx.compose.ui.text.input.KeyboardType.Ascii)
+        Text(Lang.t("Leave the price empty to charge the unit price × the pack size. A lower pack price gives a discount for every full pack in the sale.",
+            "اترك السعر فارغًا لاحتساب سعر الوحدة × حجم العبوة. السعر الأقل للعبوة يمنح خصمًا لكل عبوة كاملة في البيع."), color = DT.SubText, fontSize = 11.sp)
         error?.let { Text(it, color = DT.Red, fontSize = 12.sp) }
     }
 }

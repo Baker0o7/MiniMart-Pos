@@ -105,7 +105,9 @@ data class CartItem(
     var quantity: Int = 1,
     var discount: Double = 0.0,
     // For weighed products: actual weight from PLU barcode
-    val weightKg: Double = 0.0
+    val weightKg: Double = 0.0,
+    // The shop's carton deals for this product; the saving follows the quantity (see UnitMath.dealDiscount).
+    val deals: List<com.minimart.pos.util.PackDeal> = emptyList()
 ) {
     // ── Inclusive VAT (tax is already inside the selling price) ───────────────
     val lineSubtotal: Double get() = if (product.isWeighed && weightKg > 0)
@@ -114,7 +116,10 @@ data class CartItem(
     val lineTax: Double get() = if (product.taxRate > 0)
         lineSubtotal - (lineSubtotal / (1.0 + product.taxRate)) else 0.0
     val lineNet: Double get() = lineSubtotal - lineTax
-    val lineDiscount: Double get() = discount.coerceIn(0.0, lineSubtotal)
+    /** What the carton deals save on this line (never on weighed lines). */
+    val dealDiscount: Double get() = if (product.isWeighed || deals.isEmpty()) 0.0 else com.minimart.pos.util.UnitMath.dealDiscount(quantity, deals)
+    val lineDiscount: Double get() = (com.minimart.pos.util.Money.fromDouble(discount.coerceAtLeast(0.0)) +
+        com.minimart.pos.util.Money.fromDouble(dealDiscount)).toDouble().coerceIn(0.0, lineSubtotal)
     val lineTotal: Double get() = lineSubtotal - lineDiscount
     // Display helpers
     val displayWeight: String get() = if (product.isWeighed && weightKg > 0)

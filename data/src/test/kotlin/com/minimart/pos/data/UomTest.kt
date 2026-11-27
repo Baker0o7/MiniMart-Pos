@@ -108,3 +108,81 @@ class Migration21To22Test : DbTestBase() {
         helper.close()
     }
 }
+
+class UomPackPricingTest : DbTestBase() {
+    private fun repo() = UomRepository(db.uomDao(), db)
+    private fun product(name: String = "Soda", weighed: Boolean = false) = runBlocking {
+        db.productDao().insertProduct(Product(barcode = "b$name", name = name, price = 50.0, stock = 100, unit = "pcs", isWeighed = weighed))
+    }
+    private fun refused(r: UomResult) = (r as? UomResult.Refused)?.error
+
+    @Test fun packKeepsItsOwnPriceBarcodeAndCost() = runBlocking {
+        val r = repo(); r.ensureDefaults(); val id = product()
+        assertEquals(UomResult.Ok, r.savePack(id, "carton", 24, price = 1100.0, barcode = "CTN-0001", cost = 900.0))
+        val p = db.uomDao().packsFor(id).single()
+        assertEquals(1100.0, p.price, 0.0); assertEquals("CTN-0001", p.barcode); assertEquals(900.0, p.cost, 0.0)
+        // saving again changes it in place
+        assertEquals(UomResult.Ok, r.savePack(id, "carton", 24, price = 0.0, barcode = "CTN-0001", cost = 0.0))
+        val again = db.uomDao().packsFor(id).single()
+        assertEquals(p.id, again.id); assertEquals(0.0, again.price, 0.0)
+    }
+
+    @Test fun aScannedPackBarcodeFindsItsProduct() = runBlocking {
+        val r = repo(); r.ensureDefaults(); val id = product()
+        r.savePack(id, "carton", 24, barcode = "CTN-0001")
+        val hit = r.packForBarcode(" CTN-0001 ")
+        assertNotNull(hit); assertEquals(24, hit!!.first.factor); assertEquals(id, hit.second.id)
+        assertNull(r.packForBarcode("NOPE-0001")); assertNull(r.packForBarcode(""))
+    }
+
+    @Test fun aPackThatIsNotSellableIsNotFoundAtTheTill() = runBlocking {
+        val r = repo(); r.ensureDefaults(); val id = product()
+        r.savePack(id, "carton", 24, sellable = false, barcode = "CTN-0001")
+        assertNull(r.packForBarcode("CTN-0001"))
+    }
+
+    @Test fun barcodesAreUniqueAcrossProductsAndPacks() = runBlocking {
+        val r = repo(); r.ensureDefaults(); val a = product("A"); val b = product("B")
+        assertEquals(UomResult.Ok, r.savePack(a, "carton", 24, barcode = "CTN-0001"))
+        assertEquals(UomError.BARCODE_TAKEN, refused(r.savePack(b, "carton", 12, barcode = "CTN-0001")))
+        assertEquals(UomError.BARCODE_TAKEN, refused(r.savePack(b, "carton", 12, barcode = "bA")))   // a product's own barcode
+        assertEquals(UomResult.Ok, r.savePack(a, "carton", 24, barcode = "CTN-0001"))                // its own barcode again is fine
+    }
+
+    @Test fun badBarcodesAndPricesAreRefused() = runBlocking {
+        val r = repo(); r.ensureDefaults(); val id = product()
+        assertEquals(UomError.BAD_BARCODE, refused(r.savePack(id, "carton", 24, barcode = "12 3")))
+        assertEquals(UomError.BAD_PRICE, refused(r.savePack(id, "carton", 24, price = -1.0)))
+        assertEquals(UomError.BAD_PRICE, refused(r.savePack(id, "carton", 24, cost = Double.NaN)))
+        assertEquals(UomError.BAD_PRICE, refused(r.savePack(id, "carton", 24, price = 1e12)))
+        assertTrue(db.uomDao().packsFor(id).isEmpty())
+    }
+
+    @Test fun weighedProductsStillTakeNoPacks() = runBlocking {
+        val r = repo(); r.ensureDefaults(); val id = product("Rice", weighed = true)
+        assertEquals(UomError.WEIGHED_PRODUCT, refused(r.savePack(id, "bag", 50, barcode = "BAG-0001")))
+    }
+}
+
+class Migration22To23Test : DbTestBase() {
+    @Test fun addsThePackColumnsKeepsRowsAndRunsTwice() {
+        val ctx = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val helper = androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory().create(
+            SupportSQLiteOpenHelper.Configuration.builder(ctx).name(null)
+                .callback(object : SupportSQLiteOpenHelper.Callback(22) {
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        db.execSQL("CREATE TABLE product_units (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, productId INTEGER NOT NULL, unitCode TEXT NOT NULL, factor INTEGER NOT NULL, sellable INTEGER NOT NULL, purchasable INTEGER NOT NULL)")
+                    }
+                    override fun onUpgrade(db: SupportSQLiteDatabase, o: Int, n: Int) {}
+                }).build())
+        val sdb = helper.writableDatabase
+        sdb.execSQL("INSERT INTO product_units (productId, unitCode, factor, sellable, purchasable) VALUES (1, 'carton', 24, 1, 1)")
+        AppMigrations.MIGRATION_22_23.migrate(sdb)
+        AppMigrations.MIGRATION_22_23.migrate(sdb)
+        sdb.query("SELECT factor, price, barcode, cost FROM product_units").use { c ->
+            assertTrue(c.moveToFirst())
+            assertEquals(24, c.getInt(0)); assertEquals(0.0, c.getDouble(1), 0.0); assertEquals("", c.getString(2)); assertEquals(0.0, c.getDouble(3), 0.0)
+        }
+        helper.close()
+    }
+}

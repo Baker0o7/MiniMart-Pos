@@ -22,7 +22,7 @@ data class Uom(
 @Entity(
     tableName = "product_units",
     foreignKeys = [ForeignKey(entity = Product::class, parentColumns = ["id"], childColumns = ["productId"], onDelete = ForeignKey.CASCADE)],
-    indices = [Index("productId"), Index(value = ["productId", "unitCode"], unique = true)]
+    indices = [Index("productId"), Index(value = ["productId", "unitCode"], unique = true), Index("barcode")]
 )
 data class ProductUnit(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -30,5 +30,11 @@ data class ProductUnit(
     val unitCode: String,
     val factor: Int,
     val sellable: Boolean = true,
-    val purchasable: Boolean = true
+    val purchasable: Boolean = true,
+    /** The shop's own price for one pack (a carton deal). 0 = not set: the price is the unit price times the factor. */
+    @androidx.room.ColumnInfo(defaultValue = "0.0") val price: Double = 0.0,
+    /** Barcode printed on the pack. Empty = none. Kept unique across products and packs by the repository. */
+    @androidx.room.ColumnInfo(defaultValue = "''") val barcode: String = "",
+    /** What one pack costs when bought. 0 = not set: the unit cost times the factor. */
+    @androidx.room.ColumnInfo(defaultValue = "0.0") val cost: Double = 0.0
 )

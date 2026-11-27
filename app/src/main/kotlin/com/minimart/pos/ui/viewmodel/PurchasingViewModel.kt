@@ -261,11 +261,13 @@ class PurchaseOrderEditorViewModel @Inject constructor(
     fun setCost(index: Int, text: String) = editLine(index) { it.copy(costText = text) }
 
     /** Orders one more pack: adds its units to the quantity (the order itself stays in the product's main unit). */
-    fun addPack(index: Int, factor: Int) = editLine(index) { l ->
+    fun addPack(index: Int, factor: Int, packCost: Double = 0.0) = editLine(index) { l ->
         if (l.weighed || !com.minimart.pos.util.UnitMath.validFactor(factor)) l
         else {
             val total = (l.qty.toLong() + factor).coerceAtMost(999_999L)
-            l.copy(qtyText = total.toString())
+            // A pack with its own cost sets the cost of one unit (carton cost / pack size); stock still arrives in the main unit.
+            val unitCost = com.minimart.pos.util.UnitMath.unitCostFromPack(packCost, factor)
+            l.copy(qtyText = total.toString(), costText = if (unitCost > 0.0) fmt(unitCost, true, 4) else l.costText)
         }
     }
     private fun editLine(index: Int, f: (PoLine) -> PoLine) {

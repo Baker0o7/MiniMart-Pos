@@ -364,9 +364,9 @@ fun PurchaseOrderEditorScreen(onBack: () -> Unit, currency: String, vm: Purchase
                             androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
                                 items(packs, key = { it.unitCode }) { pk ->
                                     Box(Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(20.dp)).background(DT.TealDim)
-                                        .clickable(role = androidx.compose.ui.semantics.Role.Button) { vm.addPack(i, pk.factor) }
+                                        .clickable(role = androidx.compose.ui.semantics.Role.Button) { vm.addPack(i, pk.factor, pk.cost) }
                                         .padding(horizontal = 14.dp), contentAlignment = Alignment.Center) {
-                                        Text("+ ${pk.unitCode} (${pk.factor} $baseUnit)", color = DT.TealLight, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                        Text("+ ${pk.unitCode} (${pk.factor} $baseUnit)" + (if (pk.cost > 0) "  @ " + String.format(java.util.Locale.US, "%,.2f", pk.cost) else ""), color = DT.TealLight, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                                     }
                                 }
                             }

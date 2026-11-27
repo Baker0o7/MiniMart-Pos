@@ -3,8 +3,10 @@ package com.minimart.pos.data.repository
 import androidx.room.withTransaction
 import com.minimart.pos.data.dao.UomDao
 import com.minimart.pos.data.db.AppDatabase
+import com.minimart.pos.data.entity.Product
 import com.minimart.pos.data.entity.ProductUnit
 import com.minimart.pos.data.entity.Uom
+import com.minimart.pos.util.Money
 import com.minimart.pos.util.UnitMath
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -12,7 +14,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /** Why a unit change was refused. The screens turn these into plain words (English and Arabic). */
-enum class UomError { BAD_NAME, DUPLICATE, IN_USE, BAD_FACTOR, UNKNOWN_UNIT, SAME_AS_BASE, NO_PRODUCT, WEIGHED_PRODUCT, NOT_FOUND }
+enum class UomError { BAD_NAME, DUPLICATE, IN_USE, BAD_FACTOR, UNKNOWN_UNIT, SAME_AS_BASE, NO_PRODUCT, WEIGHED_PRODUCT, NOT_FOUND, BAD_BARCODE, BARCODE_TAKEN, BAD_PRICE }
 
 sealed class UomResult {
     object Ok : UomResult()
@@ -84,21 +86,49 @@ class UomRepository @Inject constructor(private val dao: UomDao, private val db:
     suspend fun packsFor(productId: Long): List<ProductUnit> = dao.packsFor(productId)
 
     /** Adds or changes one pack size of a product ("carton = 24"). Weighed products are counted in kg and take no packs. */
-    suspend fun savePack(productId: Long, code: String, factor: Int, sellable: Boolean = true, purchasable: Boolean = true): UomResult = db.withTransaction {
+    suspend fun savePack(
+        productId: Long, code: String, factor: Int, sellable: Boolean = true, purchasable: Boolean = true,
+        price: Double = 0.0, barcode: String = "", cost: Double = 0.0
+    ): UomResult = db.withTransaction {
         val product = db.productDao().getProductById(productId) ?: return@withTransaction UomResult.Refused(UomError.NO_PRODUCT)
         if (product.isWeighed) return@withTransaction UomResult.Refused(UomError.WEIGHED_PRODUCT)
         if (!UnitMath.validFactor(factor)) return@withTransaction UomResult.Refused(UomError.BAD_FACTOR)
         val c = UnitMath.normalizeCode(code) ?: return@withTransaction UomResult.Refused(UomError.BAD_NAME)
         if (dao.getByCode(c) == null) return@withTransaction UomResult.Refused(UomError.UNKNOWN_UNIT)
         if (c == UnitMath.normalizeCode(product.unit)) return@withTransaction UomResult.Refused(UomError.SAME_AS_BASE)
+        if (price.isNaN() || cost.isNaN() || price < 0.0 || cost < 0.0 || price > MAX_MONEY || cost > MAX_MONEY) return@withTransaction UomResult.Refused(UomError.BAD_PRICE)
+        val bc = UnitMath.normalizeBarcode(barcode) ?: return@withTransaction UomResult.Refused(UomError.BAD_BARCODE)
         val existing = dao.packsFor(productId).firstOrNull { it.unitCode == c }
-        dao.upsertPack(ProductUnit(id = existing?.id ?: 0, productId = productId, unitCode = c, factor = factor, sellable = sellable, purchasable = purchasable))
+        if (bc.isNotEmpty() && (db.productDao().getAnyByBarcode(bc) != null || dao.packBarcodeTaken(bc, existing?.id ?: 0L) > 0))
+            return@withTransaction UomResult.Refused(UomError.BARCODE_TAKEN)
+        dao.upsertPack(ProductUnit(
+            id = existing?.id ?: 0, productId = productId, unitCode = c, factor = factor, sellable = sellable, purchasable = purchasable,
+            price = Money.fromDouble(price).toDouble(), barcode = bc, cost = Money.fromDouble(cost).toDouble()
+        ))
         UomResult.Ok
+    }
+
+    /** Carton deals by product, kept up to date as prices and packs change. Only packs with a price below the single-unit total count. */
+    fun observePackDeals(): Flow<Map<Long, List<com.minimart.pos.util.PackDeal>>> = dao.observeDealRows().map { rows ->
+        rows.mapNotNull { r -> UnitMath.deal(r.basePrice, r.factor, r.packPrice)?.let { r.productId to it } }
+            .groupBy({ it.first }, { it.second })
+    }
+
+    /** The sellable pack a scanned barcode belongs to, with its product, or null when it is not a pack barcode. */
+    suspend fun packForBarcode(barcode: String): Pair<ProductUnit, Product>? {
+        val code = barcode.trim()
+        if (code.isEmpty()) return null
+        val pack = dao.sellablePackByBarcode(code) ?: return null
+        val product = db.productDao().getProductById(pack.productId)?.takeIf { it.isActive && !it.isWeighed } ?: return null
+        return pack to product
     }
 
     suspend fun removePack(productId: Long, code: String) = dao.deletePack(productId, code)
 
     companion object {
+        /** Prices and costs above this are almost certainly typing mistakes. */
+        const val MAX_MONEY = 10_000_000.0
+
         /** The units a new shop starts with, in the order they are listed. */
         val DEFAULTS: List<Pair<String, String>> = listOf(
             "pcs" to "Pieces", "kg" to "Kilogram", "g" to "Gram", "litre" to "Litre", "ml" to "Millilitre", "dozen" to "Dozen",

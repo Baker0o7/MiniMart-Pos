@@ -319,7 +319,9 @@ fun ScannerCartScreen(
                                 androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(start = 62.dp, end = 14.dp, bottom = 8.dp),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     items(packs, key = { it.unitCode }) { pk ->
-                                        val label = "+ ${pk.unitCode} (${pk.factor})"
+                                        val shown = com.minimart.pos.util.UnitMath.packPrice(product.price, pk.factor, pk.price)
+                                        val label = "+ ${pk.unitCode} (${pk.factor})  " + String.format(java.util.Locale.US, "%,.0f", shown) +
+                                            (if (com.minimart.pos.util.UnitMath.deal(product.price, pk.factor, pk.price) != null) " ✓" else "")
                                         Box(Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(20.dp)).background(DT.TealDim)
                                             .clickable(role = androidx.compose.ui.semantics.Role.Button) {
                                                 context.vibrateShort(); vm.addUnits(product, pk.factor); searchText = ""; searchVm.clear()

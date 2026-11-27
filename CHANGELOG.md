@@ -9,6 +9,7 @@ Every release is published, with its signed APKs, on the [Releases page](https:/
 
 ### Added
 - **Profit & Loss screen** (Reports, top bar). See today, this week or this month as a full statement: sales, VAT, cost of goods, gross profit, expenses and net profit, with gross margin. It is compared with the period just before it, shows which products and categories earn the most, and lists items sold below cost or with no cost price recorded. Export gives the accountant a statement and a profit-by-product spreadsheet.
+- **Units of measure 2.0.** A pack (for example a carton of 24) can now have its own price, its own barcode and its own cost. A pack price below the unit price × pack size gives an automatic discount for every full pack in the sale, even if the cashier changes the quantity by hand. Scanning a carton barcode at the till adds the whole carton. Ordering a pack on a purchase order sets the cost of one unit from the carton cost. Pieces can always be sold loose, because stock is counted in the main unit.
 
 ## [1.33.25] - 2026-11-26
 
