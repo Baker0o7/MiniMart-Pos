@@ -24,7 +24,13 @@ android {
     testOptions {
         // Robolectric needs Android resources/manifest merged for the in-memory Room tests.
         unitTests.isIncludeAndroidResources = true
-        unitTests.all { it.useJUnitPlatform() }
+        unitTests.all {
+            it.useJUnitPlatform()
+            // Robolectric downloads its Android jar when a test run starts. Maven Central's main host rate-limits CI runners
+            // (HTTP 429, which failed whole test runs), so use Google's mirror of Maven Central instead.
+            it.systemProperty("robolectric.dependency.repo.id", "central-mirror")
+            it.systemProperty("robolectric.dependency.repo.url", "https://maven-central.storage-download.googleapis.com/maven2")
+        }
     }
 }
 
